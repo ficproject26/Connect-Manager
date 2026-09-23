@@ -27,6 +27,7 @@ const Dashboard = ({ onNavigate }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredIssue, setHoveredIssue] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
+  const [leaderboardList, setLeaderboardList] = useState([]);
   const [loadingStats, setLoadingStats] = useState(true);
   const [trendPeriod, setTrendPeriod] = useState('3m'); // '3m' | '6m' | '1y'
   const [territoryFilter, setTerritoryFilter] = useState('pin'); // 'dist' | 'div' | 'pin'
@@ -38,9 +39,15 @@ const Dashboard = ({ onNavigate }) => {
     let isMounted = true;
     const fetchDashboardMetrics = async () => {
       try {
-        const res = await reportService.getDashboardStats();
+        const [res, leadRes] = await Promise.all([
+          reportService.getDashboardStats(),
+          reportService.getLeaderboardData().catch(() => ({ success: false }))
+        ]);
         if (res.success && isMounted) {
           setDashboardData(res);
+        }
+        if (leadRes.success && Array.isArray(leadRes.data) && isMounted) {
+          setLeaderboardList(leadRes.data);
         }
       } catch (err) {
         console.error('Failed to load real dashboard stats:', err);
@@ -54,50 +61,50 @@ const Dashboard = ({ onNavigate }) => {
 
   // Exact KPI Metrics computed from database
   const kpis = dashboardData?.kpiMetrics || {
-    totalManagers: 10,
-    managersBreakdown: '4 State | 2 District | 2 Division | 2 Pincode',
-    totalVendors: 7,
-    activeVendors: 4,
-    pendingVendors: 2,
-    totalShops: 7,
-    activeShops: 4,
-    inactiveShops: 3,
-    totalTieups: 4,
-    todayTieups: 1,
-    weekTieups: 3,
-    verifiedVendors: 4,
-    openIssues: 3,
-    kycPending: 2,
-    vendorRequests: 1
+    totalManagers: 0,
+    managersBreakdown: '0 State | 0 District | 0 Division | 0 Pincode',
+    totalVendors: 0,
+    activeVendors: 0,
+    pendingVendors: 0,
+    totalShops: 0,
+    activeShops: 0,
+    inactiveShops: 0,
+    totalTieups: 0,
+    todayTieups: 0,
+    weekTieups: 0,
+    verifiedVendors: 0,
+    openIssues: 0,
+    kycPending: 0,
+    vendorRequests: 0
   };
 
   const statusCounts = dashboardData?.statusCounts || {
-    total: 7,
-    active: 4,
-    pending: 1,
-    underReview: 1,
-    rejected: 1,
-    inactive: 1
+    total: 0,
+    active: 0,
+    pending: 0,
+    underReview: 0,
+    rejected: 0,
+    inactive: 0
   };
 
   const issueCounts = dashboardData?.issueCounts || getIssueStatusCounts();
-  const openCount = issueCounts.open;
-  const inProgressCount = issueCounts.inProgress;
-  const escalatedCount = issueCounts.escalated;
-  const resolvedCount = issueCounts.resolved;
-  const totalIssuesCount = issueCounts.total || (openCount + inProgressCount + escalatedCount + resolvedCount) || 1;
+  const openCount = issueCounts.open || 0;
+  const inProgressCount = issueCounts.inProgress || 0;
+  const escalatedCount = issueCounts.escalated || 0;
+  const resolvedCount = issueCounts.resolved || 0;
+  const totalIssuesCount = issueCounts.total || (openCount + inProgressCount + escalatedCount + resolvedCount) || 0;
 
-  const openPct = Math.round((openCount / totalIssuesCount) * 100);
-  const inProgressPct = Math.round((inProgressCount / totalIssuesCount) * 100);
-  const escalatedPct = Math.round((escalatedCount / totalIssuesCount) * 100);
-  const resolvedPct = Math.max(0, 100 - (openPct + inProgressPct + escalatedPct));
+  const openPct = totalIssuesCount > 0 ? Math.round((openCount / totalIssuesCount) * 100) : 0;
+  const inProgressPct = totalIssuesCount > 0 ? Math.round((inProgressCount / totalIssuesCount) * 100) : 0;
+  const escalatedPct = totalIssuesCount > 0 ? Math.round((escalatedCount / totalIssuesCount) * 100) : 0;
+  const resolvedPct = totalIssuesCount > 0 ? Math.max(0, 100 - (openPct + inProgressPct + escalatedPct)) : 0;
 
   // Circumference for r=38 is 238.76
   const C = 238.76;
-  const openDash = (openCount / totalIssuesCount) * C;
-  const inProgDash = (inProgressCount / totalIssuesCount) * C;
-  const escDash = (escalatedCount / totalIssuesCount) * C;
-  const resDash = (resolvedCount / totalIssuesCount) * C;
+  const openDash = totalIssuesCount > 0 ? (openCount / totalIssuesCount) * C : 0;
+  const inProgDash = totalIssuesCount > 0 ? (inProgressCount / totalIssuesCount) * C : 0;
+  const escDash = totalIssuesCount > 0 ? (escalatedCount / totalIssuesCount) * C : 0;
+  const resDash = totalIssuesCount > 0 ? (resolvedCount / totalIssuesCount) * C : 0;
 
   const issueSegments = [
     { id: 'open', label: 'Open', count: openCount, percent: `${openPct}%`, color: '#ef4444', dashArray: `${openDash.toFixed(1)} ${C.toFixed(1)}`, dashOffset: '0' },
@@ -138,37 +145,24 @@ const Dashboard = ({ onNavigate }) => {
   const pincodeCode = user?.scope?.pincodeCode;
   const isStateManager = (user?.role || '').toLowerCase().includes('state');
 
-  // Trend Data for 6 months
-  const trendDataMap = {
-    '3m': [
-      { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
-      { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
-      { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
-    ],
-    '6m': [
-      { month: 'Jan', merchants: 45, tieUps: 320, barH: 52, dotY: 104 },
-      { month: 'Feb', merchants: 52, tieUps: 450, barH: 62, dotY: 88 },
-      { month: 'Mar', merchants: 64, tieUps: 580, barH: 76, dotY: 72 },
-      { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
-      { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
-      { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
-    ],
-    '1y': [
-      { month: 'Jul', merchants: 28, tieUps: 180, barH: 32, dotY: 118 },
-      { month: 'Aug', merchants: 34, tieUps: 220, barH: 38, dotY: 112 },
-      { month: 'Sep', merchants: 38, tieUps: 260, barH: 42, dotY: 108 },
-      { month: 'Oct', merchants: 42, tieUps: 290, barH: 48, dotY: 106 },
-      { month: 'Nov', merchants: 40, tieUps: 310, barH: 46, dotY: 105 },
-      { month: 'Dec', merchants: 44, tieUps: 340, barH: 50, dotY: 102 },
-      { month: 'Jan', merchants: 45, tieUps: 320, barH: 52, dotY: 104 },
-      { month: 'Feb', merchants: 52, tieUps: 450, barH: 62, dotY: 88 },
-      { month: 'Mar', merchants: 64, tieUps: 580, barH: 76, dotY: 72 },
-      { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
-      { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
-      { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
-    ]
-  };
-  const trendData = trendDataMap[trendPeriod] || trendDataMap['3m'];
+  // Dynamic Trend Data
+  const trendData = React.useMemo(() => {
+    const count = trendPeriod === '1y' ? 12 : trendPeriod === '6m' ? 6 : 3;
+    const months = [];
+    const now = new Date();
+    for (let i = count - 1; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mLabel = d.toLocaleString('en-US', { month: 'short' });
+      months.push({
+        month: mLabel,
+        merchants: 0,
+        tieUps: 0,
+        barH: 0,
+        dotY: 130
+      });
+    }
+    return months;
+  }, [trendPeriod]);
 
   const getTrendCoords = (i, total) => {
     const startX = 46;
@@ -181,244 +175,102 @@ const Dashboard = ({ onNavigate }) => {
     return { barX, dotX, barWidth };
   };
 
-  // Dynamic Territories based on manager's assigned state & district
+  // Dynamic Territories based on manager's assigned scope
   const territoryList = React.useMemo(() => {
-    if (territoryFilter === 'pin') {
-      if (stateName.includes('Tamil') || stateName === 'Tamil Nadu') {
-        return [
-          { name: '636114 (Salem Attur)', value: 712, percent: 92 },
-          { name: '636001 (Salem Fort)', value: 620, percent: 80 },
-          { name: '600001 (Chennai Central)', value: 584, percent: 76 },
-          { name: '641001 (Coimbatore Main)', value: 512, percent: 68 },
-          { name: '625001 (Madurai Town)', value: 486, percent: 64 }
-        ];
-      }
-      if (stateName === 'Karnataka') {
-        return [
-          { name: '560034 (Koramangala)', value: 850, percent: 95 },
-          { name: '560095 (HSR Layout)', value: 712, percent: 88 },
-          { name: '560001 (MG Road)', value: 620, percent: 80 },
-          { name: '570001 (Mysuru Town)', value: 584, percent: 76 },
-          { name: '590001 (Belagavi)', value: 512, percent: 68 }
-        ];
-      }
-      if (stateName === 'Maharashtra') {
-        return [
-          { name: '400001 (Mumbai Fort)', value: 890, percent: 96 },
-          { name: '411001 (Pune Station)', value: 740, percent: 89 },
-          { name: '440001 (Nagpur City)', value: 610, percent: 78 },
-          { name: '400601 (Thane West)', value: 550, percent: 72 },
-          { name: '422001 (Nashik GPO)', value: 490, percent: 65 }
-        ];
-      }
-      return [
-        { name: 'PIN 636114', value: 712, percent: 92 },
-        { name: 'PIN 636001', value: 620, percent: 80 },
-        { name: 'PIN 600001', value: 584, percent: 76 },
-        { name: 'PIN 641001', value: 512, percent: 68 },
-        { name: 'PIN 625001', value: 486, percent: 64 }
-      ];
+    const roleData = dashboardData?.roleSpecificData;
+    if (territoryFilter === 'dist' && roleData?.districtBreakdown?.length > 0) {
+      return roleData.districtBreakdown.slice(0, 5).map(d => ({
+        name: d.districtName,
+        value: d.totalVendors || 0,
+        percent: d.totalVendors > 0 ? Math.min(100, Math.round((d.totalVendors / (kpis.totalVendors || 1)) * 100)) : 0
+      }));
     }
+    if (territoryFilter === 'div' && roleData?.divisionBreakdown?.length > 0) {
+      return roleData.divisionBreakdown.slice(0, 5).map(div => ({
+        name: div.divisionName,
+        value: div.totalVendors || 0,
+        percent: div.totalVendors > 0 ? Math.min(100, Math.round((div.totalVendors / (kpis.totalVendors || 1)) * 100)) : 0
+      }));
+    }
+    if (territoryFilter === 'pin' && roleData?.pincodeBreakdown?.length > 0) {
+      return roleData.pincodeBreakdown.slice(0, 5).map(p => ({
+        name: `PIN ${p.pincodeCode || p.pincodeId}`,
+        value: p.totalVendors || 0,
+        percent: p.totalVendors > 0 ? Math.min(100, Math.round((p.totalVendors / (kpis.totalVendors || 1)) * 100)) : 0
+      }));
+    }
+    if (roleData?.districtBreakdown?.length > 0) {
+      return roleData.districtBreakdown.slice(0, 5).map(d => ({
+        name: d.districtName,
+        value: d.totalVendors || 0,
+        percent: 0
+      }));
+    }
+    if (roleData?.divisionBreakdown?.length > 0) {
+      return roleData.divisionBreakdown.slice(0, 5).map(div => ({
+        name: div.divisionName,
+        value: div.totalVendors || 0,
+        percent: 0
+      }));
+    }
+    if (roleData?.pincodeBreakdown?.length > 0) {
+      return roleData.pincodeBreakdown.slice(0, 5).map(p => ({
+        name: `PIN ${p.pincodeCode || p.pincodeId}`,
+        value: p.totalVendors || 0,
+        percent: 0
+      }));
+    }
+    return [];
+  }, [dashboardData, territoryFilter, kpis.totalVendors]);
 
-    if (territoryFilter === 'div') {
-      if (stateName.includes('Tamil') || stateName === 'Tamil Nadu') {
-        return [
-          { name: 'Salem Division', value: 820, percent: 94 },
-          { name: 'Chennai North Division', value: 760, percent: 88 },
-          { name: 'Coimbatore South Division', value: 690, percent: 80 },
-          { name: 'Madurai Urban Division', value: 610, percent: 72 },
-          { name: 'Tiruchirappalli Division', value: 530, percent: 64 }
-        ];
-      }
-      if (stateName === 'Karnataka') {
-        return [
-          { name: 'Bengaluru Central Div', value: 870, percent: 96 },
-          { name: 'Bengaluru South Div', value: 790, percent: 89 },
-          { name: 'Mysuru City Div', value: 680, percent: 78 },
-          { name: 'Mangaluru Div', value: 610, percent: 71 },
-          { name: 'Hubballi Div', value: 540, percent: 63 }
-        ];
-      }
-      if (stateName === 'Maharashtra') {
-        return [
-          { name: 'Mumbai City Div', value: 910, percent: 96 },
-          { name: 'Pune Cantonment Div', value: 780, percent: 86 },
-          { name: 'Nagpur Central Div', value: 640, percent: 76 },
-          { name: 'Thane Urban Div', value: 580, percent: 70 },
-          { name: 'Nashik Valley Div', value: 510, percent: 64 }
-        ];
-      }
-      return [
-        { name: `${stateName} Division A`, value: 820, percent: 94 },
-        { name: `${stateName} Division B`, value: 760, percent: 88 },
-        { name: `${stateName} Division C`, value: 690, percent: 80 },
-        { name: `${stateName} Division D`, value: 610, percent: 72 },
-        { name: `${stateName} Division E`, value: 530, percent: 64 }
-      ];
-    }
+  // Dynamic Activities from audit logs
+  const allActivitiesList = React.useMemo(() => {
+    const raw = dashboardData?.recentActivities || [];
+    return raw.map((act, idx) => {
+      const action = act.action || act.title || 'Activity';
+      const isKyc = action.toLowerCase().includes('kyc');
+      const isTieup = action.toLowerCase().includes('tieup') || action.toLowerCase().includes('merchant');
+      const isIssue = action.toLowerCase().includes('issue') || action.toLowerCase().includes('escalat');
+      const isReport = action.toLowerCase().includes('report');
+      
+      const category = isKyc ? 'kyc' : isTieup ? 'tieup' : isIssue ? 'escalation' : isReport ? 'report' : 'vendor';
+      const icon = isKyc ? CheckCircle : isTieup ? Handshake : isIssue ? AlertTriangle : isReport ? FileText : UserPlus;
+      const bg = isKyc ? '#dcfce7' : isTieup ? '#fef3c7' : isIssue ? '#fee2e2' : isReport ? '#ede9fe' : '#e0f2fe';
+      const color = isKyc ? '#16a34a' : isTieup ? '#d97706' : isIssue ? '#dc2626' : isReport ? '#7c3aed' : '#0284c7';
 
-    // Default 'dist' (Districts)
-    if (stateName.includes('Tamil') || stateName === 'Tamil Nadu') {
-      return [
-        { name: 'Chennai District', value: 890, percent: 96 },
-        { name: 'Salem District', value: 712, percent: 88 },
-        { name: 'Coimbatore District', value: 640, percent: 80 },
-        { name: 'Madurai District', value: 584, percent: 74 },
-        { name: 'Tiruchirappalli District', value: 512, percent: 66 }
-      ];
-    }
-    if (stateName === 'Karnataka') {
-      return [
-        { name: 'Bengaluru Urban', value: 920, percent: 98 },
-        { name: 'Mysuru', value: 750, percent: 85 },
-        { name: 'Belagavi', value: 660, percent: 76 },
-        { name: 'Mangaluru', value: 590, percent: 70 },
-        { name: 'Hubballi-Dharwad', value: 520, percent: 62 }
-      ];
-    }
-    if (stateName === 'Maharashtra') {
-      return [
-        { name: 'Mumbai Urban', value: 890, percent: 96 },
-        { name: 'Pune', value: 740, percent: 89 },
-        { name: 'Nagpur', value: 610, percent: 78 },
-        { name: 'Thane', value: 550, percent: 72 },
-        { name: 'Nashik', value: 490, percent: 65 }
-      ];
-    }
-    return [
-      { name: `${stateName} East`, value: 712, percent: 92 },
-      { name: `${stateName} West`, value: 620, percent: 80 },
-      { name: `${stateName} North`, value: 584, percent: 76 },
-      { name: `${stateName} South`, value: 512, percent: 68 },
-      { name: `${stateName} Central`, value: 486, percent: 64 }
-    ];
-  }, [stateName, territoryFilter]);
-
-  // Dynamic Top Performing Managers matching manager's jurisdiction
-  
-  const allActivitiesList = [
-    {
-      id: 1,
-      category: 'vendor',
-      title: 'New vendor request received',
-      sub: `Sri Foods - ${districtName || territoryList[0]?.name || stateName}`,
-      time: '10:24 AM Today',
-      icon: UserPlus,
-      bg: '#e0f2fe',
-      color: '#0284c7',
-      tag: 'Vendor Request'
-    },
-    {
-      id: 2,
-      category: 'kyc',
-      title: 'Physical KYC verification approved',
-      sub: `ABC Traders - ${territoryList[1]?.name || stateName}`,
-      time: '09:18 AM Today',
-      icon: CheckCircle,
-      bg: '#dcfce7',
-      color: '#16a34a',
-      tag: 'KYC Verified'
-    },
-    {
-      id: 3,
-      category: 'tieup',
-      title: 'New merchant tie-up created',
-      sub: `Fresh Mart - ${territoryList[2]?.name || stateName}`,
-      time: '12:30 PM Today',
-      icon: Handshake,
-      bg: '#fef3c7',
-      color: '#d97706',
-      tag: 'Tie-up Active'
-    },
-    {
-      id: 4,
-      category: 'escalation',
-      title: 'Issue escalated: Payout delay inquiry',
-      sub: `Payment review - ${territoryList[3]?.name || stateName}`,
-      time: '02:00 PM Today',
-      icon: AlertTriangle,
-      bg: '#fee2e2',
-      color: '#dc2626',
-      tag: 'Escalation'
-    },
-    {
-      id: 5,
-      category: 'report',
-      title: 'Manager territory report submitted',
-      sub: `Division Operations - ${divisionName || 'Krishnagiri Division'}`,
-      time: '04:30 PM Today',
-      icon: FileText,
-      bg: '#ede9fe',
-      color: '#7c3aed',
-      tag: 'Field Report'
-    },
-    {
-      id: 6,
-      category: 'vendor',
-      title: 'Shop visit & QR standee installed',
-      sub: `Anand Sweets - ${districtName || 'Salem'}`,
-      time: 'Yesterday 05:15 PM',
-      icon: Store,
-      bg: '#e0f2fe',
-      color: '#0284c7',
-      tag: 'Shop Visit'
-    },
-    {
-      id: 7,
-      category: 'kyc',
-      title: 'GSTIN verification audited',
-      sub: `Karthik Hardware - ${territoryList[0]?.name || stateName}`,
-      time: 'Yesterday 02:40 PM',
-      icon: CheckCircle,
-      bg: '#dcfce7',
-      color: '#16a34a',
-      tag: 'Compliance'
-    },
-    {
-      id: 8,
-      category: 'tieup',
-      title: 'Commercial agreement renewal signed',
-      sub: `Royal Supermart - ${districtName || 'Chennai'}`,
-      time: '20 Sep 2026',
-      icon: Handshake,
-      bg: '#fef3c7',
-      color: '#d97706',
-      tag: 'Agreement Renewal'
-    }
-  ];
+      return {
+        id: act._id || act.id || idx + 1,
+        category,
+        title: action,
+        sub: act.details || act.description || act.entity || 'Audit record',
+        time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent',
+        icon,
+        bg,
+        color,
+        tag: action
+      };
+    });
+  }, [dashboardData]);
 
   const filteredActivities = allActivitiesList.filter(act => {
     if (activityFilter !== 'all' && act.category !== activityFilter) return false;
     return true;
   });
 
+  // Dynamic Top Performing Managers from live database leaderboard
   const topManagers = React.useMemo(() => {
-    if (stateName === 'Karnataka') {
-      return [
-        { id: 1, name: 'Priya Rao', level: 'District', territory: 'Bengaluru Urban', vendors: 312, tieups: 94, status: 'Excellent', statusClass: 'excellent', avatarBg: '#0284c7' },
-        { id: 2, name: 'Vikram Kumar', level: 'Division', territory: 'Bengaluru South', vendors: 245, tieups: 78, status: 'Excellent', statusClass: 'excellent', avatarBg: '#8b5cf6' },
-        { id: 3, name: 'Ananya Desai', level: 'Pincode', territory: '560034 Koramangala', vendors: 198, tieups: 64, status: 'Good', statusClass: 'good', avatarBg: '#0d9488' },
-        { id: 4, name: 'Ramesh Sen', level: 'District', territory: 'Bengaluru Urban', vendors: 160, tieups: 52, status: 'Good', statusClass: 'good', avatarBg: '#ea580c' },
-        { id: 5, name: 'Arjun Somnath', level: 'District', territory: 'Mysuru', vendors: 142, tieups: 48, status: 'Average', statusClass: 'average', avatarBg: '#d97706' }
-      ];
-    }
-    if (stateName === 'Maharashtra') {
-      return [
-        { id: 1, name: 'Devendra Patil', level: 'State', territory: 'Maharashtra', vendors: 410, tieups: 110, status: 'Excellent', statusClass: 'excellent', avatarBg: '#0284c7' },
-        { id: 2, name: 'Aarav Mehta', level: 'District', territory: 'Mumbai Urban', vendors: 290, tieups: 85, status: 'Excellent', statusClass: 'excellent', avatarBg: '#8b5cf6' },
-        { id: 3, name: 'Siddharth Pawar', level: 'Division', territory: 'Pune Central', vendors: 210, tieups: 68, status: 'Good', statusClass: 'good', avatarBg: '#0d9488' },
-        { id: 4, name: 'Neha Kulkarni', level: 'Pincode', territory: '400001', vendors: 175, tieups: 55, status: 'Good', statusClass: 'good', avatarBg: '#ea580c' },
-        { id: 5, name: 'Rajesh Shinde', level: 'District', territory: 'Thane', vendors: 130, tieups: 40, status: 'Average', statusClass: 'average', avatarBg: '#d97706' }
-      ];
-    }
-    return [
-      { id: 1, name: 'S. Aravind', level: 'District', territory: `${stateName} Central`, vendors: 245, tieups: 78, status: 'Excellent', statusClass: 'excellent', avatarBg: '#0284c7' },
-      { id: 2, name: 'M. Priya', level: 'Division', territory: `${stateName} Division A`, vendors: 198, tieups: 64, status: 'Good', statusClass: 'good', avatarBg: '#8b5cf6' },
-      { id: 3, name: 'K. Dinesh', level: 'Pincode', territory: `${stateName} Division B`, vendors: 160, tieups: 52, status: 'Good', statusClass: 'good', avatarBg: '#0d9488' },
-      { id: 4, name: 'R. Kavitha', level: 'District', territory: `${stateName} North`, vendors: 312, tieups: 94, status: 'Excellent', statusClass: 'excellent', avatarBg: '#ea580c' },
-      { id: 5, name: 'V. Saravanan', level: 'Pincode', territory: `${stateName} Division C`, vendors: 142, tieups: 48, status: 'Average', statusClass: 'average', avatarBg: '#d97706' }
-    ];
-  }, [stateName]);
+    return leaderboardList.slice(0, 5).map(m => ({
+      id: m.rank || m.id,
+      name: m.name,
+      level: m.roleLabel || m.level,
+      territory: m.territory,
+      vendors: m.vendorsOnboarded || 0,
+      tieups: m.activeVendors || 0,
+      status: m.rating || 'Active',
+      statusClass: (m.rating || 'steady').toLowerCase(),
+      avatarBg: m.avatarBg || '#0284c7'
+    }));
+  }, [leaderboardList]);
 
   return (
     <div>
@@ -794,7 +646,12 @@ const Dashboard = ({ onNavigate }) => {
               <BarChart2 size={16} style={{ color: 'var(--forge-gold)' }} />
               Territory Performance
             </div>
-            <select aria-label="Filter territory performance" className="analytics-select" defaultValue="dist">
+            <select 
+              aria-label="Filter territory performance" 
+              className="analytics-select" 
+              value={territoryFilter}
+              onChange={(e) => setTerritoryFilter(e.target.value)}
+            >
               <option value="dist">Districts</option>
               <option value="div">Divisions</option>
               <option value="pin">Pincodes</option>
@@ -802,18 +659,24 @@ const Dashboard = ({ onNavigate }) => {
           </div>
 
           <div className="territory-bars-list">
-            {territoryList.map((item) => (
-              <div key={item.name} className="territory-bar-item">
-                <span className="territory-name" title={item.name}>{item.name}</span>
-                <div className="territory-progress-track">
-                  <div 
-                    className="territory-progress-fill" 
-                    style={{ width: `${item.percent}%` }}
-                  />
+            {territoryList.length > 0 ? (
+              territoryList.map((item) => (
+                <div key={item.name} className="territory-bar-item">
+                  <span className="territory-name" title={item.name}>{item.name}</span>
+                  <div className="territory-progress-track">
+                    <div 
+                      className="territory-progress-fill" 
+                      style={{ width: `${item.percent}%` }}
+                    />
+                  </div>
+                  <span className="territory-val">{item.value}</span>
                 </div>
-                <span className="territory-val">{item.value}</span>
+              ))
+            ) : (
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                No territory data recorded yet
               </div>
-            ))}
+            )}
           </div>
         </div>
 
@@ -834,60 +697,27 @@ const Dashboard = ({ onNavigate }) => {
           </div>
 
           <div className="activities-timeline">
-            <div className="activity-item">
-              <div className="activity-icon-node" style={{ background: '#e0f2fe', color: '#0284c7' }}>
-                <UserPlus size={14} />
+            {allActivitiesList.length > 0 ? (
+              allActivitiesList.slice(0, 5).map((act) => {
+                const IconComponent = act.icon;
+                return (
+                  <div key={act.id} className="activity-item">
+                    <div className="activity-icon-node" style={{ background: act.bg, color: act.color }}>
+                      <IconComponent size={14} />
+                    </div>
+                    <div className="activity-text-content">
+                      <div className="activity-title">{act.title}</div>
+                      <div className="activity-sub">{act.sub}</div>
+                    </div>
+                    <span className="activity-time">{act.time}</span>
+                  </div>
+                );
+              })
+            ) : (
+              <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
+                No recent activities recorded
               </div>
-              <div className="activity-text-content">
-                <div className="activity-title">New vendor request received</div>
-                <div className="activity-sub">Sri Foods - {districtName || territoryList[0]?.name || stateName}</div>
-              </div>
-              <span className="activity-time">10:24 AM</span>
-            </div>
-
-            <div className="activity-item">
-              <div className="activity-icon-node" style={{ background: '#dcfce7', color: '#16a34a' }}>
-                <CheckCircle size={14} />
-              </div>
-              <div className="activity-text-content">
-                <div className="activity-title">KYC approved</div>
-                <div className="activity-sub">ABC Traders - {territoryList[1]?.name || stateName}</div>
-              </div>
-              <span className="activity-time">09:18 AM</span>
-            </div>
-
-            <div className="activity-item">
-              <div className="activity-icon-node" style={{ background: '#fef3c7', color: '#d97706' }}>
-                <Handshake size={14} />
-              </div>
-              <div className="activity-text-content">
-                <div className="activity-title">New tie-up created</div>
-                <div className="activity-sub">Fresh Mart - {territoryList[2]?.name || stateName}</div>
-              </div>
-              <span className="activity-time">12:30 PM</span>
-            </div>
-
-            <div className="activity-item">
-              <div className="activity-icon-node" style={{ background: '#fee2e2', color: '#dc2626' }}>
-                <AlertTriangle size={14} />
-              </div>
-              <div className="activity-text-content">
-                <div className="activity-title">Issue escalated</div>
-                <div className="activity-sub">Payment delay - {territoryList[3]?.name || stateName}</div>
-              </div>
-              <span className="activity-time">02:00 PM</span>
-            </div>
-
-            <div className="activity-item">
-              <div className="activity-icon-node" style={{ background: '#ede9fe', color: '#7c3aed' }}>
-                <FileText size={14} />
-              </div>
-              <div className="activity-text-content">
-                <div className="activity-title">Manager report submitted</div>
-                <div className="activity-sub">Division A - Krishnagiri</div>
-              </div>
-              <span className="activity-time">04:30 PM</span>
-            </div>
+            )}
           </div>
         </div>
       </div>
@@ -924,26 +754,34 @@ const Dashboard = ({ onNavigate }) => {
                 </tr>
               </thead>
               <tbody>
-                {topManagers.map((m) => (
-                  <tr key={m.id}>
-                    <td style={{ color: '#94a3b8', fontWeight: 600 }}>{m.id}</td>
-                    <td>
-                      <span className="manager-avatar-mini" style={{ background: m.avatarBg, color: 'white' }}>
-                        {m.name.slice(0, 1)}
-                      </span>
-                      <strong>{m.name}</strong>
-                    </td>
-                    <td>{m.level}</td>
-                    <td>{m.territory}</td>
-                    <td><strong>{m.vendors}</strong></td>
-                    <td>{m.tieups}</td>
-                    <td>
-                      <span className={`perf-badge ${m.statusClass}`}>
-                        ● {m.status}
-                      </span>
+                {topManagers.length > 0 ? (
+                  topManagers.map((m) => (
+                    <tr key={m.id}>
+                      <td style={{ color: '#94a3b8', fontWeight: 600 }}>{m.id}</td>
+                      <td>
+                        <span className="manager-avatar-mini" style={{ background: m.avatarBg, color: 'white' }}>
+                          {(m.name || 'M').slice(0, 1)}
+                        </span>
+                        <strong>{m.name}</strong>
+                      </td>
+                      <td>{m.level}</td>
+                      <td>{m.territory}</td>
+                      <td><strong>{m.vendors}</strong></td>
+                      <td>{m.tieups}</td>
+                      <td>
+                        <span className={`perf-badge ${m.statusClass}`}>
+                          ● {m.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="7" style={{ textAlign: 'center', padding: '24px', color: 'var(--text-muted)' }}>
+                      No manager rankings recorded yet
                     </td>
                   </tr>
-                ))}
+                )}
               </tbody>
             </table>
           </div>

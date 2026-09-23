@@ -220,8 +220,8 @@ const getDashboardStats = async (req, res) => {
       activeShops: statusCounts.active,
       inactiveShops: statusCounts.inactive + statusCounts.rejected,
       totalTieups: statusCounts.active,
-      todayTieups: todayTieups > 0 ? todayTieups : Math.min(statusCounts.active, 1),
-      weekTieups: weekTieups > 0 ? weekTieups : Math.min(statusCounts.active, 3),
+      todayTieups: todayTieups,
+      weekTieups: weekTieups,
       verifiedVendors: statusCounts.active,
       openIssues: statusCounts.pending + statusCounts.underReview + (statusCounts.rejected > 0 ? 1 : 0),
       kycPending: statusCounts.pending + statusCounts.underReview,
@@ -234,12 +234,20 @@ const getDashboardStats = async (req, res) => {
       .slice(0, 5);
 
     const issueCounts = {
-      total: 5,
-      open: 1,
-      inProgress: 2,
-      escalated: 1,
-      resolved: 1
+      total: 0,
+      open: 0,
+      inProgress: 0,
+      escalated: 0,
+      resolved: 0
     };
+
+    // Recent activities from auditLogs
+    const allLogs = await db.auditLogs.find();
+    const scopedVendorIds = new Set(vendors.map(v => v._id));
+    const recentActivities = allLogs
+      .filter(log => scopedVendorIds.has(log.recordId) || log.userId === user.id)
+      .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))
+      .slice(0, 10);
 
     res.json({
       success: true,
@@ -249,7 +257,8 @@ const getDashboardStats = async (req, res) => {
       categoryCounts,
       kpiMetrics,
       roleSpecificData,
-      recentVendors
+      recentVendors,
+      recentActivities
     });
   } catch (err) {
     console.error('Dashboard stats error:', err);

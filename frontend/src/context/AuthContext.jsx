@@ -18,31 +18,7 @@ export const DEMO_ACCOUNTS = [
     label: 'State Mgr 1 (KA)',
     email: 'state.mgr1@example.com',
     password: 'Password@123',
-    scopeName: 'Karnataka (4 Mgrs)'
-  },
-  {
-    key: 'state_mgr2',
-    role: 'state_manager',
-    label: 'State Mgr 2 (KA)',
-    email: 'state.mgr2@example.com',
-    password: 'Password@123',
-    scopeName: 'Karnataka (4 Mgrs)'
-  },
-  {
-    key: 'state_mgr3',
-    role: 'state_manager',
-    label: 'State Mgr 3 (KA)',
-    email: 'state.mgr3@example.com',
-    password: 'Password@123',
-    scopeName: 'Karnataka (4 Mgrs)'
-  },
-  {
-    key: 'state_mgr4',
-    role: 'state_manager',
-    label: 'State Mgr 4 (KA)',
-    email: 'state.mgr4@example.com',
-    password: 'Password@123',
-    scopeName: 'Karnataka (4 Mgrs)'
+    scopeName: 'Karnataka'
   },
   {
     key: 'dist_mgr1',
@@ -50,15 +26,7 @@ export const DEMO_ACCOUNTS = [
     label: 'District Mgr 1 (Blr Urban)',
     email: 'dist.mgr1@example.com',
     password: 'Password@123',
-    scopeName: 'Bengaluru Urban (2 Mgrs)'
-  },
-  {
-    key: 'dist_mgr2',
-    role: 'district_manager',
-    label: 'District Mgr 2 (Blr Urban)',
-    email: 'dist.mgr2@example.com',
-    password: 'Password@123',
-    scopeName: 'Bengaluru Urban (2 Mgrs)'
+    scopeName: 'Bengaluru Urban'
   },
   {
     key: 'div_mgr1',
@@ -66,15 +34,7 @@ export const DEMO_ACCOUNTS = [
     label: 'Division Mgr 1 (Blr South)',
     email: 'div.mgr1@example.com',
     password: 'Password@123',
-    scopeName: 'Bengaluru South (2 Mgrs)'
-  },
-  {
-    key: 'div_mgr2',
-    role: 'division_manager',
-    label: 'Division Mgr 2 (Blr South)',
-    email: 'div.mgr2@example.com',
-    password: 'Password@123',
-    scopeName: 'Bengaluru South (2 Mgrs)'
+    scopeName: 'Bengaluru South'
   },
   {
     key: 'pin_mgr1',
@@ -82,15 +42,7 @@ export const DEMO_ACCOUNTS = [
     label: 'Pincode Mgr 1 (560034)',
     email: 'pin.mgr1@example.com',
     password: 'Password@123',
-    scopeName: 'PIN 560034 (2 Mgrs)'
-  },
-  {
-    key: 'pin_mgr2',
-    role: 'pincode_manager',
-    label: 'Pincode Mgr 2 (560034)',
-    email: 'pin.mgr2@example.com',
-    password: 'Password@123',
-    scopeName: 'PIN 560034 (2 Mgrs)'
+    scopeName: 'PIN 560034'
   }
 ];
 
