@@ -8,6 +8,24 @@ const Navbar = ({ onNavigate }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const esRef = useRef(null);
+  const profileDropdownRef = useRef(null);
+
+  // Close dropdown on outside touch or click anywhere on screen
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (profileDropdownRef.current && !profileDropdownRef.current.contains(e.target)) {
+        setDropdownOpen(false);
+      }
+    };
+    if (dropdownOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
+      document.addEventListener('touchstart', handleOutsideClick);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleOutsideClick);
+      document.removeEventListener('touchstart', handleOutsideClick);
+    };
+  }, [dropdownOpen]);
 
   // Sync unread notification count & subscribe to real-time SSE
   useEffect(() => {
@@ -125,7 +143,7 @@ const Navbar = ({ onNavigate }) => {
         </button>
 
         {/* Manager User Profile Capsule */}
-        <div style={{ position: 'relative' }}>
+        <div ref={profileDropdownRef} style={{ position: 'relative' }}>
           <div 
             className="user-profile-btn"
             onClick={() => {

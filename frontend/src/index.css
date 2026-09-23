@@ -1,4 +1,4 @@
-﻿/* ----------------------------------------------------
+/* ----------------------------------------------------
    FORGE INDIA CONNECT - AGENT MANAGER PORTAL DESIGN SYSTEM
    Pixel-Accurate Match to Reference UI
    Soft Slate Background (#f0f5fa), Crisp White Cards,
@@ -152,7 +152,7 @@ button, input, select, textarea {
   padding: 12px 10px;
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 6px;
   flex: 1;
   overflow-y: auto;
 }
@@ -161,8 +161,8 @@ button, input, select, textarea {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 8px 12px;
-  border-radius: var(--radius-sm);
+  padding: 9px 12px;
+  border-radius: 8px;
   color: #475569;
   font-size: 0.84rem;
   font-weight: 600;
@@ -675,8 +675,8 @@ button, input, select, textarea {
 .middle-analytics-grid {
   display: grid;
   grid-template-columns: 1.25fr 1fr 1fr;
-  gap: 12px;
-  margin-bottom: 12px;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 @media (max-width: 1200px) {

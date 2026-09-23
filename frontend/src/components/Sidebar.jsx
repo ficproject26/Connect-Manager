@@ -143,28 +143,6 @@ const Sidebar = ({ currentPage, onNavigate }) => {
           </div>
         </div>
       </nav>
-
-      {/* 3. Bottom Illustrated Footer Card */}
-      <div className="sidebar-footer-card">
-        <img 
-          src="/assets/sidebar_footer.jpg" 
-          alt="Stronger Communities" 
-          className="sidebar-footer-img"
-          onError={(e) => {
-            e.target.style.display = 'none';
-          }}
-        />
-        <div className="sidebar-footer-overlay">
-          <div className="sidebar-footer-title">
-            Stronger Businesses <br />
-            Brighter Communities
-          </div>
-          <div className="sidebar-footer-meta">
-            Forge India Connect <br />
-            Manager Portal v1.0.0
-          </div>
-        </div>
-      </div>
     </aside>
   );
 };

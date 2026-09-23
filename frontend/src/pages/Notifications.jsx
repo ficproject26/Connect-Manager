@@ -142,7 +142,7 @@ const Notifications = ({ onNavigate }) => {
   };
 
   return (
-    <div>
+    <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
         <div>
@@ -188,7 +188,7 @@ const Notifications = ({ onNavigate }) => {
       </div>
 
       {/* Filter Tabs & Search */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px', maxWidth: '850px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px', width: '100%', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '8px' }}>
           {[
             { id: 'all', label: 'All' },
@@ -236,17 +236,42 @@ const Notifications = ({ onNavigate }) => {
       </div>
 
       {/* List */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '850px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', flex: 1 }}>
         {loading && notifications.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+          <div style={{ padding: '60px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
             Loading live notifications...
           </div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: '40px', textAlign: 'center', background: 'white', borderRadius: '12px', border: '1px solid var(--border-normal)' }}>
-            <Bell size={32} style={{ color: '#cbd5e1', marginBottom: '8px' }} />
-            <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#475569' }}>No notifications found</div>
-            <div style={{ fontSize: '0.78rem', color: '#94a3b8', marginTop: '4px' }}>
-              Real-time alerts for vendor onboarding and tasks will appear here as they occur.
+          <div style={{
+            padding: '70px 24px',
+            minHeight: '380px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'white',
+            borderRadius: '14px',
+            border: '1px solid var(--border-normal)',
+            boxShadow: 'var(--shadow-card)',
+            width: '100%',
+            textAlign: 'center'
+          }}>
+            <div style={{
+              width: '64px',
+              height: '64px',
+              borderRadius: '50%',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '14px'
+            }}>
+              <Bell size={28} style={{ color: '#94a3b8' }} />
+            </div>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#334155' }}>No notifications found</div>
+            <div style={{ fontSize: '0.84rem', color: '#94a3b8', marginTop: '6px', maxWidth: '440px', lineHeight: 1.5 }}>
+              Real-time alerts for vendor onboarding, compliance status updates, and field task assignments will appear here as they occur.
             </div>
           </div>
         ) : (
