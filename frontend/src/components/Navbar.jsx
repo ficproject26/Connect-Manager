@@ -1,12 +1,58 @@
-import React, { useState } from 'react';
-import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings, Layers } from 'lucide-react';
-import { useAuth, DEMO_ACCOUNTS } from '../context/AuthContext';
+import React, { useState, useEffect, useRef } from 'react';
+import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 const Navbar = ({ onNavigate }) => {
-  const { user, logout, quickSwitchRole } = useAuth();
+  const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
-  const [roleMenuOpen, setRoleMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [unreadCount, setUnreadCount] = useState(0);
+  const esRef = useRef(null);
+
+  // Sync unread notification count & subscribe to real-time SSE
+  useEffect(() => {
+    let isMounted = true;
+    const token = localStorage.getItem('agent_mgr_token') || '';
+
+    async function fetchCount() {
+      try {
+        const res = await fetch('/api/notifications/unread-count', {
+          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        });
+        const data = await res.json();
+        if (data.success && isMounted) {
+          setUnreadCount(data.unreadCount || 0);
+        }
+      } catch (e) {
+        // ignore network error
+      }
+    }
+
+    fetchCount();
+
+    try {
+      const sseUrl = `/api/notifications/stream?token=${encodeURIComponent(token)}`;
+      const es = new EventSource(sseUrl);
+      esRef.current = es;
+
+      es.onmessage = (event) => {
+        try {
+          const parsed = JSON.parse(event.data);
+          if (parsed.type === 'notification') {
+            setUnreadCount(prev => prev + 1);
+          }
+        } catch (e) {}
+      };
+    } catch (err) {}
+
+    const interval = setInterval(fetchCount, 25000);
+
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+      if (esRef.current) esRef.current.close();
+    };
+  }, [user]);
 
   const getRoleDisplayName = (role) => {
     switch (role) {
@@ -28,7 +74,7 @@ const Navbar = ({ onNavigate }) => {
         <Search size={16} className="nav-search-icon" />
         <input
           type="text"
-          placeholder="Search managers, vendors, shops, pincodes, issues..."
+          placeholder="Search managers, vendors, shops, pincodes, tasks..."
           className="nav-search-input"
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -42,94 +88,37 @@ const Navbar = ({ onNavigate }) => {
 
       {/* 2. Top Nav Actions */}
       <div className="top-nav-actions">
-        {/* Quick Demo Role Switcher Dropdown (Unobtrusive in Top Bar) */}
-        <div style={{ position: 'relative' }}>
-          <button
-            className="nav-icon-btn"
-            style={{ 
-              width: 'auto', 
-              padding: '0 10px', 
-              gap: '6px', 
-              fontSize: '0.72rem', 
-              fontWeight: 700, 
-              color: '#854d0e', 
-              background: '#fef3c7', 
-              borderColor: '#fde68a' 
-            }}
-            onClick={() => {
-              setRoleMenuOpen(!roleMenuOpen);
-              setDropdownOpen(false);
-            }}
-            title="Switch Manager Jurisdiction"
-          >
-            <Layers size={13} style={{ color: '#b45309' }} />
-            <span>Switch Role</span>
-            <ChevronDown size={12} />
-          </button>
-
-          {roleMenuOpen && (
-            <div style={{
-              position: 'absolute',
-              right: 0,
-              top: '115%',
-              width: '240px',
-              background: 'white',
-              borderRadius: 'var(--radius-md)',
-              border: '1px solid var(--border-normal)',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.15)',
-              padding: '8px',
-              zIndex: 50,
-              maxHeight: '300px',
-              overflowY: 'auto'
-            }}>
-              <div style={{ fontSize: '0.68rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase', padding: '4px 8px' }}>
-                Select Jurisdiction Tier
-              </div>
-              {DEMO_ACCOUNTS.map((acc) => {
-                const isActive = user?.email === acc.email;
-                return (
-                  <div
-                    key={acc.key}
-                    onClick={() => {
-                      quickSwitchRole(acc.key);
-                      setRoleMenuOpen(false);
-                    }}
-                    style={{
-                      padding: '6px 8px',
-                      borderRadius: 'var(--radius-xs)',
-                      fontSize: '0.75rem',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      background: isActive ? '#fef08a' : 'transparent',
-                      color: isActive ? '#854d0e' : '#334155',
-                      fontWeight: isActive ? 700 : 500
-                    }}
-                  >
-                    <span>{acc.label}</span>
-                    {isActive && <span style={{ fontSize: '0.65rem', color: '#15803d' }}>● Current</span>}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Notification Bell with Badge 3 */}
+        {/* Notification Bell with Dynamic Badge */}
         <button
           className="nav-icon-btn"
           title="Notifications"
-          onClick={() => onNavigate && onNavigate('notifications')}
+          onClick={() => {
+            if (onNavigate) {
+              onNavigate('notifications');
+            }
+          }}
+          style={{ position: 'relative' }}
         >
           <Bell size={17} />
-          <span className="nav-notification-badge">3</span>
+          {unreadCount > 0 && (
+            <span
+              className="nav-notification-badge"
+              style={{
+                background: '#ef4444',
+                color: 'white',
+                fontWeight: 800,
+                fontSize: '10px'
+              }}
+            >
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          )}
         </button>
 
         {/* Help Circle */}
         <button
           className="nav-icon-btn"
-          title="Help & Support"
+          title="Help and Support"
           onClick={() => alert('Forge India Connect Support Desk: support@forgeindiaconnect.in')}
         >
           <HelpCircle size={17} />
@@ -141,7 +130,6 @@ const Navbar = ({ onNavigate }) => {
             className="user-profile-btn"
             onClick={() => {
               setDropdownOpen(!dropdownOpen);
-              setRoleMenuOpen(false);
             }}
           >
             <div className="user-avatar-circle">

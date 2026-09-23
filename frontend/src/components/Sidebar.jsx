@@ -1,29 +1,20 @@
-import React, { useState } from 'react';
+﻿import React from 'react';
 import { 
   Home, 
-  Users, 
-  BarChart2, 
+  Users,
   UserCheck, 
-  UserPlus,
+  BarChart2, 
   Store, 
-  ShoppingBag, 
-  AlertTriangle, 
-  TrendingUp, 
+  CheckSquare, 
   Trophy,
   Bell, 
   User, 
-  Settings, 
-  ChevronRight, 
-  ChevronDown 
+  Settings 
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const Sidebar = ({ currentPage, onNavigate }) => {
   const { user } = useAuth();
-  const [mgmtOpen, setMgmtOpen] = useState(false);
-  const [reportsOpen, setReportsOpen] = useState(false);
-
-  const isStateOrDistrict = user?.role === 'state_manager' || user?.role === 'district_manager' || user?.role === 'division_manager';
 
   return (
     <aside className="sidebar">
@@ -51,7 +42,6 @@ const Sidebar = ({ currentPage, onNavigate }) => {
             <span>Dashboard</span>
           </div>
         </div>
-
         {/* Managers Directory (Dedicated Separate Tab) */}
         <div 
           className={`sidebar-link ${currentPage === 'field-managers' ? 'active' : ''}`}
@@ -63,59 +53,18 @@ const Sidebar = ({ currentPage, onNavigate }) => {
           </div>
         </div>
 
-        {/* Reports > (Collapsible) */}
-        <div>
-          <div 
-            className="sidebar-link"
-            onClick={() => setReportsOpen(!reportsOpen)}
-          >
-            <div className="sidebar-link-left">
-              <BarChart2 size={17} className="sidebar-link-icon" />
-              <span>Reports</span>
-            </div>
-            {reportsOpen ? <ChevronDown size={14} className="sidebar-chevron" /> : <ChevronRight size={14} className="sidebar-chevron" />}
-          </div>
-          {reportsOpen && (
-            <div className="sidebar-subnav">
-              <div 
-                className={`sidebar-sublink ${currentPage === 'reports' ? 'active' : ''}`}
-                onClick={() => onNavigate('reports')}
-              >
-                Territory Analytics
-              </div>
-              <div 
-                className={`sidebar-sublink ${currentPage === 'audit-logs' ? 'active' : ''}`}
-                onClick={() => onNavigate('audit-logs')}
-              >
-                Audit Compliance
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Onboard Vendor */}
+        {/* Agents Directory */}
         <div 
-          className={`sidebar-link ${currentPage === 'add-vendor' ? 'active' : ''}`}
-          onClick={() => onNavigate('add-vendor')}
-        >
-          <div className="sidebar-link-left">
-            <UserPlus size={17} className="sidebar-link-icon" />
-            <span>Onboard Vendor</span>
-          </div>
-        </div>
-
-        {/* Vendor Requests */}
-        <div 
-          className={`sidebar-link ${currentPage === 'vendor-requests' ? 'active' : ''}`}
-          onClick={() => onNavigate('vendor-requests')}
+          className={`sidebar-link ${currentPage === 'agents-directory' || currentPage === 'agent-directory' ? 'active' : ''}`}
+          onClick={() => onNavigate('agents-directory')}
         >
           <div className="sidebar-link-left">
             <UserCheck size={17} className="sidebar-link-icon" />
-            <span>Vendor Requests</span>
+            <span>Agents Directory</span>
           </div>
         </div>
 
-        {/* Vendors */}
+        {/* Vendors Directory */}
         <div 
           className={`sidebar-link ${currentPage === 'vendors' ? 'active' : ''}`}
           onClick={() => onNavigate('vendors')}
@@ -126,25 +75,27 @@ const Sidebar = ({ currentPage, onNavigate }) => {
           </div>
         </div>
 
-        {/* Issues */}
+        {/* Reports (Single Module) */}
         <div 
-          className={`sidebar-link ${currentPage === 'issues' ? 'active' : ''}`}
-          onClick={() => onNavigate('issues')}
+          className={`sidebar-link ${currentPage === 'reports' ? 'active' : ''}`}
+          onClick={() => onNavigate('reports')}
         >
           <div className="sidebar-link-left">
-            <AlertTriangle size={17} className="sidebar-link-icon" />
-            <span>Issues</span>
+            <BarChart2 size={17} className="sidebar-link-icon" />
+            <span>Reports</span>
           </div>
         </div>
 
-        {/* Performance */}
+
+
+        {/* Tasks */}
         <div 
-          className={`sidebar-link ${currentPage === 'performance' ? 'active' : ''}`}
-          onClick={() => onNavigate('performance')}
+          className={`sidebar-link ${currentPage === 'tasks' || currentPage === 'issues' ? 'active' : ''}`}
+          onClick={() => onNavigate('tasks')}
         >
           <div className="sidebar-link-left">
-            <TrendingUp size={17} className="sidebar-link-icon" />
-            <span>Performance</span>
+            <CheckSquare size={17} className="sidebar-link-icon" />
+            <span>Tasks</span>
           </div>
         </div>
 

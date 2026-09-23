@@ -1,4 +1,4 @@
-const API_BASE = '/api';
+﻿const API_BASE = '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('agent_mgr_token');
@@ -231,6 +231,35 @@ export const reportService = {
   async getVendorReportData() {
     const res = await fetch(`${API_BASE}/reports/vendors`, { headers: getAuthHeaders() });
     return handleResponse(res);
+  },
+
+  async submitReport(data) {
+    const res = await fetch(`${API_BASE}/reports/submit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  async getSubmittedReports(params = {}) {
+    const query = new URLSearchParams();
+    Object.entries(params).forEach(([k, v]) => {
+      if (v !== undefined && v !== null && v !== '') {
+        query.append(k, v);
+      }
+    });
+    const res = await fetch(`${API_BASE}/reports/submitted?${query.toString()}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async getSubmittedReportById(id) {
+    const res = await fetch(`${API_BASE}/reports/submitted/${id}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
   }
 };
 
@@ -255,6 +284,96 @@ export const uploadService = {
       headers,
       body: formData
     });
+    return handleResponse(res);
+  }
+};
+
+export const shopVisitService = {
+  async createShopVisit(visitData) {
+    const res = await fetch(`${API_BASE}/shop-visits`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(visitData)
+    });
+    return handleResponse(res);
+  },
+
+  async getShopVisits(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(k => {
+      if (params[k] !== undefined && params[k] !== null && params[k] !== '' && params[k] !== 'undefined' && params[k] !== 'null') {
+        cleanParams[k] = params[k];
+      }
+    });
+    const query = new URLSearchParams(cleanParams);
+    const queryString = query.toString();
+    const url = queryString ? `${API_BASE}/shop-visits?${queryString}` : `${API_BASE}/shop-visits`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    return handleResponse(res);
+  },
+
+  async updateShopVisit(id, updateData) {
+    const res = await fetch(`${API_BASE}/shop-visits/${id}`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(updateData)
+    });
+    return handleResponse(res);
+  }
+};
+
+export const taskService = {
+  async getTasks(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(k => {
+      if (params[k] !== undefined && params[k] !== null && params[k] !== '' && params[k] !== 'All') {
+        cleanParams[k] = params[k];
+      }
+    });
+    const query = new URLSearchParams(cleanParams);
+    const queryString = query.toString();
+    const url = queryString ? `${API_BASE}/qc-tasks/tasks?${queryString}` : `${API_BASE}/qc-tasks/tasks`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    return handleResponse(res);
+  },
+
+  async updateTaskStatus(id, action, data = {}) {
+    const res = await fetch(`${API_BASE}/qc-tasks/tasks/${id}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ action, ...data })
+    });
+    return handleResponse(res);
+  },
+
+  async submitSuspendRequest(id, data = {}) {
+    const res = await fetch(`${API_BASE}/qc-tasks/tasks/${id}/suspend`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  }
+};
+
+
+export const agentService = {
+  async getAgents(params = {}) {
+    const cleanParams = {};
+    Object.keys(params).forEach(k => {
+      if (params[k] !== undefined && params[k] !== null && params[k] !== '' && params[k] !== 'All') {
+        cleanParams[k] = params[k];
+      }
+    });
+    const query = new URLSearchParams(cleanParams);
+    const queryString = query.toString();
+    const url = queryString ? `${API_BASE}/operations/agents?${queryString}` : `${API_BASE}/operations/agents`;
+    const res = await fetch(url, { headers: getAuthHeaders() });
+    return handleResponse(res);
+  },
+
+  async getAgentHierarchy() {
+    const res = await fetch(`${API_BASE}/operations/agents/hierarchy`, { headers: getAuthHeaders() });
     return handleResponse(res);
   }
 };

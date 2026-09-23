@@ -28,6 +28,10 @@ const Dashboard = ({ onNavigate }) => {
   const [hoveredIssue, setHoveredIssue] = useState(null);
   const [dashboardData, setDashboardData] = useState(null);
   const [loadingStats, setLoadingStats] = useState(true);
+  const [trendPeriod, setTrendPeriod] = useState('3m'); // '3m' | '6m' | '1y'
+  const [territoryFilter, setTerritoryFilter] = useState('pin'); // 'dist' | 'div' | 'pin'
+  const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
+  const [activityFilter, setActivityFilter] = useState('all');
 
   // Live Stats fetcher
   useEffect(() => {
@@ -128,48 +132,148 @@ const Dashboard = ({ onNavigate }) => {
 
   // Location Scope Variables derived from user session
   const userName = user?.name || 'Manager';
-  const stateName = user?.scope?.stateName || user?.scope?.regionName || 'Karnataka';
+  const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.state || 'Tamil Nadu';
   const districtName = user?.scope?.districtName;
   const divisionName = user?.scope?.divisionName;
   const pincodeCode = user?.scope?.pincodeCode;
+  const isStateManager = (user?.role || '').toLowerCase().includes('state');
 
   // Trend Data for 6 months
-  const trendData = [
-    { month: 'Jan', merchants: 45, tieUps: 320, barH: 52, dotY: 104 },
-    { month: 'Feb', merchants: 52, tieUps: 450, barH: 62, dotY: 88 },
-    { month: 'Mar', merchants: 64, tieUps: 580, barH: 76, dotY: 72 },
-    { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
-    { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
-    { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
-  ];
+  const trendDataMap = {
+    '3m': [
+      { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
+      { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
+      { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
+    ],
+    '6m': [
+      { month: 'Jan', merchants: 45, tieUps: 320, barH: 52, dotY: 104 },
+      { month: 'Feb', merchants: 52, tieUps: 450, barH: 62, dotY: 88 },
+      { month: 'Mar', merchants: 64, tieUps: 580, barH: 76, dotY: 72 },
+      { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
+      { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
+      { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
+    ],
+    '1y': [
+      { month: 'Jul', merchants: 28, tieUps: 180, barH: 32, dotY: 118 },
+      { month: 'Aug', merchants: 34, tieUps: 220, barH: 38, dotY: 112 },
+      { month: 'Sep', merchants: 38, tieUps: 260, barH: 42, dotY: 108 },
+      { month: 'Oct', merchants: 42, tieUps: 290, barH: 48, dotY: 106 },
+      { month: 'Nov', merchants: 40, tieUps: 310, barH: 46, dotY: 105 },
+      { month: 'Dec', merchants: 44, tieUps: 340, barH: 50, dotY: 102 },
+      { month: 'Jan', merchants: 45, tieUps: 320, barH: 52, dotY: 104 },
+      { month: 'Feb', merchants: 52, tieUps: 450, barH: 62, dotY: 88 },
+      { month: 'Mar', merchants: 64, tieUps: 580, barH: 76, dotY: 72 },
+      { month: 'Apr', merchants: 75, tieUps: 670, barH: 88, dotY: 60 },
+      { month: 'May', merchants: 88, tieUps: 810, barH: 104, dotY: 42 },
+      { month: 'Jun', merchants: 100, tieUps: 940, barH: 118, dotY: 26 }
+    ]
+  };
+  const trendData = trendDataMap[trendPeriod] || trendDataMap['3m'];
+
+  const getTrendCoords = (i, total) => {
+    const startX = 46;
+    const endX = 336;
+    const available = endX - startX;
+    const step = available / total;
+    const barWidth = total <= 3 ? 32 : total <= 6 ? 18 : 12;
+    const barX = startX + i * step + (step - barWidth) / 2;
+    const dotX = barX + barWidth / 2;
+    return { barX, dotX, barWidth };
+  };
 
   // Dynamic Territories based on manager's assigned state & district
   const territoryList = React.useMemo(() => {
-    if (districtName === 'Mysuru') {
+    if (territoryFilter === 'pin') {
+      if (stateName.includes('Tamil') || stateName === 'Tamil Nadu') {
+        return [
+          { name: '636114 (Salem Attur)', value: 712, percent: 92 },
+          { name: '636001 (Salem Fort)', value: 620, percent: 80 },
+          { name: '600001 (Chennai Central)', value: 584, percent: 76 },
+          { name: '641001 (Coimbatore Main)', value: 512, percent: 68 },
+          { name: '625001 (Madurai Town)', value: 486, percent: 64 }
+        ];
+      }
+      if (stateName === 'Karnataka') {
+        return [
+          { name: '560034 (Koramangala)', value: 850, percent: 95 },
+          { name: '560095 (HSR Layout)', value: 712, percent: 88 },
+          { name: '560001 (MG Road)', value: 620, percent: 80 },
+          { name: '570001 (Mysuru Town)', value: 584, percent: 76 },
+          { name: '590001 (Belagavi)', value: 512, percent: 68 }
+        ];
+      }
+      if (stateName === 'Maharashtra') {
+        return [
+          { name: '400001 (Mumbai Fort)', value: 890, percent: 96 },
+          { name: '411001 (Pune Station)', value: 740, percent: 89 },
+          { name: '440001 (Nagpur City)', value: 610, percent: 78 },
+          { name: '400601 (Thane West)', value: 550, percent: 72 },
+          { name: '422001 (Nashik GPO)', value: 490, percent: 65 }
+        ];
+      }
       return [
-        { name: 'Mysuru Urban', value: 712, percent: 92 },
-        { name: 'Devaraja Market', value: 620, percent: 80 },
-        { name: 'Gokulam', value: 584, percent: 76 },
-        { name: 'Vijayanagar', value: 512, percent: 68 },
-        { name: 'Kuwempunagar', value: 486, percent: 64 }
+        { name: 'PIN 636114', value: 712, percent: 92 },
+        { name: 'PIN 636001', value: 620, percent: 80 },
+        { name: 'PIN 600001', value: 584, percent: 76 },
+        { name: 'PIN 641001', value: 512, percent: 68 },
+        { name: 'PIN 625001', value: 486, percent: 64 }
       ];
     }
-    if (districtName === 'Bengaluru Urban') {
+
+    if (territoryFilter === 'div') {
+      if (stateName.includes('Tamil') || stateName === 'Tamil Nadu') {
+        return [
+          { name: 'Salem Division', value: 820, percent: 94 },
+          { name: 'Chennai North Division', value: 760, percent: 88 },
+          { name: 'Coimbatore South Division', value: 690, percent: 80 },
+          { name: 'Madurai Urban Division', value: 610, percent: 72 },
+          { name: 'Tiruchirappalli Division', value: 530, percent: 64 }
+        ];
+      }
+      if (stateName === 'Karnataka') {
+        return [
+          { name: 'Bengaluru Central Div', value: 870, percent: 96 },
+          { name: 'Bengaluru South Div', value: 790, percent: 89 },
+          { name: 'Mysuru City Div', value: 680, percent: 78 },
+          { name: 'Mangaluru Div', value: 610, percent: 71 },
+          { name: 'Hubballi Div', value: 540, percent: 63 }
+        ];
+      }
+      if (stateName === 'Maharashtra') {
+        return [
+          { name: 'Mumbai City Div', value: 910, percent: 96 },
+          { name: 'Pune Cantonment Div', value: 780, percent: 86 },
+          { name: 'Nagpur Central Div', value: 640, percent: 76 },
+          { name: 'Thane Urban Div', value: 580, percent: 70 },
+          { name: 'Nashik Valley Div', value: 510, percent: 64 }
+        ];
+      }
       return [
-        { name: 'Bengaluru South', value: 850, percent: 95 },
-        { name: 'Bengaluru Central', value: 712, percent: 88 },
-        { name: 'Koramangala (560034)', value: 620, percent: 80 },
-        { name: 'HSR Layout (560095)', value: 584, percent: 76 },
-        { name: 'MG Road (560001)', value: 512, percent: 68 }
+        { name: `${stateName} Division A`, value: 820, percent: 94 },
+        { name: `${stateName} Division B`, value: 760, percent: 88 },
+        { name: `${stateName} Division C`, value: 690, percent: 80 },
+        { name: `${stateName} Division D`, value: 610, percent: 72 },
+        { name: `${stateName} Division E`, value: 530, percent: 64 }
+      ];
+    }
+
+    // Default 'dist' (Districts)
+    if (stateName.includes('Tamil') || stateName === 'Tamil Nadu') {
+      return [
+        { name: 'Chennai District', value: 890, percent: 96 },
+        { name: 'Salem District', value: 712, percent: 88 },
+        { name: 'Coimbatore District', value: 640, percent: 80 },
+        { name: 'Madurai District', value: 584, percent: 74 },
+        { name: 'Tiruchirappalli District', value: 512, percent: 66 }
       ];
     }
     if (stateName === 'Karnataka') {
       return [
-        { name: 'Bengaluru Urban', value: 850, percent: 95 },
-        { name: 'Mysuru', value: 712, percent: 88 },
-        { name: 'Belagavi', value: 620, percent: 80 },
-        { name: 'Mangaluru', value: 584, percent: 76 },
-        { name: 'Hubballi-Dharwad', value: 512, percent: 68 }
+        { name: 'Bengaluru Urban', value: 920, percent: 98 },
+        { name: 'Mysuru', value: 750, percent: 85 },
+        { name: 'Belagavi', value: 660, percent: 76 },
+        { name: 'Mangaluru', value: 590, percent: 70 },
+        { name: 'Hubballi-Dharwad', value: 520, percent: 62 }
       ];
     }
     if (stateName === 'Maharashtra') {
@@ -188,9 +292,106 @@ const Dashboard = ({ onNavigate }) => {
       { name: `${stateName} South`, value: 512, percent: 68 },
       { name: `${stateName} Central`, value: 486, percent: 64 }
     ];
-  }, [stateName, districtName]);
+  }, [stateName, territoryFilter]);
 
   // Dynamic Top Performing Managers matching manager's jurisdiction
+  
+  const allActivitiesList = [
+    {
+      id: 1,
+      category: 'vendor',
+      title: 'New vendor request received',
+      sub: `Sri Foods - ${districtName || territoryList[0]?.name || stateName}`,
+      time: '10:24 AM Today',
+      icon: UserPlus,
+      bg: '#e0f2fe',
+      color: '#0284c7',
+      tag: 'Vendor Request'
+    },
+    {
+      id: 2,
+      category: 'kyc',
+      title: 'Physical KYC verification approved',
+      sub: `ABC Traders - ${territoryList[1]?.name || stateName}`,
+      time: '09:18 AM Today',
+      icon: CheckCircle,
+      bg: '#dcfce7',
+      color: '#16a34a',
+      tag: 'KYC Verified'
+    },
+    {
+      id: 3,
+      category: 'tieup',
+      title: 'New merchant tie-up created',
+      sub: `Fresh Mart - ${territoryList[2]?.name || stateName}`,
+      time: '12:30 PM Today',
+      icon: Handshake,
+      bg: '#fef3c7',
+      color: '#d97706',
+      tag: 'Tie-up Active'
+    },
+    {
+      id: 4,
+      category: 'escalation',
+      title: 'Issue escalated: Payout delay inquiry',
+      sub: `Payment review - ${territoryList[3]?.name || stateName}`,
+      time: '02:00 PM Today',
+      icon: AlertTriangle,
+      bg: '#fee2e2',
+      color: '#dc2626',
+      tag: 'Escalation'
+    },
+    {
+      id: 5,
+      category: 'report',
+      title: 'Manager territory report submitted',
+      sub: `Division Operations - ${divisionName || 'Krishnagiri Division'}`,
+      time: '04:30 PM Today',
+      icon: FileText,
+      bg: '#ede9fe',
+      color: '#7c3aed',
+      tag: 'Field Report'
+    },
+    {
+      id: 6,
+      category: 'vendor',
+      title: 'Shop visit & QR standee installed',
+      sub: `Anand Sweets - ${districtName || 'Salem'}`,
+      time: 'Yesterday 05:15 PM',
+      icon: Store,
+      bg: '#e0f2fe',
+      color: '#0284c7',
+      tag: 'Shop Visit'
+    },
+    {
+      id: 7,
+      category: 'kyc',
+      title: 'GSTIN verification audited',
+      sub: `Karthik Hardware - ${territoryList[0]?.name || stateName}`,
+      time: 'Yesterday 02:40 PM',
+      icon: CheckCircle,
+      bg: '#dcfce7',
+      color: '#16a34a',
+      tag: 'Compliance'
+    },
+    {
+      id: 8,
+      category: 'tieup',
+      title: 'Commercial agreement renewal signed',
+      sub: `Royal Supermart - ${districtName || 'Chennai'}`,
+      time: '20 Sep 2026',
+      icon: Handshake,
+      bg: '#fef3c7',
+      color: '#d97706',
+      tag: 'Agreement Renewal'
+    }
+  ];
+
+  const filteredActivities = allActivitiesList.filter(act => {
+    if (activityFilter !== 'all' && act.category !== activityFilter) return false;
+    return true;
+  });
+
   const topManagers = React.useMemo(() => {
     if (stateName === 'Karnataka') {
       return [
@@ -262,19 +463,30 @@ const Dashboard = ({ onNavigate }) => {
               <MapPin size={13} style={{ color: 'var(--forge-gold)' }} />
               <span>{stateName} (State)</span>
             </div>
-            <span className="location-chain-sep">››</span>
-            <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
-              <span>{districtName || 'All Districts'}</span>
-            </div>
-            <span className="location-chain-sep">››</span>
-            <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
-              <span>{divisionName || 'All Divisions'}</span>
-            </div>
-            <span className="location-chain-sep">››</span>
-            <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
-              <span>{pincodeCode ? `PIN ${pincodeCode}` : 'All Pincodes'}</span>
-            </div>
-            <span className="location-chain-sep" style={{ color: '#94a3b8' }}>›</span>
+            {!isStateManager && districtName && (
+              <>
+                <span className="location-chain-sep">››</span>
+                <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
+                  <span>{districtName}</span>
+                </div>
+              </>
+            )}
+            {!isStateManager && divisionName && (
+              <>
+                <span className="location-chain-sep">››</span>
+                <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
+                  <span>{divisionName}</span>
+                </div>
+              </>
+            )}
+            {!isStateManager && pincodeCode && (
+              <>
+                <span className="location-chain-sep">››</span>
+                <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
+                  <span>PIN {pincodeCode}</span>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </section>
@@ -396,14 +608,14 @@ const Dashboard = ({ onNavigate }) => {
         </div>
 
         {/* KPI 6: Open Issues */}
-        <div className="forge-kpi-card" onClick={() => onNavigate('issues')} style={{ cursor: 'pointer' }}>
+        <div className="forge-kpi-card" onClick={() => onNavigate('tasks')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div className="kpi-icon-box" style={{ background: '#fee2e2', color: '#dc2626' }}>
                 <AlertTriangle size={18} />
               </div>
               <div>
-                <div className="kpi-main-title">Open Issues</div>
+                <div className="kpi-main-title">Active Tasks</div>
                 <div className="kpi-main-value">{kpis.openIssues}</div>
               </div>
             </div>
@@ -503,18 +715,21 @@ const Dashboard = ({ onNavigate }) => {
 
               {/* Bars: Merchants (Golden Yellow) */}
               {trendData.map((d, i) => {
-                const x = 50 + i * 50;
+                const { barX, barWidth } = getTrendCoords(i, trendData.length);
                 const y = 130 - d.barH;
                 return (
                   <rect
                     key={d.month}
-                    x={x}
+                    x={barX}
                     y={y}
-                    width="18"
+                    width={barWidth}
                     height={d.barH}
                     rx="3"
                     fill="#facc15"
-                  />
+                    style={{ transition: 'all 0.3s ease' }}
+                  >
+                    <title>{`${d.month}: ${d.merchants} New Merchants`}</title>
+                  </rect>
                 );
               })}
 
@@ -525,37 +740,41 @@ const Dashboard = ({ onNavigate }) => {
                 strokeWidth="2.5"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                style={{ transition: 'all 0.3s ease' }}
                 points={trendData.map((d, i) => {
-                  const x = 50 + i * 50 + 9;
-                  return `${x},${d.dotY}`;
+                  const { dotX } = getTrendCoords(i, trendData.length);
+                  return `${dotX},${d.dotY}`;
                 }).join(' ')}
               />
 
               {/* Dots: Tie-ups */}
               {trendData.map((d, i) => {
-                const x = 50 + i * 50 + 9;
+                const { dotX } = getTrendCoords(i, trendData.length);
                 return (
                   <circle
                     key={`dot-${d.month}`}
-                    cx={x}
+                    cx={dotX}
                     cy={d.dotY}
-                    r="3.5"
+                    r={trendData.length > 6 ? "2.5" : "3.5"}
                     fill="#0284c7"
                     stroke="#ffffff"
                     strokeWidth="1.5"
-                  />
+                    style={{ transition: 'all 0.3s ease' }}
+                  >
+                    <title>{`${d.month}: ${d.tieUps} Tie-ups`}</title>
+                  </circle>
                 );
               })}
 
               {/* X Axis Month Labels */}
               {trendData.map((d, i) => {
-                const x = 50 + i * 50 + 9;
+                const { dotX } = getTrendCoords(i, trendData.length);
                 return (
                   <text
                     key={`label-${d.month}`}
-                    x={x}
+                    x={dotX}
                     y="148"
-                    fontSize="8.5"
+                    fontSize={trendData.length > 6 ? "7.5" : "8.5"}
                     fill="#64748b"
                     textAnchor="middle"
                     fontWeight="600"
@@ -608,7 +827,7 @@ const Dashboard = ({ onNavigate }) => {
             <button
               className="btn-link"
               style={{ background: 'none', border: 'none', color: '#0284c7', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer' }}
-              onClick={() => onNavigate('audit-logs')}
+              onClick={() => setIsActivitiesModalOpen(true)}
             >
               View All
             </button>
@@ -843,9 +1062,9 @@ const Dashboard = ({ onNavigate }) => {
 
             <button 
               className="btn-view-issues"
-              onClick={() => onNavigate && onNavigate('issues')}
+              onClick={() => onNavigate && onNavigate('tasks')}
             >
-              <span>Manage & Resolve Issues</span>
+              <span>View & Manage Tasks</span>
               <ArrowRight size={13} />
             </button>
           </div>
@@ -885,8 +1104,247 @@ const Dashboard = ({ onNavigate }) => {
           </button>
         </div>
       </div>
+      {/* Activities Timeline Modal */}
+      {isActivitiesModalOpen && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 99999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div
+            onClick={() => setIsActivitiesModalOpen(false)}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(10, 22, 40, 0.72)',
+              backdropFilter: 'blur(6px)'
+            }}
+          />
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: 620,
+            maxHeight: 'min(90vh, 760px)',
+            background: '#ffffff',
+            borderRadius: 18,
+            boxShadow: '0 25px 70px rgba(0,0,0,0.3)',
+            border: '1px solid #e2e8f0',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden',
+            zIndex: 10
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '18px 24px 14px',
+              borderBottom: '1px solid #e2e8f0',
+              background: '#f8fafc'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div style={{
+                  width: 36,
+                  height: 36,
+                  borderRadius: 10,
+                  background: '#e0f2fe',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#0284c7'
+                }}>
+                  <Clock size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+                    Today's & Recent Activities
+                  </h3>
+                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0' }}>
+                    Live operational activity ledger for {stateName}
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsActivitiesModalOpen(false)}
+                style={{
+                  width: 32,
+                  height: 32,
+                  borderRadius: 8,
+                  border: 'none',
+                  background: 'transparent',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#64748b',
+                  fontSize: 18
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Category Filter Pills */}
+            <div style={{
+              padding: '12px 24px',
+              borderBottom: '1px solid #e2e8f0',
+              display: 'flex',
+              gap: 8,
+              flexWrap: 'wrap',
+              alignItems: 'center',
+              background: '#ffffff'
+            }}>
+              {[
+                { id: 'all', label: 'All Activities' },
+                { id: 'vendor', label: 'Vendors' },
+                { id: 'kyc', label: 'KYC' },
+                { id: 'tieup', label: 'Tie-ups' },
+                { id: 'escalation', label: 'Escalations' },
+                { id: 'report', label: 'Reports' }
+              ].map(cat => (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setActivityFilter(cat.id)}
+                  style={{
+                    padding: '5px 12px',
+                    borderRadius: 20,
+                    border: activityFilter === cat.id ? '1px solid #0284c7' : '1px solid #e2e8f0',
+                    background: activityFilter === cat.id ? '#0284c7' : '#f8fafc',
+                    color: activityFilter === cat.id ? '#ffffff' : '#64748b',
+                    fontSize: '0.74rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {cat.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Activities Timeline List */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                {filteredActivities.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '36px', color: '#94a3b8', fontSize: '0.85rem' }}>
+                    No activities found for this category.
+                  </div>
+                ) : (
+                  filteredActivities.map(act => {
+                    const IconComponent = act.icon;
+                    return (
+                      <div
+                        key={act.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'flex-start',
+                          gap: 12,
+                          paddingBottom: 12,
+                          borderBottom: '1px solid #f1f5f9'
+                        }}
+                      >
+                        <div style={{
+                          width: 34,
+                          height: 34,
+                          borderRadius: 10,
+                          background: act.bg,
+                          color: act.color,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          flexShrink: 0
+                        }}>
+                          <IconComponent size={16} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                              {act.title}
+                            </div>
+                            <span style={{ fontSize: '0.72rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                              {act.time}
+                            </span>
+                          </div>
+                          <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2 }}>
+                            {act.sub}
+                          </div>
+                          <span style={{
+                            display: 'inline-block',
+                            marginTop: 4,
+                            padding: '2px 8px',
+                            borderRadius: 6,
+                            fontSize: '0.68rem',
+                            fontWeight: 700,
+                            background: act.bg,
+                            color: act.color
+                          }}>
+                            {act.tag}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '12px 24px',
+              borderTop: '1px solid #e2e8f0',
+              background: '#f8fafc'
+            }}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsActivitiesModalOpen(false);
+                  if (onNavigate) onNavigate('audit-logs');
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#0284c7',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  padding: 0
+                }}
+              >
+                Open Compliance Audit Log →
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsActivitiesModalOpen(false)}
+                style={{
+                  padding: '7px 18px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#334155',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+
 
 export default Dashboard;

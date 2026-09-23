@@ -429,32 +429,32 @@ const FieldManagers = () => {
         </div>
       ) : viewMode === 'table' ? (
         /* TABLE VIEW */
-        <div className="table-container">
-          <table className="data-table">
+        <div className="table-container" style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table className="data-table" style={{ width: '100%', minWidth: '980px', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ width: '22%', textAlign: 'left', paddingLeft: '18px' }}>Manager Profile</th>
-                <th style={{ width: '16%', textAlign: 'left' }}>Relation & Rank</th>
-                <th style={{ width: '17%', textAlign: 'left' }}>Hierarchy Level</th>
-                <th style={{ width: '18%', textAlign: 'left' }}>Contact Details</th>
-                <th style={{ width: '15%', textAlign: 'left' }}>Assigned Jurisdiction</th>
-                <th style={{ width: '6%', textAlign: 'center' }}>Status</th>
-                <th style={{ width: '6%', textAlign: 'center', paddingRight: '18px' }}>Action</th>
+                <th style={{ minWidth: '180px', textAlign: 'left', paddingLeft: '20px' }}>Manager Profile</th>
+                <th style={{ minWidth: '150px', textAlign: 'left' }}>Relation & Rank</th>
+                <th style={{ minWidth: '160px', textAlign: 'left' }}>Hierarchy Level</th>
+                <th style={{ minWidth: '175px', textAlign: 'left' }}>Contact Details</th>
+                <th style={{ minWidth: '160px', textAlign: 'left' }}>Assigned Jurisdiction</th>
+                <th style={{ minWidth: '85px', textAlign: 'center' }}>Status</th>
+                <th style={{ minWidth: '90px', textAlign: 'center', paddingRight: '20px' }}>Action</th>
               </tr>
             </thead>
             <tbody>
               {filteredManagers.map((m) => (
                 <tr key={m.id} style={{ background: m.isSelf ? '#fefce8' : 'transparent' }}>
-                  <td style={{ paddingLeft: '18px' }}>
+                  <td style={{ paddingLeft: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{
-                        width: '32px',
-                        height: '32px',
+                        width: '34px',
+                        height: '34px',
                         borderRadius: '50%',
                         background: getAvatarColor(m.name),
                         color: 'white',
                         fontWeight: 700,
-                        fontSize: '0.82rem',
+                        fontSize: '0.84rem',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
@@ -462,32 +462,49 @@ const FieldManagers = () => {
                       }}>
                         {m.name ? m.name.slice(0, 1).toUpperCase() : 'M'}
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem' }}>{m.name}</div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ID: {m.id}</div>
+                      <div style={{ minWidth: 0 }}>
+                        <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
+                          {m.name}
+                        </div>
+                        <div 
+                          title={`Full ID: ${m.id}`} 
+                          style={{ 
+                            fontSize: '0.72rem', 
+                            color: 'var(--text-muted)', 
+                            fontFamily: 'monospace',
+                            whiteSpace: 'nowrap',
+                            letterSpacing: '0.2px'
+                          }}
+                        >
+                          ID: {m.id ? (m.id.length > 12 ? `${m.id.slice(0, 8)}…` : m.id) : '—'}
+                        </div>
                       </div>
                     </div>
                   </td>
                   <td>{getRelationBadge(m)}</td>
                   <td>{getRoleBadge(m.role)}</td>
                   <td>
-                    <div style={{ fontSize: '0.82rem', color: '#1e293b' }}>{m.email}</div>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{m.mobile}</div>
+                    <div style={{ fontSize: '0.82rem', color: '#1e293b', fontWeight: 500, whiteSpace: 'nowrap' }}>
+                      {m.email}
+                    </div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
+                      {m.mobile || '—'}
+                    </div>
                   </td>
                   <td>
                     {getJurisdictionFormatted(m)}
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <span className="status-badge active" style={{ fontSize: '0.72rem', padding: '2px 8px' }}>
+                    <span className="status-badge active" style={{ fontSize: '0.72rem', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
                       <span className="status-dot"></span> Active
                     </span>
                   </td>
-                  <td style={{ textAlign: 'center', paddingRight: '18px' }}>
+                  <td style={{ textAlign: 'center', paddingRight: '20px' }}>
                     <button
                       onClick={() => setSelectedManager(m)}
                       className="btn btn-secondary btn-sm"
                       style={{
-                        padding: '4px 10px',
+                        padding: '5px 12px',
                         fontSize: '0.75rem',
                         fontWeight: 600,
                         borderRadius: '6px',
@@ -497,7 +514,9 @@ const FieldManagers = () => {
                         border: '1px solid #cbd5e1',
                         background: '#f8fafc',
                         color: '#334155',
-                        cursor: 'pointer'
+                        cursor: 'pointer',
+                        whiteSpace: 'nowrap',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       <Eye size={12} />

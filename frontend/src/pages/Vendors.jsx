@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { vendorService, locationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -16,20 +16,18 @@ import StatusBadge from '../components/StatusBadge';
 
 const CATEGORIES = [
   'All',
-  'Food & Beverage',
-  'Electronics & Retail',
-  'Grocery & Essentials',
-  'Automotive',
-  'Home & Living',
-  'Health & Fitness',
-  'Apparel & Fashion',
-  'Retail & Handicrafts',
-  'Services & Professional'
+  'Services',
+  'Products',
+  'Daily Needs',
+  'Food',
+  'Stay',
+  'Travel',
+  'Jobs'
 ];
 
 const STATUSES = ['All', 'Active', 'Pending', 'Under Review', 'Rejected', 'Inactive'];
 
-const Vendors = ({ onNavigate, filterParams = {} }) => {
+const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   const { user } = useAuth();
 
   const [vendors, setVendors] = useState([]);
@@ -126,7 +124,7 @@ const Vendors = ({ onNavigate, filterParams = {} }) => {
             Managing vendors geographically scoped to your jurisdiction ({pagination.total} total)
           </p>
         </div>
-        <button className="btn btn-primary" onClick={() => onNavigate('add-vendor')}>
+        <button className="btn btn-primary" onClick={() => onOpenOnboard ? onOpenOnboard() : onNavigate('add-vendor')}>
           <PlusCircle size={18} /> Register New Vendor
         </button>
       </div>

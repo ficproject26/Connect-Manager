@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { auditService } from '../services/api';
 import { History, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 
-const AuditLogs = () => {
+const AuditLogs = ({ onNavigate }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,6 +32,27 @@ const AuditLogs = () => {
 
   return (
     <div>
+      {onNavigate && (
+        <button
+          onClick={() => onNavigate('dashboard')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '7px 14px',
+            marginBottom: '16px',
+            background: 'var(--surface, #ffffff)',
+            border: '1px solid var(--border, #e2e8f0)',
+            borderRadius: '8px',
+            fontSize: '0.82rem',
+            fontWeight: 700,
+            color: 'var(--text-main, #0f172a)',
+            cursor: 'pointer'
+          }}
+        >
+          ← Back to Dashboard
+        </button>
+      )}
       <div style={{ marginBottom: '24px' }}>
         <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Audit Trail & Compliance Log</h2>
         <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>

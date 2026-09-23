@@ -1,4 +1,4 @@
-/* ----------------------------------------------------
+﻿/* ----------------------------------------------------
    FORGE INDIA CONNECT - AGENT MANAGER PORTAL DESIGN SYSTEM
    Pixel-Accurate Match to Reference UI
    Soft Slate Background (#f0f5fa), Crisp White Cards,
@@ -48,6 +48,18 @@
   --radius-sm: 8px;
   --radius-md: 12px;
   --radius-lg: 16px;
+
+  /* Compatibility & Common Variables */
+  --primary: #f59e0b;
+  --primary-dark: #d97706;
+  --primary-light: #fef3c7;
+  --surface: #ffffff;
+  --surface-subtle: #f8fafc;
+  --border: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --bg: #f0f5fa;
+  --bg-subtle: #f8fafc;
+  --text-primary: #0f172a;
   --radius-full: 9999px;
 
   --transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1273,17 +1285,28 @@ button, input, select, textarea {
   background: white;
   border-radius: var(--radius-md);
   border: 1px solid var(--border-normal);
-  overflow-x: auto;
   box-shadow: var(--shadow-card);
+  overflow-x: auto;
+  overflow-y: hidden;
+  margin-bottom: 20px;
+  -webkit-overflow-scrolling: touch;
 }
 
-.table-container {
-  background: white;
-  border-radius: var(--radius-md);
-  border: 1px solid var(--border-normal);
-  box-shadow: var(--shadow-card);
-  overflow: hidden;
-  margin-bottom: 20px;
+.table-container::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-container::-webkit-scrollbar-track {
+  background: #f8fafc;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
 }
 
 .data-table {
