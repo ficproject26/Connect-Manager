@@ -1,5 +1,21 @@
 [
   {
+    "_id": "user_admin",
+    "name": "System Administrator",
+    "email": "admin@example.com",
+    "mobile": "9999999999",
+    "passwordHash": "$2a$10$7gUEItVG1m3bhjA7NlXu9OgsaZHENipYOy.q0I16Rv2j7SrIDdJky",
+    "role": "state_manager",
+    "level": 1,
+    "stateId": "state_ka",
+    "districtId": null,
+    "divisionId": null,
+    "pincodeId": null,
+    "status": "active",
+    "createdAt": "2026-09-09T11:01:29.137Z",
+    "updatedAt": "2026-09-09T11:01:29.137Z"
+  },
+  {
     "_id": "user_state_mgr1",
     "name": "Ramesh Kumar",
     "email": "state.mgr1@example.com",

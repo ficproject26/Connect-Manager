@@ -543,6 +543,52 @@ const Login = ({ onNavigate }) => {
               </button>
             </form>
 
+            {/* Quick Demo Credentials Helper */}
+            <div style={{
+              marginTop: '14px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              flexWrap: 'wrap'
+            }}>
+              <span style={{ fontSize: '0.72rem', color: '#64748b' }}>Quick demo:</span>
+              <button
+                type="button"
+                onClick={() => { setIdentifier('admin@example.com'); setPassword('admin123'); setError(''); }}
+                style={{
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  color: '#334155',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                Admin (admin@example.com)
+              </button>
+              <button
+                type="button"
+                onClick={() => { setIdentifier('state.mgr1@example.com'); setPassword('Password@123'); setError(''); }}
+                style={{
+                  background: '#fef3c7',
+                  border: '1px solid #fde68a',
+                  borderRadius: '6px',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 600,
+                  color: '#92400e',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                State Mgr (state.mgr1@example.com)
+              </button>
+            </div>
+
             {/* Single, Prominent Registration Callout Footer */}
             <div style={{
               marginTop: '22px',

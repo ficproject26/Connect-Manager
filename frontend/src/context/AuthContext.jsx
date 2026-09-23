@@ -1,9 +1,17 @@
-﻿import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
 
 const AuthContext = createContext(null);
 
 export const DEMO_ACCOUNTS = [
+  {
+    key: 'admin',
+    role: 'state_manager',
+    label: 'System Admin (Statewide)',
+    email: 'admin@example.com',
+    password: 'admin123',
+    scopeName: 'Karnataka (Statewide)'
+  },
   {
     key: 'state_mgr1',
     role: 'state_manager',
@@ -104,6 +112,23 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
+    if (savedToken.startsWith('mock_token_')) {
+      const accKey = savedToken.replace('mock_token_', '');
+      const demoAccount = DEMO_ACCOUNTS.find(a => a.key === accKey) || DEMO_ACCOUNTS[0];
+      setUser({
+        _id: demoAccount.key,
+        id: demoAccount.key,
+        name: demoAccount.label,
+        email: demoAccount.email,
+        role: demoAccount.role,
+        status: 'active',
+        pincode: '560034',
+        scope: { stateName: 'Karnataka', pincodeCode: '560034', districtName: 'Bengaluru Urban' }
+      });
+      setLoading(false);
+      return;
+    }
+
     try {
       const res = await authService.getMe();
       if (res.success && res.user) {
@@ -126,17 +151,20 @@ export const AuthProvider = ({ children }) => {
   const login = async (identifier, password) => {
     try {
       const res = await authService.login(identifier, password);
-      if (res.success && res.token) {
-        if (res.user?.status === 'active' || !res.user?.status) {
-          localStorage.setItem('agent_mgr_token', res.token);
-          setToken(res.token);
-          setUser(res.user);
+      if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
+        const token = res.token || res.data?.token;
+        const user = res.user || res.data?.user || res.data;
+        if (user?.status === 'active' || !user?.status) {
+          localStorage.setItem('agent_mgr_token', token);
+          setToken(token);
+          setUser(user);
         }
-        return res;
+        return { success: true, token, user };
       }
+      throw new Error(res.message || 'Login failed. Invalid response from server.');
     } catch (err) {
       const demoAccount = DEMO_ACCOUNTS.find(a => a.email.toLowerCase() === (identifier || '').toLowerCase());
-      if (demoAccount) {
+      if (demoAccount && (!password || password === demoAccount.password || password === 'admin123' || password === 'Password@123')) {
         const mockUser = {
           _id: demoAccount.key,
           id: demoAccount.key,

@@ -26,9 +26,24 @@ async function seedData() {
   // - 2 Division Agent Managers per Division
   // - 2 Pincode Agent Managers per Pincode
   console.log('Seeding 4 State Managers, 2 District Managers, 2 Division Managers, 2 Pincode Managers...');
-  const passwordHash = await bcrypt.hash('Password@123', 10);
+  const adminHash = await bcrypt.hash('admin123', 10);
 
   const users = [
+    // --- SYSTEM ADMINISTRATOR / STATE MANAGER ---
+    {
+      _id: 'user_admin',
+      name: 'System Administrator',
+      email: 'admin@example.com',
+      mobile: '9999999999',
+      passwordHash: adminHash,
+      role: 'state_manager',
+      level: 1,
+      stateId: 'state_ka',
+      districtId: null,
+      divisionId: null,
+      pincodeId: null,
+      status: 'active'
+    },
     // --- 4 STATE AGENT MANAGERS (KARNATAKA) ---
     {
       _id: 'user_state_mgr1',
