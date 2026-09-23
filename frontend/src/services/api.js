@@ -1,4 +1,7 @@
-﻿const API_BASE = '/api';
+const rawApiUrl = import.meta.env.VITE_API_URL;
+const API_BASE = rawApiUrl
+  ? (rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api`)
+  : '/api';
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('agent_mgr_token');
