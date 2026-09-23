@@ -3,10 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "start:server": "node server/src/server.js",
-    "seed": "node server/src/seed/seed.js",
-    "test:access": "node server/test_access_control.js",
-    "dev:client": "cd client && npm run dev",
-    "build:client": "cd client && npm run build"
+    "build": "cd frontend && npm install && npm run build",
+    "dev": "cd frontend && npm run dev",
+    "start": "node backend/src/server.js",
+    "start:server": "node backend/src/server.js",
+    "seed": "node backend/src/seed/seed.js",
+    "dev:client": "cd frontend && npm run dev",
+    "build:client": "cd frontend && npm run build"
   }
 }
