@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../services/api';
 
 const Navbar = ({ onNavigate }) => {
   const { user, logout } = useAuth();
@@ -31,13 +32,18 @@ const Navbar = ({ onNavigate }) => {
   useEffect(() => {
     let isMounted = true;
     const token = localStorage.getItem('agent_mgr_token') || '';
+    if (!token || token.startsWith('mock_token_')) {
+      setUnreadCount(0);
+      return;
+    }
 
     async function fetchCount() {
       try {
-        const res = await fetch('/api/notifications/unread-count', {
-          headers: token ? { Authorization: `Bearer ${token}` } : {}
+        const res = await fetch(`${API_BASE}/notifications/unread-count`, {
+          headers: { Authorization: `Bearer ${token}` }
         });
-        const data = await res.json();
+        if (!res.ok) return;
+        const data = await res.json().catch(() => ({}));
         if (data.success && isMounted) {
           setUnreadCount(data.unreadCount || 0);
         }
@@ -49,26 +55,39 @@ const Navbar = ({ onNavigate }) => {
     fetchCount();
 
     try {
-      const sseUrl = `/api/notifications/stream?token=${encodeURIComponent(token)}`;
-      const es = new EventSource(sseUrl);
-      esRef.current = es;
+      if (typeof window !== 'undefined' && 'EventSource' in window) {
+        const sseUrl = `${API_BASE}/notifications/stream?token=${encodeURIComponent(token)}`;
+        const es = new EventSource(sseUrl);
+        esRef.current = es;
 
-      es.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-          if (parsed.type === 'notification') {
-            setUnreadCount(prev => prev + 1);
+        es.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed.type === 'notification') {
+              setUnreadCount(prev => prev + 1);
+            }
+          } catch (e) {}
+        };
+
+        es.onerror = () => {
+          // If server returns 404 or stream fails, close immediately to prevent reconnect loop
+          if (esRef.current) {
+            esRef.current.close();
+            esRef.current = null;
           }
-        } catch (e) {}
-      };
+        };
+      }
     } catch (err) {}
 
-    const interval = setInterval(fetchCount, 25000);
+    const interval = setInterval(fetchCount, 30000);
 
     return () => {
       isMounted = false;
       clearInterval(interval);
-      if (esRef.current) esRef.current.close();
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
     };
   }, [user]);
 

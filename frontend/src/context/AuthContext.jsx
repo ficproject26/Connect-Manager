@@ -32,19 +32,9 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
+    // Immediately purge any stale/legacy mock tokens
     if (savedToken.startsWith('mock_token_')) {
-      const accKey = savedToken.replace('mock_token_', '');
-      const demoAccount = DEMO_ACCOUNTS.find(a => a.key === accKey) || DEMO_ACCOUNTS[0];
-      setUser({
-        _id: demoAccount.key,
-        id: demoAccount.key,
-        name: demoAccount.label,
-        email: demoAccount.email,
-        role: demoAccount.role,
-        status: 'active',
-        pincode: '560034',
-        scope: { stateName: 'Karnataka', pincodeCode: '560034', districtName: 'Bengaluru Urban' }
-      });
+      logout();
       setLoading(false);
       return;
     }
@@ -69,40 +59,18 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const login = async (identifier, password) => {
-    try {
-      const res = await authService.login(identifier, password);
-      if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
-        const token = res.token || res.data?.token;
-        const user = res.user || res.data?.user || res.data;
-        if (user?.status === 'active' || !user?.status) {
-          localStorage.setItem('agent_mgr_token', token);
-          setToken(token);
-          setUser(user);
-        }
-        return { success: true, token, user };
+    const res = await authService.login(identifier, password);
+    if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
+      const token = res.token || res.data?.token;
+      const user = res.user || res.data?.user || res.data;
+      if (user?.status === 'active' || !user?.status) {
+        localStorage.setItem('agent_mgr_token', token);
+        setToken(token);
+        setUser(user);
       }
-      throw new Error(res.message || 'Login failed. Invalid response from server.');
-    } catch (err) {
-      const demoAccount = DEMO_ACCOUNTS.find(a => a.email.toLowerCase() === (identifier || '').toLowerCase());
-      if (demoAccount && (!password || password === demoAccount.password || password === 'admin123' || password === 'Password@123')) {
-        const mockUser = {
-          _id: demoAccount.key,
-          id: demoAccount.key,
-          name: demoAccount.label,
-          email: demoAccount.email,
-          role: demoAccount.role,
-          status: 'active',
-          pincode: '560034',
-          scope: { stateName: 'Karnataka', pincodeCode: '560034', districtName: 'Bengaluru Urban' }
-        };
-        const mockToken = `mock_token_${demoAccount.key}`;
-        localStorage.setItem('agent_mgr_token', mockToken);
-        setToken(mockToken);
-        setUser(mockUser);
-        return { success: true, user: mockUser, token: mockToken };
-      }
-      throw err;
+      return { success: true, token, user };
     }
+    throw new Error(res.message || 'Login failed. Invalid response from server.');
   };
 
   const quickSwitchRole = async (accountKey) => {

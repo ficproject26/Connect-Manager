@@ -12,6 +12,7 @@ import {
   RefreshCw
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { API_BASE } from '../services/api';
 
 const Notifications = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -24,17 +25,27 @@ const Notifications = ({ onNavigate }) => {
   const token = localStorage.getItem('agent_mgr_token') || '';
 
   const fetchNotifications = async () => {
+    if (!token || token.startsWith('mock_token_')) {
+      setNotifications([]);
+      return;
+    }
     try {
       setLoading(true);
-      const res = await fetch('/api/notifications', {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      const res = await fetch(`${API_BASE}/notifications`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      const data = await res.json();
+      if (!res.ok) {
+        setNotifications([]);
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
       if (data.success) {
         setNotifications(data.notifications || []);
+      } else {
+        setNotifications([]);
       }
     } catch (err) {
-      console.error('Failed to fetch manager notifications:', err);
+      setNotifications([]);
     } finally {
       setLoading(false);
     }
@@ -45,61 +56,73 @@ const Notifications = ({ onNavigate }) => {
 
     // Listen to real-time events via SSE
     try {
-      const sseUrl = `/api/notifications/stream?token=${encodeURIComponent(token)}`;
-      const es = new EventSource(sseUrl);
-      esRef.current = es;
+      if (typeof window !== 'undefined' && 'EventSource' in window && token && !token.startsWith('mock_token_')) {
+        const sseUrl = `${API_BASE}/notifications/stream?token=${encodeURIComponent(token)}`;
+        const es = new EventSource(sseUrl);
+        esRef.current = es;
 
-      es.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-          if (parsed.type === 'notification' && parsed.data) {
-            setNotifications(prev => [parsed.data, ...prev.filter(n => n._id !== parsed.data._id)]);
+        es.onmessage = (event) => {
+          try {
+            const parsed = JSON.parse(event.data);
+            if (parsed.type === 'notification' && parsed.data) {
+              setNotifications(prev => [parsed.data, ...prev.filter(n => n._id !== parsed.data._id)]);
+            }
+          } catch (e) {}
+        };
+
+        es.onerror = () => {
+          if (esRef.current) {
+            esRef.current.close();
+            esRef.current = null;
           }
-        } catch (e) {}
-      };
+        };
+      }
     } catch (err) {}
 
     return () => {
-      if (esRef.current) esRef.current.close();
+      if (esRef.current) {
+        esRef.current.close();
+        esRef.current = null;
+      }
     };
   }, [user]);
 
   const markAsRead = async (id) => {
     try {
-      await fetch(`/api/notifications/${id}/read`, {
-        method: 'PATCH',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      if (token && !token.startsWith('mock_token_')) {
+        await fetch(`${API_BASE}/notifications/${id}/read`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
       setNotifications(prev =>
         prev.map(n => (n._id === id || n.id === id ? { ...n, isRead: true } : n))
       );
-    } catch (err) {
-      console.error('Failed to mark read:', err);
-    }
+    } catch (err) {}
   };
 
   const markAllAsRead = async () => {
     try {
-      await fetch('/api/notifications/mark-all-read', {
-        method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      if (token && !token.startsWith('mock_token_')) {
+        await fetch(`${API_BASE}/notifications/mark-all-read`, {
+          method: 'POST',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
       setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (err) {
-      console.error('Failed to mark all read:', err);
-    }
+    } catch (err) {}
   };
 
   const removeNotification = async (id) => {
     try {
-      await fetch(`/api/notifications/${id}`, {
-        method: 'DELETE',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      });
+      if (token && !token.startsWith('mock_token_')) {
+        await fetch(`${API_BASE}/notifications/${id}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
       setNotifications(prev => prev.filter(n => n._id !== id && n.id !== id));
-    } catch (err) {
-      console.error('Failed to delete notification:', err);
-    }
+    } catch (err) {}
   };
 
   const getRelativeTime = (isoString) => {

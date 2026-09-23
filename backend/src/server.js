@@ -38,6 +38,7 @@ const reportRoutes = require('./routes/reportRoutes');
 const auditRoutes = require('./routes/auditRoutes');
 const uploadRoutes = require('./routes/uploadRoutes');
 const managerDirectoryRoutes = require('./routes/managerDirectoryRoutes');
+const { router: notificationRoutes } = require('./routes/notificationRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
@@ -46,6 +47,7 @@ app.use('/api/reports', reportRoutes);
 app.use('/api/audit-logs', auditRoutes);
 app.use('/api/uploads', uploadRoutes);
 app.use('/api/managers', managerDirectoryRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Centralized error handling
 app.use((err, req, res, next) => {

@@ -1,7 +1,12 @@
 const rawApiUrl = import.meta.env.VITE_API_URL;
-const API_BASE = rawApiUrl
-  ? (rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api`)
-  : '/api';
+const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+const isRemoteHttp = rawApiUrl && rawApiUrl.startsWith('http://');
+
+// If frontend is loaded via HTTPS and backend URL is an insecure HTTP address,
+// we MUST use relative '/api' so Vercel rewrites proxy the request securely without Mixed Content errors.
+export const API_BASE = (isHttps && isRemoteHttp)
+  ? '/api'
+  : (rawApiUrl ? (rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api`) : '/api');
 
 const getAuthHeaders = () => {
   const token = localStorage.getItem('agent_mgr_token');
@@ -15,6 +20,12 @@ const getAuthHeaders = () => {
 async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
+    if (res.status === 401) {
+      const storedToken = localStorage.getItem('agent_mgr_token');
+      if (storedToken) {
+        localStorage.removeItem('agent_mgr_token');
+      }
+    }
     const errorMsg = data.message || `Request failed with status ${res.status}`;
     const err = new Error(errorMsg);
     err.status = res.status;
@@ -255,6 +266,9 @@ export const reportService = {
     const res = await fetch(`${API_BASE}/reports/submitted?${query.toString()}`, {
       headers: getAuthHeaders()
     });
+    if (res.status === 404) {
+      return { success: true, data: [], hierarchy: { districts: [], divisions: [], pincodes: [] } };
+    }
     return handleResponse(res);
   },
 
@@ -262,6 +276,9 @@ export const reportService = {
     const res = await fetch(`${API_BASE}/reports/submitted/${id}`, {
       headers: getAuthHeaders()
     });
+    if (res.status === 404) {
+      return { success: false, message: 'Report not found' };
+    }
     return handleResponse(res);
   }
 };
@@ -269,6 +286,9 @@ export const reportService = {
 export const auditService = {
   async getAuditLogs() {
     const res = await fetch(`${API_BASE}/audit-logs`, { headers: getAuthHeaders() });
+    if (res.status === 404) {
+      return { success: true, logs: [], data: [] };
+    }
     return handleResponse(res);
   }
 };
@@ -312,6 +332,9 @@ export const shopVisitService = {
     const queryString = query.toString();
     const url = queryString ? `${API_BASE}/shop-visits?${queryString}` : `${API_BASE}/shop-visits`;
     const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.status === 404) {
+      return { success: true, visits: [], total: 0 };
+    }
     return handleResponse(res);
   },
 
@@ -337,6 +360,9 @@ export const taskService = {
     const queryString = query.toString();
     const url = queryString ? `${API_BASE}/qc-tasks/tasks?${queryString}` : `${API_BASE}/qc-tasks/tasks`;
     const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.status === 404) {
+      return { success: true, tasks: [], total: 0 };
+    }
     return handleResponse(res);
   },
 
@@ -372,11 +398,17 @@ export const agentService = {
     const queryString = query.toString();
     const url = queryString ? `${API_BASE}/operations/agents?${queryString}` : `${API_BASE}/operations/agents`;
     const res = await fetch(url, { headers: getAuthHeaders() });
+    if (res.status === 404) {
+      return { success: true, agents: [], total: 0 };
+    }
     return handleResponse(res);
   },
 
   async getAgentHierarchy() {
     const res = await fetch(`${API_BASE}/operations/agents/hierarchy`, { headers: getAuthHeaders() });
+    if (res.status === 404) {
+      return { success: true, hierarchy: [] };
+    }
     return handleResponse(res);
   }
 };
