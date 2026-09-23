@@ -14,16 +14,19 @@ const Settings = () => {
   };
 
   return (
-    <div>
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Portal Settings</h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+    <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ marginBottom: '22px' }}>
+        <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <SettingsIcon size={22} color="var(--forge-gold-vibrant)" />
+          Portal Settings
+        </h2>
+        <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
           Manage your notification alerts, operational workflows, and security preferences
         </p>
       </div>
 
-      <div style={{ maxWidth: '700px' }}>
-        <div className="card">
+      <div style={{ width: '100%', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div className="card" style={{ width: '100%', marginBottom: 0 }}>
           <div className="card-header">
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Bell size={18} color="var(--primary)" /> Field Notification Preferences
@@ -103,7 +106,7 @@ const Settings = () => {
           </form>
         </div>
 
-        <div className="card" style={{ marginTop: '24px' }}>
+        <div className="card" style={{ width: '100%', marginTop: 0 }}>
           <div className="card-header">
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Shield size={18} color="#0ea5e9" /> Security & Session Policy
