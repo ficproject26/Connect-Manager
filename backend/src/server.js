@@ -4,10 +4,10 @@ const path = require('path');
 const dotenv = require('dotenv');
 const db = require('./config/db');
 
-dotenv.config();
+dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
-const PORT = process.env.PORT || 5002;
+const PORT = process.env.PORT || 8005;
 
 // Middleware
 app.use(cors({
