@@ -11,6 +11,38 @@ export const DEMO_ACCOUNTS = [
     email: 'admin@example.com',
     password: 'admin123',
     scopeName: 'Karnataka (Statewide)'
+  },
+  {
+    key: 'state',
+    role: 'state_manager',
+    label: 'State Manager (Karnataka)',
+    email: 'state.mgr1@example.com',
+    password: 'Password@123',
+    scopeName: 'Karnataka (Statewide)'
+  },
+  {
+    key: 'district',
+    role: 'district_manager',
+    label: 'District Manager (BLR Urban)',
+    email: 'dist.mgr1@example.com',
+    password: 'Password@123',
+    scopeName: 'Bengaluru Urban District'
+  },
+  {
+    key: 'division',
+    role: 'division_manager',
+    label: 'Division Manager (BLR South)',
+    email: 'div.mgr1@example.com',
+    password: 'Password@123',
+    scopeName: 'Bengaluru South Division'
+  },
+  {
+    key: 'pincode',
+    role: 'pincode_manager',
+    label: 'PIN Code Manager (560034)',
+    email: 'pin.mgr1@example.com',
+    password: 'Password@123',
+    scopeName: 'PIN 560034 (Koramangala)'
   }
 ];
 
