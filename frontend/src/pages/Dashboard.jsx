@@ -20,7 +20,6 @@ import {
 } from 'lucide-react';
 
 import { reportService } from '../services/api';
-import { getIssueStatusCounts } from '../services/issuesData';
 
 const Dashboard = ({ onNavigate }) => {
   const { user } = useAuth();

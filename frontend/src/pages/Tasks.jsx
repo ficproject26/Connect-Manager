@@ -33,7 +33,6 @@ import {
 } from 'lucide-react';
 import { taskService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { DEFAULT_TASKS } from '../services/tasksData';
 
 const Tasks = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -63,7 +62,7 @@ const Tasks = ({ onNavigate }) => {
     if (showSpinner) setRefreshing(true);
     try {
       const res = await taskService.getTasks();
-      if (res && res.success && Array.isArray(res.data) && res.data.length > 0) {
+      if (res && res.success && Array.isArray(res.data)) {
         const mapped = res.data.map(t => {
           let formattedDue = 'Pending';
           if (t.dueDate) {
@@ -111,10 +110,10 @@ const Tasks = ({ onNavigate }) => {
             priority: t.priority || 'Medium',
             dueDate: formattedDue,
             status: t.status || 'Assigned',
-            assignedTo: t.assignedManagerName || 'Shiva',
-            assignedManagerRole: t.assignedManagerRole || 'pincode_manager',
-            createdByAdminName: t.createdByAdminName || 'Kumar',
-            createdByAdminRole: t.createdByAdminRole || 'Pincode Admin',
+            assignedTo: t.assignedManagerName || user?.name || 'Assigned Manager',
+            assignedManagerRole: t.assignedManagerRole || user?.role || 'pincode_manager',
+            createdByAdminName: t.createdByAdminName || 'System Admin',
+            createdByAdminRole: t.createdByAdminRole || 'State Manager',
             qcIssueId: t.qcIssueId,
             description: t.description || 'Field operational deliverable and compliance task.',
             remarks: t.remarks || '',
@@ -124,21 +123,11 @@ const Tasks = ({ onNavigate }) => {
         });
         setTasks(mapped);
       } else {
-        const saved = localStorage.getItem('forge_manager_tasks');
-        if (saved) {
-          setTasks(JSON.parse(saved));
-        } else {
-          setTasks(DEFAULT_TASKS);
-        }
+        setTasks([]);
       }
     } catch (err) {
-      console.warn('Could not fetch server tasks, using cached or default:', err);
-      const saved = localStorage.getItem('forge_manager_tasks');
-      if (saved) {
-        setTasks(JSON.parse(saved));
-      } else {
-        setTasks(DEFAULT_TASKS);
-      }
+      console.error('Failed to fetch tasks from database:', err);
+      setTasks([]);
     } finally {
       setLoading(false);
       if (showSpinner) setRefreshing(false);

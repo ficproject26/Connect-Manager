@@ -382,6 +382,15 @@ export const taskService = {
       body: JSON.stringify(data)
     });
     return handleResponse(res);
+  },
+
+  async createTask(taskData) {
+    const res = await fetch(`${API_BASE}/qc-tasks/tasks`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(taskData)
+    });
+    return handleResponse(res);
   }
 };
 
@@ -398,17 +407,36 @@ export const agentService = {
     const queryString = query.toString();
     const url = queryString ? `${API_BASE}/operations/agents?${queryString}` : `${API_BASE}/operations/agents`;
     const res = await fetch(url, { headers: getAuthHeaders() });
-    if (res.status === 404) {
-      return { success: true, agents: [], total: 0 };
-    }
     return handleResponse(res);
   },
 
   async getAgentHierarchy() {
     const res = await fetch(`${API_BASE}/operations/agents/hierarchy`, { headers: getAuthHeaders() });
-    if (res.status === 404) {
-      return { success: true, hierarchy: [] };
-    }
+    return handleResponse(res);
+  },
+
+  async createAgent(data) {
+    const res = await fetch(`${API_BASE}/operations/agents`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  }
+};
+
+export const settingsService = {
+  async getSettings() {
+    const res = await fetch(`${API_BASE}/settings`, { headers: getAuthHeaders() });
+    return handleResponse(res);
+  },
+
+  async updateSettings(data) {
+    const res = await fetch(`${API_BASE}/settings`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
     return handleResponse(res);
   }
 };

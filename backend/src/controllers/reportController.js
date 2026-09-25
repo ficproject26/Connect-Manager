@@ -414,8 +414,131 @@ const getLeaderboardData = async (req, res) => {
   }
 };
 
+// POST /api/reports/submit - Persist generated periodical report to database
+const submitReport = async (req, res) => {
+  try {
+    const user = req.user;
+    const { periodLabel, dateRange, startDate, endDate, summary, shopVisits, tasks } = req.body;
+
+    const count = await db.submittedReports.count();
+    const reportCode = `REP-${10000 + count + 1}`;
+
+    const newReport = await db.submittedReports.insertOne({
+      reportCode,
+      periodLabel: periodLabel || 'Field Performance Report',
+      dateRange: dateRange || 'N/A',
+      startDate: startDate || new Date().toISOString(),
+      endDate: endDate || new Date().toISOString(),
+      summary: summary || {},
+      shopVisits: shopVisits || [],
+      tasks: tasks || [],
+      managerId: user.id,
+      managerName: user.name,
+      managerRole: user.role,
+      stateId: user.stateId || 'state_ka',
+      districtId: user.districtId || null,
+      divisionId: user.divisionId || null,
+      pincodeId: user.pincodeId || null,
+      submittedAt: new Date().toISOString()
+    });
+
+    // Record in audit log
+    await db.auditLogs.insertOne({
+      action: 'Report Submitted',
+      recordId: newReport._id,
+      recordType: 'report',
+      userId: user.id,
+      userName: user.name,
+      userRole: user.role,
+      details: `Submitted ${periodLabel} (${reportCode}) with ${summary?.totalVisits || 0} visits and ${summary?.tasksAssigned || 0} tasks.`,
+      timestamp: new Date().toISOString()
+    });
+
+    res.status(201).json({
+      success: true,
+      message: 'Report submitted and saved to database successfully',
+      data: newReport
+    });
+  } catch (err) {
+    console.error('Submit report error:', err);
+    res.status(500).json({ success: false, message: 'Failed to submit report to database' });
+  }
+};
+
+// GET /api/reports/submitted - Retrieve submitted reports within jurisdiction
+const getSubmittedReports = async (req, res) => {
+  try {
+    const user = req.user;
+    const { district, division, pincode, managerRole, search } = req.query;
+
+    const [allReports, districts, divisions, pincodes] = await Promise.all([
+      db.submittedReports.find(),
+      db.districts.find(user.stateId ? { stateId: user.stateId } : {}),
+      db.divisions.find(user.districtId ? { districtId: user.districtId } : {}),
+      db.pincodes.find(user.divisionId ? { divisionId: user.divisionId } : {})
+    ]);
+
+    let filtered = allReports.filter(r => {
+      // Scope filtering
+      if (user.role === 'state_manager' && user.stateId && r.stateId && r.stateId !== user.stateId) return false;
+      if (user.role === 'district_manager' && user.districtId && r.districtId && r.districtId !== user.districtId) return false;
+      if (user.role === 'division_manager' && user.divisionId && r.divisionId && r.divisionId !== user.divisionId) return false;
+      if (user.role === 'pincode_manager' && user.pincodeId && r.pincodeId && r.pincodeId !== user.pincodeId) return false;
+
+      // Filter params
+      if (district && district !== 'All' && r.districtId !== district) return false;
+      if (division && division !== 'All' && r.divisionId !== division) return false;
+      if (pincode && pincode !== 'All' && r.pincodeId !== pincode) return false;
+      if (managerRole && managerRole !== 'All' && r.managerRole !== managerRole) return false;
+
+      if (search && search.trim()) {
+        const q = search.toLowerCase();
+        const matchCode = (r.reportCode || '').toLowerCase().includes(q);
+        const matchName = (r.managerName || '').toLowerCase().includes(q);
+        const matchPeriod = (r.periodLabel || '').toLowerCase().includes(q);
+        if (!matchCode && !matchName && !matchPeriod) return false;
+      }
+
+      return true;
+    });
+
+    filtered.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt));
+
+    res.json({
+      success: true,
+      total: filtered.length,
+      data: filtered,
+      hierarchy: {
+        districts,
+        divisions,
+        pincodes
+      }
+    });
+  } catch (err) {
+    console.error('Error fetching submitted reports:', err);
+    res.status(500).json({ success: false, message: 'Failed to retrieve submitted reports' });
+  }
+};
+
+// GET /api/reports/submitted/:id - Get detail of submitted report
+const getSubmittedReportById = async (req, res) => {
+  try {
+    const report = await db.submittedReports.findById(req.params.id);
+    if (!report) {
+      return res.status(404).json({ success: false, message: 'Submitted report not found' });
+    }
+    res.json({ success: true, data: report });
+  } catch (err) {
+    console.error('Error fetching submitted report by id:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch report details' });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getVendorReportData,
-  getLeaderboardData
+  getLeaderboardData,
+  submitReport,
+  getSubmittedReports,
+  getSubmittedReportById
 };

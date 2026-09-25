@@ -1,0 +1,15 @@
+[
+  {
+    "_id": "a7efcf56-e97f-4269-93ba-31b58e54ca49",
+    "userId": "user_admin",
+    "emailAlerts": true,
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "dailyDigest": true,
+    "theme": "light",
+    "autoAssignTasks": true,
+    "territoryAlertRadiusKm": 15,
+    "createdAt": "2026-09-25T13:45:23.298Z",
+    "updatedAt": "2026-09-25T13:45:23.298Z"
+  }
+]

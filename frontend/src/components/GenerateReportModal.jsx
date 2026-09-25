@@ -1,7 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { reportService } from '../services/api';
-import { DEFAULT_TASKS } from '../services/tasksData';
+import { reportService, taskService } from '../services/api';
 import {
   Calendar,
   Clock,
@@ -35,6 +34,18 @@ const PERIOD_PRESETS = [
 
 export default function GenerateReportModal({ onClose, onReportSubmitted, allVisits = [] }) {
   const { user } = useAuth();
+  const [allTasks, setAllTasks] = useState([]);
+
+  // Fetch real tasks from database
+  useEffect(() => {
+    let isMounted = true;
+    taskService.getTasks().then(res => {
+      if (res && res.success && Array.isArray(res.data) && isMounted) {
+        setAllTasks(res.data);
+      }
+    }).catch(() => {});
+    return () => { isMounted = false; };
+  }, []);
 
   // Wizard Steps: 'select_period' | 'preview'
   const [step, setStep] = useState('select_period');
@@ -101,17 +112,14 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
     });
   }, [allVisits, startDate, endDate]);
 
-  // 3. Filter Live Tasks for the Period
+  // 3. Filter Live Database Tasks for the Period
   const periodTasks = useMemo(() => {
-    let tasks = DEFAULT_TASKS;
-    try {
-      const saved = localStorage.getItem('forge_manager_tasks');
-      if (saved) tasks = JSON.parse(saved);
-    } catch (e) {
-      console.error(e);
-    }
-    return tasks;
-  }, []);
+    return allTasks.filter(t => {
+      if (!t.dueDate && !t.createdAt) return true;
+      const tDate = new Date(t.dueDate || t.createdAt);
+      return tDate >= startDate && tDate <= endDate;
+    });
+  }, [allTasks, startDate, endDate]);
 
   // 4. Compute Dynamic Summary Statistics
   const summary = useMemo(() => {
