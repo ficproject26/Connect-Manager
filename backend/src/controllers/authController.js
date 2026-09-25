@@ -486,12 +486,115 @@ const simulateKyc = async (req, res) => {
   }
 };
 
+// Sync Admin Master Territory Hierarchy into Manager Portal Collections
+async function syncAdminMasterTerritories() {
+  const endpoints = [
+    'http://127.0.0.1:8004/api/territory/hierarchy',
+    'http://localhost:8004/api/territory/hierarchy',
+    'https://api.ficapp.in/api/territory/hierarchy'
+  ];
+
+  for (const url of endpoints) {
+    try {
+      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      if (res.ok) {
+        const json = await res.json();
+        const hierarchy = json.hierarchy || json.states || [];
+        if (hierarchy && Array.isArray(hierarchy) && hierarchy.length > 0) {
+          const activeStates = [];
+          const activeDistricts = [];
+          const activeDivisions = [];
+          const activePincodes = [];
+
+          hierarchy.forEach(st => {
+            if (!st || !st.name) return;
+            const stateId = String(st._id || st.id);
+            activeStates.push({
+              _id: stateId,
+              id: stateId,
+              name: st.name.trim(),
+              code: st.code || st.name.slice(0, 2).toUpperCase(),
+              status: 'Active'
+            });
+
+            (st.districts || []).forEach(dt => {
+              if (!dt || !dt.name) return;
+              const distId = String(dt._id || dt.id);
+              activeDistricts.push({
+                _id: distId,
+                id: distId,
+                name: dt.name.trim(),
+                code: dt.code || dt.name.slice(0, 3).toUpperCase(),
+                stateId: stateId,
+                status: 'Active'
+              });
+
+              (dt.divisions || []).forEach(dv => {
+                if (!dv || !dv.name) return;
+                const divId = String(dv._id || dv.id);
+                activeDivisions.push({
+                  _id: divId,
+                  id: divId,
+                  name: dv.name.trim(),
+                  code: dv.code || dv.name.slice(0, 3).toUpperCase(),
+                  districtId: distId,
+                  stateId: stateId,
+                  status: 'Active'
+                });
+
+                (dv.pincodes || []).forEach(p => {
+                  const code = typeof p === 'string' ? p : (p.code || p.pincode);
+                  if (code) {
+                    const pinId = String(p._id || p.id || code);
+                    activePincodes.push({
+                      _id: pinId,
+                      id: pinId,
+                      code: String(code).trim(),
+                      name: p.name || p.postOffice || ('PIN ' + code),
+                      divisionId: divId,
+                      districtId: distId,
+                      stateId: stateId,
+                      status: 'Active'
+                    });
+                  }
+                });
+              });
+            });
+          });
+
+          if (activeStates.length > 0) {
+            await db.states.clear();
+            await db.states.insertMany(activeStates);
+
+            await db.districts.clear();
+            await db.districts.insertMany(activeDistricts);
+
+            await db.divisions.clear();
+            await db.divisions.insertMany(activeDivisions);
+
+            await db.pincodes.clear();
+            await db.pincodes.insertMany(activePincodes);
+
+            return { states: activeStates, districts: activeDistricts, divisions: activeDivisions, pincodes: activePincodes };
+          }
+        }
+      }
+    } catch (e) {
+      // try next endpoint
+    }
+  }
+  return null;
+}
+
 const getRegistrationLocations = async (req, res) => {
   try {
-    const states = await db.states.find();
-    const districts = await db.districts.find();
-    const divisions = await db.divisions.find();
-    const pincodes = await db.pincodes.find();
+    // Synchronize strictly with Admin Master Territory Database
+    await syncAdminMasterTerritories();
+
+    const states = await db.states.find({ status: 'Active' });
+    const districts = await db.districts.find({ status: 'Active' });
+    const divisions = await db.divisions.find({ status: 'Active' });
+    const pincodes = await db.pincodes.find({ status: 'Active' });
     const users = await db.users.find();
 
     const activeOrPending = users.filter(u => u.status === 'active' || u.status === 'under_review' || u.status === 'kyc_pending');
