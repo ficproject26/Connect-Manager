@@ -33,6 +33,7 @@ import {
   FileCheck2
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
+import { useRealtime } from '../realtime';
 
 const VendorDetails = ({ vendorId, onNavigate }) => {
   const [vendor, setVendor] = useState(null);
@@ -65,6 +66,17 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
   useEffect(() => {
     if (vendorId) fetchVendor(unmasked);
   }, [vendorId, unmasked]);
+
+  useRealtime('vendor', (ev) => {
+    if (String(ev.entityId) === String(vendorId)) {
+      if (ev.data) {
+        setVendor(prev => ({ ...prev, ...ev.data }));
+      } else {
+        fetchVendor(unmasked);
+      }
+    }
+  });
+
 
   const toggleMask = () => {
     setUnmasked(!unmasked);

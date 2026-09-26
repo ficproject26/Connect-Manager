@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { reportService } from '../services/api';
+import { useRealtime } from '../realtime';
 
 const Dashboard = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -33,30 +34,37 @@ const Dashboard = ({ onNavigate }) => {
   const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
   const [activityFilter, setActivityFilter] = useState('all');
 
+  const fetchDashboardMetrics = async () => {
+    try {
+      const [res, leadRes] = await Promise.all([
+        reportService.getDashboardStats(),
+        reportService.getLeaderboardData().catch(() => ({ success: false }))
+      ]);
+      if (res.success) {
+        setDashboardData(res);
+      }
+      if (leadRes.success && Array.isArray(leadRes.data)) {
+        setLeaderboardList(leadRes.data);
+      }
+    } catch (err) {
+      console.error('Failed to load real dashboard stats:', err);
+    } finally {
+      setLoadingStats(false);
+    }
+  };
+
   // Live Stats fetcher
   useEffect(() => {
-    let isMounted = true;
-    const fetchDashboardMetrics = async () => {
-      try {
-        const [res, leadRes] = await Promise.all([
-          reportService.getDashboardStats(),
-          reportService.getLeaderboardData().catch(() => ({ success: false }))
-        ]);
-        if (res.success && isMounted) {
-          setDashboardData(res);
-        }
-        if (leadRes.success && Array.isArray(leadRes.data) && isMounted) {
-          setLeaderboardList(leadRes.data);
-        }
-      } catch (err) {
-        console.error('Failed to load real dashboard stats:', err);
-      } finally {
-        if (isMounted) setLoadingStats(false);
-      }
-    };
     fetchDashboardMetrics();
-    return () => { isMounted = false; };
   }, [user]);
+
+  // Real-time synchronization: refresh dashboard metrics when tasks, vendors, or agents change
+  useRealtime('*', (event) => {
+    if (['task', 'vendor', 'agent', 'shop_visit', 'manager'].includes(event.entity)) {
+      fetchDashboardMetrics();
+    }
+  });
+
 
   // Exact KPI Metrics computed from database
   const kpis = dashboardData?.kpiMetrics || {

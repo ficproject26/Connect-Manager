@@ -4,6 +4,7 @@ require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const { v4: uuidv4 } = require('uuid');
 const { ObjectId } = require('mongodb');
 const { getMongoDb } = require('./mongo');
+const eventPublisher = require('../events/eventPublisher');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
 if (!fs.existsSync(DATA_DIR)) {
@@ -30,8 +31,10 @@ class Collection {
     this.mongoName = mongoCollectionName || name;
     this.filePath = path.join(DATA_DIR, `${name}.json`);
     this._mongoCol = null;
+    this._isReady = false;
     this._ensureFile();
     this._load();
+    this._isReady = true;
   }
 
   _ensureFile() {
@@ -200,6 +203,23 @@ class Collection {
       });
     }
 
+    if (this._isReady) {
+      eventPublisher.publishEntityEvent({
+        entity: this.name,
+        action: 'created',
+        entityId: newDoc._id || newDoc.id,
+        data: newDoc,
+        scope: {
+          stateId: newDoc.stateId || newDoc.state,
+          districtId: newDoc.districtId || newDoc.district,
+          divisionId: newDoc.divisionId || newDoc.division,
+          pincodeId: newDoc.pincodeId || newDoc.pincode,
+          targetUserId: newDoc.targetUserId || newDoc.assignedTo || newDoc.userId,
+          role: newDoc.role
+        }
+      }).catch(() => {});
+    }
+
     return newDoc;
   }
 
@@ -238,6 +258,32 @@ class Collection {
       });
     }
 
+    if (this._isReady && newDocs.length > 0) {
+      if (newDocs.length === 1) {
+        const doc = newDocs[0];
+        eventPublisher.publishEntityEvent({
+          entity: this.name,
+          action: 'created',
+          entityId: doc._id || doc.id,
+          data: doc,
+          scope: {
+            stateId: doc.stateId || doc.state,
+            districtId: doc.districtId || doc.district,
+            divisionId: doc.divisionId || doc.division,
+            pincodeId: doc.pincodeId || doc.pincode,
+            targetUserId: doc.targetUserId || doc.assignedTo || doc.userId,
+            role: doc.role
+          }
+        }).catch(() => {});
+      } else {
+        eventPublisher.publishBatchEvent({
+          entity: this.name,
+          action: 'batch_created',
+          items: newDocs
+        }).catch(() => {});
+      }
+    }
+
     return newDocs;
   }
 
@@ -270,6 +316,23 @@ class Collection {
         });
     }
 
+    if (this._isReady && updated) {
+      eventPublisher.publishEntityEvent({
+        entity: this.name,
+        action: 'updated',
+        entityId: updated._id || updated.id,
+        data: updated,
+        scope: {
+          stateId: updated.stateId || updated.state,
+          districtId: updated.districtId || updated.district,
+          divisionId: updated.divisionId || updated.division,
+          pincodeId: updated.pincodeId || updated.pincode,
+          targetUserId: updated.targetUserId || updated.assignedTo || updated.userId,
+          role: updated.role
+        }
+      }).catch(() => {});
+    }
+
     return updated;
   }
 
@@ -299,6 +362,23 @@ class Collection {
       });
     }
 
+    if (this._isReady && updated) {
+      eventPublisher.publishEntityEvent({
+        entity: this.name,
+        action: 'updated',
+        entityId: updated._id || updated.id,
+        data: updated,
+        scope: {
+          stateId: updated.stateId || updated.state,
+          districtId: updated.districtId || updated.district,
+          divisionId: updated.divisionId || updated.division,
+          pincodeId: updated.pincodeId || updated.pincode,
+          targetUserId: updated.targetUserId || updated.assignedTo || updated.userId,
+          role: updated.role
+        }
+      }).catch(() => {});
+    }
+
     return updated;
   }
 
@@ -317,6 +397,22 @@ class Collection {
       this._mongoCol.deleteOne(cleanQuery).catch(err => {
         console.error(`[Manager MongoDB] Async deleteOne error in ${this.name}:`, err.message);
       });
+    }
+
+    if (this._isReady) {
+      const deletedId = query._id || query.id || 'deleted';
+      eventPublisher.publishEntityEvent({
+        entity: this.name,
+        action: 'deleted',
+        entityId: String(deletedId),
+        data: { id: deletedId, ...cleanQuery },
+        scope: {
+          stateId: cleanQuery.stateId || cleanQuery.state,
+          districtId: cleanQuery.districtId || cleanQuery.district,
+          divisionId: cleanQuery.divisionId || cleanQuery.division,
+          pincodeId: cleanQuery.pincodeId || cleanQuery.pincode
+        }
+      }).catch(() => {});
     }
 
     return { deletedCount: records.length - filtered.length };
@@ -366,6 +462,25 @@ function initDatabase() {
       const collections = Object.values(db).filter(c => c && typeof c.initMongo === 'function');
       await Promise.all(collections.map(col => col.initMongo(mongoDb)));
       console.log('✅ [Manager Database] All Manager collections linked to MongoDB Atlas.');
+
+      // Ensure performance indexes in MongoDB Atlas
+      try {
+        await Promise.allSettled([
+          mongoDb.collection('managers').createIndex({ email: 1 }),
+          mongoDb.collection('managers').createIndex({ role: 1, status: 1 }),
+          mongoDb.collection('vendors').createIndex({ status: 1, kycStatus: 1 }),
+          mongoDb.collection('vendors').createIndex({ pincode: 1 }),
+          mongoDb.collection('tasks').createIndex({ status: 1, createdAt: -1 }),
+          mongoDb.collection('tasks').createIndex({ assignedTo: 1 }),
+          mongoDb.collection('agents').createIndex({ status: 1 }),
+          mongoDb.collection('notifications').createIndex({ userId: 1, isRead: 1 }),
+          mongoDb.collection('pincodes').createIndex({ code: 1 }),
+          mongoDb.collection('districts').createIndex({ stateId: 1 }),
+          mongoDb.collection('divisions').createIndex({ districtId: 1 })
+        ]);
+        console.log('⚡ [Manager Database] Performance indexes verified in MongoDB Atlas.');
+      } catch (idxErr) {}
+
       return true;
     } catch (err) {
       console.error('[Manager Database] Init error:', err.message);
@@ -379,5 +494,3 @@ initDatabase().catch(e => console.warn('[Manager Database] Auto-init:', e.messag
 
 db.initDatabase = initDatabase;
 module.exports = db;
-
-

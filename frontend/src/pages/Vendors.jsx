@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { vendorService, locationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useRealtime } from '../realtime';
+import { useRealtime, applyRealtimeUpdate } from '../realtime';
 import { 
   Search, 
   Filter, 
@@ -100,9 +100,14 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   }, [search, category, status, districtId, divisionId, pincodeId]);
 
   // Real-time synchronization without manual refresh
-  useRealtime('vendor', () => {
-    loadVendors(pagination.page || 1);
+  useRealtime('vendor', (event) => {
+    if (event.action === 'updated' && event.data) {
+      setVendors(prev => applyRealtimeUpdate(prev, event));
+    } else {
+      loadVendors(pagination.page || 1);
+    }
   });
+
 
   const resetFilters = () => {
     setSearch('');

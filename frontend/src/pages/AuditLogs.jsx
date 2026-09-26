@@ -1,24 +1,38 @@
 import React, { useState, useEffect } from 'react';
 import { auditService } from '../services/api';
 import { History, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useRealtime } from '../realtime';
 
 const AuditLogs = ({ onNavigate }) => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const fetchLogs = async () => {
+    try {
+      const res = await auditService.getAuditLogs();
+      if (res.success) setLogs(res.data);
+    } catch (err) {
+      console.error('Failed to load audit logs:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const res = await auditService.getAuditLogs();
-        if (res.success) setLogs(res.data);
-      } catch (err) {
-        console.error('Failed to load audit logs:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchLogs();
   }, []);
+
+  useRealtime('audit', (event) => {
+    if (event.action === 'created' && event.data) {
+      setLogs((prev) => [event.data, ...prev.filter(l => (l._id || l.id) !== (event.data._id || event.data.id))]);
+    }
+  });
+  useRealtime('audit_logs', (event) => {
+    if (event.action === 'created' && event.data) {
+      setLogs((prev) => [event.data, ...prev.filter(l => (l._id || l.id) !== (event.data._id || event.data.id))]);
+    }
+  });
+
 
   const getActionBadgeColor = (action) => {
     switch (action) {

@@ -1,2 +1,3 @@
-export { default as realtimeClient } from './realtimeClient';
-export { useRealtime, applyRealtimeUpdate } from './useRealtime';
+export { realtimeClient } from './websocketClient';
+export { default as WebSocketClient } from './websocketClient';
+export { useRealtime, useRealtimeSync, applyRealtimeUpdate, applyEntityUpdate } from './useRealtime';

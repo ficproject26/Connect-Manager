@@ -2,27 +2,34 @@ import React, { useState, useEffect } from 'react';
 import { vendorService } from '../services/api';
 import { UserCheck, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
+import { useRealtime } from '../realtime';
 
 const VendorRequests = ({ onNavigate }) => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
 
-  useEffect(() => {
-    const fetchRequests = async () => {
-      try {
-        const res = await vendorService.getVendors({ status: 'Pending' });
-        if (res.success) {
-          setVendors(res.data);
-        }
-      } catch (err) {
-        console.error('Failed to load vendor requests:', err);
-      } finally {
-        setLoading(false);
+  const fetchRequests = async () => {
+    try {
+      const res = await vendorService.getVendors({ status: 'Pending' });
+      if (res.success) {
+        setVendors(res.data);
       }
-    };
+    } catch (err) {
+      console.error('Failed to load vendor requests:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchRequests();
   }, []);
+
+  useRealtime('vendor', () => {
+    fetchRequests();
+  });
+
 
   const pendingList = vendors.filter(v => 
     v.businessName?.toLowerCase().includes(search.toLowerCase()) || 

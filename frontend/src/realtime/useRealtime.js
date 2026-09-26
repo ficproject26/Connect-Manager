@@ -1,9 +1,10 @@
 import { useEffect, useRef } from 'react';
-import realtimeClient from './realtimeClient';
+import { realtimeClient } from './websocketClient';
+import { applyRealtimeUpdate, applyEntityUpdate } from './stateSync';
 
 /**
  * React hook to listen for real-time entity updates without reloading the page.
- * @param {string} entity - Entity to listen for (e.g., 'task', 'vendor', 'agent', 'wallet', '*')
+ * @param {string} entity - Entity to listen for (e.g., 'task', 'vendor', 'agent', 'notification', '*')
  * @param {Function} onEvent - Callback executed with event payload { event, entity, entityId, action, data, version }
  * @param {Array} deps - Dependency array
  */
@@ -27,37 +28,31 @@ export function useRealtime(entity, onEvent, deps = []) {
 }
 
 /**
- * State updater helper that mutates or updates an array of records in place
- * without disturbing active form state, pagination, or filters.
+ * React hook to automatically bind a state list to real-time events for an entity.
+ * In-place updates preserve active filters, search inputs, and pagination.
+ * @param {string} entity - Entity name ('task', 'vendor', etc.)
+ * @param {Function} setData - React setState function for list
+ * @param {Object} [options]
+ * @param {string} [options.idField='_id'] - Primary key field
+ * @param {Function} [options.onUpdate] - Optional custom handler
  */
-export function applyRealtimeUpdate(prevList, event, idField = '_id') {
-  if (!Array.isArray(prevList)) return prevList;
-  const { action, entityId, data } = event;
-  const targetId = String(entityId || data?._id || data?.id);
+export function useRealtimeSync(entity, setData, options = {}) {
+  const idField = options.idField || '_id';
+  const onUpdate = options.onUpdate;
 
-  if (action === 'deleted') {
-    return prevList.filter(item => String(item[idField] || item.id) !== targetId);
-  }
-
-  if (action === 'created') {
-    // If not already in list, prepend
-    const exists = prevList.some(item => String(item[idField] || item.id) === targetId);
-    if (!exists && data) {
-      return [data, ...prevList];
+  useRealtime(entity, (event) => {
+    if (typeof setData === 'function') {
+      setData((prev) => {
+        if (!Array.isArray(prev)) return prev;
+        return applyRealtimeUpdate(prev, event, idField);
+      });
     }
-    return prevList;
-  }
 
-  if (action === 'updated') {
-    const idx = prevList.findIndex(item => String(item[idField] || item.id) === targetId);
-    if (idx >= 0) {
-      const updatedList = [...prevList];
-      updatedList[idx] = { ...updatedList[idx], ...data };
-      return updatedList;
+    if (typeof onUpdate === 'function') {
+      onUpdate(event);
     }
-  }
-
-  return prevList;
+  });
 }
 
+export { applyRealtimeUpdate, applyEntityUpdate };
 export default useRealtime;

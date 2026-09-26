@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
+import { useRealtime } from '../realtime';
 
 const Notifications = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -20,9 +21,9 @@ const Notifications = ({ onNavigate }) => {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'vendor' | 'task' | 'unread'
   const [searchQuery, setSearchQuery] = useState('');
-  const esRef = useRef(null);
 
   const token = localStorage.getItem('agent_mgr_token') || '';
+
 
   const fetchNotifications = async () => {
     if (!token || token.startsWith('mock_token_')) {
@@ -53,39 +54,19 @@ const Notifications = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchNotifications();
-
-    // Listen to real-time events via SSE
-    try {
-      if (typeof window !== 'undefined' && 'EventSource' in window && token && !token.startsWith('mock_token_')) {
-        const sseUrl = `${API_BASE}/notifications/stream?token=${encodeURIComponent(token)}`;
-        const es = new EventSource(sseUrl);
-        esRef.current = es;
-
-        es.onmessage = (event) => {
-          try {
-            const parsed = JSON.parse(event.data);
-            if (parsed.type === 'notification' && parsed.data) {
-              setNotifications(prev => [parsed.data, ...prev.filter(n => n._id !== parsed.data._id)]);
-            }
-          } catch (e) {}
-        };
-
-        es.onerror = () => {
-          if (esRef.current) {
-            esRef.current.close();
-            esRef.current = null;
-          }
-        };
-      }
-    } catch (err) {}
-
-    return () => {
-      if (esRef.current) {
-        esRef.current.close();
-        esRef.current = null;
-      }
-    };
   }, [user]);
+
+  // Real-time synchronization
+  useRealtime('notification', (ev) => {
+    if (ev.action === 'created' && ev.data) {
+      setNotifications(prev => [ev.data, ...prev.filter(n => (n._id || n.id) !== (ev.data._id || ev.data.id))]);
+    } else if (ev.action === 'updated' && ev.data) {
+      setNotifications(prev => prev.map(n => ((n._id || n.id) === (ev.data._id || ev.data.id) ? { ...n, ...ev.data } : n)));
+    } else if (ev.action === 'deleted') {
+      const delId = String(ev.entityId);
+      setNotifications(prev => prev.filter(n => String(n._id || n.id) !== delId));
+    }
+  });
 
   const markAsRead = async (id) => {
     try {

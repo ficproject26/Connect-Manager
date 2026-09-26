@@ -3,12 +3,13 @@ import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings } from 'l
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
 
+import { useRealtime } from '../realtime';
+
 const Navbar = ({ onNavigate }) => {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
-  const esRef = useRef(null);
   const profileDropdownRef = useRef(null);
 
   // Close dropdown on outside touch or click anywhere on screen
@@ -28,68 +29,37 @@ const Navbar = ({ onNavigate }) => {
     };
   }, [dropdownOpen]);
 
-  // Sync unread notification count & subscribe to real-time SSE
-  useEffect(() => {
-    let isMounted = true;
+  // Sync unread notification count
+  const fetchCount = async () => {
     const token = localStorage.getItem('agent_mgr_token') || '';
     if (!token || token.startsWith('mock_token_')) {
       setUnreadCount(0);
       return;
     }
-
-    async function fetchCount() {
-      try {
-        const res = await fetch(`${API_BASE}/notifications/unread-count`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        if (!res.ok) return;
-        const data = await res.json().catch(() => ({}));
-        if (data.success && isMounted) {
-          setUnreadCount(data.unreadCount || 0);
-        }
-      } catch (e) {
-        // ignore network error
-      }
-    }
-
-    fetchCount();
-
     try {
-      if (typeof window !== 'undefined' && 'EventSource' in window) {
-        const sseUrl = `${API_BASE}/notifications/stream?token=${encodeURIComponent(token)}`;
-        const es = new EventSource(sseUrl);
-        esRef.current = es;
-
-        es.onmessage = (event) => {
-          try {
-            const parsed = JSON.parse(event.data);
-            if (parsed.type === 'notification') {
-              setUnreadCount(prev => prev + 1);
-            }
-          } catch (e) {}
-        };
-
-        es.onerror = () => {
-          // If server returns 404 or stream fails, close immediately to prevent reconnect loop
-          if (esRef.current) {
-            esRef.current.close();
-            esRef.current = null;
-          }
-        };
+      const res = await fetch(`${API_BASE}/notifications/unread-count`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) return;
+      const data = await res.json().catch(() => ({}));
+      if (data.success) {
+        setUnreadCount(data.unreadCount || 0);
       }
-    } catch (err) {}
+    } catch (e) {}
+  };
 
-    const interval = setInterval(fetchCount, 30000);
+  useEffect(() => {
+    fetchCount();
+  }, []);
 
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-      if (esRef.current) {
-        esRef.current.close();
-        esRef.current = null;
-      }
-    };
-  }, [user]);
+  // Real-time synchronization for notifications
+  useRealtime('notification', (ev) => {
+    if (ev.action === 'created') {
+      setUnreadCount(prev => prev + 1);
+    } else {
+      fetchCount();
+    }
+  });
 
   const getRoleDisplayName = (role) => {
     switch (role) {

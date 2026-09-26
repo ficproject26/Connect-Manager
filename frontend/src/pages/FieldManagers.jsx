@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { managerService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useRealtime } from '../realtime';
+
 import { 
   Users, 
   Search, 
@@ -32,28 +34,36 @@ const FieldManagers = () => {
   const [selectedManager, setSelectedManager] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
 
-  useEffect(() => {
-    const fetchManagers = async () => {
-      try {
-        setLoading(true);
-        const res = await managerService.getManagerDirectory();
-        if (res.success) {
-          const currentId = user?.id || user?._id;
-          const rawAll = res.all || [...(res.peers || []), ...(res.subordinates || res.data || [])];
-          const all = rawAll.filter(m => !m.isSelf && m.id !== currentId);
-          setAllManagers(all);
-          setPeersList((res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && m.id !== currentId));
-          setSubordinatesList((res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && m.id !== currentId));
-        }
-      } catch (err) {
-        console.error('Failed to load manager directory:', err);
-      } finally {
-        setLoading(false);
+  const fetchManagers = async () => {
+    try {
+      setLoading(true);
+      const res = await managerService.getManagerDirectory();
+      if (res.success) {
+        const currentId = user?.id || user?._id;
+        const rawAll = res.all || [...(res.peers || []), ...(res.subordinates || res.data || [])];
+        const all = rawAll.filter(m => !m.isSelf && m.id !== currentId);
+        setAllManagers(all);
+        setPeersList((res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && m.id !== currentId));
+        setSubordinatesList((res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && m.id !== currentId));
       }
-    };
+    } catch (err) {
+      console.error('Failed to load manager directory:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchManagers();
   }, [user]);
+
+  useRealtime('manager', () => {
+    fetchManagers();
+  });
+  useRealtime('user', () => {
+    fetchManagers();
+  });
+
 
   const handleCopy = (text, fieldId) => {
     if (!text) return;

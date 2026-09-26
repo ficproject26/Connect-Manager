@@ -1,9 +1,16 @@
 const db = require('../config/db');
+const { cacheManager } = require('../realtime');
 
 // GET /api/states - Read-only, filtered by manager's scope, strictly Active
 const getStates = async (req, res) => {
   try {
     const user = req.user || {};
+    const cacheKey = `territory:states:${user.id || 'public'}:${user.stateId || user.state || 'all'}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     let states = await db.states.find({ status: 'Active' });
 
     if (user.stateId) {
@@ -12,7 +19,9 @@ const getStates = async (req, res) => {
       states = states.filter(s => s.name?.toLowerCase() === user.state.toLowerCase());
     }
 
-    res.json({ success: true, data: states, states });
+    const payload = { success: true, data: states, states };
+    await cacheManager.set(cacheKey, payload, 600);
+    res.json(payload);
   } catch (err) {
     console.error('Get states error:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve states' });
@@ -34,6 +43,12 @@ const getDistricts = async (req, res) => {
       }
     }
 
+    const cacheKey = `territory:districts:${user.id || 'public'}:${targetStateId || 'all'}:${user.districtId || user.district || 'all'}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     let query = { status: 'Active' };
     if (targetStateId) {
       query.stateId = targetStateId;
@@ -48,7 +63,9 @@ const getDistricts = async (req, res) => {
       districts = districts.filter(d => d.name?.toLowerCase() === user.district.toLowerCase());
     }
 
-    res.json({ success: true, data: districts, districts });
+    const payload = { success: true, data: districts, districts };
+    await cacheManager.set(cacheKey, payload, 600);
+    res.json(payload);
   } catch (err) {
     console.error('Get districts error:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve districts' });
@@ -70,6 +87,12 @@ const getDivisions = async (req, res) => {
       }
     }
 
+    const cacheKey = `territory:divisions:${user.id || 'public'}:${targetDistrictId || 'all'}:${user.divisionId || user.division || 'all'}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     let query = { status: 'Active' };
     if (targetDistrictId) {
       query.districtId = targetDistrictId;
@@ -85,7 +108,9 @@ const getDivisions = async (req, res) => {
       divisions = divisions.filter(d => d.name?.toLowerCase() === user.division.toLowerCase());
     }
 
-    res.json({ success: true, data: divisions, divisions });
+    const payload = { success: true, data: divisions, divisions };
+    await cacheManager.set(cacheKey, payload, 600);
+    res.json(payload);
   } catch (err) {
     console.error('Get divisions error:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve divisions' });
@@ -107,6 +132,12 @@ const getPincodes = async (req, res) => {
       }
     }
 
+    const cacheKey = `territory:pincodes:${user.id || 'public'}:${targetDivisionId || 'all'}:${user.pincodeId || user.pincode || 'all'}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     let query = { status: 'Active' };
     if (targetDivisionId) {
       query.divisionId = targetDivisionId;
@@ -124,7 +155,9 @@ const getPincodes = async (req, res) => {
       pincodes = pincodes.filter(p => String(p.code || p.pincode).trim() === String(user.pincode).trim());
     }
 
-    res.json({ success: true, data: pincodes, pincodes });
+    const payload = { success: true, data: pincodes, pincodes };
+    await cacheManager.set(cacheKey, payload, 600);
+    res.json(payload);
   } catch (err) {
     console.error('Get pincodes error:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve pincodes' });
