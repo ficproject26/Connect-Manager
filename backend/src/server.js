@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -69,6 +69,7 @@ app.use((err, req, res, next) => {
 // Auto-seed if database is clean
 const seedData = require('./seed/seed');
 async function startServer() {
+  if (db.initDatabase) { await db.initDatabase(); }
   const usersCount = await db.users.count();
   if (usersCount === 0) {
     console.log('No data found in datastore. Running seed...');
@@ -77,8 +78,8 @@ async function startServer() {
 
   app.listen(PORT, () => {
     console.log(`=============================================`);
-    console.log(`🚀 Agent Manager API Server running on port ${PORT}`);
-    console.log(`🌐 Health endpoint: http://localhost:${PORT}/api/health`);
+    console.log(`ðŸš€ Agent Manager API Server running on port ${PORT}`);
+    console.log(`ðŸŒ Health endpoint: http://localhost:${PORT}/api/health`);
     console.log(`=============================================`);
   });
 }
@@ -88,3 +89,4 @@ if (require.main === module) {
 }
 
 module.exports = app;
+

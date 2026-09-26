@@ -318,7 +318,7 @@ function initDatabase() {
         console.warn('[Manager Database] MongoDB Atlas not reachable, using local store.');
         return false;
       }
-      const collections = Object.values(db);
+      const collections = Object.values(db).filter(c => c && typeof c.initMongo === 'function');
       await Promise.all(collections.map(col => col.initMongo(mongoDb)));
       console.log('✅ [Manager Database] All Manager collections linked to MongoDB Atlas.');
       return true;
@@ -334,4 +334,5 @@ initDatabase().catch(e => console.warn('[Manager Database] Auto-init:', e.messag
 
 db.initDatabase = initDatabase;
 module.exports = db;
+
 
