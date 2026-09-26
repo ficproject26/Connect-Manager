@@ -270,10 +270,11 @@ async function runTestSuite() {
     assert(cachedBefore !== null, 'Cache key successfully stored');
 
     // Invalidate pattern
-    cacheManager.invalidatePattern('territory:*');
-    await new Promise((r) => setTimeout(r, 50));
+    await cacheManager.invalidatePattern('territory:*');
+    await new Promise((r) => setTimeout(r, 100));
     const cachedAfter = await cacheManager.get(cacheKey);
     assert(cachedAfter === null, 'Cache entry instantly purged on invalidation signal');
+
 
     // -------------------------------------------------------------
     // TEST 6: Heartbeat Ping / Pong

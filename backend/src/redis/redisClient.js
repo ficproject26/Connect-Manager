@@ -24,20 +24,27 @@ class RedisBroker {
   }
 
   init() {
-    const redisUrl = process.env.REDIS_URL;
+    const rawUrl = process.env.REDIS_URL;
+    let redisUrl = null;
+    if (rawUrl) {
+      const match = rawUrl.match(/(rediss?:\/\/[^\s'"]+)/);
+      redisUrl = match ? match[1] : rawUrl.trim();
+    }
     const redisHost = process.env.REDIS_HOST || '127.0.0.1';
     const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
     const redisPassword = process.env.REDIS_PASSWORD || undefined;
 
+
     const redisOptions = {
-      maxRetriesPerRequest: 1,
-      connectTimeout: 2000,
+      maxRetriesPerRequest: 3,
+      connectTimeout: 10000,
       lazyConnect: true,
-      enableOfflineQueue: false,
-      retryStrategy: (times) => (times > 5 ? null : Math.min(times * 300, 2000))
+      enableOfflineQueue: true,
+      retryStrategy: (times) => (times > 10 ? null : Math.min(times * 500, 5000))
     };
 
     if (redisPassword) redisOptions.password = redisPassword;
+
 
     try {
       this.pubClient = redisUrl

@@ -90,7 +90,7 @@ class CacheManager {
     this.purgeLocalKey(key, true);
   }
 
-  purgeLocalKey(key, broadcast = true) {
+  async purgeLocalKey(key, broadcast = true) {
     this.stats.invalidations++;
     this.memoryCache.delete(key);
     if (this.ttlTimers.has(key)) {
@@ -107,11 +107,13 @@ class CacheManager {
     }
 
     if (redisBroker.isRedisConnected && redisBroker.pubClient) {
-      redisBroker.pubClient.del(`cache:${key}`).catch(() => {});
+      try {
+        await redisBroker.pubClient.del(`cache:${key}`);
+      } catch (e) {}
     }
   }
 
-  purgeLocalPattern(pattern, broadcast = true) {
+  async purgeLocalPattern(pattern, broadcast = true) {
     this.stats.invalidations++;
     const regex = new RegExp('^' + pattern.replace(/\*/g, '.*') + '$');
     for (const key of this.memoryCache.keys()) {
@@ -131,18 +133,28 @@ class CacheManager {
         timestamp: Date.now()
       }).catch(() => {});
     }
+
+    if (redisBroker.isRedisConnected && redisBroker.pubClient) {
+      try {
+        const redisPattern = `cache:${pattern}`;
+        const keys = await redisBroker.pubClient.keys(redisPattern);
+        if (keys && keys.length > 0) {
+          await redisBroker.pubClient.del(...keys);
+        }
+      } catch (e) {}
+    }
   }
 
-  purgeLocalEntity(entity, entityId = null, broadcast = true) {
+  async purgeLocalEntity(entity, entityId = null, broadcast = true) {
     const e = String(entity).toLowerCase();
-    this.purgeLocalPattern(`${e}:*`, false);
+    await this.purgeLocalPattern(`${e}:*`, false);
     if (entityId) {
-      this.purgeLocalKey(`${e}_${entityId}`, false);
+      await this.purgeLocalKey(`${e}_${entityId}`, false);
     }
 
     // Also purge global aggregations
-    this.purgeLocalPattern('stats:*', false);
-    this.purgeLocalPattern('dashboard:*', false);
+    await this.purgeLocalPattern('stats:*', false);
+    await this.purgeLocalPattern('dashboard:*', false);
 
     if (broadcast) {
       redisBroker.publish(CHANNELS.CACHE, {
@@ -154,13 +166,14 @@ class CacheManager {
     }
   }
 
-  invalidateEntity(entity, entityId = null) {
-    this.purgeLocalEntity(entity, entityId, true);
+  async invalidateEntity(entity, entityId = null) {
+    return this.purgeLocalEntity(entity, entityId, true);
   }
 
-  invalidatePattern(pattern) {
-    this.purgeLocalPattern(pattern, true);
+  async invalidatePattern(pattern) {
+    return this.purgeLocalPattern(pattern, true);
   }
+
 
   getStats() {
     return {
