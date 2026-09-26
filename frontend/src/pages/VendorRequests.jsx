@@ -61,30 +61,34 @@ const VendorRequests = ({ onNavigate }) => {
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{ width: '22%', textAlign: 'left', paddingLeft: '20px' }}>Business Name</th>
-              <th style={{ width: '16%', textAlign: 'left' }}>Category</th>
-              <th style={{ width: '15%', textAlign: 'left' }}>Applicant</th>
+              <th style={{ width: '5%', textAlign: 'center', paddingLeft: '16px' }}>S.No</th>
+              <th style={{ width: '20%', textAlign: 'left', paddingLeft: '12px' }}>Business Name</th>
+              <th style={{ width: '15%', textAlign: 'left' }}>Category</th>
+              <th style={{ width: '14%', textAlign: 'left' }}>Applicant</th>
               <th style={{ width: '14%', textAlign: 'left' }}>Contact</th>
               <th style={{ width: '10%', textAlign: 'center' }}>Status</th>
               <th style={{ width: '11%', textAlign: 'center' }}>Submission Date</th>
-              <th style={{ width: '12%', textAlign: 'center', paddingRight: '20px' }}>Action</th>
+              <th style={{ width: '11%', textAlign: 'center', paddingRight: '20px' }}>Action</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>Loading requests...</td>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '32px', color: '#64748b' }}>Loading requests...</td>
               </tr>
             ) : pendingList.length === 0 ? (
               <tr>
-                <td colSpan="7" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
+                <td colSpan="8" style={{ textAlign: 'center', padding: '32px', color: 'var(--text-muted)' }}>
                   No pending vendor requests requiring action in your scope.
                 </td>
               </tr>
             ) : (
-              pendingList.map((v) => (
+              pendingList.map((v, index) => (
                 <tr key={v._id}>
-                  <td style={{ paddingLeft: '20px' }}>
+                  <td style={{ textAlign: 'center', paddingLeft: '16px', fontWeight: 600, color: '#64748b', fontSize: '0.82rem' }}>
+                    {index + 1}
+                  </td>
+                  <td style={{ paddingLeft: '12px' }}>
                     <strong style={{ color: '#0f172a' }}>{v.businessName}</strong>
                     <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px' }}>GSTIN: {v.gstin || 'N/A'}</div>
                   </td>

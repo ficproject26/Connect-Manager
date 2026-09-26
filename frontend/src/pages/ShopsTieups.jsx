@@ -78,6 +78,7 @@ const ShopsTieups = ({ onNavigate }) => {
           <table className="data-table">
             <thead>
               <tr>
+                <th style={{ width: '55px', textAlign: 'center' }}>S.No</th>
                 <th>Shop / Partner Name</th>
                 <th>Category</th>
                 <th>Contact</th>
@@ -85,8 +86,11 @@ const ShopsTieups = ({ onNavigate }) => {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((item) => (
+              {filtered.map((item, index) => (
                 <tr key={item._id || item.id}>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '0.82rem' }}>
+                    {index + 1}
+                  </td>
                   <td>
                     <strong>{item.businessName || item.name}</strong>
                   </td>

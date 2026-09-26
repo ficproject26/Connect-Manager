@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { vendorService, locationService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { 
@@ -210,32 +210,36 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
         <table className="data-table">
           <thead>
             <tr>
-              <th style={{ width: '25%', textAlign: 'left', paddingLeft: '20px' }}>Business & Contact</th>
-              <th style={{ width: '18%', textAlign: 'left' }}>Category</th>
-              <th style={{ width: '22%', textAlign: 'left' }}>Location Scope</th>
-              <th style={{ width: '17%', textAlign: 'left' }}>Masked Identifiers</th>
+              <th style={{ width: '5%', textAlign: 'center', paddingLeft: '16px' }}>S.No</th>
+              <th style={{ width: '24%', textAlign: 'left', paddingLeft: '12px' }}>Business & Contact</th>
+              <th style={{ width: '17%', textAlign: 'left' }}>Category</th>
+              <th style={{ width: '21%', textAlign: 'left' }}>Location Scope</th>
+              <th style={{ width: '16%', textAlign: 'left' }}>Masked Identifiers</th>
               <th style={{ width: '8%', textAlign: 'center' }}>Status</th>
-              <th style={{ width: '10%', textAlign: 'center', paddingRight: '20px' }}>Actions</th>
+              <th style={{ width: '9%', textAlign: 'center', paddingRight: '20px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '36px', color: '#64748b' }}>
                   Loading vendors within your scope...
                 </td>
               </tr>
             ) : vendors.length === 0 ? (
               <tr>
-                <td colSpan="6" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
+                <td colSpan="7" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
                   <Store size={36} style={{ margin: '0 auto 8px', color: '#cbd5e1', display: 'block' }} />
                   <div>No vendors found matching your current scope & filters.</div>
                 </td>
               </tr>
             ) : (
-              vendors.map((v) => (
+              vendors.map((v, index) => (
                 <tr key={v._id}>
-                  <td style={{ paddingLeft: '20px' }}>
+                  <td style={{ textAlign: 'center', paddingLeft: '16px', fontWeight: 600, color: '#64748b', fontSize: '0.82rem' }}>
+                    {(pagination?.page ? (pagination.page - 1) * (pagination.limit || 10) : 0) + index + 1}
+                  </td>
+                  <td style={{ paddingLeft: '12px' }}>
                     <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem' }}>
                       {v.businessName}
                     </div>

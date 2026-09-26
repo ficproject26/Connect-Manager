@@ -216,6 +216,7 @@ const DistrictDashboard = ({ user, onNavigate }) => {
           <table className="data-table">
             <thead>
               <tr>
+                <th style={{ width: '55px', textAlign: 'center' }}>S.No</th>
                 <th>Business Name</th>
                 <th>Category</th>
                 <th>Mobile</th>
@@ -224,8 +225,11 @@ const DistrictDashboard = ({ user, onNavigate }) => {
               </tr>
             </thead>
             <tbody>
-              {recentVendors.map((v) => (
+              {recentVendors.map((v, index) => (
                 <tr key={v._id}>
+                  <td style={{ textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '0.82rem' }}>
+                    {index + 1}
+                  </td>
                   <td>
                     <div style={{ fontWeight: 600 }}>{v.businessName}</div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{v.name}</div>
