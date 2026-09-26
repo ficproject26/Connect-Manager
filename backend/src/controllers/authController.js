@@ -191,6 +191,40 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'State, District, Division, and PIN Code selections are required for PIN Code Manager.' });
     }
 
+    // Mandatory Backend Territory Hierarchy Validation against Single Source of Truth
+    let stateDoc = null;
+    let distDoc = null;
+    let divDoc = null;
+    let pinDoc = null;
+
+    if (stateId) {
+      stateDoc = await db.states.findOne({ _id: stateId, status: 'Active' });
+      if (!stateDoc) {
+        return res.status(400).json({ success: false, message: 'Selected State does not exist or is not active in Admin Territory Management.' });
+      }
+    }
+
+    if (districtId) {
+      distDoc = await db.districts.findOne({ _id: districtId, stateId: stateDoc ? (stateDoc._id || stateId) : stateId, status: 'Active' });
+      if (!distDoc) {
+        return res.status(400).json({ success: false, message: 'Selected District does not belong to the selected State or is not active.' });
+      }
+    }
+
+    if (divisionId) {
+      divDoc = await db.divisions.findOne({ _id: divisionId, districtId: distDoc ? (distDoc._id || districtId) : districtId, status: 'Active' });
+      if (!divDoc) {
+        return res.status(400).json({ success: false, message: 'Selected Division does not belong to the selected District or is not active.' });
+      }
+    }
+
+    if (pincodeId) {
+      pinDoc = await db.pincodes.findOne({ _id: pincodeId, divisionId: divDoc ? (divDoc._id || divisionId) : divisionId, status: 'Active' });
+      if (!pinDoc) {
+        return res.status(400).json({ success: false, message: 'Selected PIN Code does not belong to the selected Division or is not active.' });
+      }
+    }
+
     // Check duplicate email or mobile
     const existingEmail = await db.users.findOne({ email: email.trim().toLowerCase() });
     if (existingEmail) {
@@ -235,6 +269,14 @@ const register = async (req, res) => {
       districtId: districtId || null,
       divisionId: divisionId || null,
       pincodeId: pincodeId || null,
+      state: stateDoc?.name || null,
+      district: distDoc?.name || null,
+      division: divDoc?.name || null,
+      pincode: pinDoc?.code || null,
+      stateName: stateDoc?.name || null,
+      districtName: distDoc?.name || null,
+      divisionName: divDoc?.name || null,
+      pincodeCode: pinDoc?.code || null,
       regionId: stateId || null,
       avatarUrl: avatarUrl || null
     });

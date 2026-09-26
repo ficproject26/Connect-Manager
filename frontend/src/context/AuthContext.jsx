@@ -10,15 +10,15 @@ export const DEMO_ACCOUNTS = [
     label: 'System Admin (Statewide)',
     email: 'admin@example.com',
     password: 'admin123',
-    scopeName: 'Karnataka (Statewide)'
+    scopeName: 'Tamil Nadu (Statewide)'
   },
   {
     key: 'state',
     role: 'state_manager',
-    label: 'State Manager (Karnataka)',
+    label: 'State Manager (Tamil Nadu)',
     email: 'state.mgr1@example.com',
     password: 'Password@123',
-    scopeName: 'Karnataka (Statewide)'
+    scopeName: 'Tamil Nadu (Statewide)'
   },
   {
     key: 'district',

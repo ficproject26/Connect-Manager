@@ -49,7 +49,7 @@ const StateDashboard = ({ user, onNavigate }) => {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '16px' }}>
           <div>
             <h2 className="jurisdiction-title">
-              State of {roleSpecificData.stateName || user?.scope?.stateName || 'Karnataka'}
+              State of {roleSpecificData.stateName || user?.scope?.stateName || user?.state || '-'}
             </h2>
             <div className="jurisdiction-subtitle">
               <span>Logged in as <strong>{user?.name}</strong></span>

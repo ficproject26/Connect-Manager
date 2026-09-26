@@ -2,6 +2,7 @@
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const { v4: uuidv4 } = require('uuid');
+const { ObjectId } = require('mongodb');
 const { getMongoDb } = require('./mongo');
 
 const DATA_DIR = path.join(__dirname, '..', '..', 'data');
@@ -14,7 +15,11 @@ function sanitizeQuery(query) {
   const sanitized = {};
   for (const [k, v] of Object.entries(query)) {
     if (v === undefined || v === null) continue;
-    sanitized[k] = v;
+    if (['_id', 'id', 'stateId', 'districtId', 'divisionId', 'pincodeId'].includes(k) && typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v)) {
+      sanitized[k] = { $in: [new ObjectId(v), v] };
+    } else {
+      sanitized[k] = v;
+    }
   }
   return sanitized;
 }
@@ -84,7 +89,11 @@ class Collection {
     const records = this.cache || [];
     return records.filter(item => {
       for (const [key, val] of Object.entries(cleanQuery)) {
-        if (item[key] !== val) return false;
+        if (val && typeof val === 'object' && val.$in) {
+          if (!val.$in.map(String).includes(String(item[key]))) return false;
+        } else if (item[key] !== val) {
+          return false;
+        }
       }
       return true;
     });

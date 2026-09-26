@@ -225,7 +225,7 @@ const FieldManagers = () => {
     }
     return (
       <div>
-        <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{m.stateName || 'Karnataka'}</span>
+        <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{m.stateName || m.state || '-'}</span>
       </div>
     );
   };
@@ -741,7 +741,7 @@ const FieldManagers = () => {
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.82rem' }}>
                   <div>
                     <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>State:</span>
-                    <strong>{selectedManager.stateName || 'Karnataka'}</strong>
+                    <strong>{selectedManager.stateName || selectedManager.state || '-'}</strong>
                   </div>
                   <div>
                     <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>District:</span>

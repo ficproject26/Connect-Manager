@@ -26,7 +26,7 @@ const Leaderboard = ({ onNavigate }) => {
   const [allRankings, setAllRankings] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const stateName = user?.scope?.stateName || user?.scope?.regionName || 'Karnataka';
+  const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.state || '-';
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
