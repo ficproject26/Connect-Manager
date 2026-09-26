@@ -85,8 +85,13 @@ const Dashboard = ({ onNavigate }) => {
     rejected: 0,
     inactive: 0
   };
-
-  const issueCounts = dashboardData?.issueCounts || getIssueStatusCounts();
+  const issueCounts = dashboardData?.issueCounts || {
+    total: 0,
+    open: 0,
+    inProgress: 0,
+    escalated: 0,
+    resolved: 0
+  };
   const openCount = issueCounts.open || 0;
   const inProgressCount = issueCounts.inProgress || 0;
   const escalatedCount = issueCounts.escalated || 0;
