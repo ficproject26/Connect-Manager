@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
@@ -69,19 +69,16 @@ app.use((err, req, res, next) => {
 // Auto-seed if database is clean
 const seedData = require('./seed/seed');
 async function startServer() {
-  if (db.initDatabase) { await db.initDatabase(); }
-  const usersCount = await db.users.count();
-  if (usersCount === 0) {
-    console.log('No data found in datastore. Running seed...');
-    await seedData();
-  }
-
   app.listen(PORT, () => {
-    console.log(`=============================================`);
-    console.log(`ðŸš€ Agent Manager API Server running on port ${PORT}`);
-    console.log(`ðŸŒ Health endpoint: http://localhost:${PORT}/api/health`);
-    console.log(`=============================================`);
+    console.log('=============================================');
+    console.log(`Agent Manager API Server running on port ${PORT}`);
+    console.log(`Health endpoint: http://localhost:${PORT}/api/health`);
+    console.log('=============================================');
   });
+
+  if (db.initDatabase) {
+    db.initDatabase().catch(e => console.warn('[Manager Database] Init error:', e.message));
+  }
 }
 
 if (require.main === module) {

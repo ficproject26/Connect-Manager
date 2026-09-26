@@ -95,7 +95,8 @@ export const AuthProvider = ({ children }) => {
     if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
       const token = res.token || res.data?.token;
       const user = res.user || res.data?.user || res.data;
-      if (user?.status === 'active' || !user?.status) {
+      const status = String(user?.status || '').toLowerCase();
+      if (status === 'active' || status === 'approved' || !user?.status) {
         localStorage.setItem('agent_mgr_token', token);
         setToken(token);
         setUser(user);
@@ -103,6 +104,22 @@ export const AuthProvider = ({ children }) => {
       return { success: true, token, user };
     }
     throw new Error(res.message || 'Login failed. Invalid response from server.');
+  };
+
+  const loginWithOtp = async (mobile, otp) => {
+    const res = await authService.verifyOtp(mobile, otp);
+    if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
+      const token = res.token || res.data?.token;
+      const user = res.user || res.data?.user || res.data;
+      const status = String(user?.status || '').toLowerCase();
+      if (status === 'active' || status === 'approved' || !user?.status) {
+        localStorage.setItem('agent_mgr_token', token);
+        setToken(token);
+        setUser(user);
+      }
+      return { success: true, token, user };
+    }
+    throw new Error(res.message || 'OTP verification failed.');
   };
 
   const quickSwitchRole = async (accountKey) => {
@@ -144,6 +161,7 @@ export const AuthProvider = ({ children }) => {
         token,
         loading,
         login,
+        loginWithOtp,
         logout,
         setSession,
         quickSwitchRole,

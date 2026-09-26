@@ -199,6 +199,14 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
     return `${start}${'•'.repeat(Math.max(4, str.length - visibleStart - visibleEnd))}${end}`;
   };
 
+  // Date safe helper
+  const formatDateSafe = (dateVal) => {
+    if (!dateVal) return 'N/A';
+    const d = new Date(dateVal);
+    if (isNaN(d.getTime())) return 'N/A';
+    return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  };
+
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}>
       {/* ─── 1. Top Header & Action Toolbar ─── */}
@@ -263,7 +271,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 <span>•</span>
                 <span>Category: <strong>{vendor.category}</strong> {vendor.subCategory && `(${vendor.subCategory})`}</span>
                 <span>•</span>
-                <span>Registered: {new Date(vendor.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                <span>Registered: {formatDateSafe(vendor.createdAt)}</span>
               </div>
             </div>
           </div>
@@ -580,7 +588,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                   <div>
                     <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>Vendor Application Submitted</div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                      Registered by {vendor.addedBy?.name || 'Shiva (Pincode Manager)'} on {new Date(vendor.createdAt).toLocaleDateString('en-IN')}
+                      Registered by {vendor.addedBy?.name || 'Field Manager'} on {formatDateSafe(vendor.createdAt)}
                     </div>
                   </div>
                 </div>
@@ -676,8 +684,13 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
             <div className="card-body" style={{ padding: '18px' }}>
               {vendor.documents?.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {vendor.documents.map((doc, idx) => {
-                    const isImg = doc.type?.includes('image') || doc.url?.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                  {vendor.documents.map((rawDoc, idx) => {
+                    const doc = typeof rawDoc === 'string'
+                      ? { url: rawDoc, name: rawDoc.split('/').pop() || 'Document', size: 0 }
+                      : (rawDoc || {});
+                    const docUrl = doc.url || '';
+                    const docName = doc.name || `Document ${idx + 1}`;
+                    const isImg = doc.type?.includes('image') || docUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i);
                     return (
                       <div key={idx} style={{
                         background: '#f8fafc',
@@ -685,9 +698,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                         borderRadius: '10px',
                         overflow: 'hidden'
                       }}>
-                        {isImg && (
+                        {isImg && docUrl && (
                           <div 
-                            onClick={() => setPreviewImage(doc.url)}
+                            onClick={() => setPreviewImage(docUrl)}
                             style={{
                               position: 'relative',
                               width: '100%',
@@ -699,8 +712,8 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                             title="Click to view full image"
                           >
                             <img
-                              src={doc.url}
-                              alt={doc.name || 'Storefront proof'}
+                              src={docUrl}
+                              alt={docName}
                               style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
                               onError={(e) => {
                                 e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg';
@@ -736,53 +749,57 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                         }}>
                           <div style={{ overflow: 'hidden' }}>
                             <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {doc.name}
+                              {docName}
                             </div>
                             <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                              Field Upload • {doc.size ? `${Math.round(doc.size / 1024)} KB` : 'Verified JPEG'}
+                              Field Upload • {doc.size ? `${Math.round(doc.size / 1024)} KB` : 'Verified Document'}
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '6px' }}>
-                            <button
-                              type="button"
-                              onClick={() => setPreviewImage(doc.url)}
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.74rem',
-                                fontWeight: 600,
-                                background: '#eff6ff',
-                                color: '#2563eb',
-                                border: '1px solid #bfdbfe',
-                                borderRadius: '6px',
-                                cursor: 'pointer',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px'
-                              }}
-                            >
-                              <Eye size={12} /> View
-                            </button>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              download
-                              style={{
-                                padding: '4px 8px',
-                                fontSize: '0.74rem',
-                                fontWeight: 600,
-                                background: '#f1f5f9',
-                                color: '#475569',
-                                border: '1px solid #e2e8f0',
-                                borderRadius: '6px',
-                                textDecoration: 'none',
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '3px'
-                              }}
-                            >
-                              <ExternalLink size={12} />
-                            </a>
+                            {docUrl && (
+                              <button
+                                type="button"
+                                onClick={() => setPreviewImage(docUrl)}
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 600,
+                                  background: '#eff6ff',
+                                  color: '#2563eb',
+                                  border: '1px solid #bfdbfe',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px'
+                                }}
+                              >
+                                <Eye size={12} /> View
+                              </button>
+                            )}
+                            {docUrl && (
+                              <a
+                                href={docUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                download
+                                style={{
+                                  padding: '4px 8px',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 600,
+                                  background: '#f1f5f9',
+                                  color: '#475569',
+                                  border: '1px solid #e2e8f0',
+                                  borderRadius: '6px',
+                                  textDecoration: 'none',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px'
+                                }}
+                              >
+                                <ExternalLink size={12} />
+                              </a>
+                            )}
                           </div>
                         </div>
                       </div>

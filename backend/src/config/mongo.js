@@ -1,4 +1,4 @@
-﻿const { MongoClient } = require('mongodb');
+const { MongoClient } = require('mongodb');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 
@@ -10,7 +10,12 @@ async function getMongoDb() {
   const uri = process.env.MONGODB_URI || 'mongodb+srv://Connect-app:Connect123@cluster0.fzj1k5l.mongodb.net/test?retryWrites=true&w=majority';
   try {
     if (!client) {
-      client = new MongoClient(uri, { serverSelectionTimeoutMS: 5000 });
+      client = new MongoClient(uri, {
+        serverSelectionTimeoutMS: 5000,
+        connectTimeoutMS: 5000,
+        socketTimeoutMS: 8000,
+        maxIdleTimeMS: 15000
+      });
       await client.connect();
     }
     db = client.db();

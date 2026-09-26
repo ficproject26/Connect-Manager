@@ -1,4 +1,4 @@
-﻿const fs = require('fs');
+const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const { v4: uuidv4 } = require('uuid');
@@ -68,10 +68,28 @@ class Collection {
       this._mongoCol = mongoDb.collection(this.mongoName);
       const docs = await this._mongoCol.find({}).toArray();
       if (docs && docs.length > 0) {
-        this._write(docs);
-        console.log(`[Manager MongoDB] Loaded ${docs.length} documents for '${this.name}' (${this.mongoName})`);
+        // Merge with existing cache to preserve local configurations & managers
+        const docMap = new Map();
+        for (const d of docs) {
+          const key = d.email ? String(d.email).toLowerCase() : String(d._id || d.id);
+          docMap.set(key, d);
+        }
+        const missing = [];
+        for (const item of (this.cache || [])) {
+          const key = item.email ? String(item.email).toLowerCase() : String(item._id || item.id);
+          if (!docMap.has(key)) {
+            docMap.set(key, item);
+            missing.push(item);
+          }
+        }
+        if (missing.length > 0) {
+          await this._mongoCol.insertMany(missing, { ordered: false }).catch(() => {});
+        }
+        const merged = Array.from(docMap.values());
+        this._write(merged);
+        console.log(`[Manager MongoDB] Loaded & synced ${merged.length} documents for '${this.name}' (${this.mongoName})`);
       } else if (this.cache && this.cache.length > 0) {
-        await this._mongoCol.insertMany(this.cache);
+        await this._mongoCol.insertMany(this.cache, { ordered: false }).catch(() => {});
         console.log(`[Manager MongoDB] Seeded ${this.cache.length} documents into '${this.mongoName}'`);
       }
     } catch (err) {
@@ -83,7 +101,7 @@ class Collection {
     const cleanQuery = sanitizeQuery(query);
     if (this._mongoCol) {
       try {
-        return await this._mongoCol.find(cleanQuery).toArray();
+        return await this._mongoCol.find(cleanQuery).maxTimeMS(2000).toArray();
       } catch (e) {}
     }
     const records = this.cache || [];
@@ -103,7 +121,7 @@ class Collection {
     const cleanQuery = sanitizeQuery(query);
     if (this._mongoCol) {
       try {
-        const doc = await this._mongoCol.findOne(cleanQuery);
+        const doc = await this._mongoCol.findOne(cleanQuery, { maxTimeMS: 2000 });
         if (doc) return doc;
       } catch (e) {}
     }
@@ -121,9 +139,13 @@ class Collection {
     const strId = String(id);
     if (this._mongoCol) {
       try {
-        const doc = await this._mongoCol.findOne({
-          $or: [{ _id: id }, { id: id }, { _id: strId }, { id: strId }]
-        });
+        const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
+        if (/^[0-9a-fA-F]{24}$/.test(strId)) {
+          try {
+            orConditions.push({ _id: new ObjectId(strId) });
+          } catch (e) {}
+        }
+        const doc = await this._mongoCol.findOne({ $or: orConditions }, { maxTimeMS: 2000 });
         if (doc) return doc;
       } catch (e) {}
     }
@@ -180,7 +202,14 @@ class Collection {
     });
 
     const records = this.cache || [];
-    records.push(...newDocs);
+    for (const d of newDocs) {
+      const idx = records.findIndex(i => String(i._id || i.id) === d._id);
+      if (idx >= 0) {
+        records[idx] = { ...records[idx], ...d };
+      } else {
+        records.push(d);
+      }
+    }
     this._write(records);
 
     if (this._mongoCol && newDocs.length > 0) {
@@ -302,7 +331,7 @@ class Collection {
 }
 
 const db = {
-  users: new Collection('users', 'users'),
+  users: new Collection('users', 'managers'),
   states: new Collection('states', 'states'),
   districts: new Collection('districts', 'districts'),
   divisions: new Collection('divisions', 'divisions'),

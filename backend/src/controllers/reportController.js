@@ -1,23 +1,46 @@
 const db = require('../config/db');
-const { getScopeFilter } = require('../middleware/scopeMiddleware');
+const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
+
+// Helper to determine status category accurately
+const isVendorActive = (s) => {
+  const st = String(s || '').toLowerCase();
+  return st === 'active' || st === 'approved';
+};
+const isVendorPending = (s) => {
+  const st = String(s || '').toLowerCase();
+  return st === 'pending' || st === 'under review' || st === 'under_review' || st === 'kyc_pending';
+};
+const isVendorRejected = (s) => String(s || '').toLowerCase() === 'rejected';
+const isVendorInactive = (s) => String(s || '').toLowerCase() === 'inactive';
 
 // GET /api/reports/dashboard - Tailored KPI widgets and analytics by role
 const getDashboardStats = async (req, res) => {
   try {
     const user = req.user;
-    const scopeFilter = getScopeFilter(user);
 
-    // Get all vendors in caller's scope
-    const vendors = await db.vendors.find(scopeFilter);
+    // Load all vendors and deduplicate
+    const rawVendors = await db.vendors.find({});
+    const seen = new Set();
+    const uniqueVendors = [];
+    for (const v of rawVendors) {
+      const key = String(v.registrationId || v._id || v.id || `${v.phone || v.mobile}_${v.businessName}`);
+      if (!seen.has(key)) {
+        seen.add(key);
+        uniqueVendors.push(v);
+      }
+    }
 
-    // Common status counts
+    // Filter strictly by caller's scope
+    const vendors = uniqueVendors.filter(v => isVendorInScope(v, user));
+
+    // Common status counts computed live from database
     const statusCounts = {
       total: vendors.length,
-      active: vendors.filter(v => v.status === 'Active').length,
-      pending: vendors.filter(v => v.status === 'Pending').length,
-      underReview: vendors.filter(v => v.status === 'Under Review').length,
-      rejected: vendors.filter(v => v.status === 'Rejected').length,
-      inactive: vendors.filter(v => v.status === 'Inactive').length
+      active: vendors.filter(v => isVendorActive(v.status)).length,
+      pending: vendors.filter(v => isVendorPending(v.status)).length,
+      underReview: vendors.filter(v => String(v.status || '').toLowerCase().includes('review')).length,
+      rejected: vendors.filter(v => isVendorRejected(v.status)).length,
+      inactive: vendors.filter(v => isVendorInactive(v.status)).length
     };
 
     // Category distribution
@@ -35,7 +58,7 @@ const getDashboardStats = async (req, res) => {
       const divisions = await db.divisions.find({ stateId: user.stateId });
       const pincodes = await db.pincodes.find({ stateId: user.stateId });
 
-      // Find all 4 State Managers for Karnataka
+      // Find state managers
       const stateManagers = await db.users.find({
         role: 'state_manager',
         stateId: user.stateId
@@ -50,14 +73,17 @@ const getDashboardStats = async (req, res) => {
 
       // District breakdown
       const districtBreakdown = districts.map(d => {
-        const districtVendors = vendors.filter(v => v.districtId === d._id);
+        const districtVendors = vendors.filter(v => 
+          (v.districtId && v.districtId === d._id) ||
+          (v.district && v.district.toLowerCase() === (d.name || '').toLowerCase())
+        );
         return {
           districtId: d._id,
           districtName: d.name,
           totalVendors: districtVendors.length,
-          activeVendors: districtVendors.filter(v => v.status === 'Active').length,
-          pendingVendors: districtVendors.filter(v => v.status === 'Pending' || v.status === 'Under Review').length,
-          rejectedVendors: districtVendors.filter(v => v.status === 'Rejected').length
+          activeVendors: districtVendors.filter(v => isVendorActive(v.status)).length,
+          pendingVendors: districtVendors.filter(v => isVendorPending(v.status)).length,
+          rejectedVendors: districtVendors.filter(v => isVendorRejected(v.status)).length
         };
       });
 
@@ -91,14 +117,17 @@ const getDashboardStats = async (req, res) => {
       );
 
       const divisionBreakdown = divisions.map(div => {
-        const divVendors = vendors.filter(v => v.divisionId === div._id);
+        const divVendors = vendors.filter(v => 
+          (v.divisionId && v.divisionId === div._id) ||
+          (v.division && v.division.toLowerCase() === (div.name || '').toLowerCase())
+        );
         return {
           divisionId: div._id,
           divisionName: div.name,
           totalVendors: divVendors.length,
-          activeVendors: divVendors.filter(v => v.status === 'Active').length,
-          pendingVendors: divVendors.filter(v => v.status === 'Pending' || v.status === 'Under Review').length,
-          rejectedVendors: divVendors.filter(v => v.status === 'Rejected').length
+          activeVendors: divVendors.filter(v => isVendorActive(v.status)).length,
+          pendingVendors: divVendors.filter(v => isVendorPending(v.status)).length,
+          rejectedVendors: divVendors.filter(v => isVendorRejected(v.status)).length
         };
       });
 
@@ -129,15 +158,18 @@ const getDashboardStats = async (req, res) => {
       );
 
       const pincodeBreakdown = pincodes.map(p => {
-        const pinVendors = vendors.filter(v => v.pincodeId === p._id);
+        const pinVendors = vendors.filter(v => 
+          (v.pincodeId && v.pincodeId === p._id) ||
+          (v.pincode && String(v.pincode) === String(p.code))
+        );
         return {
           pincodeId: p._id,
           pincodeCode: p.code,
           areaName: p.areaName,
           totalVendors: pinVendors.length,
-          activeVendors: pinVendors.filter(v => v.status === 'Active').length,
-          pendingVendors: pinVendors.filter(v => v.status === 'Pending' || v.status === 'Under Review').length,
-          rejectedVendors: pinVendors.filter(v => v.status === 'Rejected').length
+          activeVendors: pinVendors.filter(v => isVendorActive(v.status)).length,
+          pendingVendors: pinVendors.filter(v => isVendorPending(v.status)).length,
+          rejectedVendors: pinVendors.filter(v => isVendorRejected(v.status)).length
         };
       });
 
@@ -207,8 +239,8 @@ const getDashboardStats = async (req, res) => {
     const startOfWeek = new Date(now);
     startOfWeek.setDate(now.getDate() - now.getDay());
 
-    const todayTieups = vendors.filter(v => v.status === 'Active' && new Date(v.createdAt) >= startOfToday).length;
-    const weekTieups = vendors.filter(v => v.status === 'Active' && new Date(v.createdAt) >= startOfWeek).length;
+    const todayTieups = vendors.filter(v => isVendorActive(v.status) && new Date(v.createdAt) >= startOfToday).length;
+    const weekTieups = vendors.filter(v => isVendorActive(v.status) && new Date(v.createdAt) >= startOfWeek).length;
 
     const kpiMetrics = {
       totalManagers: scopedManagers.length,
@@ -225,7 +257,10 @@ const getDashboardStats = async (req, res) => {
       verifiedVendors: statusCounts.active,
       openIssues: statusCounts.pending + statusCounts.underReview + (statusCounts.rejected > 0 ? 1 : 0),
       kycPending: statusCounts.pending + statusCounts.underReview,
-      vendorRequests: statusCounts.pending
+      pendingKYC: statusCounts.pending + statusCounts.underReview,
+      vendorRequests: statusCounts.pending,
+      rejectedVendors: statusCounts.rejected,
+      inactiveVendors: statusCounts.inactive
     };
 
     // Recent 5 vendors
@@ -256,6 +291,8 @@ const getDashboardStats = async (req, res) => {
       issueCounts,
       categoryCounts,
       kpiMetrics,
+      stats: kpiMetrics,
+      data: kpiMetrics,
       roleSpecificData,
       recentVendors,
       recentActivities

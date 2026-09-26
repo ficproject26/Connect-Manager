@@ -31,7 +31,7 @@ import {
   Upload,
   Pause
 } from 'lucide-react';
-import { taskService } from '../services/api';
+import { taskService, agentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
 const Tasks = ({ onNavigate }) => {
@@ -52,10 +52,27 @@ const Tasks = ({ onNavigate }) => {
   const [actionLoading, setActionLoading] = useState(false);
   const [reworkMode, setReworkMode] = useState(false);
   const [reworkPhoto, setReworkPhoto] = useState('');
-  const [reworkReason, setReworkReason] = useState(''); // true = show rework form
-  const [reworkAudio, setReworkAudio] = useState(null); // base64 audio blob
-  const [reworkRecording, setReworkRecording] = useState(false); // mic active
-  const reworkMediaRef = React.useRef(null); // MediaRecorder ref
+  const [reworkReason, setReworkReason] = useState('');
+  const [reworkAudio, setReworkAudio] = useState(null);
+  const [reworkRecording, setReworkRecording] = useState(false);
+  const reworkMediaRef = React.useRef(null);
+
+  // Task allocation & agents list state
+  const [agentsList, setAgentsList] = useState([]);
+  const [showAssignModal, setShowAssignModal] = useState(false);
+  const [assignForm, setAssignForm] = useState({
+    title: '',
+    vendor: '',
+    category: 'Physical QC Audit',
+    priority: 'Medium',
+    dueDate: '',
+    description: '',
+    assignedToId: '',
+    remarks: ''
+  });
+  const [assigning, setAssigning] = useState(false);
+  const [assignError, setAssignError] = useState('');
+  const [assignSuccess, setAssignSuccess] = useState('');
 
   // Fetch real tasks from backend API
   const fetchTasks = async (showSpinner = false) => {
@@ -110,8 +127,16 @@ const Tasks = ({ onNavigate }) => {
             priority: t.priority || 'Medium',
             dueDate: formattedDue,
             status: t.status || 'Assigned',
-            assignedTo: t.assignedManagerName || user?.name || 'Assigned Manager',
-            assignedManagerRole: t.assignedManagerRole || user?.role || 'pincode_manager',
+            progress: t.progress !== undefined ? t.progress : (['Completed', 'Closed'].includes(t.status) ? 100 : t.status === 'In Progress' ? 50 : 0),
+            assignedTo: t.assignedAgentName || t.assignedManagerName || user?.name || 'Assigned Agent',
+            assignedManagerRole: t.assignedAgentRole || t.assignedManagerRole || user?.role || 'pincode_agent',
+            assignedDate: t.assignedDate || t.createdAt,
+            completedDate: t.completedDate || t.completionDetails?.completedAt || null,
+            lastUpdate: t.lastUpdate || t.updatedAt || null,
+            state: t.state || 'Tamil Nadu',
+            district: t.district || '',
+            division: t.division || '',
+            pincode: t.pincode || '',
             createdByAdminName: t.createdByAdminName || 'System Admin',
             createdByAdminRole: t.createdByAdminRole || 'State Manager',
             qcIssueId: t.qcIssueId,
@@ -136,7 +161,81 @@ const Tasks = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchTasks();
+    // Load available subordinate agents for task allocation
+    agentService.getAgents().then(res => {
+      if (res && res.success && Array.isArray(res.data)) {
+        setAgentsList(res.data);
+      }
+    }).catch(() => {});
   }, []);
+
+  const handleAssignTask = async (e) => {
+    e.preventDefault();
+    if (!assignForm.description && !assignForm.title) {
+      setAssignError('Please provide a task title or description.');
+      return;
+    }
+    const selectedAgent = agentsList.find(a => String(a._id || a.id) === String(assignForm.assignedToId));
+    setAssigning(true);
+    setAssignError('');
+    setAssignSuccess('');
+    try {
+      const payload = {
+        vendor: assignForm.vendor || (selectedAgent ? `Field Deliverable: ${selectedAgent.name}` : 'General Operation'),
+        category: assignForm.category || 'Physical QC Audit',
+        priority: assignForm.priority || 'Medium',
+        dueDate: assignForm.dueDate ? new Date(assignForm.dueDate).toISOString() : new Date(Date.now() + 86400000 * 3).toISOString(),
+        description: assignForm.title ? `${assignForm.title} - ${assignForm.description}` : assignForm.description,
+        remarks: assignForm.remarks || '',
+        assignedTo: selectedAgent?.name || user?.name,
+        assignedAgentId: selectedAgent?._id || selectedAgent?.id || null,
+        assignedAgentName: selectedAgent?.name || null,
+        assignedAgentRole: selectedAgent?.role || selectedAgent?.roleLevel || 'pincode_agent',
+        state: selectedAgent?.state || user?.state || 'Tamil Nadu',
+        district: selectedAgent?.district || user?.district || '',
+        division: selectedAgent?.division || user?.division || '',
+        pincode: selectedAgent?.pincode || user?.pincode || null,
+        location: selectedAgent ? `${selectedAgent.district || ''}, ${selectedAgent.state || ''}`.trim() : (user?.district || 'Tamil Nadu')
+      };
+      const res = await taskService.createTask(payload);
+      if (res && res.success) {
+        setAssignSuccess('Task allocated successfully!');
+        setShowAssignModal(false);
+        setAssignForm({
+          title: '',
+          vendor: '',
+          category: 'Physical QC Audit',
+          priority: 'Medium',
+          dueDate: '',
+          description: '',
+          assignedToId: '',
+          remarks: ''
+        });
+        await fetchTasks(true);
+      } else {
+        setAssignError(res?.message || 'Failed to allocate task');
+      }
+    } catch (err) {
+      setAssignError(err.message || 'Error creating task');
+    } finally {
+      setAssigning(false);
+    }
+  };
+
+  const handleDirectStatusChange = async (taskId, nextStatus) => {
+    setActionLoading(true);
+    try {
+      const res = await taskService.updateTaskStatus(taskId, undefined, { status: nextStatus });
+      if (res && res.success) {
+        setSelectedTask(prev => prev ? { ...prev, status: nextStatus, progress: nextStatus === 'Completed' ? 100 : prev.progress } : null);
+        await fetchTasks();
+      }
+    } catch (err) {
+      console.error('Failed to change status:', err);
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   
   const openTaskModal = (taskItem) => {
@@ -472,6 +571,27 @@ const Tasks = ({ onNavigate }) => {
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <button
+            onClick={() => setShowAssignModal(true)}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 16px',
+              borderRadius: '8px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+              color: '#ffffff',
+              fontSize: '0.84rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              boxShadow: '0 2px 6px rgba(37, 99, 235, 0.25)'
+            }}
+          >
+            <Plus size={15} />
+            <span>Assign New Task</span>
+          </button>
+
+          <button
             onClick={() => fetchTasks(true)}
             disabled={refreshing}
             style={{
@@ -650,9 +770,14 @@ const Tasks = ({ onNavigate }) => {
         >
           <option value="All">All Statuses</option>
           <option value="Assigned">Assigned</option>
-          <option value="Pending Acceptance">Pending Acceptance</option>
+          <option value="Accepted">Accepted</option>
           <option value="In Progress">In Progress</option>
+          <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Cancelled">Cancelled</option>
+          <option value="Overdue">Overdue</option>
+          <option value="Suspended">Suspended</option>
           <option value="Closed">Closed</option>
         </select>
 
@@ -1140,46 +1265,111 @@ const Tasks = ({ onNavigate }) => {
 
             {/* Modal Body */}
             <div style={{ padding: '18px 22px', overflowY: 'auto', flex: 1 }}>
-              {!isPincodeManager && (
-                <div style={{
-                  background: '#f0f9ff',
-                  border: '1.5px solid #bae6fd',
-                  borderRadius: '12px',
-                  padding: '12px 16px',
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  gap: '12px'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <User size={18} />
+              {/* Comprehensive Task Allocation & Lifecycle Metadata */}
+              <div style={{
+                background: '#ffffff',
+                border: '1.5px solid var(--border)',
+                borderRadius: '14px',
+                padding: '16px',
+                marginBottom: '16px',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.03)'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <ClipboardList size={18} />
                     </div>
                     <div>
-                      <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0369a1' }}>
-                        Pincode Manager Deliverable Oversight
+                      <div style={{ fontSize: '0.86rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                        Task Allocation & Hierarchy
                       </div>
-                      <div style={{ fontSize: '0.75rem', color: '#0284c7', marginTop: '2px' }}>
-                        Assigned Pincode Lead: <strong>{selectedTask.assignedTo || 'Shiva'}</strong> {selectedTask.territory ? `(${selectedTask.territory})` : ''}.
-                        Field work execution and rework are handled exclusively by Pincode Managers.
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                        Assigned To: <strong>{selectedTask.assignedTo || 'Unassigned'}</strong> • Role: <span style={{ textTransform: 'capitalize' }}>{(selectedTask.assignedManagerRole || 'Agent').replace('_', ' ')}</span>
                       </div>
                     </div>
                   </div>
-                  <span style={{
-                    fontSize: '11px',
-                    fontWeight: 700,
-                    background: '#e0f2fe',
-                    color: '#0369a1',
-                    padding: '3px 10px',
-                    borderRadius: '20px',
-                    border: '1px solid #7dd3fc',
-                    whiteSpace: 'nowrap'
-                  }}>
-                    VIEW ONLY
-                  </span>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      ...getPriorityStyle(selectedTask.priority)
+                    }}>
+                      {selectedTask.priority || 'Medium'} Priority
+                    </span>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: 700,
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      background: getStatusBadge(selectedTask.status).bg,
+                      color: getStatusBadge(selectedTask.status).text
+                    }}>
+                      {selectedTask.status}
+                    </span>
+                  </div>
                 </div>
-              )}
+
+                {/* Progress bar */}
+                <div style={{ marginBottom: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.74rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: '4px' }}>
+                    <span>Completion Progress</span>
+                    <span style={{ color: 'var(--text-main)' }}>{selectedTask.progress || (selectedTask.status === 'Completed' ? 100 : selectedTask.status === 'In Progress' ? 50 : 0)}%</span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: '#e2e8f0', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{
+                      width: `${selectedTask.progress || (selectedTask.status === 'Completed' ? 100 : selectedTask.status === 'In Progress' ? 50 : 0)}%`,
+                      height: '100%',
+                      background: selectedTask.status === 'Completed' ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #6366f1)',
+                      transition: 'width 0.4s ease'
+                    }} />
+                  </div>
+                </div>
+
+                {/* Details Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', fontSize: '0.78rem' }}>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>State / Jurisdiction</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.state || selectedTask.raw?.state || 'Tamil Nadu'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>District</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.district || selectedTask.raw?.district || 'Krishnagiri'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Division</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.division || selectedTask.raw?.division || 'Central'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Pincode</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.pincode || selectedTask.raw?.pincode || '635109'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Date</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.assignedDate ? new Date(selectedTask.assignedDate).toLocaleDateString('en-IN') : 'Recently'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Due Date</span>
+                    <strong style={{ color: '#b45309' }}>{selectedTask.dueDate || 'Standard 3 days'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Last Update</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.lastUpdate ? new Date(selectedTask.lastUpdate).toLocaleDateString('en-IN') : 'N/A'}</strong>
+                  </div>
+                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Completed Date</span>
+                    <strong style={{ color: selectedTask.completedDate ? '#15803d' : 'var(--text-muted)' }}>{selectedTask.completedDate ? new Date(selectedTask.completedDate).toLocaleDateString('en-IN') : 'Pending'}</strong>
+                  </div>
+                </div>
+
+                {selectedTask.description && (
+                  <div style={{ marginTop: '10px', padding: '10px 12px', background: '#f1f5f9', borderRadius: '8px', fontSize: '0.8rem', color: '#334155' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Description / Deliverable</span>
+                    {selectedTask.description}
+                  </div>
+                )}
+              </div>
 
               {/* 1. Shop Name and Location */}
               <div style={{
@@ -1808,80 +1998,109 @@ const Tasks = ({ onNavigate }) => {
                 }
                 return (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    {/* 1. Solved */}
-                    <button
-                      type="button"
-                      disabled={actionLoading}
-                      onClick={() => handleTaskAction('solved')}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '9px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'linear-gradient(135deg, #10b981, #059669)',
-                        color: '#ffffff',
-                        fontSize: '0.84rem',
-                        fontWeight: 700,
-                        cursor: actionLoading ? 'not-allowed' : 'pointer',
-                        boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
-                      }}
-                      title="Mark as Solved / Completed"
-                    >
-                      <CheckCircle2 size={15} />
-                      <span>{actionLoading ? 'Saving...' : 'Solved'}</span>
-                    </button>
+                    {/* Status Changer Dropdown */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
+                      <select
+                        value={selectedTask.status}
+                        disabled={actionLoading}
+                        onChange={(e) => handleDirectStatusChange(selectedTask._id, e.target.value)}
+                        style={{
+                          padding: '7px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid var(--border)',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          background: '#ffffff',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <option value="Assigned">Assigned</option>
+                        <option value="Accepted">Accepted</option>
+                        <option value="In Progress">In Progress</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Completed">Completed</option>
+                        <option value="Rejected">Rejected</option>
+                        <option value="Cancelled">Cancelled</option>
+                        <option value="Overdue">Overdue</option>
+                        <option value="Suspended">Suspended</option>
+                      </select>
+                    </div>
 
-                    {/* 2. Suspend */}
-                    <button
-                      type="button"
-                      disabled={actionLoading}
-                      onClick={() => handleTaskAction('suspend')}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '9px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'linear-gradient(135deg, #f97316, #ea580c)',
-                        color: '#ffffff',
-                        fontSize: '0.84rem',
-                        fontWeight: 700,
-                        cursor: actionLoading ? 'not-allowed' : 'pointer',
-                        boxShadow: '0 2px 6px rgba(249, 115, 22, 0.3)'
-                      }}
-                      title="Request Task Suspend"
-                    >
-                      <Pause size={15} />
-                      <span>{actionLoading ? 'Saving...' : 'Suspend'}</span>
-                    </button>
+                    {/* Quick Complete */}
+                    {selectedTask.status !== 'Completed' && (
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => handleDirectStatusChange(selectedTask._id, 'Completed')}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        <CheckCircle2 size={14} />
+                        <span>Complete</span>
+                      </button>
+                    )}
 
-                    {/* 3. Not Solved */}
-                    <button
-                      type="button"
-                      disabled={actionLoading}
-                      onClick={() => handleTaskAction('not_solved')}
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '9px 16px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                        color: '#ffffff',
-                        fontSize: '0.84rem',
-                        fontWeight: 700,
-                        cursor: actionLoading ? 'not-allowed' : 'pointer',
-                        boxShadow: '0 2px 6px rgba(99, 102, 241, 0.3)'
-                      }}
-                      title="Flag as Not Solved / In Progress"
-                    >
-                      <AlertCircle size={15} />
-                      <span>{actionLoading ? 'Saving...' : 'Not Solved'}</span>
-                    </button>
+                    {/* Quick In Progress */}
+                    {selectedTask.status !== 'In Progress' && selectedTask.status !== 'Completed' && (
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => handleDirectStatusChange(selectedTask._id, 'In Progress')}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        <Play size={14} />
+                        <span>In Progress</span>
+                      </button>
+                    )}
+
+                    {/* Quick Accept */}
+                    {selectedTask.status === 'Assigned' && (
+                      <button
+                        type="button"
+                        disabled={actionLoading}
+                        onClick={() => handleDirectStatusChange(selectedTask._id, 'Accepted')}
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          padding: '8px 14px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #0284c7, #0369a1)',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer'
+                        }}
+                      >
+                        <Check size={14} />
+                        <span>Accept</span>
+                      </button>
+                    )}
                   </div>
                 );
               })()}
@@ -1904,6 +2123,293 @@ const Tasks = ({ onNavigate }) => {
                 Close
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Assign New Task Modal */}
+      {showAssignModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 9999,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div
+            onClick={() => setShowAssignModal(false)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(10,22,40,0.65)', backdropFilter: 'blur(5px)' }}
+          />
+
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '620px',
+            maxHeight: '90vh',
+            background: '#ffffff',
+            borderRadius: '18px',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.28)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '16px 22px',
+              borderBottom: '1px solid var(--border)',
+              background: '#f8fafc'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '34px', height: '34px', borderRadius: '8px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <Plus size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
+                    Assign New Field Deliverable / Task
+                  </h3>
+                  <p style={{ margin: 0, fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                    Allocate targets and deliverables hierarchically to lower-level agents
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowAssignModal(false)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <form onSubmit={handleAssignTask} style={{ padding: '20px 22px', overflowY: 'auto', flex: 1 }}>
+              {assignError && (
+                <div style={{ padding: '10px 14px', background: '#fee2e2', border: '1px solid #fecaca', borderRadius: '8px', color: '#b91c1c', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600 }}>
+                  {assignError}
+                </div>
+              )}
+              {assignSuccess && (
+                <div style={{ padding: '10px 14px', background: '#dcfce7', border: '1px solid #86efac', borderRadius: '8px', color: '#15803d', fontSize: '0.82rem', marginBottom: '14px', fontWeight: 600 }}>
+                  {assignSuccess}
+                </div>
+              )}
+
+              {/* Task Title */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                  Task / Target Title *
+                </label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Onboard Milk & Milk shop"
+                  value={assignForm.title}
+                  onChange={(e) => setAssignForm({ ...assignForm, title: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Assign To Agent */}
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                  Assign To Subordinate Agent *
+                </label>
+                <select
+                  required
+                  value={assignForm.assignedToId}
+                  onChange={(e) => setAssignForm({ ...assignForm, assignedToId: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    fontSize: '0.85rem',
+                    background: '#ffffff',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                >
+                  <option value="">Select an agent in your territory...</option>
+                  {agentsList.map(a => (
+                    <option key={a._id || a.id} value={a._id || a.id}>
+                      {a.name} — {(a.role || a.roleLevel || 'Agent').replace('_', ' ')} ({a.district || a.pincode || a.state || 'Assigned Territory'})
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Vendor / Business Name & Category */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                    Target Merchant / Shop Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Milk & Milk Store"
+                    value={assignForm.vendor}
+                    onChange={(e) => setAssignForm({ ...assignForm, vendor: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                    Category
+                  </label>
+                  <select
+                    value={assignForm.category}
+                    onChange={(e) => setAssignForm({ ...assignForm, category: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      fontSize: '0.85rem',
+                      background: '#ffffff',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="Physical QC Audit">Physical QC Audit</option>
+                    <option value="Vendor Onboarding">Vendor Onboarding</option>
+                    <option value="Compliance Verification">Compliance Verification</option>
+                    <option value="Merchant Inspection">Merchant Inspection</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Priority & Due Date */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                    Priority *
+                  </label>
+                  <select
+                    value={assignForm.priority}
+                    onChange={(e) => setAssignForm({ ...assignForm, priority: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      fontSize: '0.85rem',
+                      background: '#ffffff',
+                      fontWeight: 700,
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  >
+                    <option value="High">HIGH</option>
+                    <option value="Medium">MEDIUM</option>
+                    <option value="Low">LOW</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                    Due Date
+                  </label>
+                  <input
+                    type="date"
+                    value={assignForm.dueDate}
+                    onChange={(e) => setAssignForm({ ...assignForm, dueDate: e.target.value })}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: '1px solid var(--border)',
+                      fontSize: '0.85rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Description / Instructions */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '6px' }}>
+                  Deliverable Description & Instructions *
+                </label>
+                <textarea
+                  rows={3}
+                  required
+                  placeholder="Provide detailed instructions for the field agent..."
+                  value={assignForm.description}
+                  onChange={(e) => setAssignForm({ ...assignForm, description: e.target.value })}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    fontSize: '0.85rem',
+                    outline: 'none',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Footer Buttons */}
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowAssignModal(false)}
+                  style={{
+                    padding: '9px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid var(--border)',
+                    background: '#ffffff',
+                    color: 'var(--text-main)',
+                    fontSize: '0.84rem',
+                    fontWeight: 600,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={assigning}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '9px 20px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #2563eb, #1d4ed8)',
+                    color: '#ffffff',
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    cursor: assigning ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 2px 6px rgba(37,99,235,0.3)'
+                  }}
+                >
+                  <Plus size={15} />
+                  <span>{assigning ? 'Assigning...' : 'Assign Task'}</span>
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

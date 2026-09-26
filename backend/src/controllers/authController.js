@@ -54,7 +54,8 @@ const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }
 
 const login = async (req, res) => {
   try {
-    const { identifier, password } = req.body;
+    const identifier = req.body.identifier || req.body.email || req.body.mobile;
+    const { password } = req.body;
 
     if (!identifier || !password) {
       return res.status(400).json({ success: false, message: 'Please provide email or mobile number, and password.' });
@@ -79,7 +80,9 @@ const login = async (req, res) => {
     }
 
     // Determine normalized status for simulation/review
-    const userStatus = user.status || 'under_review';
+    const rawStatus = (user.status || '').toLowerCase();
+    const isApproved = rawStatus === 'active' || rawStatus === 'approved';
+    const userStatus = isApproved ? 'active' : (rawStatus || 'under_review');
 
     // Generate JWT carrying role and geographic/regional claims
     const tokenPayload = {
@@ -866,9 +869,149 @@ const uploadDocument = (req, res) => {
   }
 };
 
+const managerOtpStore = new Map();
+const OTP_EXPIRY_MS = 5 * 60 * 1000;
+
+const sendOtp = async (req, res) => {
+  try {
+    const rawMobile = (req.body.mobile || req.body.phone || req.body.mobileNumber || '').toString().trim();
+    if (!rawMobile || !/^[6-9][0-9]{9}$/.test(rawMobile)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian mobile number.' });
+    }
+
+    const user = await db.users.findOne({ mobile: rawMobile });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        notRegistered: true,
+        message: 'This mobile number is not registered as a manager. Please contact the administrator or register for onboarding.'
+      });
+    }
+
+    const rawStatus = (user.status || '').toLowerCase();
+    if (rawStatus === 'inactive' || rawStatus === 'suspended' || rawStatus === 'rejected') {
+      return res.status(403).json({
+        success: false,
+        message: `Your account is ${rawStatus}. Please contact the system administrator.`
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    managerOtpStore.set(rawMobile, { otp, expiresAt: Date.now() + OTP_EXPIRY_MS, userId: user._id });
+
+    console.log(`[Manager OTP] Sent to ${rawMobile}: ${otp}`);
+
+    return res.json({
+      success: true,
+      message: `OTP sent successfully to +91 ${rawMobile}. Valid for 5 minutes.`,
+      otp
+    });
+  } catch (err) {
+    console.error('Send OTP error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to send OTP' });
+  }
+};
+
+const verifyOtp = async (req, res) => {
+  try {
+    const rawMobile = (req.body.mobile || req.body.phone || req.body.mobileNumber || '').toString().trim();
+    const code = (req.body.otp || req.body.code || '').toString().trim();
+
+    if (!rawMobile || !code) {
+      return res.status(400).json({ success: false, message: 'Mobile number and OTP are required.' });
+    }
+
+    const record = managerOtpStore.get(rawMobile);
+    if (!record) {
+      return res.status(400).json({ success: false, message: 'No OTP requested for this mobile number or session expired. Please request OTP again.' });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      managerOtpStore.delete(rawMobile);
+      return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new OTP.' });
+    }
+
+    if (record.otp !== code) {
+      return res.status(400).json({ success: false, message: 'Incorrect OTP. Please enter the valid 6-digit verification code.' });
+    }
+
+    managerOtpStore.delete(rawMobile);
+
+    const user = await db.users.findById(record.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Manager account not found.' });
+    }
+
+    const rawStatus = (user.status || '').toLowerCase();
+    const isApproved = rawStatus === 'active' || rawStatus === 'approved';
+    const userStatus = isApproved ? 'active' : (rawStatus || 'under_review');
+
+    const tokenPayload = {
+      id: user._id,
+      role: user.role,
+      level: user.level,
+      status: userStatus,
+      regionId: user.regionId || user.stateId,
+      stateId: user.stateId,
+      districtId: user.districtId,
+      divisionId: user.divisionId,
+      pincodeId: user.pincodeId
+    };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' });
+
+    const regionObj = (user.regionId || user.stateId) ? await db.states.findById(user.regionId || user.stateId) : null;
+    const state = user.stateId ? await db.states.findById(user.stateId) : null;
+    const district = user.districtId ? await db.districts.findById(user.districtId) : null;
+    const division = user.divisionId ? await db.divisions.findById(user.divisionId) : null;
+    const pincode = user.pincodeId ? await db.pincodes.findById(user.pincodeId) : null;
+
+    return res.json({
+      success: true,
+      message: 'Mobile OTP verified successfully. Login granted.',
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        mobile: user.mobile,
+        role: user.role,
+        level: user.level,
+        status: userStatus,
+        adminApprovalStatus: user.adminApprovalStatus || (userStatus === 'kyc_pending' ? 'approved' : 'pending'),
+        kycStatus: user.kycStatus || 'pending_verification',
+        dob: user.dob || null,
+        gender: user.gender || null,
+        address: user.address || null,
+        documents: user.documents || {},
+        avatarUrl: user.avatarUrl || null,
+        regionId: user.regionId || user.stateId,
+        scope: {
+          regionId: user.regionId || user.stateId,
+          regionName: regionObj?.name || null,
+          stateId: user.stateId,
+          stateName: state?.name || null,
+          districtId: user.districtId,
+          districtName: district?.name || null,
+          divisionId: user.divisionId,
+          divisionName: division?.name || null,
+          pincodeId: user.pincodeId,
+          pincodeCode: pincode?.code || null,
+          pincodeArea: pincode?.areaName || null
+        }
+      }
+    });
+  } catch (err) {
+    console.error('Verify OTP error:', err);
+    return res.status(500).json({ success: false, message: 'Internal server error during OTP verification' });
+  }
+};
+
 module.exports = {
   login,
   register,
+  sendOtp,
+  verifyOtp,
   checkCapacity,
   simulateApproval,
   simulateKyc,

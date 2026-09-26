@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { getScopeFilter } = require('../middleware/scopeMiddleware');
+const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
 
 // Mask sensitive identifiers for security
 const maskPan = (pan) => {
@@ -31,11 +31,11 @@ const populateVendorLocations = async (vendor) => {
 
   return {
     ...vendor,
-    stateName: state?.name || '',
-    districtName: district?.name || '',
-    divisionName: division?.name || '',
-    pincodeCode: pincode?.code || '',
-    pincodeArea: pincode?.areaName || ''
+    stateName: state?.name || vendor.state || vendor.assignedState || '',
+    districtName: district?.name || vendor.district || vendor.assignedDistrict || '',
+    divisionName: division?.name || vendor.division || vendor.assignedDivision || '',
+    pincodeCode: pincode?.code || vendor.pincode || '',
+    pincodeArea: pincode?.areaName || vendor.area || ''
   };
 };
 
@@ -43,7 +43,6 @@ const populateVendorLocations = async (vendor) => {
 const getVendors = async (req, res) => {
   try {
     const user = req.user;
-    const scopeFilter = getScopeFilter(user);
 
     // Extract query parameters
     const {
@@ -60,31 +59,61 @@ const getVendors = async (req, res) => {
       sortOrder = 'desc'
     } = req.query;
 
-    // Load all vendors that match base geographic scope
-    const allScopedVendors = await db.vendors.find(scopeFilter);
+    // Load all vendors
+    const rawVendors = await db.vendors.find({});
+
+    // Deduplicate vendors by unique identifier (_id, phone, registrationId)
+    const seenVendorKeys = new Set();
+    const uniqueVendors = [];
+    for (const v of rawVendors) {
+      const key = String(v.registrationId || v._id || v.id || `${v.phone || v.mobile}_${v.businessName}`);
+      if (!seenVendorKeys.has(key)) {
+        seenVendorKeys.add(key);
+        uniqueVendors.push(v);
+      }
+    }
+
+    // Filter strictly by caller's scope
+    const scopedVendors = uniqueVendors.filter(v => isVendorInScope(v, user));
 
     // Apply granular filters
-    let filtered = allScopedVendors.filter(v => {
-      // 1. Search filter: matches vendor name, business name, or mobile
+    let filtered = scopedVendors.filter(v => {
+      // 1. Search filter: matches vendor name, business name, registration ID, or mobile
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
-        const matchesName = v.name?.toLowerCase().includes(q);
-        const matchesBiz = v.businessName?.toLowerCase().includes(q);
-        const matchesMobile = v.mobile?.includes(q);
-        if (!matchesName && !matchesBiz && !matchesMobile) return false;
+        const matchesName = (v.name || '').toLowerCase().includes(q);
+        const matchesBiz = (v.businessName || '').toLowerCase().includes(q);
+        const matchesMobile = (v.mobile || v.phone || '').includes(q);
+        const matchesReg = (v.registrationId || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesBiz && !matchesMobile && !matchesReg) return false;
       }
 
       // 2. Category & Subcategory
-      if (category && category !== 'All' && v.category !== category) return false;
-      if (subCategory && subCategory !== 'All' && v.subCategory !== subCategory) return false;
+      if (category && category !== 'All' && (v.category || '').toLowerCase() !== category.toLowerCase()) return false;
+      if (subCategory && subCategory !== 'All' && (v.subCategory || '').toLowerCase() !== subCategory.toLowerCase()) return false;
 
       // 3. Status filter
-      if (status && status !== 'All' && v.status?.toLowerCase() !== status.toLowerCase()) return false;
+      if (status && status !== 'All' && (v.status || '').toLowerCase() !== status.toLowerCase()) return false;
 
-      // 4. Sub-location filters (bounded by scope)
-      if (districtId && v.districtId !== districtId) return false;
-      if (divisionId && v.divisionId !== divisionId) return false;
-      if (pincodeId && v.pincodeId !== pincodeId) return false;
+      // 4. Sub-location filters (bounded by scope) - match by ID or Name
+      if (districtId) {
+        const dId = String(districtId).toLowerCase();
+        const matchesDistrict = (v.districtId && String(v.districtId).toLowerCase() === dId) ||
+          (v.district && v.district.toLowerCase() === dId);
+        if (!matchesDistrict) return false;
+      }
+      if (divisionId) {
+        const divId = String(divisionId).toLowerCase();
+        const matchesDiv = (v.divisionId && String(v.divisionId).toLowerCase() === divId) ||
+          (v.division && v.division.toLowerCase() === divId);
+        if (!matchesDiv) return false;
+      }
+      if (pincodeId) {
+        const pinId = String(pincodeId).toLowerCase();
+        const matchesPin = (v.pincodeId && String(v.pincodeId).toLowerCase() === pinId) ||
+          (v.pincode && String(v.pincode).toLowerCase() === pinId);
+        if (!matchesPin) return false;
+      }
 
       return true;
     });

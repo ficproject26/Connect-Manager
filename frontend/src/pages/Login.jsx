@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth, DEMO_ACCOUNTS } from '../context/AuthContext';
+import { authService } from '../services/api';
 import {
   Lock,
   Mail,
@@ -16,14 +17,25 @@ import {
   ChevronRight,
   CheckCircle2,
   Users,
-  Store
+  Store,
+  Smartphone,
+  KeyRound,
+  RotateCcw
 } from 'lucide-react';
 
 const Login = ({ onNavigate }) => {
-  const { login } = useAuth();
+  const { login, loginWithOtp } = useAuth();
+  const [loginMode, setLoginMode] = useState('password'); // 'password' | 'otp'
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+
+  // OTP Login states
+  const [mobile, setMobile] = useState('');
+  const [otp, setOtp] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpMessage, setOtpMessage] = useState('');
+
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -59,8 +71,9 @@ const Login = ({ onNavigate }) => {
     setLoading(true);
     try {
       const res = await login(identifier.trim(), password);
-      if (res?.user && res.user.status !== 'active') {
-        const flowState = res.user.status === 'kyc_pending' ? 'kyc_pending' : 'under_review';
+      const userStatus = String(res?.user?.status || '').toLowerCase();
+      if (res?.user && userStatus !== 'active' && userStatus !== 'approved') {
+        const flowState = userStatus === 'kyc_pending' ? 'kyc_pending' : 'under_review';
         onNavigate('register', {
           user: res.user,
           flowState,
@@ -69,6 +82,56 @@ const Login = ({ onNavigate }) => {
       }
     } catch (err) {
       setError(err.message || 'Login failed. Check your credentials.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    setOtpMessage('');
+    const cleanPhone = mobile.trim();
+    if (!cleanPhone || !/^[6-9][0-9]{9}$/.test(cleanPhone)) {
+      setError('Please enter a valid 10-digit Indian mobile number.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authService.sendOtp(cleanPhone);
+      setOtpSent(true);
+      setOtpMessage(res.message || 'OTP sent successfully.');
+      if (res.otp) {
+        setOtp(res.otp);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError('');
+    if (!otp.trim()) {
+      setError('Please enter the 6-digit OTP.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await loginWithOtp(mobile.trim(), otp.trim());
+      const userStatus = String(res?.user?.status || '').toLowerCase();
+      if (res?.user && userStatus !== 'active' && userStatus !== 'approved') {
+        const flowState = userStatus === 'kyc_pending' ? 'kyc_pending' : 'under_review';
+        onNavigate('register', {
+          user: res.user,
+          flowState,
+          token: res.token
+        });
+      }
+    } catch (err) {
+      setError(err.message || 'Invalid or expired OTP.');
     } finally {
       setLoading(false);
     }
@@ -391,157 +454,400 @@ const Login = ({ onNavigate }) => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {/* Official Email / Mobile Input */}
-              <div className="form-group" style={{ margin: 0 }}>
-                <label style={{
-                  display: 'block',
-                  fontSize: '0.78rem',
-                  fontWeight: 800,
-                  color: '#334155',
-                  marginBottom: '6px'
-                }}>
-                  Official Email or Mobile Number <span style={{ color: '#ef4444' }}>*</span>
-                </label>
-                <div style={{ position: 'relative' }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '24px',
-                    height: '24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#94a3b8'
-                  }}>
-                    <Mail size={16} />
-                  </div>
-                  <input
-                    type="text"
-                    className="form-input"
-                    placeholder="e.g. manager@example.com or 10-digit mobile"
-                    value={identifier}
-                    onChange={(e) => setIdentifier(e.target.value)}
-                    style={{
-                      paddingLeft: '40px',
-                      fontSize: '0.86rem',
-                      height: '42px',
-                      borderRadius: '10px',
-                      borderColor: '#cbd5e1',
-                      background: '#f8fafc',
-                      transition: 'all 0.15s ease'
-                    }}
-                    required
-                  />
-                </div>
-              </div>
-
-              {/* Password Input */}
-              <div className="form-group" style={{ margin: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#334155', margin: 0 }}>
-                    Password <span style={{ color: '#ef4444' }}>*</span>
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => onNavigate('forgot-password')}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      color: '#d97706',
-                      fontSize: '0.74rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      padding: 0
-                    }}
-                  >
-                    Forgot Password?
-                  </button>
-                </div>
-                <div style={{ position: 'relative' }}>
-                  <div style={{
-                    position: 'absolute',
-                    left: '12px',
-                    top: '50%',
-                    transform: 'translateY(-50%)',
-                    width: '24px',
-                    height: '24px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#94a3b8'
-                  }}>
-                    <Lock size={16} />
-                  </div>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    className="form-input"
-                    placeholder="Enter account password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    style={{
-                      paddingLeft: '40px',
-                      paddingRight: '42px',
-                      fontSize: '0.86rem',
-                      height: '42px',
-                      borderRadius: '10px',
-                      borderColor: '#cbd5e1',
-                      background: '#f8fafc',
-                      transition: 'all 0.15s ease'
-                    }}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    style={{
-                      position: 'absolute',
-                      right: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none',
-                      border: 'none',
-                      color: '#94a3b8',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      padding: '4px'
-                    }}
-                  >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Sign In Primary Button */}
+            {/* Mode Selector Tabs */}
+            <div style={{
+              display: 'flex',
+              background: '#f1f5f9',
+              borderRadius: '10px',
+              padding: '4px',
+              marginBottom: '18px',
+              gap: '4px'
+            }}>
               <button
-                type="submit"
-                disabled={loading}
+                type="button"
+                onClick={() => { setLoginMode('password'); setError(''); }}
                 style={{
-                  width: '100%',
-                  padding: '12px 18px',
-                  fontSize: '0.92rem',
-                  fontWeight: 800,
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: loginMode === 'password' ? '#ffffff' : 'transparent',
+                  color: loginMode === 'password' ? '#0f172a' : '#64748b',
+                  fontSize: '0.8rem',
+                  fontWeight: loginMode === 'password' ? 800 : 600,
+                  boxShadow: loginMode === 'password' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: '8px',
-                  borderRadius: '10px',
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                  color: '#ffffff',
-                  border: 'none',
-                  boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
-                  cursor: loading ? 'not-allowed' : 'pointer',
-                  marginTop: '4px',
+                  gap: '6px',
                   transition: 'all 0.15s ease'
                 }}
               >
-                {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
-                {!loading && <ArrowRight size={16} />}
+                <Lock size={14} /> Password Login
               </button>
-            </form>
+              <button
+                type="button"
+                onClick={() => { setLoginMode('otp'); setError(''); }}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: loginMode === 'otp' ? '#ffffff' : 'transparent',
+                  color: loginMode === 'otp' ? '#0f172a' : '#64748b',
+                  fontSize: '0.8rem',
+                  fontWeight: loginMode === 'otp' ? 800 : 600,
+                  boxShadow: loginMode === 'otp' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Smartphone size={14} /> Mobile OTP Login
+              </button>
+            </div>
+
+            {loginMode === 'password' ? (
+              <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {/* Official Email / Mobile Input */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    color: '#334155',
+                    marginBottom: '6px'
+                  }}>
+                    Official Email or Mobile Number <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '24px',
+                      height: '24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#94a3b8'
+                    }}>
+                      <Mail size={16} />
+                    </div>
+                    <input
+                      type="text"
+                      className="form-input"
+                      placeholder="e.g. manager@example.com or 10-digit mobile"
+                      value={identifier}
+                      onChange={(e) => setIdentifier(e.target.value)}
+                      style={{
+                        paddingLeft: '40px',
+                        fontSize: '0.86rem',
+                        height: '42px',
+                        borderRadius: '10px',
+                        borderColor: '#cbd5e1',
+                        background: '#f8fafc',
+                        transition: 'all 0.15s ease'
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Password Input */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#334155', margin: 0 }}>
+                      Password <span style={{ color: '#ef4444' }}>*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => onNavigate('forgot-password')}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: '#d97706',
+                        fontSize: '0.74rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        padding: 0
+                      }}
+                    >
+                      Forgot Password?
+                    </button>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '24px',
+                      height: '24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: '#94a3b8'
+                    }}>
+                      <Lock size={16} />
+                    </div>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      className="form-input"
+                      placeholder="Enter account password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      style={{
+                        paddingLeft: '40px',
+                        paddingRight: '42px',
+                        fontSize: '0.86rem',
+                        height: '42px',
+                        borderRadius: '10px',
+                        borderColor: '#cbd5e1',
+                        background: '#f8fafc',
+                        transition: 'all 0.15s ease'
+                      }}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        padding: '4px'
+                      }}
+                    >
+                      {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Sign In Primary Button */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '12px 18px',
+                    fontSize: '0.92rem',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    borderRadius: '10px',
+                    background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                    color: '#ffffff',
+                    border: 'none',
+                    boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    marginTop: '4px',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {loading ? 'Authenticating...' : 'Sign In to Dashboard'}
+                  {!loading && <ArrowRight size={16} />}
+                </button>
+              </form>
+            ) : (
+              /* Mobile OTP Login Form */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {otpMessage && (
+                  <div style={{
+                    padding: '10px 12px',
+                    background: '#f0fdf4',
+                    border: '1px solid #bbf7d0',
+                    borderRadius: '8px',
+                    color: '#166534',
+                    fontSize: '0.78rem',
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <CheckCircle2 size={16} style={{ color: '#16a34a', flexShrink: 0 }} />
+                    <span>{otpMessage}</span>
+                  </div>
+                )}
+
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.78rem',
+                    fontWeight: 800,
+                    color: '#334155',
+                    marginBottom: '6px'
+                  }}>
+                    Registered Mobile Number <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <div style={{
+                      position: 'absolute',
+                      left: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: '#64748b',
+                      fontSize: '0.84rem',
+                      fontWeight: 700
+                    }}>
+                      <Smartphone size={16} style={{ color: '#94a3b8' }} /> +91
+                    </div>
+                    <input
+                      type="tel"
+                      maxLength={10}
+                      className="form-input"
+                      placeholder="10-digit mobile number"
+                      value={mobile}
+                      disabled={otpSent}
+                      onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                      style={{
+                        paddingLeft: '56px',
+                        fontSize: '0.86rem',
+                        height: '42px',
+                        borderRadius: '10px',
+                        borderColor: '#cbd5e1',
+                        background: otpSent ? '#f1f5f9' : '#f8fafc',
+                        letterSpacing: '0.5px',
+                        fontWeight: 600
+                      }}
+                      required
+                    />
+                  </div>
+                </div>
+
+                {!otpSent ? (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={loading || mobile.length !== 10}
+                    style={{
+                      width: '100%',
+                      padding: '12px 18px',
+                      fontSize: '0.92rem',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      borderRadius: '10px',
+                      background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                      color: '#ffffff',
+                      border: 'none',
+                      boxShadow: '0 4px 14px rgba(217, 119, 6, 0.35)',
+                      cursor: (loading || mobile.length !== 10) ? 'not-allowed' : 'pointer',
+                      opacity: (loading || mobile.length !== 10) ? 0.6 : 1,
+                      marginTop: '4px',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    {loading ? 'Sending OTP...' : 'Get Verification OTP'}
+                    {!loading && <ArrowRight size={16} />}
+                  </button>
+                ) : (
+                  <form onSubmit={handleVerifyOtp} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                        <label style={{ fontSize: '0.78rem', fontWeight: 800, color: '#334155', margin: 0 }}>
+                          Enter 6-Digit OTP <span style={{ color: '#ef4444' }}>*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => { setOtpSent(false); setOtp(''); setOtpMessage(''); }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: '#d97706',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: 0
+                          }}
+                        >
+                          <RotateCcw size={12} /> Change Number
+                        </button>
+                      </div>
+                      <div style={{ position: 'relative' }}>
+                        <div style={{
+                          position: 'absolute',
+                          left: '12px',
+                          top: '50%',
+                          transform: 'translateY(-50%)',
+                          color: '#94a3b8'
+                        }}>
+                          <KeyRound size={16} />
+                        </div>
+                        <input
+                          type="text"
+                          maxLength={6}
+                          className="form-input"
+                          placeholder="e.g. 123456"
+                          value={otp}
+                          onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                          style={{
+                            paddingLeft: '40px',
+                            fontSize: '1.1rem',
+                            letterSpacing: '4px',
+                            fontWeight: 800,
+                            height: '44px',
+                            borderRadius: '10px',
+                            borderColor: '#d97706',
+                            background: '#fffbeb',
+                            textAlign: 'center'
+                          }}
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    <button
+                      type="submit"
+                      disabled={loading || otp.length !== 6}
+                      style={{
+                        width: '100%',
+                        padding: '12px 18px',
+                        fontSize: '0.92rem',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        borderRadius: '10px',
+                        background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)',
+                        cursor: (loading || otp.length !== 6) ? 'not-allowed' : 'pointer',
+                        opacity: (loading || otp.length !== 6) ? 0.6 : 1,
+                        transition: 'all 0.15s ease'
+                      }}
+                    >
+                      {loading ? 'Verifying OTP...' : 'Verify OTP & Sign In'}
+                      {!loading && <ArrowRight size={16} />}
+                    </button>
+                  </form>
+                )}
+              </div>
+            )}
 
             {/* Quick Demo Credentials Helper */}
             <div style={{

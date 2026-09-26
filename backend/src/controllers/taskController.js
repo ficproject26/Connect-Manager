@@ -7,25 +7,43 @@ const getTasks = async (req, res) => {
   try {
     const user = req.user;
     const scopeFilter = getScopeFilter(user);
-    const { status, category, priority, search } = req.query;
+    const { status, category, priority, search, state, district, division, pincode, agentId, agentRole } = req.query;
 
     const allTasks = await db.tasks.find();
 
     let filtered = allTasks.filter(t => {
-      // Scope filtering
-      if (user.role === 'state_manager' && user.stateId && t.stateId && t.stateId !== user.stateId) return false;
-      if (user.role === 'district_manager' && user.districtId && t.districtId && t.districtId !== user.districtId) return false;
-      if (user.role === 'division_manager' && user.divisionId && t.divisionId && t.divisionId !== user.divisionId) return false;
-      if (user.role === 'pincode_manager' && user.pincodeId && t.pincodeId && t.pincodeId !== user.pincodeId) return false;
+      // Scope authorization filtering based on authenticated manager
+      if (user.role === 'state_manager') {
+        const uState = (user.state || user.assignedState || '').toLowerCase();
+        const tState = (t.state || t.stateName || '').toLowerCase();
+        if (user.stateId && t.stateId && t.stateId !== user.stateId && (!uState || !tState || uState !== tState)) return false;
+      }
+      if (user.role === 'district_manager') {
+        const uDist = (user.district || '').toLowerCase();
+        const tDist = (t.district || '').toLowerCase();
+        if (user.districtId && t.districtId && t.districtId !== user.districtId && (!uDist || !tDist || uDist !== tDist)) return false;
+      }
+      if (user.role === 'division_manager') {
+        const uDiv = (user.division || '').toLowerCase();
+        const tDiv = (t.division || '').toLowerCase();
+        if (user.divisionId && t.divisionId && t.divisionId !== user.divisionId && (!uDiv || !tDiv || uDiv !== tDiv)) return false;
+      }
+      if (user.role === 'pincode_manager') {
+        const uPin = String(user.pincode || user.pincodeCode || '');
+        const tPin = String(t.pincode || '');
+        if (user.pincodeId && t.pincodeId && t.pincodeId !== user.pincodeId && (!uPin || !tPin || uPin !== tPin)) return false;
+      }
 
-      // Status filter
+      // Query-level optional filters
       if (status && status !== 'All' && t.status !== status) return false;
-
-      // Category filter
       if (category && category !== 'All' && t.category !== category) return false;
-
-      // Priority filter
       if (priority && priority !== 'All' && t.priority !== priority) return false;
+      if (state && t.state && !t.state.toLowerCase().includes(state.toLowerCase())) return false;
+      if (district && t.district && !t.district.toLowerCase().includes(district.toLowerCase())) return false;
+      if (division && t.division && !t.division.toLowerCase().includes(division.toLowerCase())) return false;
+      if (pincode && t.pincode && !String(t.pincode).includes(String(pincode))) return false;
+      if (agentId && t.assignedAgentId !== agentId && t.assignedManagerId !== agentId) return false;
+      if (agentRole && t.assignedManagerRole !== agentRole && t.assignedAgentRole !== agentRole) return false;
 
       // Search filter
       if (search && search.trim()) {
@@ -34,7 +52,8 @@ const getTasks = async (req, res) => {
         const matchVendor = (t.vendor || '').toLowerCase().includes(q);
         const matchDesc = (t.description || '').toLowerCase().includes(q);
         const matchLoc = (t.location || '').toLowerCase().includes(q);
-        if (!matchTitle && !matchVendor && !matchDesc && !matchLoc) return false;
+        const matchAssignee = (t.assignedManagerName || t.assignedAgentName || '').toLowerCase().includes(q);
+        if (!matchTitle && !matchVendor && !matchDesc && !matchLoc && !matchAssignee) return false;
       }
 
       return true;
@@ -87,24 +106,33 @@ const createTask = async (req, res) => {
       category: category || 'Physical QC Audit',
       priority: priority || 'Medium',
       dueDate: dueDate || new Date(Date.now() + 86400000 * 3).toISOString(),
+      assignedDate: new Date().toISOString(),
       status: 'Assigned',
+      progress: 0,
       assignedManagerId: user.id,
       assignedManagerName: assignedTo || user.name,
       assignedManagerRole: assignedManagerRole || user.role,
+      assignedAgentId: req.body.assignedAgentId || null,
+      assignedAgentName: req.body.assignedAgentName || null,
+      assignedAgentRole: req.body.assignedAgentRole || null,
       createdByAdminName: user.name,
       createdByAdminRole: user.role,
       description: description || 'Field operational deliverable and compliance task.',
       remarks: remarks || '',
-      location: location || user.scope?.regionName || 'Karnataka',
-      pincode: pincode || user.scope?.pincodeCode || null,
+      location: location || (user.district ? `${user.district}, ${user.state || 'Tamil Nadu'}` : 'Tamil Nadu'),
+      state: req.body.state || user.state || user.assignedState || 'Tamil Nadu',
+      district: req.body.district || user.district || '',
+      division: req.body.division || user.division || '',
+      pincode: pincode || user.pincode || user.pincodeCode || null,
       pincodeId: pincodeId || user.pincodeId || null,
       divisionId: divisionId || user.divisionId || null,
       districtId: districtId || user.districtId || null,
-      stateId: stateId || user.stateId || 'state_ka',
+      stateId: stateId || user.stateId || (user.state === 'Karnataka' ? 'state_ka' : '6aa10f70ca0932e6eaec1f5c'),
       photos: [],
       shopPhoto: null,
       reworkDetails: null,
-      completionDetails: null
+      completionDetails: null,
+      lastUpdate: new Date().toISOString()
     });
 
     // Log to audit trail
@@ -141,7 +169,11 @@ const updateTaskStatus = async (req, res) => {
     let nextStatus = task.status;
     let updateFields = {};
 
-    if (action === 'start' || action === 'in_progress') {
+    const { status: directStatus, progress, completionPercentage } = req.body;
+
+    if (directStatus && ['Assigned', 'Accepted', 'In Progress', 'Pending', 'Completed', 'Rejected', 'Cancelled', 'Overdue', 'Suspended', 'Rework'].includes(directStatus)) {
+      nextStatus = directStatus;
+    } else if (action === 'start' || action === 'in_progress' || action === 'not_solved') {
       nextStatus = 'In Progress';
       if (reworkPhoto || reworkAudio || reworkRemarks) {
         updateFields.reworkDetails = {
@@ -151,7 +183,7 @@ const updateTaskStatus = async (req, res) => {
           updatedAt: new Date().toISOString()
         };
       }
-    } else if (action === 'complete' || action === 'resolve') {
+    } else if (action === 'complete' || action === 'resolve' || action === 'solved') {
       nextStatus = 'Completed';
       updateFields.completionDetails = {
         workCompleted: remarks || resolutionDetails || 'Operational task resolved on-site.',
@@ -160,6 +192,16 @@ const updateTaskStatus = async (req, res) => {
         completedAt: new Date().toISOString(),
         completedBy: user.name
       };
+      updateFields.completedDate = new Date().toISOString();
+      updateFields.progress = 100;
+    } else if (action === 'accept') {
+      nextStatus = 'Accepted';
+    } else if (action === 'reject') {
+      nextStatus = 'Rejected';
+    } else if (action === 'cancel') {
+      nextStatus = 'Cancelled';
+    } else if (action === 'pending') {
+      nextStatus = 'Pending';
     } else if (action === 'rework') {
       nextStatus = 'Rework';
       updateFields.reworkDetails = {
@@ -172,7 +214,12 @@ const updateTaskStatus = async (req, res) => {
       nextStatus = 'Suspended';
     }
 
+    if (progress !== undefined || completionPercentage !== undefined) {
+      updateFields.progress = Number(progress !== undefined ? progress : completionPercentage);
+    }
+
     updateFields.status = nextStatus;
+    updateFields.lastUpdate = new Date().toISOString();
     if (remarks) updateFields.remarks = remarks;
 
     const updatedTask = await db.tasks.findByIdAndUpdate(id, { $set: updateFields });

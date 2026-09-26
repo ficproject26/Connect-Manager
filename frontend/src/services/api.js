@@ -45,6 +45,24 @@ export const authService = {
     return handleResponse(res);
   },
 
+  async sendOtp(mobile) {
+    const res = await fetch(`${API_BASE}/auth/send-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile })
+    });
+    return handleResponse(res);
+  },
+
+  async verifyOtp(mobile, otp) {
+    const res = await fetch(`${API_BASE}/auth/verify-otp`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ mobile, otp })
+    });
+    return handleResponse(res);
+  },
+
   async forgotPassword(email) {
     const res = await fetch(`${API_BASE}/auth/forgot-password`, {
       method: 'POST',
