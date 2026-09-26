@@ -1,8 +1,10 @@
+const http = require('http');
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const dotenv = require('dotenv');
 const db = require('./config/db');
+const { realtimeWebSocketServer } = require('./realtime');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
@@ -43,6 +45,7 @@ const taskRoutes = require('./routes/taskRoutes');
 const shopVisitRoutes = require('./routes/shopVisitRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
+const realtimeRoutes = require('./routes/realtimeRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
@@ -56,6 +59,7 @@ app.use('/api/qc-tasks', taskRoutes);
 app.use('/api/shop-visits', shopVisitRoutes);
 app.use('/api/operations', agentRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/realtime', realtimeRoutes);
 
 // Centralized error handling
 app.use((err, req, res, next) => {
@@ -69,10 +73,14 @@ app.use((err, req, res, next) => {
 // Auto-seed if database is clean
 const seedData = require('./seed/seed');
 async function startServer() {
-  app.listen(PORT, () => {
+  const server = http.createServer(app);
+  realtimeWebSocketServer.attach(server);
+
+  server.listen(PORT, () => {
     console.log('=============================================');
     console.log(`Agent Manager API Server running on port ${PORT}`);
     console.log(`Health endpoint: http://localhost:${PORT}/api/health`);
+    console.log(`Realtime WS: ws://localhost:${PORT}/ws`);
     console.log('=============================================');
   });
 

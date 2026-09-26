@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
+import { realtimeClient } from '../realtime';
 
 const AuthContext = createContext(null);
 
@@ -55,6 +56,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('agent_mgr_token');
     setToken(null);
     setUser(null);
+    realtimeClient.disconnect();
   };
 
   const initAuth = async () => {
@@ -89,6 +91,14 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     initAuth();
   }, []);
+
+  useEffect(() => {
+    if (token && user) {
+      realtimeClient.connect(token);
+    } else if (!token) {
+      realtimeClient.disconnect();
+    }
+  }, [token, user]);
 
   const login = async (identifier, password) => {
     const res = await authService.login(identifier, password);

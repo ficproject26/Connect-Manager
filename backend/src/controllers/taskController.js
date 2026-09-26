@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const { getScopeFilter } = require('../middleware/scopeMiddleware');
 const { broadcastNotification } = require('../routes/notificationRoutes');
+const { publishEntityEvent } = require('../realtime');
 
 // GET /api/qc-tasks/tasks - Get scoped operational & QC tasks
 const getTasks = async (req, res) => {
@@ -147,6 +148,21 @@ const createTask = async (req, res) => {
       timestamp: new Date().toISOString()
     });
 
+    // Broadcast real-time ecosystem event
+    publishEntityEvent({
+      entity: 'task',
+      action: 'created',
+      entityId: newTask._id,
+      data: newTask,
+      scope: {
+        stateId: newTask.stateId || newTask.state,
+        districtId: newTask.districtId || newTask.district,
+        divisionId: newTask.divisionId || newTask.division,
+        pincodeId: newTask.pincodeId || newTask.pincode,
+        targetUserId: newTask.assignedTo || newTask.assignedManagerId
+      }
+    });
+
     res.status(201).json({ success: true, message: 'Task created successfully', data: newTask });
   } catch (err) {
     console.error('Error creating task:', err);
@@ -244,6 +260,21 @@ const updateTaskStatus = async (req, res) => {
       recordId: id,
       userId: task.assignedManagerId || user.id,
       createdAt: new Date().toISOString()
+    });
+
+    // Broadcast real-time ecosystem event
+    publishEntityEvent({
+      entity: 'task',
+      action: 'updated',
+      entityId: updatedTask._id,
+      data: updatedTask,
+      scope: {
+        stateId: updatedTask.stateId || updatedTask.state,
+        districtId: updatedTask.districtId || updatedTask.district,
+        divisionId: updatedTask.divisionId || updatedTask.division,
+        pincodeId: updatedTask.pincodeId || updatedTask.pincode,
+        targetUserId: updatedTask.assignedTo || updatedTask.assignedManagerId
+      }
     });
 
     res.json({ success: true, message: `Task status updated to ${nextStatus}`, data: updatedTask });

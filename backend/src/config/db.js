@@ -99,44 +99,59 @@ class Collection {
 
   async find(query = {}) {
     const cleanQuery = sanitizeQuery(query);
+    const records = this.cache || [];
+    if (records.length > 0) {
+      return records.filter(item => {
+        for (const [key, val] of Object.entries(cleanQuery)) {
+          if (val && typeof val === 'object' && val.$in) {
+            if (!val.$in.map(String).includes(String(item[key]))) return false;
+          } else if (item[key] !== val) {
+            return false;
+          }
+        }
+        return true;
+      });
+    }
+
     if (this._mongoCol) {
       try {
-        return await this._mongoCol.find(cleanQuery).maxTimeMS(2000).toArray();
+        const mongoPromise = this._mongoCol.find(cleanQuery).toArray();
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Mongo timeout')), 400));
+        return await Promise.race([mongoPromise, timeoutPromise]);
       } catch (e) {}
     }
-    const records = this.cache || [];
-    return records.filter(item => {
-      for (const [key, val] of Object.entries(cleanQuery)) {
-        if (val && typeof val === 'object' && val.$in) {
-          if (!val.$in.map(String).includes(String(item[key]))) return false;
-        } else if (item[key] !== val) {
-          return false;
-        }
-      }
-      return true;
-    });
+    return [];
   }
 
   async findOne(query = {}) {
     const cleanQuery = sanitizeQuery(query);
-    if (this._mongoCol) {
-      try {
-        const doc = await this._mongoCol.findOne(cleanQuery, { maxTimeMS: 2000 });
-        if (doc) return doc;
-      } catch (e) {}
-    }
     const records = this.cache || [];
-    return records.find(item => {
+    const cached = records.find(item => {
       for (const [key, val] of Object.entries(cleanQuery)) {
         if (item[key] !== val) return false;
       }
       return true;
-    }) || null;
+    });
+    if (cached) return cached;
+
+    if (this._mongoCol) {
+      try {
+        const mongoPromise = this._mongoCol.findOne(cleanQuery);
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Mongo timeout')), 400));
+        const doc = await Promise.race([mongoPromise, timeoutPromise]);
+        if (doc) return doc;
+      } catch (e) {}
+    }
+    return null;
   }
 
   async findById(id) {
     if (!id) return null;
     const strId = String(id);
+    const records = this.cache || [];
+    const cached = records.find(item => String(item._id || item.id) === strId);
+    if (cached) return cached;
+
     if (this._mongoCol) {
       try {
         const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
@@ -145,12 +160,13 @@ class Collection {
             orConditions.push({ _id: new ObjectId(strId) });
           } catch (e) {}
         }
-        const doc = await this._mongoCol.findOne({ $or: orConditions }, { maxTimeMS: 2000 });
+        const mongoPromise = this._mongoCol.findOne({ $or: orConditions });
+        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Mongo timeout')), 400));
+        const doc = await Promise.race([mongoPromise, timeoutPromise]);
         if (doc) return doc;
       } catch (e) {}
     }
-    const records = this.cache || [];
-    return records.find(item => String(item._id || item.id) === strId) || null;
+    return null;
   }
 
   async insertOne(doc) {
@@ -175,15 +191,13 @@ class Collection {
     this._write(records);
 
     if (this._mongoCol) {
-      try {
-        await this._mongoCol.updateOne(
-          { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
-          { $set: newDoc },
-          { upsert: true }
-        );
-      } catch (err) {
-        console.error(`[Manager MongoDB] Error inserting ${this.name}:`, err.message);
-      }
+      this._mongoCol.updateOne(
+        { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
+        { $set: newDoc },
+        { upsert: true }
+      ).catch(err => {
+        console.error(`[Manager MongoDB] Async insert error in ${this.name}:`, err.message);
+      });
     }
 
     return newDoc;
@@ -213,17 +227,15 @@ class Collection {
     this._write(records);
 
     if (this._mongoCol && newDocs.length > 0) {
-      try {
-        await Promise.all(newDocs.map(d =>
-          this._mongoCol.updateOne(
-            { $or: [{ _id: d._id }, { id: d.id }] },
-            { $set: d },
-            { upsert: true }
-          )
-        ));
-      } catch (err) {
-        console.error(`[Manager MongoDB] Error insertMany ${this.name}:`, err.message);
-      }
+      Promise.all(newDocs.map(d =>
+        this._mongoCol.updateOne(
+          { $or: [{ _id: d._id }, { id: d.id }] },
+          { $set: d },
+          { upsert: true }
+        )
+      )).catch(err => {
+        console.error(`[Manager MongoDB] Async insertMany error in ${this.name}:`, err.message);
+      });
     }
 
     return newDocs;
@@ -252,11 +264,10 @@ class Collection {
     }
 
     if (this._mongoCol) {
-      try {
-        await this._mongoCol.updateOne(cleanQuery, { $set: { ...patch, updatedAt: new Date().toISOString() } });
-      } catch (err) {
-        console.error(`[Manager MongoDB] Error updateOne ${this.name}:`, err.message);
-      }
+      this._mongoCol.updateOne(cleanQuery, { $set: { ...patch, updatedAt: new Date().toISOString() } })
+        .catch(err => {
+          console.error(`[Manager MongoDB] Async updateOne error in ${this.name}:`, err.message);
+        });
     }
 
     return updated;
@@ -280,14 +291,12 @@ class Collection {
     }
 
     if (this._mongoCol) {
-      try {
-        await this._mongoCol.updateOne(
-          { $or: [{ _id: id }, { id: id }, { _id: strId }, { id: strId }] },
-          { $set: { ...patch, updatedAt: new Date().toISOString() } }
-        );
-      } catch (err) {
-        console.error(`[Manager MongoDB] Error findByIdAndUpdate ${this.name}:`, err.message);
-      }
+      this._mongoCol.updateOne(
+        { $or: [{ _id: id }, { id: id }, { _id: strId }, { id: strId }] },
+        { $set: { ...patch, updatedAt: new Date().toISOString() } }
+      ).catch(err => {
+        console.error(`[Manager MongoDB] Async findByIdAndUpdate error in ${this.name}:`, err.message);
+      });
     }
 
     return updated;
@@ -305,11 +314,9 @@ class Collection {
     this._write(filtered);
 
     if (this._mongoCol) {
-      try {
-        await this._mongoCol.deleteOne(cleanQuery);
-      } catch (err) {
-        console.error(`[Manager MongoDB] Error deleteOne ${this.name}:`, err.message);
-      }
+      this._mongoCol.deleteOne(cleanQuery).catch(err => {
+        console.error(`[Manager MongoDB] Async deleteOne error in ${this.name}:`, err.message);
+      });
     }
 
     return { deletedCount: records.length - filtered.length };

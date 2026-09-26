@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { publishEntityEvent } = require('../realtime');
 
 // Check if an agent falls within the user's hierarchical scope
 const isAgentInScope = (agent, user) => {
@@ -243,6 +244,20 @@ const createAgent = async (req, res) => {
       userRole: user.role,
       details: `Onboarded agent ${newAgent.name} (${newAgent.role})`,
       timestamp: new Date().toISOString()
+    });
+
+    // Broadcast real-time ecosystem event
+    publishEntityEvent({
+      entity: 'agent',
+      action: 'created',
+      entityId: newAgent._id,
+      data: newAgent,
+      scope: {
+        stateId: newAgent.stateId,
+        districtId: newAgent.districtId,
+        divisionId: newAgent.divisionId,
+        pincodeId: newAgent.pincodeId
+      }
     });
 
     res.status(201).json({ success: true, message: 'Agent onboarded successfully', data: newAgent });

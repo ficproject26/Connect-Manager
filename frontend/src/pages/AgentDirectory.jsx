@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { agentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useRealtime } from '../realtime';
 import { 
   UserCheck, 
   Search, 
@@ -59,6 +60,11 @@ const AgentDirectory = ({ onNavigate }) => {
   useEffect(() => {
     fetchAgents();
   }, [user]);
+
+  // Real-time synchronization for agent directory
+  useRealtime('agent', () => {
+    fetchAgents(false);
+  });
 
   const handleCopy = (text, fieldId) => {
     if (!text) return;

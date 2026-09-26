@@ -1,5 +1,6 @@
 const db = require('../config/db');
 const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
+const { publishEntityEvent } = require('../realtime');
 
 // Mask sensitive identifiers for security
 const maskPan = (pan) => {
@@ -264,6 +265,20 @@ const createVendor = async (req, res) => {
 
     const populated = await populateVendorLocations(newVendor);
 
+    // Broadcast real-time ecosystem event
+    publishEntityEvent({
+      entity: 'vendor',
+      action: 'created',
+      entityId: newVendor._id,
+      data: populated,
+      scope: {
+        stateId: newVendor.stateId || newVendor.state,
+        districtId: newVendor.districtId || newVendor.district,
+        divisionId: newVendor.divisionId || newVendor.division,
+        pincodeId: newVendor.pincodeId || newVendor.pincode
+      }
+    });
+
     res.status(201).json({
       success: true,
       message: 'Vendor successfully registered',
@@ -326,6 +341,20 @@ const updateVendor = async (req, res) => {
     });
 
     const populated = await populateVendorLocations(updated);
+
+    // Broadcast real-time ecosystem event
+    publishEntityEvent({
+      entity: 'vendor',
+      action: 'updated',
+      entityId: updated._id,
+      data: populated,
+      scope: {
+        stateId: updated.stateId || updated.state,
+        districtId: updated.districtId || updated.district,
+        divisionId: updated.divisionId || updated.division,
+        pincodeId: updated.pincodeId || updated.pincode
+      }
+    });
 
     res.json({
       success: true,
@@ -402,6 +431,20 @@ const updateVendorStatus = async (req, res) => {
     });
 
     const populated = await populateVendorLocations(updated);
+
+    // Broadcast real-time ecosystem event
+    publishEntityEvent({
+      entity: 'vendor',
+      action: 'updated',
+      entityId: updated._id,
+      data: populated,
+      scope: {
+        stateId: updated.stateId || updated.state,
+        districtId: updated.districtId || updated.district,
+        divisionId: updated.divisionId || updated.division,
+        pincodeId: updated.pincodeId || updated.pincode
+      }
+    });
 
     res.json({
       success: true,

@@ -33,6 +33,7 @@ import {
 } from 'lucide-react';
 import { taskService, agentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useRealtime } from '../realtime';
 
 const Tasks = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -168,6 +169,18 @@ const Tasks = ({ onNavigate }) => {
       }
     }).catch(() => {});
   }, []);
+
+  // Listen for ecosystem-wide real-time task events with zero page reload
+  useRealtime('task', (event) => {
+    fetchTasks(false);
+    if (selectedTask && String(selectedTask._id || selectedTask.id) === String(event.entityId)) {
+      if (event.action === 'deleted') {
+        setSelectedTask(null);
+      } else if (event.data) {
+        setSelectedTask(prev => ({ ...prev, ...event.data }));
+      }
+    }
+  });
 
   const handleAssignTask = async (e) => {
     e.preventDefault();

@@ -154,54 +154,51 @@
   },
   {
     "_id": "6ab76ac045152c228d463958",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T06:48:32.826Z",
-    "id": "6ab76ac045152c228d463958",
-    "message": "You have been assigned a target of 2 visits: fvghjk",
-    "priority": "high",
-    "read": false,
     "receiver": "6ab3ca2d7ee04aa0f057fcf1",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-26T09:44:08.478Z",
+    "message": "You have been assigned a target of 2 visits: fvghjk",
+    "read": false,
+    "priority": "high",
+    "category": "target_assigned",
+    "createdAt": "2026-09-26T06:48:32.826Z",
+    "__v": 0,
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337"
-    ]
+    ],
+    "updatedAt": "2026-09-26T09:44:08.420Z"
   },
   {
     "_id": "6ab76b6345152c228d4639a6",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T06:51:15.288Z",
-    "id": "6ab76b6345152c228d4639a6",
-    "message": "You have been assigned a target of 25 visits: dfghnjm,",
-    "priority": "high",
-    "read": false,
     "receiver": "6a9120a73cbecf25841b8d87",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-26T09:44:08.464Z",
+    "message": "You have been assigned a target of 25 visits: dfghnjm,",
+    "read": false,
+    "priority": "high",
+    "category": "target_assigned",
+    "createdAt": "2026-09-26T06:51:15.288Z",
+    "__v": 0,
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337"
-    ]
+    ],
+    "updatedAt": "2026-09-26T09:44:08.435Z"
   },
   {
     "_id": "6ab76b6645152c228d4639b0",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T06:51:18.852Z",
-    "id": "6ab76b6645152c228d4639b0",
-    "message": "You have been assigned a target of 2 visits: dxfgchjbmkl",
-    "priority": "high",
-    "read": false,
     "receiver": "6a9120a73cbecf25841b8d87",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-26T09:44:08.493Z",
+    "message": "You have been assigned a target of 2 visits: dxfgchjbmkl",
+    "read": false,
+    "priority": "high",
+    "category": "target_assigned",
+    "createdAt": "2026-09-26T06:51:18.852Z",
+    "__v": 0,
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337"
-    ]
+    ],
+    "updatedAt": "2026-09-26T09:44:08.450Z"
   },
   {
     "_id": "NOTIF-1790414127807-0AM4",
@@ -314,5 +311,29 @@
     "isRead": false,
     "createdAt": "2026-09-26T10:17:29.078Z",
     "updatedAt": "2026-09-26T10:17:29.078Z"
+  },
+  {
+    "_id": "f75e5b76-0878-48b2-900f-4f8061b89721",
+    "id": "f75e5b76-0878-48b2-900f-4f8061b89721",
+    "type": "task_updated",
+    "title": "Task TSK-100006 In Progress",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100006 as In Progress.",
+    "recordId": "65d3185e-a6df-427b-a565-c00481726817",
+    "userId": "user_state_1",
+    "isRead": false,
+    "createdAt": "2026-09-26T14:17:22.238Z",
+    "updatedAt": "2026-09-26T14:17:22.238Z"
+  },
+  {
+    "_id": "4e15b71f-49c7-4bbd-8ed9-aba6bd7f67f5",
+    "id": "4e15b71f-49c7-4bbd-8ed9-aba6bd7f67f5",
+    "type": "task_updated",
+    "title": "Task TSK-100006 Completed",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100006 as Completed.",
+    "recordId": "65d3185e-a6df-427b-a565-c00481726817",
+    "userId": "user_state_1",
+    "isRead": false,
+    "createdAt": "2026-09-26T14:17:22.243Z",
+    "updatedAt": "2026-09-26T14:17:22.243Z"
   }
 ]
