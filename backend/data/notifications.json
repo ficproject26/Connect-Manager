@@ -489,26 +489,26 @@
   },
   {
     "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "createdAt": "2026-09-29T06:03:52.439Z",
     "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
-    "type": "task_updated",
-    "title": "Task TSK-100012 In Progress",
+    "isRead": false,
     "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as In Progress.",
     "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
-    "userId": "user_state_1",
-    "isRead": false,
-    "createdAt": "2026-09-29T06:03:52.439Z",
-    "updatedAt": "2026-09-29T06:03:52.439Z"
+    "title": "Task TSK-100012 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-09-29T06:03:52.439Z",
+    "userId": "user_state_1"
   },
   {
     "_id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
+    "createdAt": "2026-09-29T06:03:52.444Z",
     "id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
-    "type": "task_updated",
-    "title": "Task TSK-100012 Completed",
+    "isRead": false,
     "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as Completed.",
     "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
-    "userId": "user_state_1",
-    "isRead": false,
-    "createdAt": "2026-09-29T06:03:52.444Z",
-    "updatedAt": "2026-09-29T06:03:52.444Z"
+    "title": "Task TSK-100012 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-09-29T06:03:52.444Z",
+    "userId": "user_state_1"
   }
 ]

@@ -110,10 +110,35 @@ class RealtimeWebSocketServer {
     }));
   }
 
-  authenticateClient(ws, token) {
+  async authenticateClient(ws, token) {
     try {
       const decoded = jwt.verify(token, JWT_SECRET);
       ws.isAuthenticated = true;
+      let stateName = decoded.state || null;
+      let districtName = decoded.district || null;
+      let divisionName = decoded.division || null;
+      let pincodeCode = decoded.pincode || null;
+
+      try {
+        const db = require('../config/db');
+        if (!stateName && (decoded.stateId || decoded.regionId)) {
+          const s = await db.states.findById(decoded.stateId || decoded.regionId);
+          if (s) stateName = s.name;
+        }
+        if (!districtName && decoded.districtId) {
+          const d = await db.districts.findById(decoded.districtId);
+          if (d) districtName = d.name;
+        }
+        if (!divisionName && decoded.divisionId) {
+          const div = await db.divisions.findById(decoded.divisionId);
+          if (div) divisionName = div.name;
+        }
+        if (!pincodeCode && decoded.pincodeId) {
+          const p = await db.pincodes.findById(decoded.pincodeId);
+          if (p) pincodeCode = p.code;
+        }
+      } catch (dbErr) {}
+
       ws.user = {
         id: decoded.id || decoded._id,
         email: decoded.email,
@@ -123,10 +148,10 @@ class RealtimeWebSocketServer {
         districtId: decoded.districtId || null,
         divisionId: decoded.divisionId || null,
         pincodeId: decoded.pincodeId || null,
-        state: decoded.state || null,
-        district: decoded.district || null,
-        division: decoded.division || null,
-        pincode: decoded.pincode || null
+        state: stateName,
+        district: districtName,
+        division: divisionName,
+        pincode: pincodeCode
       };
 
       ws.send(JSON.stringify({
@@ -152,7 +177,7 @@ class RealtimeWebSocketServer {
     const role = user.role || '';
 
     // Central / Super Admins receive all events across all territories
-    if (['admin', 'super-admin', 'super_admin', 'central_admin', 'state_manager'].includes(role) || user.email === 'admin@example.com') {
+    if (['admin', 'super-admin', 'super_admin', 'central_admin'].includes(role) || user.email === 'admin@example.com') {
       return true;
     }
 
@@ -170,23 +195,67 @@ class RealtimeWebSocketServer {
 
     const norm = (s) => (s || '').toString().trim().toLowerCase();
 
-    // Territorial scope checks
+    // Territorial scope checks: support cross-matching by ID or geographic name
     if (role.includes('state')) {
-      const uState = norm(user.stateId || user.state);
-      const eState = norm(scope.stateId || scope.state);
-      if (uState && eState && uState !== eState) return false;
+      const uStateId = norm(user.stateId);
+      const uStateName = norm(user.state);
+      const eStateId = norm(scope.stateId);
+      const eStateName = norm(scope.state || scope.stateName);
+      if (uStateId || uStateName) {
+        const match = 
+          (uStateId && eStateId && uStateId === eStateId) ||
+          (uStateName && eStateName && (uStateName.includes(eStateName) || eStateName.includes(uStateName))) ||
+          (uStateName && eStateId && (uStateName.includes(eStateId) || eStateId.includes(uStateName))) ||
+          (uStateId && eStateName && uStateId === eStateName);
+        if (eStateId || eStateName) {
+          if (!match) return false;
+        }
+      }
     } else if (role.includes('district')) {
-      const uDist = norm(user.districtId || user.district);
-      const eDist = norm(scope.districtId || scope.district);
-      if (uDist && eDist && uDist !== eDist) return false;
+      const uDistId = norm(user.districtId);
+      const uDistName = norm(user.district);
+      const eDistId = norm(scope.districtId);
+      const eDistName = norm(scope.district || scope.districtName);
+      if (uDistId || uDistName) {
+        const match = 
+          (uDistId && eDistId && uDistId === eDistId) ||
+          (uDistName && eDistName && (uDistName.includes(eDistName) || eDistName.includes(uDistName))) ||
+          (uDistName && eDistId && (uDistName.includes(eDistId) || eDistId.includes(uDistName))) ||
+          (uDistId && eDistName && uDistId === eDistName);
+        if (eDistId || eDistName) {
+          if (!match) return false;
+        }
+      }
     } else if (role.includes('division')) {
-      const uDiv = norm(user.divisionId || user.division);
-      const eDiv = norm(scope.divisionId || scope.division);
-      if (uDiv && eDiv && uDiv !== eDiv) return false;
+      const uDivId = norm(user.divisionId);
+      const uDivName = norm(user.division);
+      const eDivId = norm(scope.divisionId);
+      const eDivName = norm(scope.division || scope.divisionName);
+      if (uDivId || uDivName) {
+        const match = 
+          (uDivId && eDivId && uDivId === eDivId) ||
+          (uDivName && eDivName && (uDivName.includes(eDivName) || eDivName.includes(uDivName))) ||
+          (uDivName && eDivId && (uDivName.includes(eDivId) || eDivId.includes(uDivName))) ||
+          (uDivId && eDivName && uDivId === eDivName);
+        if (eDivId || eDivName) {
+          if (!match) return false;
+        }
+      }
     } else if (role.includes('pincode') || role.includes('agent')) {
-      const uPin = norm(user.pincodeId || user.pincode);
-      const ePin = norm(scope.pincodeId || scope.pincode);
-      if (uPin && ePin && uPin !== ePin) return false;
+      const uPinId = norm(user.pincodeId);
+      const uPinCode = norm(user.pincode);
+      const ePinId = norm(scope.pincodeId);
+      const ePinCode = norm(scope.pincode || scope.pincodeCode);
+      if (uPinId || uPinCode) {
+        const match = 
+          (uPinId && ePinId && uPinId === ePinId) ||
+          (uPinCode && ePinCode && uPinCode === ePinCode) ||
+          (uPinCode && ePinId && uPinCode === ePinId) ||
+          (uPinId && ePinCode && uPinId === ePinCode);
+        if (ePinId || ePinCode) {
+          if (!match) return false;
+        }
+      }
     }
 
     return true;
