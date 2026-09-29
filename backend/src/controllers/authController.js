@@ -79,8 +79,8 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid credentials. Incorrect password.' });
     }
 
-    // Determine normalized status for simulation/review
-    const rawStatus = (user.status || '').toLowerCase();
+    // Determine normalized status for simulation/review (handles "Active", "active", "approved")
+    const rawStatus = String(user.status || '').toLowerCase().trim();
     const isApproved = rawStatus === 'active' || rawStatus === 'approved';
     const userStatus = isApproved ? 'active' : (rawStatus || 'under_review');
 

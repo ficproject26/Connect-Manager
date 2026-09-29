@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth, DEMO_ACCOUNTS } from '../context/AuthContext';
+import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';
 import {
   Lock,
@@ -11,9 +11,6 @@ import {
   Sparkles,
   Shield,
   Calendar,
-  Building,
-  Layers,
-  MapPin,
   ChevronRight,
   CheckCircle2,
   Users,
@@ -137,67 +134,6 @@ const Login = ({ onNavigate }) => {
     }
   };
 
-  const handleDemoLogin = async (acc) => {
-    setIdentifier(acc.email);
-    setPassword(acc.password);
-    setError('');
-    setLoading(true);
-    try {
-      await login(acc.email, acc.password);
-    } catch (err) {
-      setError(err.message || 'Demo login failed');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // 4 Primary representative tiers for clean demo selection
-  const primaryDemoAccounts = [
-    {
-      role: 'state_manager',
-      title: 'State Manager',
-      scope: 'Karnataka (Statewide)',
-      email: 'state.mgr1@example.com',
-      password: 'Password@123',
-      icon: Building,
-      color: '#f59e0b',
-      bg: '#fffbeb',
-      border: '#fde68a'
-    },
-    {
-      role: 'district_manager',
-      title: 'District Manager',
-      scope: 'Bengaluru Urban District',
-      email: 'dist.mgr1@example.com',
-      password: 'Password@123',
-      icon: Shield,
-      color: '#0284c7',
-      bg: '#f0f9ff',
-      border: '#bae6fd'
-    },
-    {
-      role: 'division_manager',
-      title: 'Division Manager',
-      scope: 'Bengaluru South Division',
-      email: 'div.mgr1@example.com',
-      password: 'Password@123',
-      icon: Layers,
-      color: '#8b5cf6',
-      bg: '#f5f3ff',
-      border: '#ddd6fe'
-    },
-    {
-      role: 'pincode_manager',
-      title: 'PIN Code Manager',
-      scope: 'PIN 560034 (Koramangala)',
-      email: 'pin.mgr1@example.com',
-      password: 'Password@123',
-      icon: MapPin,
-      color: '#10b981',
-      bg: '#ecfdf5',
-      border: '#a7f3d0'
-    }
-  ];
 
   return (
     <div style={{

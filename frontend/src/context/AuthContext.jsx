@@ -4,48 +4,6 @@ import { realtimeClient } from '../realtime';
 
 const AuthContext = createContext(null);
 
-export const DEMO_ACCOUNTS = [
-  {
-    key: 'admin',
-    role: 'state_manager',
-    label: 'System Admin (Statewide)',
-    email: 'admin@example.com',
-    password: 'admin123',
-    scopeName: 'Tamil Nadu (Statewide)'
-  },
-  {
-    key: 'state',
-    role: 'state_manager',
-    label: 'State Manager (Tamil Nadu)',
-    email: 'state.mgr1@example.com',
-    password: 'Password@123',
-    scopeName: 'Tamil Nadu (Statewide)'
-  },
-  {
-    key: 'district',
-    role: 'district_manager',
-    label: 'District Manager (BLR Urban)',
-    email: 'dist.mgr1@example.com',
-    password: 'Password@123',
-    scopeName: 'Bengaluru Urban District'
-  },
-  {
-    key: 'division',
-    role: 'division_manager',
-    label: 'Division Manager (BLR South)',
-    email: 'div.mgr1@example.com',
-    password: 'Password@123',
-    scopeName: 'Bengaluru South Division'
-  },
-  {
-    key: 'pincode',
-    role: 'pincode_manager',
-    label: 'PIN Code Manager (560034)',
-    email: 'pin.mgr1@example.com',
-    password: 'Password@123',
-    scopeName: 'PIN 560034 (Koramangala)'
-  }
-];
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -132,18 +90,6 @@ export const AuthProvider = ({ children }) => {
     throw new Error(res.message || 'OTP verification failed.');
   };
 
-  const quickSwitchRole = async (accountKey) => {
-    const target = DEMO_ACCOUNTS.find(a => a.key === accountKey);
-    if (!target) return;
-    setLoading(true);
-    try {
-      await login(target.email, target.password);
-    } catch (err) {
-      console.error('Quick switch failed:', err);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const setSession = (userData, tokenString) => {
     if (tokenString) {
@@ -174,7 +120,6 @@ export const AuthProvider = ({ children }) => {
         loginWithOtp,
         logout,
         setSession,
-        quickSwitchRole,
         refreshUser,
         isAuthenticated: !!user
       }}

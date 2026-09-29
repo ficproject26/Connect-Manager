@@ -14,10 +14,13 @@ const authMiddleware = async (req, res, next) => {
     const decoded = jwt.verify(token, JWT_SECRET);
 
     const user = await db.users.findById(decoded.id);
-    const userStatus = String(user?.status || '').toLowerCase();
-    const isApprovedOrActive = userStatus === 'active' || userStatus === 'approved';
-    if (!user || (!isApprovedOrActive && (userStatus === 'inactive' || userStatus === 'rejected' || userStatus === 'suspended'))) {
-      return res.status(401).json({ success: false, message: 'User account not found or inactive.' });
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User account not found.' });
+    }
+    const userStatus = String(user.status || '').toLowerCase();
+    const isBlockedStatus = userStatus === 'inactive' || userStatus === 'rejected' || userStatus === 'suspended';
+    if (isBlockedStatus) {
+      return res.status(401).json({ success: false, message: 'User account is inactive or suspended.' });
     }
 
     // Resolve state name if not directly on user
