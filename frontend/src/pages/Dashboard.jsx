@@ -60,7 +60,7 @@ const Dashboard = ({ onNavigate }) => {
 
   // Real-time synchronization: refresh dashboard metrics when tasks, vendors, or agents change
   useRealtime('*', (event) => {
-    if (['task', 'vendor', 'agent', 'shop_visit', 'manager'].includes(event.entity)) {
+    if (['task', 'vendor', 'agent', 'shop_visit', 'manager', 'user'].includes(event.entity)) {
       fetchDashboardMetrics();
     }
   });
@@ -69,6 +69,7 @@ const Dashboard = ({ onNavigate }) => {
   // Exact KPI Metrics computed from database
   const kpis = dashboardData?.kpiMetrics || {
     totalManagers: 0,
+    activeManagers: 0,
     managersBreakdown: '0 State | 0 District | 0 Division | 0 Pincode',
     totalVendors: 0,
     activeVendors: 0,
@@ -370,11 +371,27 @@ const Dashboard = ({ onNavigate }) => {
               </div>
             </div>
             <div style={{ textAlign: 'right' }}>
-              <span className="kpi-trend-pill kpi-trend-up">
-                <ArrowUpRight size={12} /> 7.7%
+              <span 
+                className="kpi-trend-pill" 
+                style={{ 
+                  background: '#dcfce7', 
+                  color: '#15803d', 
+                  border: '1px solid #bbf7d0', 
+                  fontSize: '0.72rem', 
+                  fontWeight: 700, 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '5px' 
+                }}
+              >
+                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#16a34a', display: 'inline-block' }}></span>
+                {kpis.activeManagers !== undefined ? `${kpis.activeManagers} Active` : 'Active'}
               </span>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-light)', marginTop: '2px' }}>vs last month</div>
+              <div style={{ fontSize: '0.65rem', color: 'var(--text-light)', marginTop: '2px' }}>Real-time</div>
             </div>
+          </div>
+          <div className="kpi-card-footer">
+            <span>{kpis.managersBreakdown || `${kpis.totalManagers} in Jurisdiction`}</span>
           </div>
         </div>
 

@@ -5352,5 +5352,389 @@
     "userId": "user_state_1",
     "userName": "Ramesh Kumar (TN State Manager)",
     "userRole": "state_manager"
+  },
+  {
+    "_id": "6ab815d0c9e8d211ad81dccf",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "152.57.21.93",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-26T18:58:24.864Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ab9e125bec0ef28c6e813ec",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-28T03:38:13.533Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ab9f146bec0ef28c6e813f5",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-28T04:47:02.658Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ab9f198bec0ef28c6e813fa",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.153",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-28T04:48:24.523Z",
+    "__v": 0
+  },
+  {
+    "_id": "125ce20e-47fc-4091-9f61-d7f32c561b7b",
+    "action": "VENDOR_PINCODE_ACCEPTED",
+    "createdAt": "2026-09-28T07:24:01.653Z",
+    "details": "Pincode Admin approved vendor. Forwarded for KYC audit.",
+    "id": "125ce20e-47fc-4091-9f61-d7f32c561b7b",
+    "ip": "127.0.0.1",
+    "recordId": "6ab4bbe57ee04aa0f0580792",
+    "updatedAt": "2026-09-28T07:24:01.653Z",
+    "userId": "ADM-PIN-557374",
+    "userName": "Ragul",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "9a046d49-a0f0-44b4-bdbd-a18fa6ba7c2d",
+    "action": "MANAGER_CREATED",
+    "adminId": "6ab4c2ec5df0d82cb7a09cac",
+    "adminName": "Dhanu",
+    "adminRole": "State Admin",
+    "createdAt": "2026-09-28T07:35:30.367Z",
+    "details": "State Agent Manager (Level 1) \"Surya\" registered and activated by State Admin \"Dhanu\".",
+    "id": "9a046d49-a0f0-44b4-bdbd-a18fa6ba7c2d",
+    "ip": "127.0.0.1",
+    "targetUserId": "usr_mgr_1790580930154_8uge",
+    "targetUserName": "Surya",
+    "targetUserRole": "state_manager",
+    "timestamp": "2026-09-28T07:35:30.154Z",
+    "updatedAt": "2026-09-28T07:35:30.367Z"
+  },
+  {
+    "_id": "1dfe50d5-72bc-403e-bf69-5d0a9f7ae937",
+    "action": "MANAGER_CREATED",
+    "adminId": "ADM-PIN-557374",
+    "adminName": "Ragul",
+    "adminRole": "Pincode Admin",
+    "createdAt": "2026-09-28T09:44:50.557Z",
+    "details": "Pincode Agent Manager (Level 4) \"Murugan\" registered and activated by Pincode Admin \"Ragul\".",
+    "id": "1dfe50d5-72bc-403e-bf69-5d0a9f7ae937",
+    "ip": "127.0.0.1",
+    "targetUserId": "usr_mgr_1790588690346_2iph",
+    "targetUserName": "Murugan",
+    "targetUserRole": "pincode_manager",
+    "timestamp": "2026-09-28T09:44:50.346Z",
+    "updatedAt": "2026-09-28T09:44:50.557Z"
+  },
+  {
+    "_id": "0968be9b-4b44-4fa4-aef3-d1308dc68bfb",
+    "action": "VENDOR_CREATED",
+    "createdAt": "2026-09-28T09:55:11.595Z",
+    "details": "Vendor 'Balu' onboarded. Category: Food. Assigned Pincode: 635126.",
+    "id": "0968be9b-4b44-4fa4-aef3-d1308dc68bfb",
+    "ip": "65.2.151.184",
+    "recordId": "ven_311361",
+    "updatedAt": "2026-09-28T09:55:11.595Z",
+    "userId": "usr_mgr_1790588690346_2iph",
+    "userName": "Murugan",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "adf9f9f8-0c56-4bfe-8fc5-6e0dfc840acf",
+    "action": "MANAGER_CREATED",
+    "adminId": "ADM-355A7792",
+    "adminName": "Ananya",
+    "adminRole": "District Admin",
+    "createdAt": "2026-09-28T10:45:20.285Z",
+    "details": "District Agent Manager (Level 2) \"iniya\" registered and activated by District Admin \"Ananya\".",
+    "id": "adf9f9f8-0c56-4bfe-8fc5-6e0dfc840acf",
+    "ip": "127.0.0.1",
+    "targetUserId": "usr_mgr_1790592319962_fx3y",
+    "targetUserName": "iniya",
+    "targetUserRole": "district_manager",
+    "timestamp": "2026-09-28T10:45:19.962Z",
+    "updatedAt": "2026-09-28T10:45:20.285Z"
+  },
+  {
+    "_id": "e0b0bf69-400a-4ea4-ac40-3a6388e073ec",
+    "action": "MANAGER_CREATED",
+    "adminId": "ADM-DIV-C1072D",
+    "adminName": "Ram",
+    "adminRole": "Divisional Admin",
+    "createdAt": "2026-09-28T10:52:00.301Z",
+    "details": "Division Agent Manager (Level 3) \"Vennila\" registered and activated by Divisional Admin \"Ram\".",
+    "id": "e0b0bf69-400a-4ea4-ac40-3a6388e073ec",
+    "ip": "127.0.0.1",
+    "targetUserId": "usr_mgr_1790592719925_4mk9",
+    "targetUserName": "Vennila",
+    "targetUserRole": "division_manager",
+    "timestamp": "2026-09-28T10:51:59.925Z",
+    "updatedAt": "2026-09-28T10:52:00.301Z"
+  },
+  {
+    "_id": "d861e43a-5167-4222-a34b-8f1dee2e3473",
+    "action": "VENDOR_UPDATED",
+    "createdAt": "2026-09-28T12:25:29.187Z",
+    "details": "Vendor 'Balu' profile details updated.",
+    "id": "d861e43a-5167-4222-a34b-8f1dee2e3473",
+    "ip": "65.2.151.184",
+    "recordId": "ven_311361",
+    "updatedAt": "2026-09-28T12:25:29.187Z",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "State Admin"
+  },
+  {
+    "_id": "47cb2a84-1c81-414c-9008-ae1c5585f634",
+    "action": "VENDOR_PINCODE_ACCEPTED",
+    "createdAt": "2026-09-28T13:55:29.870Z",
+    "details": "Pincode Admin approved vendor. Forwarded for KYC audit.",
+    "id": "47cb2a84-1c81-414c-9008-ae1c5585f634",
+    "ip": "127.0.0.1",
+    "recordId": "6ab6591ec3c80ae7e778f48b",
+    "updatedAt": "2026-09-28T13:55:29.870Z",
+    "userId": "ADM-PIN-608A42",
+    "userName": "Maran",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "6abb386873c9389cedd1855c",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "node",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-29T04:02:48.201Z",
+    "__v": 0
+  },
+  {
+    "_id": "e1c9d6a1-724d-42e2-8dde-059d9d64b4fb",
+    "action": "VENDOR_PINCODE_ACCEPTED",
+    "createdAt": "2026-09-29T05:17:25.561Z",
+    "details": "Pincode Admin approved vendor. Forwarded for KYC audit.",
+    "id": "e1c9d6a1-724d-42e2-8dde-059d9d64b4fb",
+    "ip": "127.0.0.1",
+    "recordId": "6ab6591ec3c80ae7e778f48b",
+    "updatedAt": "2026-09-29T05:17:25.561Z",
+    "userId": "ADM-PIN-608A42",
+    "userName": "Maran",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "6abb50d6ba70ff0e26dceaf8",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-29T05:47:02.873Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abb540be7a2635b4a21dfdf",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "node",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-29T06:00:43.164Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abb541fe7a2635b4a21dfe1",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userEmail": "admin@example.com",
+    "userRole": "super-admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "node",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-29T06:01:03.761Z",
+    "__v": 0
+  },
+  {
+    "_id": "7b133d6d-5c59-4e7f-bc1d-faf3a5e51373",
+    "id": "7b133d6d-5c59-4e7f-bc1d-faf3a5e51373",
+    "action": "Task Created",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "recordType": "task",
+    "userId": "user_state_1",
+    "userName": "Ramesh Kumar (TN State Manager)",
+    "userRole": "state_manager",
+    "details": "Created task TSK-100012 for Milk & Milk Store",
+    "timestamp": "2026-09-29T06:03:52.432Z",
+    "createdAt": "2026-09-29T06:03:52.432Z",
+    "updatedAt": "2026-09-29T06:03:52.432Z"
+  },
+  {
+    "_id": "559c7604-ae60-42d3-9612-c29d9dea3e60",
+    "id": "559c7604-ae60-42d3-9612-c29d9dea3e60",
+    "action": "Task In Progress",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "recordType": "task",
+    "userId": "user_state_1",
+    "userName": "Ramesh Kumar (TN State Manager)",
+    "userRole": "state_manager",
+    "details": "Task TSK-100012 status changed to In Progress",
+    "timestamp": "2026-09-29T06:03:52.437Z",
+    "createdAt": "2026-09-29T06:03:52.437Z",
+    "updatedAt": "2026-09-29T06:03:52.437Z"
+  },
+  {
+    "_id": "87dcc7a8-0589-4fcc-bacb-6dfa36881d16",
+    "id": "87dcc7a8-0589-4fcc-bacb-6dfa36881d16",
+    "action": "Task Completed",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "recordType": "task",
+    "userId": "user_state_1",
+    "userName": "Ramesh Kumar (TN State Manager)",
+    "userRole": "state_manager",
+    "details": "Task TSK-100012 status changed to Completed",
+    "timestamp": "2026-09-29T06:03:52.442Z",
+    "createdAt": "2026-09-29T06:03:52.442Z",
+    "updatedAt": "2026-09-29T06:03:52.442Z"
+  },
+  {
+    "_id": "e854821b-ee62-43bf-88c8-19d5f2277f22",
+    "id": "e854821b-ee62-43bf-88c8-19d5f2277f22",
+    "userId": "user_state_1",
+    "userName": "Ramesh Kumar (TN State Manager)",
+    "userRole": "state_manager",
+    "action": "Vendor Updated",
+    "module": "Vendors",
+    "recordId": "ven_311361",
+    "previousValue": {
+      "name": "Balu",
+      "businessName": "Balu",
+      "category": "Food"
+    },
+    "newValue": {
+      "name": "Balu",
+      "businessName": "Balu",
+      "category": "Food"
+    },
+    "timestamp": "2026-09-29T06:03:53.090Z",
+    "createdAt": "2026-09-29T06:03:53.090Z",
+    "updatedAt": "2026-09-29T06:03:53.090Z"
+  },
+  {
+    "_id": "22429b43-d6bc-4a2c-992d-02d94d3d09d1",
+    "id": "22429b43-d6bc-4a2c-992d-02d94d3d09d1",
+    "action": "Task Created",
+    "recordId": "38b863e5-cc27-41f9-965e-32ecaf60ce15",
+    "recordType": "task",
+    "userId": "user_state_1",
+    "userName": "Ramesh Kumar (TN State Manager)",
+    "userRole": "state_manager",
+    "details": "Created task TSK-100013 for Realtime Test Store",
+    "timestamp": "2026-09-29T06:04:21.121Z",
+    "createdAt": "2026-09-29T06:04:21.121Z",
+    "updatedAt": "2026-09-29T06:04:21.121Z"
   }
 ]

@@ -201,6 +201,30 @@
     "updatedAt": "2026-09-26T09:44:08.450Z"
   },
   {
+    "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
+    "createdAt": "2026-09-26T09:51:20.086Z",
+    "id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
+    "isRead": false,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as Completed.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-09-26T09:51:20.086Z",
+    "userId": "user_state_1"
+  },
+  {
+    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "type": "task_updated",
+    "title": "Task TSK-100005 Completed",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
+    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
+    "userId": "user_state_1",
+    "isRead": false,
+    "createdAt": "2026-09-26T10:17:29.078Z",
+    "updatedAt": "2026-09-26T10:17:29.078Z"
+  },
+  {
     "_id": "NOTIF-1790414127807-0AM4",
     "actionUrl": "/state-admin/tasks",
     "category": "task",
@@ -241,30 +265,6 @@
     "updatedAt": "2026-09-26T09:44:08.508Z"
   },
   {
-    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "createdAt": "2026-09-26T09:51:19.729Z",
-    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "isRead": false,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-09-26T09:51:19.729Z",
-    "userId": "user_state_1"
-  },
-  {
-    "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
-    "createdAt": "2026-09-26T09:51:20.086Z",
-    "id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
-    "isRead": false,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as Completed.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 Completed",
-    "type": "task_updated",
-    "updatedAt": "2026-09-26T09:51:20.086Z",
-    "userId": "user_state_1"
-  },
-  {
     "_id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
     "id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
     "type": "task_updated",
@@ -275,6 +275,18 @@
     "isRead": false,
     "createdAt": "2026-09-26T10:15:28.017Z",
     "updatedAt": "2026-09-26T10:15:28.017Z"
+  },
+  {
+    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "createdAt": "2026-09-26T09:51:19.729Z",
+    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "isRead": false,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-09-26T09:51:19.729Z",
+    "userId": "user_state_1"
   },
   {
     "_id": "c18ae4c9-52d8-453e-a61a-0fc0fda780ca",
@@ -301,18 +313,6 @@
     "updatedAt": "2026-09-26T10:17:28.489Z"
   },
   {
-    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "type": "task_updated",
-    "title": "Task TSK-100005 Completed",
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
-    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
-    "userId": "user_state_1",
-    "isRead": false,
-    "createdAt": "2026-09-26T10:17:29.078Z",
-    "updatedAt": "2026-09-26T10:17:29.078Z"
-  },
-  {
     "_id": "f75e5b76-0878-48b2-900f-4f8061b89721",
     "createdAt": "2026-09-26T14:17:22.238Z",
     "id": "f75e5b76-0878-48b2-900f-4f8061b89721",
@@ -335,5 +335,180 @@
     "type": "task_updated",
     "updatedAt": "2026-09-26T14:17:22.243Z",
     "userId": "user_state_1"
+  },
+  {
+    "_id": "NOTIF-1790580241699-1RHE",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-09-28T07:24:01.699Z",
+    "entityId": "6ab4bbe57ee04aa0f0580792",
+    "entityType": "vendor",
+    "id": "NOTIF-1790580241699-1RHE",
+    "isRead": false,
+    "message": "Pincode Admin Ragul approved merchant 'Empire'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "6ab4bbe57ee04aa0f0580792",
+      "vendorName": "Empire",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Ragul",
+      "pincode": "635126"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Krishnagiri",
+      "division": "Hosur Division",
+      "pincode": "635126",
+      "targetUserId": null,
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: Empire",
+    "type": "vendor_status",
+    "updatedAt": "2026-09-28T07:24:01.699Z"
+  },
+  {
+    "_id": "NOTIF-1790589311649-NBEH",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-09-28T09:55:11.650Z",
+    "entityId": "ven_311361",
+    "entityType": "vendor",
+    "id": "NOTIF-1790589311649-NBEH",
+    "isRead": false,
+    "message": "Food merchant 'Balu' was onboarded in PIN 635126 (Salem) by Murugan. Awaiting Pincode Admin clearance.",
+    "metadata": {
+      "vendorId": "ven_311361",
+      "vendorName": "Balu",
+      "creatorId": "usr_mgr_1790588690346_2iph",
+      "creatorName": "Murugan",
+      "pincode": "635126",
+      "category": "Food"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem North",
+      "pincode": "635126",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "New Vendor Onboarded: Balu",
+    "type": "vendor_onboarding",
+    "updatedAt": "2026-09-28T09:55:11.650Z"
+  },
+  {
+    "_id": "NOTIF-1790603729917-YBVD",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-09-28T13:55:29.917Z",
+    "entityId": "6ab6591ec3c80ae7e778f48b",
+    "entityType": "vendor",
+    "id": "NOTIF-1790603729917-YBVD",
+    "isRead": false,
+    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "6ab6591ec3c80ae7e778f48b",
+      "vendorName": "y",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Maran",
+      "pincode": "636112"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem Urban Division",
+      "pincode": "636112",
+      "targetUserId": null,
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: y",
+    "type": "vendor_status",
+    "updatedAt": "2026-09-28T13:55:29.917Z"
+  },
+  {
+    "_id": "NOTIF-1790659045582-GA75",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-09-29T05:17:25.582Z",
+    "entityId": "6ab6591ec3c80ae7e778f48b",
+    "entityType": "vendor",
+    "id": "NOTIF-1790659045582-GA75",
+    "isRead": false,
+    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "6ab6591ec3c80ae7e778f48b",
+      "vendorName": "y",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Maran",
+      "pincode": "636112"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem Urban Division",
+      "pincode": "636112",
+      "targetUserId": null,
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: y",
+    "type": "vendor_status",
+    "updatedAt": "2026-09-29T05:17:25.582Z"
+  },
+  {
+    "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "type": "task_updated",
+    "title": "Task TSK-100012 In Progress",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as In Progress.",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "userId": "user_state_1",
+    "isRead": false,
+    "createdAt": "2026-09-29T06:03:52.439Z",
+    "updatedAt": "2026-09-29T06:03:52.439Z"
+  },
+  {
+    "_id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
+    "id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
+    "type": "task_updated",
+    "title": "Task TSK-100012 Completed",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as Completed.",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "userId": "user_state_1",
+    "isRead": false,
+    "createdAt": "2026-09-29T06:03:52.444Z",
+    "updatedAt": "2026-09-29T06:03:52.444Z"
   }
 ]

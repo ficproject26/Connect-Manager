@@ -11,7 +11,13 @@ const getLowerLevelManagers = async (req, res) => {
     let peerLocationFilter = {};
     let subordinateLocationFilter = {};
 
-    if (user.role === 'state_manager') {
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
+
+    if (isGlobalAdmin) {
+      peerLocationFilter = {};
+      subordinateRoleFilter = ['state_manager', 'district_manager', 'division_manager', 'pincode_manager'];
+      subordinateLocationFilter = {};
+    } else if (user.role === 'state_manager') {
       peerLocationFilter = { stateId: user.stateId };
       subordinateRoleFilter = ['district_manager', 'division_manager', 'pincode_manager'];
       subordinateLocationFilter = { stateId: user.stateId };
