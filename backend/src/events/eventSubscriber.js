@@ -13,6 +13,8 @@ class EventSubscriber {
   constructor() {
     this.seenEventIds = new Set();
     this.maxSeen = 1000;
+    this.recentEvents = [];
+    this.maxRecent = 100;
     this.metrics = {
       totalReceived: 0,
       totalDuplicatesSkipped: 0,
@@ -55,15 +57,35 @@ class EventSubscriber {
       }
     }
 
+    // Keep in ring buffer for HTTP event polling fallback
+    this.recentEvents.push({
+      ...event,
+      receivedAt: Date.now()
+    });
+    if (this.recentEvents.length > this.maxRecent) {
+      this.recentEvents.shift();
+    }
+
     // Forward to WebSocket server for scoped delivery to connected applications
     const delivered = realtimeWebSocketServer.broadcastEvent(event);
     this.metrics.totalBroadcastToWs += delivered;
   }
 
+  getRecentEvents(sinceTimestamp = 0) {
+    if (!sinceTimestamp || isNaN(sinceTimestamp) || sinceTimestamp <= 0) {
+      return this.recentEvents.slice(-20);
+    }
+    return this.recentEvents.filter(e => {
+      const ts = e.meta?.emittedAt || e.receivedAt || 0;
+      return ts > sinceTimestamp;
+    });
+  }
+
   getMetrics() {
     return {
       ...this.metrics,
-      seenEventCacheSize: this.seenEventIds.size
+      seenEventCacheSize: this.seenEventIds.size,
+      recentEventsBufferSize: this.recentEvents.length
     };
   }
 

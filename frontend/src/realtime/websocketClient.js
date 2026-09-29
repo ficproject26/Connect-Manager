@@ -1,9 +1,4 @@
-/**
- * Centralized Real-Time WebSocket Client
- * Connects to the backend real-time event broker,
- * handles automatic JWT authentication, reconnection with jitter,
- * heartbeat ping-pong, event deduplication, and out-of-order version protection.
- */
+import { API_BASE } from '../services/api';
 
 class WebSocketClient {
   constructor() {
@@ -11,8 +6,11 @@ class WebSocketClient {
     this.token = null;
     this.isConnected = false;
     this.isConnecting = false;
+    this.isPolling = false;
+    this.pollTimer = null;
+    this.lastPollTimestamp = 0;
     this.reconnectAttempts = 0;
-    this.maxReconnectAttempts = 15;
+    this.maxReconnectAttempts = 3;
     this.reconnectTimer = null;
     this.pingTimer = null;
     this.listeners = new Map(); // key -> Set of callbacks
@@ -23,17 +21,29 @@ class WebSocketClient {
   }
 
   getWsUrl(token) {
+    if (typeof window === 'undefined') return null;
+
     if (import.meta.env.VITE_WS_URL) {
       return `${import.meta.env.VITE_WS_URL}?token=${token}`;
     }
+
+    // Vercel serverless edge does not host persistent WebSocket connections
+    if (window.location.hostname.endsWith('vercel.app')) {
+      return null;
+    }
+
     const isHttps = window.location.protocol === 'https:';
-    const proto = isHttps ? 'wss:' : 'ws:';
+    if (isHttps) {
+      // Modern browsers reject insecure ws:// from https:// origin (Mixed Content).
+      // Fallback to high-performance real-time HTTP event polling when WSS endpoint is not provided.
+      return null;
+    }
 
     let host = window.location.host;
     if (window.location.port === '5173') {
       host = `${window.location.hostname}:8005`;
     }
-    return `${proto}//${host}/ws?token=${token}`;
+    return `ws://${host}/ws?token=${token}`;
   }
 
   connect(token) {
@@ -46,19 +56,27 @@ class WebSocketClient {
     }
 
     this.token = activeToken;
+
+    const url = this.getWsUrl(activeToken);
+    if (!url) {
+      // Platform does not support WebSocket (e.g. Vercel deployment), activate HTTP event polling fallback
+      this.startPollingFallback(activeToken);
+      return;
+    }
+
     this.isConnecting = true;
 
     try {
-      const url = this.getWsUrl(activeToken);
       this.ws = new WebSocket(url);
 
       this.ws.onopen = () => {
+        this.stopPollingFallback();
         this.isConnected = true;
         this.isConnecting = false;
         this.reconnectAttempts = 0;
         console.log('⚡ [Realtime Client] Connected to ecosystem real-time event bus.');
 
-        window.dispatchEvent(new CustomEvent('connect:ws:connected', { detail: { timestamp: Date.now() } }));
+        window.dispatchEvent(new CustomEvent('connect:ws:connected', { detail: { mode: 'websocket', timestamp: Date.now() } }));
         this.startHeartbeat();
       };
 
@@ -78,16 +96,78 @@ class WebSocketClient {
         window.dispatchEvent(new CustomEvent('connect:ws:disconnected', { detail: { code: e.code } }));
 
         if (e.code !== 1000 && this.token) {
-          this.scheduleReconnect();
+          if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+            console.info('ℹ️ [Realtime Client] Switched to high-performance HTTP real-time event polling.');
+            this.startPollingFallback(this.token);
+          } else {
+            this.scheduleReconnect();
+          }
         }
       };
 
       this.ws.onerror = () => {
-        // Triggers onclose and schedules reconnect
+        // Handled by onclose
       };
     } catch (err) {
       this.isConnecting = false;
-      this.scheduleReconnect();
+      this.startPollingFallback(activeToken);
+    }
+  }
+
+  startPollingFallback(token) {
+    if (this.isPolling) return;
+    this.isPolling = true;
+    this.isConnecting = false;
+    this.isConnected = true;
+    if (this.lastPollTimestamp === 0) {
+      this.lastPollTimestamp = Date.now() - 5000;
+    }
+
+    window.dispatchEvent(new CustomEvent('connect:ws:connected', { detail: { mode: 'polling', timestamp: Date.now() } }));
+
+    const poll = async () => {
+      if (!this.token) {
+        this.stopPollingFallback();
+        return;
+      }
+
+      try {
+        const query = new URLSearchParams({
+          since: this.lastPollTimestamp.toString(),
+          token: this.token
+        });
+        const res = await fetch(`${API_BASE}/realtime/events?${query.toString()}`, {
+          headers: {
+            'Authorization': `Bearer ${this.token}`
+          }
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.success && Array.isArray(data.events)) {
+            data.events.forEach(ev => this.handleIncomingMessage(ev));
+            if (data.timestamp) {
+              this.lastPollTimestamp = data.timestamp;
+            }
+          }
+        }
+      } catch (e) {
+        // Retry silently on next cycle
+      }
+
+      if (this.isPolling) {
+        const interval = (typeof document !== 'undefined' && document.hidden) ? 10000 : 3500;
+        this.pollTimer = setTimeout(poll, interval);
+      }
+    };
+
+    poll();
+  }
+
+  stopPollingFallback() {
+    this.isPolling = false;
+    if (this.pollTimer) {
+      clearTimeout(this.pollTimer);
+      this.pollTimer = null;
     }
   }
 
@@ -98,6 +178,7 @@ class WebSocketClient {
       this.reconnectTimer = null;
     }
     this.stopHeartbeat();
+    this.stopPollingFallback();
     if (this.ws) {
       this.ws.close(1000, 'User logged out');
       this.ws = null;
@@ -109,11 +190,9 @@ class WebSocketClient {
   scheduleReconnect() {
     if (this.reconnectTimer) return;
     this.reconnectAttempts++;
-    // Exponential backoff with random jitter: (1000 * 1.5^n) + jitter
     const jitter = Math.floor(Math.random() * 500);
     const delay = Math.min(1000 * Math.pow(1.5, this.reconnectAttempts) + jitter, 10000);
 
-    console.log(`[Realtime Client] Reconnecting in ${Math.round(delay)}ms (attempt ${this.reconnectAttempts})...`);
     this.reconnectTimer = setTimeout(() => {
       this.reconnectTimer = null;
       if (this.token) {
@@ -229,6 +308,8 @@ class WebSocketClient {
     return {
       isConnected: this.isConnected,
       isConnecting: this.isConnecting,
+      isPolling: this.isPolling,
+      mode: this.isPolling ? 'polling' : (this.isConnected ? 'websocket' : 'disconnected'),
       reconnectAttempts: this.reconnectAttempts,
       lastLatencyMs: this.lastLatencyMs,
       activeListeners: Array.from(this.listeners.keys())
