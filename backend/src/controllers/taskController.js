@@ -158,8 +158,7 @@ const createTask = async (req, res) => {
         stateId: newTask.stateId || newTask.state,
         districtId: newTask.districtId || newTask.district,
         divisionId: newTask.divisionId || newTask.division,
-        pincodeId: newTask.pincodeId || newTask.pincode,
-        targetUserId: newTask.assignedTo || newTask.assignedManagerId
+        pincodeId: newTask.pincodeId || newTask.pincode
       }
     });
 
@@ -272,8 +271,7 @@ const updateTaskStatus = async (req, res) => {
         stateId: updatedTask.stateId || updatedTask.state,
         districtId: updatedTask.districtId || updatedTask.district,
         divisionId: updatedTask.divisionId || updatedTask.division,
-        pincodeId: updatedTask.pincodeId || updatedTask.pincode,
-        targetUserId: updatedTask.assignedTo || updatedTask.assignedManagerId
+        pincodeId: updatedTask.pincodeId || updatedTask.pincode
       }
     });
 

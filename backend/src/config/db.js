@@ -31,18 +31,10 @@ class Collection {
     this.mongoName = mongoCollectionName || name;
     this.filePath = path.join(DATA_DIR, `${name}.json`);
     this._mongoCol = null;
+    this._mongoDb = null;
     this._isReady = false;
-    this._ensureFile();
+    this.cache = [];
     this._load();
-    this._isReady = true;
-  }
-
-  _ensureFile() {
-    if (!fs.existsSync(this.filePath)) {
-      try {
-        fs.writeFileSync(this.filePath, JSON.stringify([], null, 2), 'utf-8');
-      } catch (e) {}
-    }
   }
 
   _load() {
@@ -67,34 +59,20 @@ class Collection {
 
   async initMongo(mongoDb) {
     if (!mongoDb) return;
+    this._mongoDb = mongoDb;
     try {
       this._mongoCol = mongoDb.collection(this.mongoName);
-      const docs = await this._mongoCol.find({}).toArray();
+      const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
+        ? { projection: { kycDocs: 0, kyc: 0 } } 
+        : {};
+      const docs = await this._mongoCol.find({}, projection).toArray();
       if (docs && docs.length > 0) {
-        // Merge with existing cache to preserve local configurations & managers
-        const docMap = new Map();
-        for (const d of docs) {
-          const key = d.email ? String(d.email).toLowerCase() : String(d._id || d.id);
-          docMap.set(key, d);
-        }
-        const missing = [];
-        for (const item of (this.cache || [])) {
-          const key = item.email ? String(item.email).toLowerCase() : String(item._id || item.id);
-          if (!docMap.has(key)) {
-            docMap.set(key, item);
-            missing.push(item);
-          }
-        }
-        if (missing.length > 0) {
-          await this._mongoCol.insertMany(missing, { ordered: false }).catch(() => {});
-        }
-        const merged = Array.from(docMap.values());
-        this._write(merged);
-        console.log(`[Manager MongoDB] Loaded & synced ${merged.length} documents for '${this.name}' (${this.mongoName})`);
-      } else if (this.cache && this.cache.length > 0) {
-        await this._mongoCol.insertMany(this.cache, { ordered: false }).catch(() => {});
-        console.log(`[Manager MongoDB] Seeded ${this.cache.length} documents into '${this.mongoName}'`);
+        this._write(docs);
+        console.log(`[Manager MongoDB] Loaded ${docs.length} documents for '${this.name}' (${this.mongoName}) from MongoDB Atlas.`);
+      } else {
+        console.log(`[Manager MongoDB] Connected to '${this.mongoName}' (0 records) in MongoDB Atlas.`);
       }
+      this._isReady = true;
     } catch (err) {
       console.warn(`[Manager MongoDB] Sync warning for '${this.name}':`, err.message);
     }
@@ -102,59 +80,85 @@ class Collection {
 
   async find(query = {}) {
     const cleanQuery = sanitizeQuery(query);
-    const records = this.cache || [];
-    if (records.length > 0) {
-      return records.filter(item => {
-        for (const [key, val] of Object.entries(cleanQuery)) {
-          if (val && typeof val === 'object' && val.$in) {
-            if (!val.$in.map(String).includes(String(item[key]))) return false;
-          } else if (item[key] !== val) {
-            return false;
-          }
-        }
-        return true;
-      });
-    }
-
     if (this._mongoCol) {
       try {
-        const mongoPromise = this._mongoCol.find(cleanQuery).toArray();
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Mongo timeout')), 400));
-        return await Promise.race([mongoPromise, timeoutPromise]);
-      } catch (e) {}
+        const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
+          ? { projection: { kycDocs: 0, kyc: 0 } } 
+          : {};
+        const docs = await this._mongoCol.find(cleanQuery, projection).toArray();
+        if (docs && docs.length > 0) {
+          return docs;
+        }
+        // Fallback for users: if querying role manager and nothing found, check managers collection
+        if (this.name === 'users' && this._mongoDb) {
+          const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, projection).toArray();
+          if (mgrDocs && mgrDocs.length > 0) return mgrDocs;
+        }
+        return docs || [];
+      } catch (e) {
+        console.warn(`[Manager MongoDB] find error in '${this.name}':`, e.message);
+      }
     }
-    return [];
+
+    // Fallback to cache if MongoDB is unreachable
+    const records = this.cache || [];
+    return records.filter(item => {
+      for (const [key, val] of Object.entries(cleanQuery)) {
+        if (val && typeof val === 'object' && val.$in) {
+          if (!val.$in.map(String).includes(String(item[key]))) return false;
+        } else if (item[key] !== val) {
+          return false;
+        }
+      }
+      return true;
+    });
   }
 
   async findOne(query = {}) {
     const cleanQuery = sanitizeQuery(query);
+    if (this._mongoCol) {
+      try {
+        const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
+          ? { projection: { kycDocs: 0, kyc: 0 } } 
+          : {};
+        let doc = await this._mongoCol.findOne(cleanQuery, projection);
+        if (doc) {
+          const strId = String(doc._id || doc.id);
+          const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
+          if (idx >= 0) this.cache[idx] = doc;
+          else this.cache.push(doc);
+          return doc;
+        }
+
+        // For users collection: also check 'managers' collection in MongoDB Atlas
+        if (this.name === 'users' && this._mongoDb) {
+          doc = await this._mongoDb.collection('managers').findOne(cleanQuery, projection);
+          if (doc) {
+            const strId = String(doc._id || doc.id);
+            const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
+            if (idx >= 0) this.cache[idx] = doc;
+            else this.cache.push(doc);
+            return doc;
+          }
+        }
+      } catch (e) {
+        console.warn(`[Manager MongoDB] findOne error in '${this.name}':`, e.message);
+      }
+    }
+
+    // Fallback to cache if Mongo is offline
     const records = this.cache || [];
-    const cached = records.find(item => {
+    return records.find(item => {
       for (const [key, val] of Object.entries(cleanQuery)) {
         if (item[key] !== val) return false;
       }
       return true;
-    });
-    if (cached) return cached;
-
-    if (this._mongoCol) {
-      try {
-        const mongoPromise = this._mongoCol.findOne(cleanQuery);
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Mongo timeout')), 400));
-        const doc = await Promise.race([mongoPromise, timeoutPromise]);
-        if (doc) return doc;
-      } catch (e) {}
-    }
-    return null;
+    }) || null;
   }
 
   async findById(id) {
     if (!id) return null;
     const strId = String(id);
-    const records = this.cache || [];
-    const cached = records.find(item => String(item._id || item.id) === strId);
-    if (cached) return cached;
-
     if (this._mongoCol) {
       try {
         const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
@@ -163,13 +167,33 @@ class Collection {
             orConditions.push({ _id: new ObjectId(strId) });
           } catch (e) {}
         }
-        const mongoPromise = this._mongoCol.findOne({ $or: orConditions });
-        const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('Mongo timeout')), 400));
-        const doc = await Promise.race([mongoPromise, timeoutPromise]);
-        if (doc) return doc;
-      } catch (e) {}
+        const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
+          ? { projection: { kycDocs: 0, kyc: 0 } } 
+          : {};
+        let doc = await this._mongoCol.findOne({ $or: orConditions }, projection);
+        if (doc) {
+          const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
+          if (idx >= 0) this.cache[idx] = doc;
+          else this.cache.push(doc);
+          return doc;
+        }
+
+        if (this.name === 'users' && this._mongoDb) {
+          doc = await this._mongoDb.collection('managers').findOne({ $or: orConditions }, projection);
+          if (doc) {
+            const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
+            if (idx >= 0) this.cache[idx] = doc;
+            else this.cache.push(doc);
+            return doc;
+          }
+        }
+      } catch (e) {
+        console.warn(`[Manager MongoDB] findById error in '${this.name}':`, e.message);
+      }
     }
-    return null;
+
+    const records = this.cache || [];
+    return records.find(item => String(item._id || item.id) === strId) || null;
   }
 
   async insertOne(doc) {
@@ -194,13 +218,23 @@ class Collection {
     this._write(records);
 
     if (this._mongoCol) {
-      this._mongoCol.updateOne(
-        { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
-        { $set: newDoc },
-        { upsert: true }
-      ).catch(err => {
-        console.error(`[Manager MongoDB] Async insert error in ${this.name}:`, err.message);
-      });
+      try {
+        await this._mongoCol.updateOne(
+          { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
+          { $set: newDoc },
+          { upsert: true }
+        );
+        // If inserting manager into users, sync to managers collection too
+        if (this.name === 'users' && this._mongoDb && (newDoc.role || '').includes('manager')) {
+          await this._mongoDb.collection('managers').updateOne(
+            { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
+            { $set: newDoc },
+            { upsert: true }
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.error(`[Manager MongoDB] Insert error in ${this.name}:`, err.message);
+      }
     }
 
     if (this._isReady) {
@@ -227,8 +261,8 @@ class Collection {
     const newDocs = docs.map(doc => {
       const genId = doc._id ? String(doc._id) : (doc.id ? String(doc.id) : uuidv4());
       return {
-        _id: genId,
-        id: genId,
+        _id: String(genId),
+        id: String(genId),
         ...doc,
         createdAt: doc.createdAt || new Date().toISOString(),
         updatedAt: doc.updatedAt || new Date().toISOString()
@@ -256,32 +290,6 @@ class Collection {
       )).catch(err => {
         console.error(`[Manager MongoDB] Async insertMany error in ${this.name}:`, err.message);
       });
-    }
-
-    if (this._isReady && newDocs.length > 0) {
-      if (newDocs.length === 1) {
-        const doc = newDocs[0];
-        eventPublisher.publishEntityEvent({
-          entity: this.name,
-          action: 'created',
-          entityId: doc._id || doc.id,
-          data: doc,
-          scope: {
-            stateId: doc.stateId || doc.state,
-            districtId: doc.districtId || doc.district,
-            divisionId: doc.divisionId || doc.division,
-            pincodeId: doc.pincodeId || doc.pincode,
-            targetUserId: doc.targetUserId || doc.assignedTo || doc.userId,
-            role: doc.role
-          }
-        }).catch(() => {});
-      } else {
-        eventPublisher.publishBatchEvent({
-          entity: this.name,
-          action: 'batch_created',
-          items: newDocs
-        }).catch(() => {});
-      }
     }
 
     return newDocs;
@@ -312,54 +320,57 @@ class Collection {
     if (this._mongoCol) {
       this._mongoCol.updateOne(cleanQuery, { $set: { ...patch, updatedAt: new Date().toISOString() } })
         .catch(err => {
-          console.error(`[Manager MongoDB] Async updateOne error in ${this.name}:`, err.message);
+          console.error(`[Manager MongoDB] updateOne error in ${this.name}:`, err.message);
         });
-    }
-
-    if (this._isReady && updated) {
-      eventPublisher.publishEntityEvent({
-        entity: this.name,
-        action: 'updated',
-        entityId: updated._id || updated.id,
-        data: updated,
-        scope: {
-          stateId: updated.stateId || updated.state,
-          districtId: updated.districtId || updated.district,
-          divisionId: updated.divisionId || updated.division,
-          pincodeId: updated.pincodeId || updated.pincode,
-          targetUserId: updated.targetUserId || updated.assignedTo || updated.userId,
-          role: updated.role
-        }
-      }).catch(() => {});
     }
 
     return updated;
   }
 
   async findByIdAndUpdate(id, update) {
+    if (!id) return null;
     const strId = String(id);
-    const records = this.cache || [];
-    const index = records.findIndex(item => String(item._id || item.id) === strId);
-
     const patch = update.$set ? update.$set : update;
     let updated = null;
+
+    if (this._mongoCol) {
+      try {
+        const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
+        if (/^[0-9a-fA-F]{24}$/.test(strId)) {
+          try {
+            orConditions.push({ _id: new ObjectId(strId) });
+          } catch (e) {}
+        }
+        await this._mongoCol.updateOne(
+          { $or: orConditions },
+          { $set: { ...patch, updatedAt: new Date().toISOString() } }
+        );
+        updated = await this.findById(id);
+
+        if (this.name === 'users' && this._mongoDb) {
+          await this._mongoDb.collection('managers').updateOne(
+            { $or: orConditions },
+            { $set: { ...patch, updatedAt: new Date().toISOString() } }
+          ).catch(() => {});
+        }
+      } catch (err) {
+        console.error(`[Manager MongoDB] findByIdAndUpdate error in ${this.name}:`, err.message);
+      }
+    }
+
+    const records = this.cache || [];
+    const index = records.findIndex(item => String(item._id || item.id) === strId);
     if (index !== -1) {
-      updated = {
+      records[index] = {
         ...records[index],
         ...patch,
         updatedAt: new Date().toISOString()
       };
-      records[index] = updated;
+      updated = updated || records[index];
       this._write(records);
-    }
-
-    if (this._mongoCol) {
-      this._mongoCol.updateOne(
-        { $or: [{ _id: id }, { id: id }, { _id: strId }, { id: strId }] },
-        { $set: { ...patch, updatedAt: new Date().toISOString() } }
-      ).catch(err => {
-        console.error(`[Manager MongoDB] Async findByIdAndUpdate error in ${this.name}:`, err.message);
-      });
+    } else if (updated) {
+      records.push(updated);
+      this._write(records);
     }
 
     if (this._isReady && updated) {
@@ -395,24 +406,11 @@ class Collection {
 
     if (this._mongoCol) {
       this._mongoCol.deleteOne(cleanQuery).catch(err => {
-        console.error(`[Manager MongoDB] Async deleteOne error in ${this.name}:`, err.message);
+        console.error(`[Manager MongoDB] deleteOne error in ${this.name}:`, err.message);
       });
-    }
-
-    if (this._isReady) {
-      const deletedId = query._id || query.id || 'deleted';
-      eventPublisher.publishEntityEvent({
-        entity: this.name,
-        action: 'deleted',
-        entityId: String(deletedId),
-        data: { id: deletedId, ...cleanQuery },
-        scope: {
-          stateId: cleanQuery.stateId || cleanQuery.state,
-          districtId: cleanQuery.districtId || cleanQuery.district,
-          divisionId: cleanQuery.divisionId || cleanQuery.division,
-          pincodeId: cleanQuery.pincodeId || cleanQuery.pincode
-        }
-      }).catch(() => {});
+      if (this.name === 'users' && this._mongoDb) {
+        this._mongoDb.collection('managers').deleteOne(cleanQuery).catch(() => {});
+      }
     }
 
     return { deletedCount: records.length - filtered.length };
@@ -434,7 +432,8 @@ class Collection {
 }
 
 const db = {
-  users: new Collection('users', 'managers'),
+  users: new Collection('users', 'users'),
+  managers: new Collection('managers', 'managers'),
   states: new Collection('states', 'states'),
   districts: new Collection('districts', 'districts'),
   divisions: new Collection('divisions', 'divisions'),
@@ -461,11 +460,15 @@ function initDatabase() {
       }
       const collections = Object.values(db).filter(c => c && typeof c.initMongo === 'function');
       await Promise.all(collections.map(col => col.initMongo(mongoDb)));
-      console.log('✅ [Manager Database] All Manager collections linked to MongoDB Atlas.');
+      console.log('✅ [Manager Database] All Manager collections linked directly to MongoDB Atlas single source of truth.');
 
       // Ensure performance indexes in MongoDB Atlas
       try {
         await Promise.allSettled([
+          mongoDb.collection('users').createIndex({ email: 1 }),
+          mongoDb.collection('users').createIndex({ mobile: 1 }),
+          mongoDb.collection('users').createIndex({ phone: 1 }),
+          mongoDb.collection('users').createIndex({ role: 1, status: 1 }),
           mongoDb.collection('managers').createIndex({ email: 1 }),
           mongoDb.collection('managers').createIndex({ role: 1, status: 1 }),
           mongoDb.collection('vendors').createIndex({ status: 1, kycStatus: 1 }),

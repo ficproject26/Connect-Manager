@@ -188,7 +188,13 @@ class RealtimeWebSocketServer {
       const target = String(scope.targetUserId).toLowerCase();
       const clientUid = String(user.id || '').toLowerCase();
       const clientEmail = String(user.email || '').toLowerCase();
-      if (target !== clientUid && target !== clientEmail) {
+      // If client is the explicitly targeted user, authorize immediately
+      if (target === clientUid || target === clientEmail) {
+        return true;
+      }
+      // If not the targeted user and this is a purely private direct message (no territorial scope), block
+      const hasTerritory = scope.stateId || scope.state || scope.districtId || scope.district || scope.divisionId || scope.pincodeId;
+      if (!hasTerritory) {
         return false;
       }
     }

@@ -54,99 +54,175 @@ const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }
 
 const login = async (req, res) => {
   try {
-    const identifier = req.body.identifier || req.body.email || req.body.mobile;
+    const rawIdentifier = String(req.body.identifier || req.body.email || req.body.mobile || '').trim();
     const { password } = req.body;
 
-    if (!identifier || !password) {
+    if (!rawIdentifier || !password) {
       return res.status(400).json({ success: false, message: 'Please provide email or mobile number, and password.' });
     }
 
-    // Support login via either email or mobile
-    const user = (await db.users.findOne({ email: identifier.trim().toLowerCase() })) ||
-      (await db.users.findOne({ mobile: identifier.trim() }));
+    const isEmail = rawIdentifier.includes('@');
+    const normalizedEmail = isEmail ? rawIdentifier.toLowerCase() : null;
+    const digitsOnly = rawIdentifier.replace(/\D/g, '');
+    const cleanMobile = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
+
+    console.log(`[Manager Auth] Login request received for identifier: "${rawIdentifier}" (email: ${normalizedEmail || 'N/A'}, mobile: ${cleanMobile || 'N/A'})`);
+
+    // Live MongoDB lookup for manager by email, mobile, phone, loginId, or managerId
+    let user = null;
+    if (normalizedEmail) {
+      user = await db.users.findOne({ email: { $regex: new RegExp(`^${normalizedEmail}$`, 'i') } });
+    }
+    if (!user && cleanMobile) {
+      user = (await db.users.findOne({ mobile: cleanMobile })) ||
+             (await db.users.findOne({ phone: cleanMobile })) ||
+             (await db.users.findOne({ mobile: rawIdentifier })) ||
+             (await db.users.findOne({ phone: rawIdentifier }));
+    }
+    if (!user) {
+      user = (await db.users.findOne({ loginId: rawIdentifier.toLowerCase() })) ||
+             (await db.users.findOne({ managerId: rawIdentifier })) ||
+             (await db.users.findOne({ _id: rawIdentifier })) ||
+             (await db.users.findOne({ id: rawIdentifier }));
+    }
 
     if (!user) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials. User not found.' });
+      console.warn(`[Manager Auth] Manager lookup failed for: "${rawIdentifier}". Authentication rejected.`);
+      return res.status(401).json({ success: false, message: 'Manager account not found with the provided email or mobile number.' });
     }
 
-    let isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch && (user.email === 'admin@example.com' || user._id === 'user_admin')) {
-      if (password === 'admin123' || password === 'Password@123') {
+    // Role check: Only regional Managers are authorized
+    const userRole = String(user.role || '').toLowerCase();
+    const isManagerRole = userRole.includes('manager') || ['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(userRole);
+    if (!isManagerRole) {
+      console.warn(`[Manager Auth] Account ${user._id} role "${user.role}" is not authorized for Manager Portal.`);
+      return res.status(403).json({ success: false, message: 'Access denied. This portal is exclusively for regional Managers.' });
+    }
+
+    // Account status check
+    const rawStatus = String(user.status || '').toLowerCase().trim();
+    const resolvedId = user.managerId || user.id || user._id;
+    console.log(`[Manager Auth] Found manager: ID=${resolvedId}, Role=${user.role}, Status=${rawStatus}`);
+
+    if (rawStatus === 'suspended') {
+      console.warn(`[Manager Auth] Suspended manager login attempt: ${user.email || user.mobile}`);
+      return res.status(403).json({ success: false, message: 'Account is suspended. Please contact your administrator.' });
+    }
+    if (rawStatus === 'inactive' || rawStatus === 'deactivated') {
+      console.warn(`[Manager Auth] Inactive manager login attempt: ${user.email || user.mobile}`);
+      return res.status(403).json({ success: false, message: 'Account is inactive. Please contact your administrator.' });
+    }
+    if (rawStatus === 'rejected') {
+      console.warn(`[Manager Auth] Rejected manager login attempt: ${user.email || user.mobile}`);
+      return res.status(403).json({ success: false, message: 'Manager registration was rejected. Please contact your administrator.' });
+    }
+
+    // Password comparison
+    let isMatch = false;
+    if (user.passwordHash) {
+      isMatch = await bcrypt.compare(password, user.passwordHash);
+    } else if (user.password && typeof user.password === 'string') {
+      if (user.password === password) {
         isMatch = true;
+        const newHash = await bcrypt.hash(password, 10);
+        await db.users.findByIdAndUpdate(user._id, { passwordHash: newHash, password: null });
+        console.log(`[Manager Auth] Migrated legacy password to bcrypt hash for ${user.email || user._id}`);
       }
     }
+
     if (!isMatch) {
+      console.warn(`[Manager Auth] Password comparison failed for manager: ${user.email || user.mobile}`);
       return res.status(401).json({ success: false, message: 'Invalid credentials. Incorrect password.' });
     }
 
-    // Determine normalized status for simulation/review (handles "Active", "active", "approved")
-    const rawStatus = String(user.status || '').toLowerCase().trim();
+    console.log(`[Manager Auth] Authentication successful for manager: ${user.email || user.mobile} (${resolvedId})`);
+
     const isApproved = rawStatus === 'active' || rawStatus === 'approved';
     const userStatus = isApproved ? 'active' : (rawStatus || 'under_review');
 
-    // Generate JWT carrying role and geographic/regional claims
+    const rolePrefix = user.role === 'state_manager' ? 'STM'
+      : user.role === 'district_manager' ? 'DTM'
+      : user.role === 'division_manager' ? 'DIV'
+      : 'PIN';
+    const managerId = user.managerId || `MGR-${rolePrefix}-${String(user._id || user.id).slice(-6)}`;
+
+    // Populate geographic and regional scope
+    const stateObj = user.stateId ? await db.states.findById(user.stateId) : null;
+    const districtObj = user.districtId ? await db.districts.findById(user.districtId) : null;
+    const divisionObj = user.divisionId ? await db.divisions.findById(user.divisionId) : null;
+    const pincodeObj = user.pincodeId ? await db.pincodes.findById(user.pincodeId) : null;
+
+    const resolvedState = user.state || user.assignedState || stateObj?.name || null;
+    const resolvedDistrict = user.district || user.assignedDistrict || districtObj?.name || null;
+    const resolvedDivision = user.division || user.assignedDivision || divisionObj?.name || null;
+    const resolvedPincode = user.pincode || user.assignedPincode || pincodeObj?.code || null;
+
     const tokenPayload = {
       id: user._id,
+      managerId,
       role: user.role,
       level: user.level,
       status: userStatus,
-      regionId: user.regionId || user.stateId,
-      stateId: user.stateId,
-      districtId: user.districtId,
-      divisionId: user.divisionId,
-      pincodeId: user.pincodeId
+      stateId: user.stateId || null,
+      districtId: user.districtId || null,
+      divisionId: user.divisionId || null,
+      pincodeId: user.pincodeId || null
     };
 
     const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' });
-
-    // Populate geographic and regional names
-    const regionObj = (user.regionId || user.stateId) ? await db.states.findById(user.regionId || user.stateId) : null;
-    const state = user.stateId ? await db.states.findById(user.stateId) : null;
-    const district = user.districtId ? await db.districts.findById(user.districtId) : null;
-    const division = user.divisionId ? await db.divisions.findById(user.divisionId) : null;
-    const pincode = user.pincodeId ? await db.pincodes.findById(user.pincodeId) : null;
 
     res.json({
       success: true,
       message: userStatus === 'active' 
         ? 'Login successful' 
         : userStatus === 'kyc_pending'
-        ? 'Account pending KYC verification. Navigating to verification simulation.'
-        : 'Account currently under review. Navigating to verification simulation.',
+        ? 'Account pending KYC verification.'
+        : 'Account currently under review.',
       token,
       user: {
         id: user._id,
+        _id: user._id,
+        managerId,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: user.mobile || user.phone,
+        phone: user.phone || user.mobile,
         role: user.role,
+        managerType: user.role,
         level: user.level,
         status: userStatus,
-        adminApprovalStatus: user.adminApprovalStatus || (userStatus === 'kyc_pending' ? 'approved' : 'pending'),
-        kycStatus: user.kycStatus || 'pending_verification',
+        state: resolvedState,
+        stateId: user.stateId || null,
+        district: resolvedDistrict,
+        districtId: user.districtId || null,
+        division: resolvedDivision,
+        divisionId: user.divisionId || null,
+        pincode: resolvedPincode,
+        pincodeId: user.pincodeId || null,
+        adminApprovalStatus: user.adminApprovalStatus || 'approved',
+        kycStatus: user.kycStatus || 'Verified',
         dob: user.dob || null,
         gender: user.gender || null,
         address: user.address || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
-        regionId: user.regionId || user.stateId,
         scope: {
-          regionId: user.regionId || user.stateId,
-          regionName: regionObj?.name || null,
-          stateId: user.stateId,
-          stateName: state?.name || null,
-          districtId: user.districtId,
-          districtName: district?.name || null,
-          divisionId: user.divisionId,
-          divisionName: division?.name || null,
-          pincodeId: user.pincodeId,
-          pincodeCode: pincode?.code || null,
-          pincodeArea: pincode?.areaName || null
+          regionId: user.stateId || null,
+          regionName: resolvedState,
+          stateId: user.stateId || null,
+          stateName: resolvedState,
+          districtId: user.districtId || null,
+          districtName: resolvedDistrict,
+          divisionId: user.divisionId || null,
+          divisionName: resolvedDivision,
+          pincodeId: user.pincodeId || null,
+          pincodeCode: resolvedPincode,
+          pincodeArea: pincodeObj?.areaName || null
         }
       }
     });
   } catch (err) {
-    console.error('Login error:', err);
+    console.error('[Manager Auth] Login error:', err);
     res.status(500).json({ success: false, message: 'Internal server error during login' });
   }
 };
@@ -707,39 +783,66 @@ const getMe = async (req, res) => {
   try {
     const user = await db.users.findById(req.user.id);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'Manager not found' });
     }
 
-    const regionObj = (user.regionId || user.stateId) ? await db.states.findById(user.regionId || user.stateId) : null;
-    const state = user.stateId ? await db.states.findById(user.stateId) : null;
-    const district = user.districtId ? await db.districts.findById(user.districtId) : null;
-    const division = user.divisionId ? await db.divisions.findById(user.divisionId) : null;
-    const pincode = user.pincodeId ? await db.pincodes.findById(user.pincodeId) : null;
+    const stateObj = user.stateId ? await db.states.findById(user.stateId) : null;
+    const districtObj = user.districtId ? await db.districts.findById(user.districtId) : null;
+    const divisionObj = user.divisionId ? await db.divisions.findById(user.divisionId) : null;
+    const pincodeObj = user.pincodeId ? await db.pincodes.findById(user.pincodeId) : null;
+
+    const resolvedState = user.state || user.assignedState || stateObj?.name || null;
+    const resolvedDistrict = user.district || user.assignedDistrict || districtObj?.name || null;
+    const resolvedDivision = user.division || user.assignedDivision || divisionObj?.name || null;
+    const resolvedPincode = user.pincode || user.assignedPincode || pincodeObj?.code || null;
+
+    const rolePrefix = user.role === 'state_manager' ? 'STM'
+      : user.role === 'district_manager' ? 'DTM'
+      : user.role === 'division_manager' ? 'DIV'
+      : 'PIN';
+    const managerId = user.managerId || `MGR-${rolePrefix}-${String(user._id || user.id).slice(-6)}`;
 
     res.json({
       success: true,
       user: {
         id: user._id,
+        _id: user._id,
+        managerId,
         name: user.name,
         email: user.email,
-        mobile: user.mobile,
+        mobile: user.mobile || user.phone,
+        phone: user.phone || user.mobile,
         role: user.role,
+        managerType: user.role,
         level: user.level,
         status: user.status,
+        state: resolvedState,
+        stateId: user.stateId || null,
+        district: resolvedDistrict,
+        districtId: user.districtId || null,
+        division: resolvedDivision,
+        divisionId: user.divisionId || null,
+        pincode: resolvedPincode,
+        pincodeId: user.pincodeId || null,
+        adminApprovalStatus: user.adminApprovalStatus || 'approved',
+        kycStatus: user.kycStatus || 'Verified',
+        dob: user.dob || null,
+        gender: user.gender || null,
+        address: user.address || null,
+        documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
-        regionId: user.regionId || user.stateId,
         scope: {
-          regionId: user.regionId || user.stateId,
-          regionName: regionObj?.name || null,
-          stateId: user.stateId,
-          stateName: state?.name || null,
-          districtId: user.districtId,
-          districtName: district?.name || null,
-          divisionId: user.divisionId,
-          divisionName: division?.name || null,
-          pincodeId: user.pincodeId,
-          pincodeCode: pincode?.code || null,
-          pincodeArea: pincode?.areaName || null
+          regionId: user.stateId || null,
+          regionName: resolvedState,
+          stateId: user.stateId || null,
+          stateName: resolvedState,
+          districtId: user.districtId || null,
+          districtName: resolvedDistrict,
+          divisionId: user.divisionId || null,
+          divisionName: resolvedDivision,
+          pincodeId: user.pincodeId || null,
+          pincodeCode: resolvedPincode,
+          pincodeArea: pincodeObj?.areaName || null
         }
       }
     });
