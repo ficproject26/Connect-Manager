@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { agentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
+import { getDisplayValue, normalizeString } from '../utils/normalize';
 import { 
   UserCheck, 
   Search, 
@@ -74,13 +75,13 @@ const AgentDirectory = ({ onNavigate }) => {
   };
 
   const resolveLevelStr = (level, role) => {
-    const rawRole = String(role || '').toLowerCase();
+    const rawRole = normalizeString(role).toLowerCase();
     const rawLevel = level;
     if (rawLevel === 1 || rawLevel === '1' || rawRole.includes('state')) return 'state';
     if (rawLevel === 2 || rawLevel === '2' || rawRole.includes('district')) return 'district';
     if (rawLevel === 3 || rawLevel === '3' || rawRole.includes('division') || rawRole.includes('divisional')) return 'division';
     if (rawLevel === 4 || rawLevel === '4' || rawRole.includes('pincode')) return 'pincode';
-    return String(rawLevel || rawRole || '').toLowerCase();
+    return normalizeString(rawLevel || rawRole || '').toLowerCase();
   };
 
   const getLevelBadge = (role, level) => {
@@ -620,14 +621,14 @@ const AgentDirectory = ({ onNavigate }) => {
                             fontWeight: 800,
                             fontSize: '0.85rem'
                           }}>
-                            {agent.name.slice(0, 2).toUpperCase()}
+                            {(getDisplayValue(agent.name, 'Ag')).slice(0, 2).toUpperCase()}
                           </div>
                           <div>
                             <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem' }}>
-                              {agent.name}
+                              {getDisplayValue(agent.name, 'Agent')}
                             </div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                              {agent.id || agent.agentCode}
+                              {getDisplayValue(agent.id || agent.agentCode, '—')}
                             </div>
                           </div>
                         </div>
@@ -636,10 +637,10 @@ const AgentDirectory = ({ onNavigate }) => {
                       {/* Jurisdiction */}
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                          {agent.jurisdiction}
+                          {getDisplayValue(agent.jurisdiction, 'Assigned Territory')}
                         </div>
                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '3px', marginTop: '2px' }}>
-                          <MapPin size={11} /> {agent.assignedArea || 'Assigned Zone'}
+                          <MapPin size={11} /> {getDisplayValue(agent.assignedArea, 'Assigned Zone')}
                         </div>
                       </td>
 
@@ -760,14 +761,14 @@ const AgentDirectory = ({ onNavigate }) => {
                       fontWeight: 800,
                       fontSize: '0.92rem'
                     }}>
-                      {agent.name.slice(0, 2).toUpperCase()}
+                      {(getDisplayValue(agent.name, 'Ag')).slice(0, 2).toUpperCase()}
                     </div>
                     <div>
                       <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                        {agent.name}
+                        {getDisplayValue(agent.name, 'Agent')}
                       </h4>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                        {agent.id}
+                        {getDisplayValue(agent.id, '—')}
                       </span>
                     </div>
                   </div>
@@ -786,10 +787,10 @@ const AgentDirectory = ({ onNavigate }) => {
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-main)', fontWeight: 600 }}>
                     <MapPin size={13} style={{ color: '#0284c7' }} />
-                    <span>{agent.jurisdiction}</span>
+                    <span>{getDisplayValue(agent.jurisdiction, 'Assigned Territory')}</span>
                   </div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', paddingLeft: '19px' }}>
-                    {agent.assignedArea}
+                    {getDisplayValue(agent.assignedArea, 'Assigned Zone')}
                   </div>
                 </div>
 

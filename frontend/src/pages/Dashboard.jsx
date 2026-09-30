@@ -21,6 +21,7 @@ import {
 
 import { reportService } from '../services/api';
 import { useRealtime } from '../realtime';
+import { getDisplayValue, normalizeString } from '../utils/normalize';
 
 const Dashboard = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -272,15 +273,15 @@ const Dashboard = ({ onNavigate }) => {
 
   // Dynamic Top Performing Managers from live database leaderboard
   const topManagers = React.useMemo(() => {
-    return leaderboardList.slice(0, 5).map(m => ({
-      id: m.rank || m.id,
-      name: m.name,
-      level: m.roleLabel || m.level,
-      territory: m.territory,
-      vendors: m.vendorsOnboarded || 0,
-      tieups: m.activeVendors || 0,
-      status: m.rating || 'Active',
-      statusClass: (m.rating || 'steady').toLowerCase(),
+    return (leaderboardList || []).slice(0, 5).map((m, idx) => ({
+      id: m.rank || idx + 1,
+      name: getDisplayValue(m.name, 'Manager'),
+      level: getDisplayValue(m.roleLabel || m.level, 'Level 1'),
+      territory: getDisplayValue(m.territory, 'Assigned Territory'),
+      vendors: Number(m.vendorsOnboarded) || 0,
+      tieups: Number(m.activeVendors) || 0,
+      status: getDisplayValue(m.rating, 'Active'),
+      statusClass: normalizeString(m.rating || 'steady').toLowerCase(),
       avatarBg: m.avatarBg || '#0284c7'
     }));
   }, [leaderboardList]);
@@ -786,20 +787,20 @@ const Dashboard = ({ onNavigate }) => {
                 {topManagers.length > 0 ? (
                   topManagers.map((m) => (
                     <tr key={m.id}>
-                      <td style={{ color: '#94a3b8', fontWeight: 600 }}>{m.id}</td>
+                      <td style={{ color: '#94a3b8', fontWeight: 600 }}>{getDisplayValue(m.id)}</td>
                       <td>
                         <span className="manager-avatar-mini" style={{ background: m.avatarBg, color: 'white' }}>
-                          {(m.name || 'M').slice(0, 1)}
+                          {getDisplayValue(m.name).slice(0, 1)}
                         </span>
-                        <strong>{m.name}</strong>
+                        <strong>{getDisplayValue(m.name)}</strong>
                       </td>
-                      <td>{m.level}</td>
-                      <td>{m.territory}</td>
+                      <td>{getDisplayValue(m.level)}</td>
+                      <td>{getDisplayValue(m.territory)}</td>
                       <td><strong>{m.vendors}</strong></td>
                       <td>{m.tieups}</td>
                       <td>
                         <span className={`perf-badge ${m.statusClass}`}>
-                          ● {m.status}
+                          ● {getDisplayValue(m.status)}
                         </span>
                       </td>
                     </tr>

@@ -1,10 +1,23 @@
 const db = require('../config/db');
 
-// GET /api/managers - Retrieve managers directory (equal level peers and subordinate managers)
 const getLowerLevelManagers = async (req, res) => {
   try {
     const user = req.user;
-    const allUsers = await db.users.find();
+    const [allUsers, allManagers] = await Promise.all([
+      db.users.find(),
+      db.managers.find()
+    ]);
+
+    const combined = [...(allUsers || []), ...(allManagers || [])];
+    const seen = new Set();
+    const uniqueUsers = [];
+    for (const u of combined) {
+      if (!u) continue;
+      const key = String(u._id || u.id || u.email || u.mobile || '');
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+      uniqueUsers.push(u);
+    }
 
     let peerRoleFilter = user.role;
     let subordinateRoleFilter = [];
@@ -37,35 +50,38 @@ const getLowerLevelManagers = async (req, res) => {
 
     // Helper to format role titles
     const formatRoleTitle = (role) => {
-      switch (role) {
-        case 'state_manager': return 'State Agent Manager (Level 1)';
-        case 'district_manager': return 'District Agent Manager (Level 2)';
-        case 'division_manager': return 'Division Agent Manager (Level 3)';
-        case 'pincode_manager': return 'Pincode Agent Manager (Level 4)';
-        default: return role;
-      }
+      const r = String(role || '').toLowerCase();
+      if (r.includes('state')) return 'State Agent Manager (Level 1)';
+      if (r.includes('district')) return 'District Agent Manager (Level 2)';
+      if (r.includes('division') || r.includes('divisional')) return 'Division Agent Manager (Level 3)';
+      if (r.includes('pincode')) return 'Pincode Agent Manager (Level 4)';
+      return String(role || 'Manager');
     };
 
-    const currentUserId = user.id || user._id;
+    const currentUserId = String(user.id || user._id || '');
 
     // Filter peers (equal level, excluding current user)
-    const rawPeers = allUsers.filter(u => {
-      if (u._id === currentUserId) return false;
-      if (u.role !== peerRoleFilter) return false;
-      if (peerLocationFilter.stateId && u.stateId !== peerLocationFilter.stateId) return false;
-      if (peerLocationFilter.districtId && u.districtId !== peerLocationFilter.districtId) return false;
-      if (peerLocationFilter.divisionId && u.divisionId !== peerLocationFilter.divisionId) return false;
-      if (peerLocationFilter.pincodeId && u.pincodeId !== peerLocationFilter.pincodeId) return false;
+    const rawPeers = uniqueUsers.filter(u => {
+      const uId = String(u._id || u.id || '');
+      if (uId === currentUserId) return false;
+      const uRole = String(u.role || '').toLowerCase();
+      if (uRole !== String(peerRoleFilter || '').toLowerCase()) return false;
+      if (peerLocationFilter.stateId && String(u.stateId || '') !== String(peerLocationFilter.stateId)) return false;
+      if (peerLocationFilter.districtId && String(u.districtId || '') !== String(peerLocationFilter.districtId)) return false;
+      if (peerLocationFilter.divisionId && String(u.divisionId || '') !== String(peerLocationFilter.divisionId)) return false;
+      if (peerLocationFilter.pincodeId && String(u.pincodeId || '') !== String(peerLocationFilter.pincodeId)) return false;
       return true;
     });
 
     // Filter subordinates (under, excluding current user)
-    const rawSubordinates = subordinateRoleFilter.length > 0 ? allUsers.filter(u => {
-      if (u._id === currentUserId) return false;
-      if (!subordinateRoleFilter.includes(u.role)) return false;
-      if (subordinateLocationFilter.stateId && u.stateId !== subordinateLocationFilter.stateId) return false;
-      if (subordinateLocationFilter.districtId && u.districtId !== subordinateLocationFilter.districtId) return false;
-      if (subordinateLocationFilter.divisionId && u.divisionId !== subordinateLocationFilter.divisionId) return false;
+    const rawSubordinates = subordinateRoleFilter.length > 0 ? uniqueUsers.filter(u => {
+      const uId = String(u._id || u.id || '');
+      if (uId === currentUserId) return false;
+      const uRole = String(u.role || '').toLowerCase();
+      if (!subordinateRoleFilter.some(sr => sr.toLowerCase() === uRole)) return false;
+      if (subordinateLocationFilter.stateId && String(u.stateId || '') !== String(subordinateLocationFilter.stateId)) return false;
+      if (subordinateLocationFilter.districtId && String(u.districtId || '') !== String(subordinateLocationFilter.districtId)) return false;
+      if (subordinateLocationFilter.divisionId && String(u.divisionId || '') !== String(subordinateLocationFilter.divisionId)) return false;
       return true;
     }) : [];
 
@@ -78,29 +94,40 @@ const getLowerLevelManagers = async (req, res) => {
         m.pincodeId ? db.pincodes.findById(m.pincodeId) : null
       ]);
 
-      const isSelf = m._id === user.id || m._id === user._id;
+      const mId = String(m._id || m.id || '');
+      const isSelf = mId === currentUserId;
+      const rawRole = String(m.role || '').toLowerCase();
+      let normLevel = m.level;
+      if (!normLevel || typeof normLevel === 'number') {
+        if (normLevel === 1 || rawRole.includes('state')) normLevel = 'state';
+        else if (normLevel === 2 || rawRole.includes('district')) normLevel = 'district';
+        else if (normLevel === 3 || rawRole.includes('division')) normLevel = 'division';
+        else normLevel = 'pincode';
+      } else {
+        normLevel = String(normLevel).toLowerCase();
+      }
 
       return {
-        id: m._id,
-        name: m.name,
-        email: m.email,
-        mobile: m.mobile,
-        role: m.role,
+        id: mId,
+        name: String(m.name || 'Manager'),
+        email: String(m.email || ''),
+        mobile: String(m.mobile || m.phone || ''),
+        role: String(m.role || 'manager'),
         roleTitle: formatRoleTitle(m.role),
-        level: m.level,
-        status: m.status || 'active',
+        level: normLevel,
+        status: String(m.status || 'active').toLowerCase(),
         relation, // 'peer' or 'subordinate'
         relationLabel: isSelf ? 'You (Current User)' : (relation === 'peer' ? 'Equal Level (Peer)' : 'Under Your Scope (Subordinate)'),
         isSelf,
-        stateId: m.stateId,
-        stateName: state?.name || null,
-        districtId: m.districtId,
-        districtName: district?.name || null,
-        divisionId: m.divisionId,
-        divisionName: division?.name || null,
-        pincodeId: m.pincodeId,
-        pincodeCode: pincode?.code || null,
-        pincodeArea: pincode?.areaName || null
+        stateId: m.stateId || null,
+        stateName: state?.name || m.state || null,
+        districtId: m.districtId || null,
+        districtName: district?.name || m.district || null,
+        divisionId: m.divisionId || null,
+        divisionName: division?.name || m.division || null,
+        pincodeId: m.pincodeId || null,
+        pincodeCode: pincode?.code || m.pincodeCode || m.pincode || null,
+        pincodeArea: pincode?.areaName || pincode?.name || m.area || null
       };
     };
 

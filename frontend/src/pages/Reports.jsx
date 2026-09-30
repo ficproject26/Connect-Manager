@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { shopVisitService, reportService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { getDisplayValue, normalizeString } from '../utils/normalize';
 import {
   Download,
   History,
@@ -66,12 +67,12 @@ const getCategoryBadgeStyle = (cat) => {
 
 const formatRoleLabel = (role) => {
   if (!role) return 'Pincode Manager';
-  const clean = String(role).toLowerCase().replace(/_/g, ' ');
+  const clean = normalizeString(role).toLowerCase().replace(/_/g, ' ');
   if (clean.includes('state')) return 'State Manager';
   if (clean.includes('district')) return 'District Manager';
   if (clean.includes('division') || clean.includes('divisional')) return 'Division Manager';
   if (clean.includes('pincode')) return 'Pincode Manager';
-  return String(role).replace(/_/g, ' ');
+  return normalizeString(role).replace(/_/g, ' ');
 };
 
 const getLevelBadgeStyle = (role) => {
@@ -800,7 +801,7 @@ const Reports = ({ onNavigate }) => {
                                 </span>
                                 <span style={{ fontSize: '0.74rem', color: '#64748b', display: 'inline-flex', alignItems: 'center', gap: 3 }}>
                                   <MapPin size={11} style={{ color: '#94a3b8' }} />
-                                  {v.pincodeCode ? `PIN: ${v.pincodeCode}` : (v.division || v.district || v.state || 'Assigned Territory')}
+                                  {v.pincodeCode ? `PIN: ${getDisplayValue(v.pincodeCode)}` : (getDisplayValue(v.division, '') || getDisplayValue(v.district, '') || getDisplayValue(v.state, 'Assigned Territory'))}
                                 </span>
                               </div>
                             </div>
@@ -1090,9 +1091,11 @@ const Reports = ({ onNavigate }) => {
                     style={{ width: '100%', padding: '8px 10px', fontSize: '0.82rem', borderRadius: 8, border: '1px solid var(--border)', background: '#f8fafc' }}
                   >
                     <option value="All">All Districts</option>
-                    {hierarchyOptions.districts.map(d => (
-                      <option key={d} value={d}>{d}</option>
-                    ))}
+                    {hierarchyOptions.districts.map(d => {
+                      const dVal = typeof d === 'object' ? (d._id || d.name || '') : String(d);
+                      const dLabel = typeof d === 'object' ? (d.name || d.districtName || dVal) : String(d);
+                      return <option key={dVal} value={dVal}>{dLabel}</option>;
+                    })}
                   </select>
                 </div>
               )}
@@ -1106,9 +1109,11 @@ const Reports = ({ onNavigate }) => {
                     style={{ width: '100%', padding: '8px 10px', fontSize: '0.82rem', borderRadius: 8, border: '1px solid var(--border)', background: '#f8fafc' }}
                   >
                     <option value="All">All Divisions</option>
-                    {hierarchyOptions.divisions.map(div => (
-                      <option key={div} value={div}>{div}</option>
-                    ))}
+                    {hierarchyOptions.divisions.map(div => {
+                      const divVal = typeof div === 'object' ? (div._id || div.name || '') : String(div);
+                      const divLabel = typeof div === 'object' ? (div.name || div.divisionName || divVal) : String(div);
+                      return <option key={divVal} value={divVal}>{divLabel}</option>;
+                    })}
                   </select>
                 </div>
               )}
@@ -1121,9 +1126,11 @@ const Reports = ({ onNavigate }) => {
                   style={{ width: '100%', padding: '8px 10px', fontSize: '0.82rem', borderRadius: 8, border: '1px solid var(--border)', background: '#f8fafc' }}
                 >
                   <option value="All">All Pincodes</option>
-                  {hierarchyOptions.pincodes.map(p => (
-                    <option key={p} value={p}>PIN: {p}</option>
-                  ))}
+                  {hierarchyOptions.pincodes.map(p => {
+                    const pVal = typeof p === 'object' ? (p.code || p.pincode || p.pincodeId || p._id || '') : String(p);
+                    const pLabel = typeof p === 'object' ? (p.code || p.pincode || p.name || p.area || pVal) : String(p);
+                    return <option key={pVal} value={pVal}>PIN: {pLabel}</option>;
+                  })}
                 </select>
               </div>
 
@@ -1278,10 +1285,10 @@ const Reports = ({ onNavigate }) => {
                           {/* 3. Jurisdiction */}
                           <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
                             <div style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: 700 }}>
-                              {rpt.district || 'District'} {rpt.division ? `• ${rpt.division}` : ''}
+                              {getDisplayValue(rpt.district, 'District')} {rpt.division ? `• ${getDisplayValue(rpt.division)}` : ''}
                             </div>
                             <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: 2 }}>
-                              {rpt.pincode ? `PIN: ${rpt.pincode}` : (rpt.state || 'Tamil Nadu')}
+                              {rpt.pincode ? `PIN: ${getDisplayValue(rpt.pincode)}` : getDisplayValue(rpt.state, 'Tamil Nadu')}
                             </div>
                           </td>
 
@@ -1495,7 +1502,7 @@ const Reports = ({ onNavigate }) => {
                     </h4>
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4 }}>
-                    Jurisdiction: {selectedSubmittedReport.district || 'District'} {selectedSubmittedReport.division ? `• ${selectedSubmittedReport.division}` : ''} {selectedSubmittedReport.pincode ? `• PIN: ${selectedSubmittedReport.pincode}` : ''}
+                    Jurisdiction: {getDisplayValue(selectedSubmittedReport.district, 'District')} {selectedSubmittedReport.division ? `• ${getDisplayValue(selectedSubmittedReport.division)}` : ''} {selectedSubmittedReport.pincode ? `• PIN: ${getDisplayValue(selectedSubmittedReport.pincode)}` : ''}
                   </div>
                 </div>
 
@@ -1995,11 +2002,11 @@ const Reports = ({ onNavigate }) => {
                     <MapPin size={13} style={{ color: '#10b981' }} /> Assigned Territory
                   </div>
                   <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.95rem' }}>
-                    {selectedVisit.district || selectedVisit.division || selectedVisit.state || 'Assigned Territory'}
+                    {getDisplayValue(selectedVisit.district) !== '-' ? getDisplayValue(selectedVisit.district) : getDisplayValue(selectedVisit.division) !== '-' ? getDisplayValue(selectedVisit.division) : getDisplayValue(selectedVisit.state, 'Assigned Territory')}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span>State: {selectedVisit.state || 'Tamil Nadu'}</span>
-                    {selectedVisit.pincodeCode && <span>• PIN: {selectedVisit.pincodeCode}</span>}
+                    <span>State: {getDisplayValue(selectedVisit.state, 'Tamil Nadu')}</span>
+                    {selectedVisit.pincodeCode && <span>• PIN: {getDisplayValue(selectedVisit.pincodeCode)}</span>}
                   </div>
                 </div>
               </div>

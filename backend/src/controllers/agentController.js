@@ -80,19 +80,34 @@ const isAgentInScope = (agent, user) => {
 };
 
 const normalizeAgent = (a) => {
-  const roleStr = String(a.role || '').toLowerCase();
-  let computedLevel = a.level;
-  if (!computedLevel) {
-    if (roleStr.includes('state')) computedLevel = 1;
-    else if (roleStr.includes('district')) computedLevel = 2;
-    else if (roleStr.includes('division')) computedLevel = 3;
-    else computedLevel = 4;
+  if (!a) return {};
+  const rawRole = (a.role && typeof a.role === 'object') ? (a.role.name || a.role.title || a.role.label || a.role.code || '') : (a.role || '');
+  const rawLevel = (a.level && typeof a.level === 'object') ? (a.level.name || a.level.code || a.level.level || '') : a.level;
+
+  const roleStr = String(rawRole).toLowerCase();
+  let computedLevel = rawLevel;
+  if (!computedLevel || typeof computedLevel === 'number') {
+    if (roleStr.includes('state') || computedLevel === 1) computedLevel = 'state';
+    else if (roleStr.includes('district') || computedLevel === 2) computedLevel = 'district';
+    else if (roleStr.includes('division') || computedLevel === 3) computedLevel = 'division';
+    else computedLevel = 'pincode';
+  } else {
+    computedLevel = String(computedLevel).toLowerCase();
+    if (computedLevel === '1') computedLevel = 'state';
+    else if (computedLevel === '2') computedLevel = 'district';
+    else if (computedLevel === '3') computedLevel = 'division';
+    else if (computedLevel === '4') computedLevel = 'pincode';
   }
 
-  const state = a.territory?.state || a.state || a.assignedState || '';
-  const district = a.territory?.district || a.district || a.assignedDistrict || '';
-  const division = a.territory?.division || a.division || a.assignedDivision || '';
-  const pincode = a.territory?.pincode || a.pincode || a.pincodeCode || '';
+  const rawState = a.territory?.state || a.state || a.assignedState;
+  const rawDistrict = a.territory?.district || a.district || a.assignedDistrict;
+  const rawDivision = a.territory?.division || a.division || a.assignedDivision;
+  const rawPincode = a.territory?.pincode || a.pincode || a.pincodeCode;
+
+  const state = (rawState && typeof rawState === 'object') ? String(rawState.name || rawState.stateName || '') : String(rawState || '');
+  const district = (rawDistrict && typeof rawDistrict === 'object') ? String(rawDistrict.name || rawDistrict.districtName || '') : String(rawDistrict || '');
+  const division = (rawDivision && typeof rawDivision === 'object') ? String(rawDivision.name || rawDivision.divisionName || '') : String(rawDivision || '');
+  const pincode = (rawPincode && typeof rawPincode === 'object') ? String(rawPincode.code || rawPincode.pincode || rawPincode.name || '') : String(rawPincode || '');
 
   let coverage = state;
   if (district) coverage += ` > ${district}`;
@@ -102,13 +117,15 @@ const normalizeAgent = (a) => {
   return {
     ...a,
     level: computedLevel,
-    mobile: a.mobile || a.phone || '',
-    phone: a.phone || a.mobile || '',
+    roleLevel: computedLevel,
+    role: typeof a.role === 'string' ? a.role : `${computedLevel}_agent`,
+    mobile: String(a.mobile || a.phone || ''),
+    phone: String(a.phone || a.mobile || ''),
     pincodeCode: pincode,
     state,
     district,
     division,
-    area: a.area || division || district || state || 'Jurisdiction Area',
+    area: String(a.area || division || district || state || 'Jurisdiction Area'),
     jurisdictionCoverage: coverage
   };
 };
@@ -146,8 +163,19 @@ const getAgents = async (req, res) => {
 
       // Level filter
       if (level && level !== 'All') {
-        const lvlNum = parseInt(level, 10);
-        if (!isNaN(lvlNum) && a.level !== lvlNum) return false;
+        const lvlStr = String(level).toLowerCase();
+        const aLvlStr = String(a.level || '').toLowerCase();
+        if (lvlStr === 'state' || lvlStr === '1') {
+          if (!aLvlStr.includes('state') && aLvlStr !== '1') return false;
+        } else if (lvlStr === 'district' || lvlStr === '2') {
+          if (!aLvlStr.includes('district') && aLvlStr !== '2') return false;
+        } else if (lvlStr === 'division' || lvlStr === '3') {
+          if (!aLvlStr.includes('division') && aLvlStr !== '3') return false;
+        } else if (lvlStr === 'pincode' || lvlStr === '4') {
+          if (!aLvlStr.includes('pincode') && aLvlStr !== '4') return false;
+        } else if (aLvlStr !== lvlStr) {
+          return false;
+        }
       }
 
       // Search filter

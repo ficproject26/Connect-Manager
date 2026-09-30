@@ -364,31 +364,78 @@ const getVendorReportData = async (req, res) => {
 };
 
 // GET /api/reports/leaderboard - Real Performance rankings calculated dynamically from database
+// GET /api/reports/leaderboard - Real Performance rankings calculated dynamically from database
 const getLeaderboardData = async (req, res) => {
   try {
     const user = req.user;
-    const allUsers = await db.users.find();
-    const allVendors = await db.vendors.find();
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
 
-    const managers = allUsers.filter(u => 
-      ['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(u.role)
-    );
+    const [allUsers, allManagers, allVendors] = await Promise.all([
+      db.users.find(),
+      db.managers.find(),
+      db.vendors.find()
+    ]);
+
+    const combined = [...(allUsers || []), ...(allManagers || [])];
+    const seen = new Set();
+    const candidateManagers = [];
+
+    for (const m of combined) {
+      if (!m) continue;
+      const key = String(m._id || m.id || m.email || m.mobile || '');
+      if (!key || seen.has(key)) continue;
+      seen.add(key);
+
+      const r = String(m.role || '').toLowerCase();
+      if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(r)) {
+        continue;
+      }
+
+      // Territory scope enforcement based on authenticated manager's level
+      if (!isGlobalAdmin) {
+        if (user.role === 'state_manager') {
+          const uState = String(user.stateId || user.state || '').trim().toLowerCase();
+          const mState = String(m.stateId || m.state || '').trim().toLowerCase();
+          if (uState && mState && uState !== mState) continue;
+        } else if (user.role === 'district_manager') {
+          const uDist = String(user.districtId || user.district || '').trim().toLowerCase();
+          const mDist = String(m.districtId || m.district || '').trim().toLowerCase();
+          if (uDist && mDist && uDist !== mDist) continue;
+        } else if (user.role === 'division_manager') {
+          const uDiv = String(user.divisionId || user.division || '').trim().toLowerCase();
+          const mDiv = String(m.divisionId || m.division || '').trim().toLowerCase();
+          if (uDiv && mDiv && uDiv !== mDiv) continue;
+        } else if (user.role === 'pincode_manager') {
+          const uPin = String(user.pincodeId || user.pincode || user.pincodeCode || '').trim().toLowerCase();
+          const mPin = String(m.pincodeId || m.pincode || m.pincodeCode || '').trim().toLowerCase();
+          if (uPin && mPin && uPin !== mPin) continue;
+        }
+      }
+
+      candidateManagers.push(m);
+    }
 
     const formatRoleLabel = (role) => {
-      switch (role) {
-        case 'state_manager': return 'State Manager';
-        case 'district_manager': return 'District Manager';
-        case 'division_manager': return 'Division Manager';
-        case 'pincode_manager': return 'Pincode Manager';
-        default: return role;
-      }
+      const r = String(role || '').toLowerCase();
+      if (r.includes('state')) return 'State Manager';
+      if (r.includes('district')) return 'District Manager';
+      if (r.includes('division') || r.includes('divisional')) return 'Division Manager';
+      if (r.includes('pincode')) return 'Pincode Manager';
+      return 'Manager';
     };
 
-    const formatLevel = (level) => `Level ${level || 1}`;
+    const formatLevel = (level, role) => {
+      const r = String(role || '').toLowerCase();
+      if (level === 1 || level === '1' || r.includes('state')) return 'Level 1 • State';
+      if (level === 2 || level === '2' || r.includes('district')) return 'Level 2 • District';
+      if (level === 3 || level === '3' || r.includes('division')) return 'Level 3 • Division';
+      if (level === 4 || level === '4' || r.includes('pincode')) return 'Level 4 • Pincode';
+      return `Level ${level || 1}`;
+    };
 
     const colorPalette = ['#0284c7', '#8b5cf6', '#f59e0b', '#0d9488', '#ea580c', '#d97706', '#6366f1', '#ec4899'];
 
-    const rankedList = await Promise.all(managers.map(async (m, idx) => {
+    const rankedList = await Promise.all(candidateManagers.map(async (m, idx) => {
       const [state, district, division, pincode] = await Promise.all([
         m.stateId ? db.states.findById(m.stateId) : null,
         m.districtId ? db.districts.findById(m.districtId) : null,
@@ -397,42 +444,49 @@ const getLeaderboardData = async (req, res) => {
       ]);
 
       // Calculate real vendors added by this respective manager
-      const managerVendors = allVendors.filter(v => 
-        v.createdBy === m._id || v.createdBy === m.id
+      const mId = String(m._id || m.id || '');
+      const managerVendors = (allVendors || []).filter(v => 
+        String(v.createdBy || '') === mId
       );
 
       const totalVendors = managerVendors.length;
-      const activeVendors = managerVendors.filter(v => v.status === 'Active').length;
-      const pendingVendors = managerVendors.filter(v => v.status === 'Pending' || v.status === 'Under Review').length;
+      const activeVendors = managerVendors.filter(v => String(v.status || '').toLowerCase() === 'active').length;
+      const pendingVendors = managerVendors.filter(v => {
+        const st = String(v.status || '').toLowerCase();
+        return st === 'pending' || st.includes('review');
+      }).length;
 
-      // Real dynamic score based on vendors added by this manager:
-      // 250 points for each Active verified vendor, 80 points for each onboarded vendor
       const basePoints = (activeVendors * 250) + (totalVendors * 80);
       const target = Math.max(totalVendors + 2, 5);
       const slaRate = totalVendors > 0 
         ? `${Math.min(99, Math.round((activeVendors / totalVendors) * 100))}%`
         : '0.0%';
 
-      let territoryText = state?.name || 'Assigned State';
-      if (pincode?.code) {
-        territoryText = `PIN ${pincode.code} (${pincode.areaName || ''})`;
-      } else if (division?.name) {
-        territoryText = `${division.name}, ${district?.name || ''}`;
-      } else if (district?.name) {
-        territoryText = `${district.name}, ${state?.name || ''}`;
+      let territoryText = state?.name || m.state || 'Assigned Territory';
+      if (pincode?.code || m.pincodeCode || m.pincode) {
+        const pin = pincode?.code || m.pincodeCode || m.pincode;
+        territoryText = `PIN ${pin}`;
+      } else if (division?.name || m.division) {
+        const divName = division?.name || m.division;
+        const distName = district?.name || m.district || '';
+        territoryText = distName ? `${divName}, ${distName}` : divName;
+      } else if (district?.name || m.district) {
+        const distName = district?.name || m.district;
+        const stName = state?.name || m.state || '';
+        territoryText = stName ? `${distName}, ${stName}` : distName;
       }
 
-      const isSelf = m._id === user.id || m._id === user._id;
+      const isSelf = mId === String(user.id || user._id || '');
 
       return {
-        id: m._id,
-        name: m.name,
-        role: m.role,
+        id: mId,
+        name: String(m.name || 'Manager'),
+        role: String(m.role || 'manager'),
         roleLabel: formatRoleLabel(m.role),
-        level: formatLevel(m.level),
-        territory: territoryText,
-        stateId: m.stateId,
-        stateName: state?.name || null,
+        level: formatLevel(m.level, m.role),
+        territory: String(territoryText),
+        stateId: m.stateId || null,
+        stateName: state?.name || m.state || null,
         vendorsOnboarded: totalVendors,
         activeVendors,
         pendingVendors,
@@ -538,10 +592,10 @@ const getSubmittedReports = async (req, res) => {
       if (user.role === 'pincode_manager' && user.pincodeId && r.pincodeId && r.pincodeId !== user.pincodeId) return false;
 
       // Filter params
-      if (district && district !== 'All' && r.districtId !== district) return false;
-      if (division && division !== 'All' && r.divisionId !== division) return false;
-      if (pincode && pincode !== 'All' && r.pincodeId !== pincode) return false;
-      if (managerRole && managerRole !== 'All' && r.managerRole !== managerRole) return false;
+      if (district && district !== 'All' && String(r.districtId || '') !== String(district) && String(r.district || '') !== String(district)) return false;
+      if (division && division !== 'All' && String(r.divisionId || '') !== String(division) && String(r.division || '') !== String(division)) return false;
+      if (pincode && pincode !== 'All' && String(r.pincodeId || '') !== String(pincode) && String(r.pincode || '') !== String(pincode)) return false;
+      if (managerRole && managerRole !== 'All' && String(r.managerRole || '').toLowerCase() !== String(managerRole).toLowerCase()) return false;
 
       if (search && search.trim()) {
         const q = search.toLowerCase();
@@ -556,14 +610,31 @@ const getSubmittedReports = async (req, res) => {
 
     filtered.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt));
 
+    const cleanDistricts = (districts || []).map(d => ({
+      _id: String(d._id || d.id || ''),
+      name: String(d.name || d.districtName || d._id || ''),
+      districtName: String(d.name || d.districtName || '')
+    }));
+    const cleanDivisions = (divisions || []).map(d => ({
+      _id: String(d._id || d.id || ''),
+      name: String(d.name || d.divisionName || d._id || ''),
+      divisionName: String(d.name || d.divisionName || '')
+    }));
+    const cleanPincodes = (pincodes || []).map(p => ({
+      _id: String(p._id || p.id || ''),
+      code: String(p.code || p.pincode || p.pincodeId || p.name || ''),
+      pincode: String(p.code || p.pincode || ''),
+      name: String(p.name || p.areaName || p.area || p.code || '')
+    }));
+
     res.json({
       success: true,
       total: filtered.length,
       data: filtered,
       hierarchy: {
-        districts,
-        divisions,
-        pincodes
+        districts: cleanDistricts,
+        divisions: cleanDivisions,
+        pincodes: cleanPincodes
       }
     });
   } catch (err) {

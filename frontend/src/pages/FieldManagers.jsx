@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { managerService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
+import { getDisplayValue, normalizeString } from '../utils/normalize';
 
 import { 
   Users, 
@@ -73,78 +74,80 @@ const FieldManagers = () => {
   };
 
   const getRoleBadge = (role) => {
-    switch (role) {
-      case 'state_manager':
-        return (
-          <span style={{
-            background: '#fef3c7',
-            color: '#92400e',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            display: 'inline-flex',
-            alignItems: 'center',
-            letterSpacing: '0.2px'
-          }}>
-            Level 1 • State Manager
-          </span>
-        );
-      case 'district_manager':
-        return (
-          <span style={{
-            background: '#e0f2fe',
-            color: '#0369a1',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            display: 'inline-flex',
-            alignItems: 'center',
-            letterSpacing: '0.2px'
-          }}>
-            Level 2 • District Manager
-          </span>
-        );
-      case 'division_manager':
-        return (
-          <span style={{
-            background: '#ecfdf5',
-            color: '#047857',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            display: 'inline-flex',
-            alignItems: 'center',
-            letterSpacing: '0.2px'
-          }}>
-            Level 3 • Division Manager
-          </span>
-        );
-      case 'pincode_manager':
-        return (
-          <span style={{
-            background: '#f5f3ff',
-            color: '#6d28d9',
-            padding: '4px 10px',
-            borderRadius: '6px',
-            fontSize: '0.74rem',
-            fontWeight: 700,
-            whiteSpace: 'nowrap',
-            display: 'inline-flex',
-            alignItems: 'center',
-            letterSpacing: '0.2px'
-          }}>
-            Level 4 • Pincode Manager
-          </span>
-        );
-      default:
-        return <span>{role}</span>;
+    const r = normalizeString(role).toLowerCase();
+    if (r.includes('state')) {
+      return (
+        <span style={{
+          background: '#fef3c7',
+          color: '#92400e',
+          padding: '4px 10px',
+          borderRadius: '6px',
+          fontSize: '0.74rem',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          letterSpacing: '0.2px'
+        }}>
+          Level 1 • State Manager
+        </span>
+      );
     }
+    if (r.includes('district')) {
+      return (
+        <span style={{
+          background: '#e0f2fe',
+          color: '#0369a1',
+          padding: '4px 10px',
+          borderRadius: '6px',
+          fontSize: '0.74rem',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          letterSpacing: '0.2px'
+        }}>
+          Level 2 • District Manager
+        </span>
+      );
+    }
+    if (r.includes('division') || r.includes('divisional')) {
+      return (
+        <span style={{
+          background: '#ecfdf5',
+          color: '#047857',
+          padding: '4px 10px',
+          borderRadius: '6px',
+          fontSize: '0.74rem',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          letterSpacing: '0.2px'
+        }}>
+          Level 3 • Division Manager
+        </span>
+      );
+    }
+    if (r.includes('pincode')) {
+      return (
+        <span style={{
+          background: '#f5f3ff',
+          color: '#6d28d9',
+          padding: '4px 10px',
+          borderRadius: '6px',
+          fontSize: '0.74rem',
+          fontWeight: 700,
+          whiteSpace: 'nowrap',
+          display: 'inline-flex',
+          alignItems: 'center',
+          letterSpacing: '0.2px'
+        }}>
+          Level 4 • Pincode Manager
+        </span>
+      );
+    }
+    return <span>{getDisplayValue(role, 'Manager')}</span>;
   };
 
   const getRelationBadge = (m) => {
@@ -203,39 +206,39 @@ const FieldManagers = () => {
   };
 
   const getJurisdictionFormatted = (m) => {
-    if (m.pincodeCode) {
+    if (m.pincodeCode || m.pincode) {
       return (
         <div>
-          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>PIN {m.pincodeCode}</span>
+          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>PIN {getDisplayValue(m.pincodeCode || m.pincode)}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginLeft: '4px' }}>
-            ({m.pincodeArea || 'Area'}) • {m.divisionName || m.districtName}
+            ({getDisplayValue(m.pincodeArea || 'Area')}) • {getDisplayValue(m.divisionName || m.districtName, '')}
           </span>
         </div>
       );
     }
-    if (m.divisionName) {
+    if (m.divisionName || m.division) {
       return (
         <div>
-          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{m.divisionName}</span>
+          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{getDisplayValue(m.divisionName || m.division)}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginLeft: '4px' }}>
-            • {m.districtName || m.stateName}
+            • {getDisplayValue(m.districtName || m.stateName, '')}
           </span>
         </div>
       );
     }
-    if (m.districtName) {
+    if (m.districtName || m.district) {
       return (
         <div>
-          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{m.districtName}</span>
+          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{getDisplayValue(m.districtName || m.district)}</span>
           <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginLeft: '4px' }}>
-            • {m.stateName || 'State'}
+            • {getDisplayValue(m.stateName || m.state, 'State')}
           </span>
         </div>
       );
     }
     return (
       <div>
-        <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{m.stateName || m.state || '-'}</span>
+        <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{getDisplayValue(m.stateName || m.state, '-')}</span>
       </div>
     );
   };
@@ -470,11 +473,11 @@ const FieldManagers = () => {
                         justifyContent: 'center',
                         flexShrink: 0
                       }}>
-                        {m.name ? m.name.slice(0, 1).toUpperCase() : 'M'}
+                        {getDisplayValue(m.name, 'M').slice(0, 1).toUpperCase()}
                       </div>
                       <div style={{ minWidth: 0 }}>
                         <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
-                          {m.name}
+                          {getDisplayValue(m.name, 'Manager')}
                         </div>
                         <div 
                           title={`Full ID: ${m.id}`} 
@@ -495,10 +498,10 @@ const FieldManagers = () => {
                   <td>{getRoleBadge(m.role)}</td>
                   <td>
                     <div style={{ fontSize: '0.82rem', color: '#1e293b', fontWeight: 500, whiteSpace: 'nowrap' }}>
-                      {m.email}
+                      {getDisplayValue(m.email)}
                     </div>
                     <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap' }}>
-                      {m.mobile || '—'}
+                      {getDisplayValue(m.mobile, '—')}
                     </div>
                   </td>
                   <td>

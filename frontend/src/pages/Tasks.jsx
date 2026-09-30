@@ -34,6 +34,7 @@ import {
 import { taskService, agentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
+import { getDisplayValue, normalizeString } from '../utils/normalize';
 
 const Tasks = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -983,7 +984,7 @@ const Tasks = ({ onNavigate }) => {
                           {item.territory && (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
                               <MapPin size={12} style={{ color: '#0284c7', flexShrink: 0 }} />
-                              <span>{item.territory}</span>
+                              <span>{getDisplayValue(item.territory)}</span>
                             </div>
                           )}
                         </div>
@@ -1344,19 +1345,19 @@ const Tasks = ({ onNavigate }) => {
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', fontSize: '0.78rem' }}>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>State / Jurisdiction</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.state || selectedTask.raw?.state || 'Tamil Nadu'}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.state || selectedTask.raw?.state, 'Tamil Nadu')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>District</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.district || selectedTask.raw?.district || 'Krishnagiri'}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.district || selectedTask.raw?.district, 'Krishnagiri')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Division</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.division || selectedTask.raw?.division || 'Central'}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.division || selectedTask.raw?.division, 'Central')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Pincode</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{selectedTask.pincode || selectedTask.raw?.pincode || '635109'}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.pincode || selectedTask.raw?.pincode, '635109')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Date</span>
@@ -1402,10 +1403,10 @@ const Tasks = ({ onNavigate }) => {
                 {selectedTask.territory && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 600, color: '#0284c7', marginTop: '4px' }}>
                     <MapPin size={13} style={{ flexShrink: 0 }} />
-                    <span>{selectedTask.territory}</span>
+                    <span>{getDisplayValue(selectedTask.territory)}</span>
                     {selectedTask.raw?.location && selectedTask.raw.location !== selectedTask.territory && (
                       <span style={{ color: 'var(--text-muted)', fontWeight: 400, marginLeft: '4px' }}>
-                        • {selectedTask.raw.location}
+                        • {getDisplayValue(selectedTask.raw.location)}
                       </span>
                     )}
                   </div>
@@ -2257,7 +2258,7 @@ const Tasks = ({ onNavigate }) => {
                   <option value="">Select an agent in your territory...</option>
                   {agentsList.map(a => (
                     <option key={a._id || a.id} value={a._id || a.id}>
-                      {a.name} — {(a.role || a.roleLevel || 'Agent').replace('_', ' ')} ({a.district || a.pincode || a.state || 'Assigned Territory'})
+                      {getDisplayValue(a.name, 'Agent')} — {normalizeString(a.role || a.roleLevel || 'Agent').replace('_', ' ')} ({getDisplayValue(a.district || a.pincode || a.state, 'Assigned Territory')})
                     </option>
                   ))}
                 </select>
