@@ -73,8 +73,18 @@ const AgentDirectory = ({ onNavigate }) => {
     setTimeout(() => setCopiedField(null), 2000);
   };
 
+  const resolveLevelStr = (level, role) => {
+    const rawRole = String(role || '').toLowerCase();
+    const rawLevel = level;
+    if (rawLevel === 1 || rawLevel === '1' || rawRole.includes('state')) return 'state';
+    if (rawLevel === 2 || rawLevel === '2' || rawRole.includes('district')) return 'district';
+    if (rawLevel === 3 || rawLevel === '3' || rawRole.includes('division') || rawRole.includes('divisional')) return 'division';
+    if (rawLevel === 4 || rawLevel === '4' || rawRole.includes('pincode')) return 'pincode';
+    return String(rawLevel || rawRole || '').toLowerCase();
+  };
+
   const getLevelBadge = (role, level) => {
-    const l = (level || role || '').toLowerCase();
+    const l = resolveLevelStr(level, role);
     if (l.includes('state')) {
       return (
         <span style={{
@@ -160,7 +170,7 @@ const AgentDirectory = ({ onNavigate }) => {
   // - State Manager: State + District + Division + Pincode Agents in their state
   const hierarchicalAgents = useMemo(() => {
     return agents.filter(agent => {
-      const aLevel = (agent.level || agent.role || '').toLowerCase();
+      const aLevel = resolveLevelStr(agent.level, agent.role);
 
       if (isPincodeManager) {
         if (!aLevel.includes('pincode')) return false;
@@ -173,7 +183,7 @@ const AgentDirectory = ({ onNavigate }) => {
       if (isDivisionManager) {
         const isAllowed = aLevel.includes('division') || aLevel.includes('pincode');
         if (!isAllowed) return false;
-        if (user?.division && agent.division && agent.division.toLowerCase() !== user.division.toLowerCase()) {
+        if (user?.division && agent.division && String(agent.division).toLowerCase() !== String(user.division).toLowerCase()) {
           return false;
         }
         return true;
@@ -182,7 +192,7 @@ const AgentDirectory = ({ onNavigate }) => {
       if (isDistrictManager) {
         const isAllowed = aLevel.includes('district') || aLevel.includes('division') || aLevel.includes('pincode');
         if (!isAllowed) return false;
-        if (user?.district && agent.district && agent.district.toLowerCase() !== user.district.toLowerCase()) {
+        if (user?.district && agent.district && String(agent.district).toLowerCase() !== String(user.district).toLowerCase()) {
           return false;
         }
         return true;
@@ -191,7 +201,7 @@ const AgentDirectory = ({ onNavigate }) => {
       if (isStateManager) {
         const isAllowed = aLevel.includes('state') || aLevel.includes('district') || aLevel.includes('division') || aLevel.includes('pincode');
         if (!isAllowed) return false;
-        if (user?.state && agent.state && agent.state.toLowerCase() !== user.state.toLowerCase()) {
+        if (user?.state && agent.state && String(agent.state).toLowerCase() !== String(user.state).toLowerCase()) {
           return false;
         }
         return true;
@@ -204,7 +214,7 @@ const AgentDirectory = ({ onNavigate }) => {
   const filteredAgents = useMemo(() => {
     return hierarchicalAgents.filter(agent => {
       if (levelFilter !== 'All') {
-        const l = (agent.level || agent.role || '').toLowerCase();
+        const l = resolveLevelStr(agent.level, agent.role);
         if (levelFilter === 'state' && !l.includes('state')) return false;
         if (levelFilter === 'district' && !l.includes('district')) return false;
         if (levelFilter === 'divisional' && !l.includes('division')) return false;
