@@ -46,6 +46,8 @@ const shopVisitRoutes = require('./routes/shopVisitRoutes');
 const agentRoutes = require('./routes/agentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const realtimeRoutes = require('./routes/realtimeRoutes');
+const managerOnboardingRoutes = require('./routes/managerOnboardingRoutes');
+
 
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
@@ -60,6 +62,8 @@ app.use('/api/shop-visits', shopVisitRoutes);
 app.use('/api/operations', agentRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/realtime', realtimeRoutes);
+app.use('/api/manager-onboarding', managerOnboardingRoutes);
+
 
 // Centralized error handling
 app.use((err, req, res, next) => {

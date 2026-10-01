@@ -442,11 +442,13 @@ const db = {
   auditLogs: new Collection('audit_logs', 'auditlogs'),
   tasks: new Collection('tasks', 'tasks'),
   shopVisits: new Collection('shop_visits', 'fieldvisits'),
+  managerOnboardings: new Collection('manager_onboardings', 'manageronboardings'),
   submittedReports: new Collection('submitted_reports', 'reports'),
   agents: new Collection('agents', 'agents'),
   notifications: new Collection('notifications', 'notifications'),
   settings: new Collection('settings', 'settings')
 };
+
 
 let initPromise = null;
 function initDatabase() {
@@ -479,7 +481,9 @@ function initDatabase() {
           mongoDb.collection('notifications').createIndex({ userId: 1, isRead: 1 }),
           mongoDb.collection('pincodes').createIndex({ code: 1 }),
           mongoDb.collection('districts').createIndex({ stateId: 1 }),
-          mongoDb.collection('divisions').createIndex({ districtId: 1 })
+          mongoDb.collection('divisions').createIndex({ districtId: 1 }),
+          mongoDb.collection('manageronboardings').createIndex({ managerId: 1, status: 1 }),
+          mongoDb.collection('manageronboardings').createIndex({ pincodeId: 1, status: 1 })
         ]);
         console.log('⚡ [Manager Database] Performance indexes verified in MongoDB Atlas.');
       } catch (idxErr) {}

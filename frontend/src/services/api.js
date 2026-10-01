@@ -458,3 +458,87 @@ export const settingsService = {
     return handleResponse(res);
   }
 };
+
+export const managerOnboardingService = {
+  /** Record a Field Shop Visit */
+  async createFieldVisit(data) {
+    const res = await fetch(`${API_BASE}/manager-onboarding/field-visit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  /** Submit full Vendor Onboarding (after field visit) */
+  async submitVendorOnboarding(data) {
+    const res = await fetch(`${API_BASE}/manager-onboarding/submit`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data)
+    });
+    return handleResponse(res);
+  },
+
+  /** Get this manager's onboarding records */
+  async getMyOnboardings(params = {}) {
+    const query = new URLSearchParams(params);
+    const res = await fetch(`${API_BASE}/manager-onboarding?${query.toString()}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  /** Admin view — all onboarding records (scoped) */
+  async getAdminOnboardings(params = {}) {
+    const query = new URLSearchParams(params);
+    const res = await fetch(`${API_BASE}/manager-onboarding/admin?${query.toString()}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  /** Approve an onboarding request (Pincode Admin) */
+  async approveOnboarding(id, notes = '') {
+    const res = await fetch(`${API_BASE}/manager-onboarding/${id}/approve`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ notes })
+    });
+    return handleResponse(res);
+  },
+
+  /** Reject an onboarding request (Pincode Admin) */
+  async rejectOnboarding(id, rejectionReason) {
+    const res = await fetch(`${API_BASE}/manager-onboarding/${id}/reject`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ rejectionReason })
+    });
+    return handleResponse(res);
+  },
+
+  /** Get single onboarding record */
+  async getOnboardingById(id) {
+    const res = await fetch(`${API_BASE}/manager-onboarding/${id}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  /** Upload a storefront photo */
+  async uploadStorefrontPhoto(file) {
+    const formData = new FormData();
+    formData.append('document', file);
+    const token = localStorage.getItem('agent_mgr_token');
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+    const res = await fetch(`${API_BASE}/uploads/document`, {
+      method: 'POST',
+      headers,
+      body: formData
+    });
+    return handleResponse(res);
+  }
+};
+

@@ -26,6 +26,7 @@ import Settings from './pages/Settings';
 import FieldManagers from './pages/FieldManagers';
 import AgentDirectory from './pages/AgentDirectory';
 import ShopVisits from './pages/ShopVisits';
+import FieldShopVisitModal from './components/FieldShopVisitModal';
 
 
 class GlobalErrorBoundary extends React.Component {
@@ -192,7 +193,7 @@ function AppInner() {
   return (
     <div className="app-shell">
       {/* Role-Aware Sidebar */}
-      <Sidebar currentPage={currentPage} onNavigate={navigate} onOpenOnboard={() => setOnboardModalOpen(true)} />
+      <Sidebar currentPage={currentPage} onNavigate={navigate} onOpenOnboard={openOnboard} />
 
       {/* Main Content Area */}
       <div className="main-content-wrapper">
@@ -201,7 +202,7 @@ function AppInner() {
         <main className="content-body">
           {currentPage === 'dashboard' && <Dashboard onNavigate={navigate} />}
           {/* VendorRequests page removed */}
-          {currentPage === 'vendors' && <Vendors onNavigate={navigate} onOpenOnboard={() => setOnboardModalOpen(true)} />}
+          {currentPage === 'vendors' && <Vendors onNavigate={navigate} onOpenOnboard={openOnboard} />}
           {currentPage === 'vendor-requests' && <VendorRequests onNavigate={navigate} />}
           {(currentPage === 'tasks' || currentPage === 'issues') && <Tasks onNavigate={navigate} />}
           {currentPage === 'leaderboard' && <Leaderboard onNavigate={navigate} />}
@@ -212,19 +213,26 @@ function AppInner() {
           {/* add-vendor page kept as fallback */}
           {currentPage === 'add-vendor' && <AddVendor onNavigate={navigate} />}
 
-          {/* Onboard Vendor Popup Modal */}
+
+          {/* Step 1 — Field Shop Visit Modal (gateway to vendor onboarding) */}
+          {fieldVisitModalOpen && (
+            <FieldShopVisitModal
+              onClose={() => setFieldVisitModalOpen(false)}
+              onProceedToOnboarding={handleFieldVisitProceed}
+            />
+          )}
+
+          {/* Step 2 — Vendor Onboarding Form (after field visit YES) */}
           {onboardModalOpen && (
             <div style={{
               position: 'fixed', inset: 0, zIndex: 9999,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               padding: '16px'
             }}>
-              {/* backdrop */}
               <div
                 onClick={() => setOnboardModalOpen(false)}
                 style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
               />
-              {/* modal card */}
               <div style={{
                 position: 'relative', width: '100%', maxWidth: 680,
                 maxHeight: 'min(90vh, 820px)',
@@ -232,7 +240,6 @@ function AppInner() {
                 boxShadow: '0 24px 80px rgba(0,0,0,0.3)',
                 display: 'flex', flexDirection: 'column', overflow: 'hidden'
               }}>
-                {/* header */}
                 <div style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                   padding: '18px 24px 14px',
@@ -253,16 +260,22 @@ function AppInner() {
                       justifyContent: 'center', fontSize: 18, color: 'var(--text-muted)',
                       flexShrink: 0
                     }}
-                  >×</button>
+                  >x</button>
                 </div>
-                {/* scrollable body */}
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
                   <VendorForm
+                    prefill={pendingPrefill}
+                    fieldVisitId={pendingFieldVisitId}
                     onSubmit={async (formData) => {
-                      const { vendorService } = await import('./services/api');
-                      const res = await vendorService.createVendor(formData);
+                      const { managerOnboardingService } = await import('./services/api');
+                      const res = await managerOnboardingService.submitVendorOnboarding({
+                        ...formData,
+                        fieldVisitId: pendingFieldVisitId
+                      });
                       if (res.success) {
                         setOnboardModalOpen(false);
+                        setPendingFieldVisitId(null);
+                        setPendingPrefill({});
                         navigate('vendors');
                       }
                     }}
@@ -292,3 +305,8 @@ export default function App() {
     </GlobalErrorBoundary>
   );
 }
+
+
+
+
+
