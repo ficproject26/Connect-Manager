@@ -41,12 +41,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
   const [unmasked, setUnmasked] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
 
-  // Status Modal State
-  const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [targetStatus, setTargetStatus] = useState('');
-  const [statusNotes, setStatusNotes] = useState('');
-  const [statusUpdating, setStatusUpdating] = useState(false);
-  const [statusError, setStatusError] = useState('');
+
 
   const fetchVendor = async (showUnmasked = false) => {
     try {
@@ -81,30 +76,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
     setUnmasked(!unmasked);
   };
 
-  const openStatusModal = (newStatus) => {
-    setTargetStatus(newStatus);
-    setStatusNotes('');
-    setStatusError('');
-    setStatusModalOpen(true);
-  };
 
-  const handleStatusSubmit = async (e) => {
-    e.preventDefault();
-    setStatusUpdating(true);
-    setStatusError('');
-
-    try {
-      const res = await vendorService.updateStatus(vendorId, targetStatus, statusNotes);
-      if (res.success) {
-        setVendor(res.data);
-        setStatusModalOpen(false);
-      }
-    } catch (err) {
-      setStatusError(err.message || 'Status transition failed');
-    } finally {
-      setStatusUpdating(false);
-    }
-  };
 
   if (loading && !vendor) {
     return (
@@ -142,64 +114,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
   }
 
   // Allowed transitions based on current status
-  const currentStatus = vendor?.status || 'Pending';
-  const getActionButtons = () => {
-    switch (currentStatus) {
-      case 'Pending':
-      case 'Pending KYC Review':
-        return (
-          <>
-            <button className="btn btn-primary btn-sm" onClick={() => openStatusModal('Under Review')}>
-              <Clock size={14} /> Move to Under Review
-            </button>
-            <button className="btn btn-success btn-sm" onClick={() => openStatusModal('Active')}>
-              <CheckCircle2 size={14} /> Approve & Activate
-            </button>
-            <button className="btn btn-danger btn-sm" onClick={() => openStatusModal('Rejected')}>
-              <XCircle size={14} /> Reject Vendor
-            </button>
-          </>
-        );
-      case 'Under Review':
-        return (
-          <>
-            <button className="btn btn-success btn-sm" onClick={() => openStatusModal('Approved')}>
-              <CheckCircle2 size={14} /> Approve Vendor
-            </button>
-            <button className="btn btn-danger btn-sm" onClick={() => openStatusModal('Rejected')}>
-              <XCircle size={14} /> Reject Vendor
-            </button>
-          </>
-        );
-      case 'Approved':
-        return (
-          <button className="btn btn-success btn-sm" onClick={() => openStatusModal('Active')}>
-            <CheckCircle2 size={14} /> Activate Operations
-          </button>
-        );
-      case 'Active':
-        return (
-          <span style={{ fontSize: '0.8rem', color: '#166534', background: '#dcfce7', border: '1px solid #bbf7d0', padding: '6px 14px', borderRadius: 'var(--radius-sm)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <CheckCircle2 size={15} color="#16a34a" /> Operations Live & Active
-          </span>
-        );
-      case 'Inactive':
-        return (
-          <span style={{ fontSize: '0.8rem', color: '#991b1b', background: '#fee2e2', border: '1px solid #fecaca', padding: '6px 14px', borderRadius: 'var(--radius-sm)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <AlertCircle size={15} color="#dc2626" /> Deactivated (Admin Restricted)
-          </span>
-        );
-      case 'Rejected':
-        return (
-          <span style={{ fontSize: '0.8rem', color: '#991b1b', background: '#fee2e2', border: '1px solid #fecaca', padding: '6px 14px', borderRadius: 'var(--radius-sm)', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-            <XCircle size={15} color="#dc2626" /> Application Rejected
-          </span>
-        );
-      default:
-        return null;
-    }
-  };
-
+  
   // Masking helpers
   const maskText = (str, visibleStart = 2, visibleEnd = 2) => {
     if (!str) return '—';
@@ -289,7 +204,6 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
           {/* Right: Quick Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {getActionButtons()}
             <button
               className="btn btn-secondary btn-sm"
               onClick={toggleMask}
@@ -867,95 +781,6 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 display: 'block'
               }}
             />
-          </div>
-        </div>
-      )}
-
-      {/* ─── Status Transition Modal ─── */}
-      {statusModalOpen && (
-        <div className="modal-overlay" style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 9999,
-          background: 'rgba(0,0,0,0.5)',
-          backdropFilter: 'blur(3px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '16px'
-        }}>
-          <div className="modal-content" style={{
-            background: '#ffffff',
-            borderRadius: '16px',
-            width: '100%',
-            maxWidth: '520px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            overflow: 'hidden'
-          }}>
-            <div className="card-header" style={{ padding: '16px 20px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: 700, margin: 0 }}>
-                Update Vendor Status to: <span style={{ color: 'var(--primary)' }}>{targetStatus}</span>
-              </h3>
-            </div>
-            <form onSubmit={handleStatusSubmit} style={{ padding: '20px' }}>
-              {statusError && (
-                <div style={{
-                  padding: '10px 14px',
-                  background: '#fee2e2',
-                  border: '1px solid #fca5a5',
-                  borderRadius: 'var(--radius-sm)',
-                  color: '#b91c1c',
-                  marginBottom: '16px',
-                  fontSize: '0.85rem'
-                }}>
-                  {statusError}
-                </div>
-              )}
-
-              <div className="form-group" style={{ marginBottom: '16px' }}>
-                <label className="form-label" style={{ display: 'block', fontSize: '0.8rem', fontWeight: 600, marginBottom: '6px' }}>
-                  Verification Notes / Reason {targetStatus === 'Rejected' && '*'}
-                </label>
-                <textarea
-                  rows={3}
-                  className="form-textarea"
-                  style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid var(--border)',
-                    outline: 'none',
-                    fontSize: '0.85rem',
-                    boxSizing: 'border-box'
-                  }}
-                  placeholder={
-                    targetStatus === 'Rejected'
-                      ? 'Please specify rejection reasons (e.g. invalid GST, illegible document)'
-                      : 'Add verification notes or operational comments'
-                  }
-                  required={targetStatus === 'Rejected'}
-                  value={statusNotes}
-                  onChange={(e) => setStatusNotes(e.target.value)}
-                />
-              </div>
-
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px' }}>
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm"
-                  onClick={() => setStatusModalOpen(false)}
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className={`btn btn-sm ${targetStatus === 'Rejected' ? 'btn-danger' : 'btn-primary'}`}
-                  disabled={statusUpdating}
-                >
-                  {statusUpdating ? 'Updating...' : `Confirm ${targetStatus}`}
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       )}
