@@ -92,8 +92,14 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
   const handleCloseReasonSubmit = async () => {
     if (!validateCommonFields()) return;
 
-    if (!voiceNote) {
-      setError('Voice Note is mandatory. Please record or upload an audio note explaining the reason.');
+    const isOther = reason === 'Other (specify below)';
+    const hasPredefinedReason = reason && reason.trim().length > 0 && !isOther;
+    const hasOtherReason = isOther && customReason?.trim().length > 0;
+    const hasWrittenReason = hasPredefinedReason || hasOtherReason;
+    const hasAudioVoiceNote = !!voiceNote;
+
+    if (!hasWrittenReason && !hasAudioVoiceNote) {
+      setError('Please provide a reason or a voice note.');
       return;
     }
 
@@ -693,11 +699,14 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
                       </div>
                     )}
 
-                    {/* Mandatory Voice Note */}
+                    {/* Optional Voice Note */}
                     <div>
-                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#7f1d1d', marginBottom: 6 }}>
-                        Mandatory Audio Voice Note <span style={{ color: '#ef4444' }}>*</span>
+                      <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#7f1d1d', marginBottom: 4 }}>
+                        Audio Voice Note
                       </label>
+                      <p style={{ margin: '0 0 8px', fontSize: 11, color: '#991b1b' }}>
+                        Optional — add a voice note if additional explanation is needed.
+                      </p>
                       <VoiceRecorder
                         onAudioRecorded={(url) => {
                           setVoiceNote(url);

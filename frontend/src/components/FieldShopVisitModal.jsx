@@ -51,7 +51,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
   const [interestStatus, setInterestStatus]   = useState(''); // 'YES' | 'NO'
 
   // NOT-interested sub-fields
-  const [notInterestedReason, setNotInterestedReason] = useState(NOT_INTERESTED_REASONS[0]);
+  const [notInterestedReason, setNotInterestedReason] = useState('');
   const [otherReason, setOtherReason]         = useState('');
   const [audioVoiceNote, setAudioVoiceNote]   = useState('');
 
@@ -124,12 +124,19 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
     if (!interestStatus)        errs.interestStatus = 'Please select merchant interest status.';
 
     if (interestStatus === 'NO') {
-      if (!notInterestedReason) errs.notInterestedReason = 'Please select a reason.';
-      if (isOtherReason && !otherReason.trim()) {
-        errs.otherReason = 'Please specify the reason.';
-      }
-      if (isOtherReason && !audioVoiceNote) {
-        errs.audioVoiceNote = 'Audio voice note is mandatory when selecting "Other".';
+      const isOther = notInterestedReason === 'Other (specify below)';
+      const hasPredefinedReason = notInterestedReason && notInterestedReason.trim().length > 0 && !isOther;
+      const hasOtherReason = isOther && otherReason?.trim().length > 0;
+      const hasWrittenReason = hasPredefinedReason || hasOtherReason;
+      const hasAudioVoiceNote = !!audioVoiceNote;
+
+      const canSubmit = hasWrittenReason || hasAudioVoiceNote;
+
+      if (!canSubmit) {
+        errs.notInterestedReason = 'Please provide a reason or a voice note.';
+        if (isOther && !hasAudioVoiceNote) {
+          errs.otherReason = 'Please specify reason or provide a voice note.';
+        }
       }
     }
 
@@ -158,7 +165,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
         interestedStatus:   interestStatus,
         interestStatus:     interestStatus,
         notInterestedReason: interestStatus === 'NO'
-          ? (isOtherReason ? 'Other (specify below)' : notInterestedReason)
+          ? (isOtherReason && otherReason.trim() ? otherReason.trim() : (notInterestedReason || (audioVoiceNote ? 'Not Interested (Audio Provided)' : 'Not specified')))
           : 'Interested in Onboarding',
         otherReason:    isOtherReason ? otherReason.trim() : null,
         voiceNote:      interestStatus === 'NO' ? (audioVoiceNote || null) : null,
@@ -572,6 +579,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                       background: '#ffffff', color: '#0f172a',
                     }}
                   >
+                    <option value="">-- Select a reason (or leave blank if providing voice note) --</option>
                     {NOT_INTERESTED_REASONS.map(r => (
                       <option key={r} value={r}>{r}</option>
                     ))}
@@ -590,7 +598,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                       display: 'block', fontSize: '0.78rem', fontWeight: 700,
                       color: '#7f1d1d', marginBottom: 6,
                     }}>
-                      Specify Reason <span style={{ color: '#ef4444' }}>*</span>
+                      Specify Reason {!audioVoiceNote && <span style={{ color: '#ef4444' }}>*</span>}
                     </label>
                     <textarea
                       rows={2}
@@ -616,34 +624,30 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                   </div>
                 )}
 
-                {/* Audio Voice Note — mandatory for "Other" */}
-                {isOtherReason && (
-                  <div>
-                    <label style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: '0.78rem', fontWeight: 700,
-                      color: '#7f1d1d', marginBottom: 8,
-                    }}>
-                      <Mic size={14} />
-                      Mandatory Audio Voice Note <span style={{ color: '#ef4444' }}>*</span>
-                    </label>
-                    <VoiceRecorder
-                      onAudioRecorded={url => {
-                        setAudioVoiceNote(url || '');
-                        setFieldErrors(p => ({ ...p, audioVoiceNote: '' }));
-                      }}
-                      onVoiceNoteUploaded={url => {
-                        setAudioVoiceNote(url || '');
-                        setFieldErrors(p => ({ ...p, audioVoiceNote: '' }));
-                      }}
-                    />
-                    {fieldErrors.audioVoiceNote && (
-                      <p style={{ color: '#ef4444', fontSize: '0.73rem', margin: '8px 0 0', fontWeight: 600 }}>
-                        {fieldErrors.audioVoiceNote}
-                      </p>
-                    )}
-                  </div>
-                )}
+                {/* Audio Voice Note — Optional for Not Interested */}
+                <div>
+                  <label style={{
+                    display: 'flex', alignItems: 'center', gap: 6,
+                    fontSize: '0.78rem', fontWeight: 700,
+                    color: '#7f1d1d', marginBottom: 4,
+                  }}>
+                    <Mic size={14} />
+                    Audio Voice Note
+                  </label>
+                  <p style={{ margin: '0 0 10px', fontSize: '0.74rem', color: '#991b1b' }}>
+                    Optional — add a voice note if additional explanation is needed.
+                  </p>
+                  <VoiceRecorder
+                    onAudioRecorded={url => {
+                      setAudioVoiceNote(url || '');
+                      setFieldErrors(p => ({ ...p, notInterestedReason: '', otherReason: '', audioVoiceNote: '' }));
+                    }}
+                    onVoiceNoteUploaded={url => {
+                      setAudioVoiceNote(url || '');
+                      setFieldErrors(p => ({ ...p, notInterestedReason: '', otherReason: '', audioVoiceNote: '' }));
+                    }}
+                  />
+                </div>
               </div>
             )}
           </div>

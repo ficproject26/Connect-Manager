@@ -7,7 +7,6 @@ import {
   Filter, 
   PlusCircle, 
   Eye, 
-  Edit3, 
   ChevronLeft, 
   ChevronRight, 
   RotateCcw,
@@ -300,22 +299,14 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     <StatusBadge status={v.status} />
                   </td>
                   <td style={{ textAlign: 'center', paddingRight: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                       <button
                         className="btn btn-outline-primary btn-sm"
                         title="View Details"
                         onClick={() => onNavigate('vendor-details', { vendorId: v._id })}
-                        style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: 600 }}
+                        style={{ padding: '5px 12px', fontSize: '0.76rem', fontWeight: 600 }}
                       >
                         <Eye size={13} /> View
-                      </button>
-                      <button
-                        className="btn btn-secondary btn-sm"
-                        title="Edit Details"
-                        onClick={() => onNavigate('edit-vendor', { vendorId: v._id })}
-                        style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: 600 }}
-                      >
-                        <Edit3 size={13} /> Edit
                       </button>
                     </div>
                   </td>

@@ -204,15 +204,6 @@ export const vendorService = {
     return handleResponse(res);
   },
 
-  async updateVendor(id, data) {
-    const res = await fetch(`${API_BASE}/vendors/${id}`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    });
-    return handleResponse(res);
-  },
-
   async updateStatus(id, status, notes = '') {
     const res = await fetch(`${API_BASE}/vendors/${id}/status`, {
       method: 'PATCH',

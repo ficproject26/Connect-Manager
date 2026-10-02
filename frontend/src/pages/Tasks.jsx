@@ -39,6 +39,23 @@ import { getDisplayValue, normalizeString } from '../utils/normalize';
 const Tasks = ({ onNavigate }) => {
   const { user } = useAuth();
   const isPincodeManager = (user?.role || '').toLowerCase().includes('pincode');
+
+  // Ownership rule: Only the assigned manager gets task execution rights.
+  // Hierarchical managers get territory visibility but read-only access.
+  const isAssignedToUser = (task) => {
+    if (!task) return false;
+    const taskMgrId = String(task.assignedManagerId || task.raw?.assignedManagerId || '');
+    const myIds = [
+      String(user?.id || ''),
+      String(user?._id || ''),
+      String(user?.managerId || ''),
+      String(user?.scope?.managerId || '')
+    ].filter(Boolean);
+    const idMatch = myIds.some(id => id && taskMgrId && id.toLowerCase() === taskMgrId.toLowerCase());
+    const nameMatch = Boolean(task.assignedTo && user?.name && task.assignedTo.trim().toLowerCase() === user.name.trim().toLowerCase());
+    const rawMgrName = Boolean(task.raw?.assignedManagerName && user?.name && task.raw.assignedManagerName.trim().toLowerCase() === user.name.trim().toLowerCase());
+    return Boolean(idMatch || nameMatch || rawMgrName);
+  };
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -128,6 +145,9 @@ const Tasks = ({ onNavigate }) => {
             createdByAdminName: t.createdByAdminName || 'System Admin',
             createdByAdminRole: t.createdByAdminRole || 'State Manager',
             qcIssueId: t.qcIssueId,
+            assignedManagerId: t.assignedManagerId || t.assignedAgentId || null,
+            assignmentStatus: t.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(t.status) ? 'ACCEPTED' : 'PENDING'),
+            executionStatus: t.executionStatus || (['Completed', 'Closed', 'Resolved'].includes(t.status) ? 'COMPLETED' : t.status === 'In Progress' ? 'IN_PROGRESS' : 'NOT_STARTED'),
             description: t.description || 'Field operational deliverable and compliance task.',
             remarks: t.remarks || '',
             completionDetails: t.completionDetails,
@@ -168,13 +188,28 @@ const Tasks = ({ onNavigate }) => {
   const handleDirectStatusChange = async (taskId, nextStatus) => {
     setActionLoading(true);
     try {
-      const res = await taskService.updateTaskStatus(taskId, undefined, { status: nextStatus });
+      const payload = {
+        status: nextStatus,
+        executionStatus: nextStatus === 'In Progress' ? 'IN_PROGRESS' : nextStatus === 'Completed' ? 'COMPLETED' : undefined,
+        actionPhoto: actionPhoto || selectedTask?.shopPhoto || null,
+        actionReason: actionReason || selectedTask?.remarks || null,
+        remarks: actionReason || selectedTask?.remarks || null
+      };
+      const res = await taskService.updateTaskStatus(taskId, undefined, payload);
       if (res && res.success) {
-        setSelectedTask(prev => prev ? { ...prev, status: nextStatus, progress: nextStatus === 'Completed' ? 100 : prev.progress } : null);
+        setSelectedTask(prev => prev ? {
+          ...prev,
+          status: nextStatus,
+          executionStatus: nextStatus === 'In Progress' ? 'IN_PROGRESS' : nextStatus === 'Completed' ? 'COMPLETED' : prev.executionStatus,
+          progress: nextStatus === 'Completed' ? 100 : nextStatus === 'In Progress' ? 50 : prev.progress
+        } : null);
         await fetchTasks();
+      } else {
+        alert(res?.message || 'Failed to update task status.');
       }
     } catch (err) {
       console.error('Failed to change status:', err);
+      alert(err.message || 'Failed to update task status.');
     } finally {
       setActionLoading(false);
     }
@@ -943,73 +978,61 @@ const Tasks = ({ onNavigate }) => {
                       {/* Action */}
                       <td style={{ padding: '14px 16px', textAlign: 'right' }}>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          {isPincodeManager && item.status === 'Pending Acceptance' && (
-                            <button
-                              onClick={() => handleUpdateStatus(item, 'accept')}
-                              style={{
-                                padding: '4px 10px',
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: '#2563eb',
-                                color: '#ffffff',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Accept
-                            </button>
-                          )}
-                          {isPincodeManager && ['Assigned', 'Accepted'].includes(item.status) && (
-                            <button
-                              onClick={() => openTaskModal(item)}
-                              style={{
-                                padding: '4px 10px',
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: '#4f46e5',
-                                color: '#ffffff',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Start
-                            </button>
-                          )}
-                          {isPincodeManager && item.status === 'Rework Required' && (
-                            <button
-                              onClick={() => openTaskModal(item)}
-                              style={{
-                                padding: '4px 10px',
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: '#e11d48',
-                                color: '#ffffff',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Start Rework
-                            </button>
-                          )}
-                          {isPincodeManager && item.status === 'In Progress' && (
-                            <button
-                              onClick={() => handleUpdateStatus(item, 'complete')}
-                              style={{
-                                padding: '4px 10px',
-                                fontSize: '0.74rem',
-                                fontWeight: 700,
-                                borderRadius: '6px',
-                                border: 'none',
-                                background: '#10b981',
-                                color: '#ffffff',
-                                cursor: 'pointer'
-                              }}
-                            >
-                              Complete
-                            </button>
+                          {/* Only the assigned manager gets task execution action buttons */}
+                          {isAssignedToUser(item) && (
+                            <>
+                              {['Assigned', 'Accepted'].includes(item.status) && (
+                                <button
+                                  onClick={() => openTaskModal(item)}
+                                  style={{
+                                    padding: '4px 10px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: '#4f46e5',
+                                    color: '#ffffff',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Start
+                                </button>
+                              )}
+                              {item.status === 'Rework Required' && (
+                                <button
+                                  onClick={() => openTaskModal(item)}
+                                  style={{
+                                    padding: '4px 10px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: '#e11d48',
+                                    color: '#ffffff',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Start Rework
+                                </button>
+                              )}
+                              {item.status === 'In Progress' && (
+                                <button
+                                  onClick={() => openTaskModal(item)}
+                                  style={{
+                                    padding: '4px 10px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: '#10b981',
+                                    color: '#ffffff',
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Complete
+                                </button>
+                              )}
+                            </>
                           )}
 
                           <button
@@ -1324,12 +1347,20 @@ const Tasks = ({ onNavigate }) => {
                             {/* 2. Start Work Action / Status Banner */}
               {(() => {
                 const status = selectedTask?.status;
+                const isAssigned = isAssignedToUser(selectedTask);
                 const isSuspended = ['Suspend Requested', 'Suspended'].includes(status);
                 const isCompleted = ['Completed', 'Resolved', 'Closed'].includes(status);
                 const isClosed = status === 'Closed';
                 const isInProgress = status === 'In Progress';
                 const isRework = status === 'Rework Required';
-                const canStart = !isSuspended && !isCompleted && !isInProgress;
+                const hasProofPhoto = Boolean(
+                  actionPhoto ||
+                  (selectedTask.photos && selectedTask.photos.length > 0 && selectedTask.photos[0] !== '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg') ||
+                  selectedTask.shopPhoto
+                );
+                const hasFieldRemarks = Boolean(actionReason && actionReason.trim().length > 0);
+                const mandatoryFieldsCompleted = hasProofPhoto && hasFieldRemarks;
+                const canStart = isAssigned && !isSuspended && !isCompleted && !isInProgress;
 
                 let bg = '#eff6ff';
                 let border = '1px solid #bfdbfe';
@@ -1400,8 +1431,9 @@ const Tasks = ({ onNavigate }) => {
                     {canStart && !isRework && (
                       <button
                         type="button"
-                        onClick={handleReworkSubmit}
-                        disabled={actionLoading}
+                        onClick={() => handleDirectStatusChange(selectedTask._id, 'In Progress')}
+                        disabled={actionLoading || !mandatoryFieldsCompleted}
+                        title={!mandatoryFieldsCompleted ? 'Upload photo proof and enter field remarks before starting work.' : 'Start work on this task'}
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1409,16 +1441,16 @@ const Tasks = ({ onNavigate }) => {
                           padding: '8px 16px',
                           borderRadius: '8px',
                           border: 'none',
-                          background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
-                          color: '#ffffff',
+                          background: mandatoryFieldsCompleted ? 'linear-gradient(135deg, #4f46e5, #4338ca)' : '#cbd5e1',
+                          color: mandatoryFieldsCompleted ? '#ffffff' : '#64748b',
                           fontSize: '0.84rem',
                           fontWeight: 700,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer',
-                          boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
+                          cursor: (mandatoryFieldsCompleted && !actionLoading) ? 'pointer' : 'not-allowed',
+                          boxShadow: mandatoryFieldsCompleted ? '0 2px 6px rgba(79, 70, 229, 0.3)' : 'none'
                         }}
                       >
                         <Play size={14} />
-                        <span>{actionLoading ? 'Starting...' : 'Start Work'}</span>
+                        <span>{actionLoading ? 'Starting...' : mandatoryFieldsCompleted ? 'Start Work' : 'Start Work (Locked)'}</span>
                       </button>
                     )}
                     {isPincodeManager && canStart && isRework && !reworkMode && (
@@ -1644,12 +1676,12 @@ const Tasks = ({ onNavigate }) => {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     <Camera size={16} style={{ color: selectedTask?.status === 'Rework Required' ? '#be123c' : '#2563eb' }} />
-                    <span>{!isPincodeManager ? 'Pincode Manager Field Photo (Read-Only)' : selectedTask?.status === 'Rework Required' ? 'Previous Field Photo (Read-Only)' : ['Completed','Resolved','Closed'].includes(selectedTask?.status) ? 'Photo Proof (Read-Only)' : 'Photo Upload'}</span>
+                    <span>{!isAssignedToUser(selectedTask) ? 'Field Photo (Read-Only)' : selectedTask?.status === 'Rework Required' ? 'Previous Field Photo (Read-Only)' : ['Completed','Resolved','Closed'].includes(selectedTask?.status) ? 'Photo Proof (Read-Only)' : 'Photo Upload'}</span>
                     {selectedTask?.status === 'Rework Required' && (
                       <span style={{ fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '20px', border: '1px solid #fecaca' }}>ORIGINAL WORK</span>
                     )}
                   </div>
-                  {isPincodeManager && !['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status) && (
+                  {isAssignedToUser(selectedTask) && !['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status) && (
                     <>
                       <label
                         htmlFor="task-action-photo-input"
@@ -1732,10 +1764,10 @@ const Tasks = ({ onNavigate }) => {
                     </div>
                   </div>
                 ) : (
-                  (!isPincodeManager || ['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status)) ? (
+                  (!isAssignedToUser(selectedTask) || ['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status)) ? (
                     <div style={{ height: '70px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
                       <Camera size={20} style={{ color: '#cbd5e1' }} />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{!isPincodeManager ? 'No field photo submitted yet by Pincode Manager' : selectedTask?.status === 'Rework Required' ? 'No previous field photo recorded' : 'No field photo captured'}</span>
+                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{!isAssignedToUser(selectedTask) ? 'No field photo submitted yet by assigned manager' : selectedTask?.status === 'Rework Required' ? 'No previous field photo recorded' : 'No field photo captured'}</span>
                     </div>
                   ) : (
                     <label
@@ -1773,7 +1805,7 @@ const Tasks = ({ onNavigate }) => {
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
                   <FileText size={16} style={{ color: '#d97706' }} />
                   <span>
-                    {!isPincodeManager ? 'Pincode Manager Field Remarks (Read-Only)' : selectedTask?.status === 'Rework Required' ? 'Previous Field Remarks (Read-Only)' : ['Completed','Resolved','Closed'].includes(selectedTask?.status) ? 'Field Remarks (Read-Only)' : 'Reason / Field Remarks'}
+                    {!isAssignedToUser(selectedTask) ? 'Field Remarks (Read-Only)' : selectedTask?.status === 'Rework Required' ? 'Previous Field Remarks (Read-Only)' : ['Completed','Resolved','Closed'].includes(selectedTask?.status) ? 'Field Remarks (Read-Only)' : 'Reason / Field Remarks'}
                   </span>
                   {selectedTask?.status === 'Rework Required' && (
                     <span style={{ marginLeft: '6px', fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '20px', border: '1px solid #fecaca' }}>ORIGINAL SUBMISSION</span>
@@ -1782,7 +1814,7 @@ const Tasks = ({ onNavigate }) => {
                     <span style={{ marginLeft: '6px', fontSize: '10px', fontWeight: 700, background: selectedTask?.status === 'Closed' ? '#f1f5f9' : '#dcfce7', color: selectedTask?.status === 'Closed' ? '#334155' : '#15803d', padding: '2px 8px', borderRadius: '20px', border: selectedTask?.status === 'Closed' ? '1px solid #cbd5e1' : '1px solid #86efac' }}>{selectedTask?.status === 'Closed' ? 'CLOSED' : 'COMPLETED'}</span>
                   )}
                 </div>
-                {(!isPincodeManager || ['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status)) ? (
+                {(!isAssignedToUser(selectedTask) || ['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status)) ? (
                   <div style={{
                     width: '100%',
                     padding: '10px 12px',
@@ -1853,27 +1885,54 @@ const Tasks = ({ onNavigate }) => {
               flexWrap: 'wrap',
               gap: '10px'
             }}>
-              {/* Decision Action Buttons â€” hidden for completed/terminal tasks */}
+              {/* Decision Action Buttons — Controlled by Ownership & Mandatory Validation */}
               {(() => {
-                if (!isPincodeManager) {
+                const isAssigned = isAssignedToUser(selectedTask);
+                const hasProofPhoto = Boolean(
+                  actionPhoto ||
+                  (selectedTask.photos && selectedTask.photos.length > 0 && selectedTask.photos[0] !== '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg') ||
+                  selectedTask.shopPhoto
+                );
+                const hasFieldRemarks = Boolean(actionReason && actionReason.trim().length > 0);
+                const mandatoryFieldsCompleted = hasProofPhoto && hasFieldRemarks;
+
+                // Rule: Non-assigned Managers get NO execution action buttons. Read-only only.
+                if (!isAssigned) {
                   return (
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      background: '#f8fafc',
-                      border: '1px solid #e2e8f0',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      color: '#475569'
-                    }}>
-                      <ShieldCheck size={16} style={{ color: '#0284c7' }} />
-                      <span>Viewing Work of Pincode Manager: {selectedTask.assignedTo || 'Shiva'}</span>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        background: '#f8fafc',
+                        border: '1px solid #e2e8f0',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        color: '#475569'
+                      }}>
+                        <ShieldCheck size={16} style={{ color: '#0284c7' }} />
+                        <span>Assigned Manager: {selectedTask.assignedTo || selectedTask.assignedManagerName || 'Assigned Manager'} (Read-Only)</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
+                        <span style={{
+                          padding: '5px 12px',
+                          borderRadius: '6px',
+                          background: '#eff6ff',
+                          color: '#1d4ed8',
+                          fontSize: '0.82rem',
+                          fontWeight: 800,
+                          border: '1px solid #bfdbfe'
+                        }}>
+                          {selectedTask.status || 'Accepted'}
+                        </span>
+                      </div>
                     </div>
                   );
                 }
+
                 if (selectedTask?.status === 'Rework Required') {
                   return (
                     <div style={{
@@ -1888,10 +1947,11 @@ const Tasks = ({ onNavigate }) => {
                       fontWeight: 700,
                       color: '#be123c'
                     }}>
-                      <RefreshCw size={14} /> Rework Required â€” Previous work is preserved above
+                      <RefreshCw size={14} /> Rework Required — Previous work is preserved above
                     </div>
                   );
                 }
+
                 const isTerminal = ['Completed', 'Resolved', 'Closed', 'Suspend Requested', 'Suspended'].includes(selectedTask?.status);
                 if (isTerminal) {
                   const isCompleted = selectedTask?.status === 'Completed' || selectedTask?.status === 'Resolved';
@@ -1909,77 +1969,107 @@ const Tasks = ({ onNavigate }) => {
                       color: isCompleted ? '#15803d' : '#c2410c'
                     }}>
                       {selectedTask?.status === 'Closed' ? (
-                        <><CheckCircle2 size={16} /> Task Closed (Accepted by Admin) â€” No further actions required</>
+                        <><CheckCircle2 size={16} /> Task Closed (Accepted by Admin) — Completed</>
                       ) : isCompleted ? (
-                        <><CheckCircle2 size={16} /> Task Completed â€” No further actions required</>
+                        <><CheckCircle2 size={16} /> Task Completed — All Work Submitted</>
                       ) : (
-                        <><AlertCircle size={16} /> Suspension Requested â€” Awaiting Review</>
+                        <><AlertCircle size={16} /> Suspension Requested — Awaiting Review</>
                       )}
                     </div>
                   );
                 }
+
                 return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                    {/* Status Changer Dropdown */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                    {/* Admin Status Display (Read-Only — Manager cannot change Admin acceptance) */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '0.76rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
-                      <select
-                        value={selectedTask.status}
-                        disabled={actionLoading}
-                        onChange={(e) => handleDirectStatusChange(selectedTask._id, e.target.value)}
-                        style={{
-                          padding: '7px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid var(--border)',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          background: '#ffffff',
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <option value="Assigned">Assigned</option>
-                        <option value="Accepted">Accepted</option>
-                        <option value="In Progress">In Progress</option>
-                        <option value="Pending">Pending</option>
-                        <option value="Completed">Completed</option>
-                        <option value="Rejected">Rejected</option>
-                        <option value="Cancelled">Cancelled</option>
-                        <option value="Overdue">Overdue</option>
-                        <option value="Suspended">Suspended</option>
-                      </select>
+                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
+                      <span style={{
+                        padding: '5px 12px',
+                        borderRadius: '6px',
+                        background: selectedTask.status === 'In Progress' ? '#ede9fe' : '#eff6ff',
+                        color: selectedTask.status === 'In Progress' ? '#6d28d9' : '#1d4ed8',
+                        fontSize: '0.82rem',
+                        fontWeight: 800,
+                        border: `1px solid ${selectedTask.status === 'In Progress' ? '#ddd6fe' : '#bfdbfe'}`
+                      }}>
+                        {selectedTask.status || 'Accepted'}
+                      </span>
                     </div>
 
-                    {/* Quick Complete */}
-                    {selectedTask.status !== 'Completed' && (
-                      <button
-                        type="button"
-                        disabled={actionLoading}
-                        onClick={() => handleDirectStatusChange(selectedTask._id, 'Completed')}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '8px 14px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
-                          color: '#ffffff',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        <CheckCircle2 size={14} />
-                        <span>Complete</span>
-                      </button>
-                    )}
+                    {/* Quick Complete:
+                        AVAILABLE only when: status === 'In Progress' AND mandatoryFieldsCompleted
+                        Otherwise: LOCKED / DISABLED
+                    */}
+                    <button
+                      type="button"
+                      disabled={actionLoading || selectedTask.status !== 'In Progress' || !mandatoryFieldsCompleted}
+                      onClick={() => handleDirectStatusChange(selectedTask._id, 'Completed')}
+                      title={
+                        selectedTask.status !== 'In Progress'
+                          ? 'Task must be In Progress before it can be marked as Completed.'
+                          : !mandatoryFieldsCompleted
+                            ? 'Complete the required task information before marking this task as completed.'
+                            : 'Mark Task as Completed'
+                      }
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted)
+                          ? 'linear-gradient(135deg, #10b981, #059669)'
+                          : '#e2e8f0',
+                        color: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted)
+                          ? '#ffffff'
+                          : '#94a3b8',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        cursor: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted && !actionLoading)
+                          ? 'pointer'
+                          : 'not-allowed',
+                        boxShadow: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted)
+                          ? '0 2px 6px rgba(16,185,129,0.3)'
+                          : 'none'
+                      }}
+                    >
+                      <CheckCircle2 size={14} />
+                      <span>{selectedTask.status !== 'In Progress' || !mandatoryFieldsCompleted ? 'Complete (Locked)' : 'Complete'}</span>
+                    </button>
 
-                    {/* Quick In Progress */}
-                    {selectedTask.status !== 'In Progress' && selectedTask.status !== 'Completed' && (
+                    {/* Quick In Progress:
+                        - ACTIVE if status === 'In Progress'
+                        - AVAILABLE if status !== 'In Progress' AND mandatoryFieldsCompleted
+                        - LOCKED if !mandatoryFieldsCompleted
+                    */}
+                    {selectedTask.status === 'In Progress' ? (
+                      <span style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '8px 14px',
+                        borderRadius: '8px',
+                        background: '#ede9fe',
+                        color: '#6d28d9',
+                        fontSize: '0.82rem',
+                        fontWeight: 800,
+                        border: '1px solid #ddd6fe'
+                      }}>
+                        <Play size={14} />
+                        <span>In Progress (Active)</span>
+                      </span>
+                    ) : (
                       <button
                         type="button"
-                        disabled={actionLoading}
+                        disabled={actionLoading || !mandatoryFieldsCompleted}
                         onClick={() => handleDirectStatusChange(selectedTask._id, 'In Progress')}
+                        title={
+                          !mandatoryFieldsCompleted
+                            ? 'Complete the required task information (photo & remarks) before starting work.'
+                            : 'Start work on this task'
+                        }
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
@@ -1987,41 +2077,27 @@ const Tasks = ({ onNavigate }) => {
                           padding: '8px 14px',
                           borderRadius: '8px',
                           border: 'none',
-                          background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-                          color: '#ffffff',
+                          background: mandatoryFieldsCompleted
+                            ? 'linear-gradient(135deg, #6366f1, #4f46e5)'
+                            : '#e2e8f0',
+                          color: mandatoryFieldsCompleted
+                            ? '#ffffff'
+                            : '#94a3b8',
                           fontSize: '0.82rem',
                           fontWeight: 700,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer'
+                          cursor: (mandatoryFieldsCompleted && !actionLoading) ? 'pointer' : 'not-allowed',
+                          boxShadow: mandatoryFieldsCompleted ? '0 2px 6px rgba(99,102,241,0.3)' : 'none'
                         }}
                       >
                         <Play size={14} />
-                        <span>In Progress</span>
+                        <span>{mandatoryFieldsCompleted ? 'In Progress' : 'In Progress (Locked)'}</span>
                       </button>
                     )}
 
-                    {/* Quick Accept */}
-                    {selectedTask.status === 'Assigned' && (
-                      <button
-                        type="button"
-                        disabled={actionLoading}
-                        onClick={() => handleDirectStatusChange(selectedTask._id, 'Accepted')}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '8px 14px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #0284c7, #0369a1)',
-                          color: '#ffffff',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer'
-                        }}
-                      >
-                        <Check size={14} />
-                        <span>Accept</span>
-                      </button>
+                    {!mandatoryFieldsCompleted && (
+                      <span style={{ fontSize: '0.74rem', color: '#dc2626', fontWeight: 600 }}>
+                        * Photo proof & remarks required to unlock actions
+                      </span>
                     )}
                   </div>
                 );

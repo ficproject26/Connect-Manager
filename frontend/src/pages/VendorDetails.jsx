@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { vendorService } from '../services/api';
 import { 
   ArrowLeft, 
-  Edit3, 
   ShieldCheck, 
   FileText, 
   Building, 
@@ -298,13 +297,6 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
             >
               {unmasked ? <><EyeOff size={14} /> Mask Sensitive</> : <><Eye size={14} /> Reveal Full Data</>}
-            </button>
-            <button
-              className="btn btn-primary btn-sm"
-              onClick={() => onNavigate('edit-vendor', { vendorId: vendor._id })}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
-            >
-              <Edit3 size={14} /> Edit Vendor
             </button>
           </div>
         </div>

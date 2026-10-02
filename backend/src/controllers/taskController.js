@@ -63,11 +63,21 @@ const getTasks = async (req, res) => {
     // Sort by createdAt descending
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
+    const enriched = filtered.map(t => {
+      const assignmentStatus = t.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(t.status) ? 'ACCEPTED' : (t.status === 'Rejected' ? 'REJECTED' : t.status === 'Cancelled' ? 'CANCELLED' : 'ACCEPTED'));
+      const executionStatus = t.executionStatus || (['Completed', 'Closed', 'Resolved'].includes(t.status) ? 'COMPLETED' : t.status === 'In Progress' ? 'IN_PROGRESS' : 'NOT_STARTED');
+      return {
+        ...t,
+        assignmentStatus,
+        executionStatus
+      };
+    });
+
     res.json({
       success: true,
-      count: filtered.length,
-      data: filtered,
-      tasks: filtered
+      count: enriched.length,
+      data: enriched,
+      tasks: enriched
     });
   } catch (err) {
     console.error('Error fetching tasks:', err);
@@ -107,12 +117,15 @@ const createTask = async (req, res) => {
       category: category || 'Physical QC Audit',
       priority: priority || 'Medium',
       dueDate: dueDate || new Date(Date.now() + 86400000 * 3).toISOString(),
-      assignedDate: new Date().toISOString(),
       status: 'Assigned',
+      assignmentStatus: 'ACCEPTED',
+      executionStatus: 'NOT_STARTED',
       progress: 0,
-      assignedManagerId: user.id,
-      assignedManagerName: assignedTo || user.name,
+      assignedManagerId: req.body.assignedManagerId || user.id,
+      assignedManagerName: assignedTo || req.body.assignedManagerName || user.name,
+      assignedManagerLevel: req.body.assignedManagerLevel || user.level || user.role,
       assignedManagerRole: assignedManagerRole || user.role,
+      assignedTerritory: req.body.assignedTerritory || user.territory || null,
       assignedAgentId: req.body.assignedAgentId || null,
       assignedAgentName: req.body.assignedAgentName || null,
       assignedAgentRole: req.body.assignedAgentRole || null,
@@ -181,15 +194,129 @@ const updateTaskStatus = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Task not found in database' });
     }
 
-    let nextStatus = task.status;
-    let updateFields = {};
+    // ── Primary Ownership & Authorization Check ──
+    const isAssignedManager = Boolean(
+      (task.assignedManagerId && [String(user.id), String(user._id), String(user.managerId)].includes(String(task.assignedManagerId))) ||
+      (task.assignedManagerName && user.name && task.assignedManagerName.trim().toLowerCase() === user.name.trim().toLowerCase())
+    );
+
+    const isAdmin = ['admin', 'system_admin', 'state_manager'].includes(user.role) ||
+      (task.createdByAdminId && [String(user.id), String(user._id), String(user.managerId)].includes(String(task.createdByAdminId)));
 
     const { status: directStatus, progress, completionPercentage } = req.body;
 
+    // ── Rule: Administrative Acceptance is Controlled by Admin ──
+    const isAdminAction = Boolean(
+      req.body.assignmentStatus ||
+      ['accept', 'reject', 'cancel'].includes(action) ||
+      ['Accepted', 'Rejected', 'Cancelled', 'Pending'].includes(directStatus)
+    );
+
+    if (isAdminAction && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Unauthorized: Administrative assignment status is controlled by Admin.'
+      });
+    }
+
+    // ── Rule: Only Assigned Manager Can Execute the Task ──
+    const isExecutionAction = Boolean(
+      req.body.executionStatus ||
+      ['start', 'in_progress', 'complete', 'resolve', 'solved', 'rework', 'suspend'].includes(action) ||
+      ['In Progress', 'Completed', 'Rework Required', 'Suspended'].includes(directStatus) ||
+      reworkPhoto ||
+      completionPhotos
+    );
+
+    const currentAssignmentStatus = task.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(task.status) ? 'ACCEPTED' : 'PENDING');
+    const currentExecutionStatus = task.executionStatus || (['Completed', 'Closed', 'Resolved'].includes(task.status) ? 'COMPLETED' : task.status === 'In Progress' ? 'IN_PROGRESS' : 'NOT_STARTED');
+
+    if (isExecutionAction) {
+      if (!isAssignedManager) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized: Only the assigned manager can execute this task or update its status.'
+        });
+      }
+
+      if (currentAssignmentStatus !== 'ACCEPTED') {
+        return res.status(400).json({
+          success: false,
+          message: 'Task must be accepted by Admin before work can begin.'
+        });
+      }
+
+      const isStarting = action === 'start' || action === 'in_progress' || directStatus === 'In Progress' || req.body.executionStatus === 'IN_PROGRESS';
+      const isCompleting = action === 'complete' || action === 'resolve' || action === 'solved' || directStatus === 'Completed' || req.body.executionStatus === 'COMPLETED';
+
+      // Verify mandatory task fields: photo and remarks
+      const hasPhoto = Boolean(
+        req.body.shopPhoto ||
+        req.body.actionPhoto ||
+        (req.body.photos && req.body.photos.length > 0) ||
+        task.shopPhoto ||
+        (task.photos && task.photos.length > 0) ||
+        (task.completionDetails?.completionPhotos && task.completionDetails.completionPhotos.length > 0) ||
+        (completionPhotos && completionPhotos.length > 0) ||
+        reworkPhoto
+      );
+
+      const hasRemarks = Boolean(
+        (remarks && remarks.trim().length > 0) ||
+        (req.body.actionReason && req.body.actionReason.trim().length > 0) ||
+        (task.remarks && task.remarks.trim().length > 0) ||
+        (resolutionDetails && resolutionDetails.trim().length > 0) ||
+        (reworkRemarks && reworkRemarks.trim().length > 0)
+      );
+
+      // Transition check: NOT_STARTED -> IN_PROGRESS
+      if (isStarting) {
+        if (!hasPhoto || !hasRemarks) {
+          return res.status(400).json({
+            success: false,
+            message: 'Mandatory task data required: Please attach photo proof and enter field remarks before starting work.'
+          });
+        }
+      }
+
+      // Transition check: IN_PROGRESS -> COMPLETED (Prevent direct NOT_STARTED -> COMPLETED)
+      if (isCompleting) {
+        if (currentExecutionStatus !== 'IN_PROGRESS' && task.status !== 'In Progress') {
+          return res.status(400).json({
+            success: false,
+            message: 'Task must be In Progress before it can be marked as Completed.'
+          });
+        }
+        if (!hasPhoto || !hasRemarks) {
+          return res.status(400).json({
+            success: false,
+            message: 'Complete the required task information before marking this task as completed.'
+          });
+        }
+      }
+    }
+
+    let nextStatus = task.status;
+    let nextAssignmentStatus = currentAssignmentStatus;
+    let nextExecutionStatus = currentExecutionStatus;
+    let updateFields = {};
+
     if (directStatus && ['Assigned', 'Accepted', 'In Progress', 'Pending', 'Completed', 'Rejected', 'Cancelled', 'Overdue', 'Suspended', 'Rework'].includes(directStatus)) {
       nextStatus = directStatus;
+      if (directStatus === 'In Progress') {
+        nextExecutionStatus = 'IN_PROGRESS';
+      } else if (directStatus === 'Completed') {
+        nextExecutionStatus = 'COMPLETED';
+      } else if (directStatus === 'Accepted') {
+        nextAssignmentStatus = 'ACCEPTED';
+      } else if (directStatus === 'Rejected') {
+        nextAssignmentStatus = 'REJECTED';
+      } else if (directStatus === 'Cancelled') {
+        nextAssignmentStatus = 'CANCELLED';
+      }
     } else if (action === 'start' || action === 'in_progress' || action === 'not_solved') {
       nextStatus = 'In Progress';
+      nextExecutionStatus = 'IN_PROGRESS';
       if (reworkPhoto || reworkAudio || reworkRemarks) {
         updateFields.reworkDetails = {
           reworkPhoto: reworkPhoto || task.reworkDetails?.reworkPhoto || '',
@@ -200,10 +327,11 @@ const updateTaskStatus = async (req, res) => {
       }
     } else if (action === 'complete' || action === 'resolve' || action === 'solved') {
       nextStatus = 'Completed';
+      nextExecutionStatus = 'COMPLETED';
       updateFields.completionDetails = {
         workCompleted: remarks || resolutionDetails || 'Operational task resolved on-site.',
         resolutionDetails: resolutionDetails || remarks || '',
-        completionPhotos: completionPhotos || [],
+        completionPhotos: completionPhotos || (req.body.actionPhoto ? [req.body.actionPhoto] : []),
         completedAt: new Date().toISOString(),
         completedBy: user.name
       };
@@ -211,12 +339,16 @@ const updateTaskStatus = async (req, res) => {
       updateFields.progress = 100;
     } else if (action === 'accept') {
       nextStatus = 'Accepted';
+      nextAssignmentStatus = 'ACCEPTED';
     } else if (action === 'reject') {
       nextStatus = 'Rejected';
+      nextAssignmentStatus = 'REJECTED';
     } else if (action === 'cancel') {
       nextStatus = 'Cancelled';
+      nextAssignmentStatus = 'CANCELLED';
     } else if (action === 'pending') {
       nextStatus = 'Pending';
+      nextAssignmentStatus = 'PENDING';
     } else if (action === 'rework') {
       nextStatus = 'Rework';
       updateFields.reworkDetails = {
@@ -228,6 +360,17 @@ const updateTaskStatus = async (req, res) => {
     } else if (action === 'suspend') {
       nextStatus = 'Suspended';
     }
+
+    if (req.body.actionPhoto) {
+      updateFields.shopPhoto = req.body.actionPhoto;
+      updateFields.photos = [req.body.actionPhoto];
+    }
+    if (req.body.actionReason) {
+      updateFields.remarks = req.body.actionReason;
+    }
+
+    updateFields.assignmentStatus = nextAssignmentStatus;
+    updateFields.executionStatus = nextExecutionStatus;
 
     if (progress !== undefined || completionPercentage !== undefined) {
       updateFields.progress = Number(progress !== undefined ? progress : completionPercentage);
@@ -243,11 +386,19 @@ const updateTaskStatus = async (req, res) => {
     await db.auditLogs.insertOne({
       action: `Task ${nextStatus}`,
       recordId: id,
+      taskId: task.taskNumber || id,
       recordType: 'task',
       userId: user.id,
       userName: user.name,
       userRole: user.role,
-      details: `Task ${task.taskNumber || id} status changed to ${nextStatus}`,
+      actorId: user.id,
+      actorRole: user.role,
+      actorManagerLevel: user.level || user.role,
+      previousStatus: task.status,
+      newStatus: nextStatus,
+      assignmentStatus: nextAssignmentStatus,
+      executionStatus: nextExecutionStatus,
+      details: `Task ${task.taskNumber || id} status changed from ${task.status} to ${nextStatus}`,
       timestamp: new Date().toISOString()
     });
 

@@ -101,6 +101,18 @@ const createShopVisit = async (req, res) => {
     const resolvedReason = notInterestedReason || (resolvedStatus === 'YES' ? 'Interested in Onboarding' : 'Not specified');
     const resolvedOther = otherReason || customReason || null;
 
+    if (resolvedStatus === 'NO') {
+      const isOther = resolvedReason === 'Other (specify below)' || resolvedReason === 'OTHER';
+      const hasPredefinedReason = resolvedReason && resolvedReason !== 'Not specified' && !isOther;
+      const hasOtherReason = isOther && resolvedOther && resolvedOther.trim().length > 0;
+      const hasWrittenReason = hasPredefinedReason || hasOtherReason;
+      const hasAudio = !!resolvedVoice;
+
+      if (!hasWrittenReason && !hasAudio) {
+        return res.status(400).json({ success: false, message: 'Please provide a reason or a voice note.' });
+      }
+    }
+
     // Idempotency: check for duplicate visit created within last 15 seconds by this manager
     const fifteenSecsAgo = new Date(Date.now() - 15000);
     const existingVisits = await db.shopVisits.find();

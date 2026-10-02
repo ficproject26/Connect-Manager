@@ -17,7 +17,6 @@ import Leaderboard from './pages/Leaderboard';
 import Notifications from './pages/Notifications';
 import AddVendor from './pages/AddVendor';
 import VendorForm from './components/VendorForm';
-import EditVendor from './pages/EditVendor';
 import VendorDetails from './pages/VendorDetails';
 import Reports from './pages/Reports';
 import AuditLogs from './pages/AuditLogs';
@@ -302,8 +301,7 @@ function AppInner() {
               </div>
             </div>
           )}
-          {currentPage === 'edit-vendor' && <EditVendor vendorId={navParams.vendorId} onNavigate={navigate} />}
-          {currentPage === 'vendor-details' && <VendorDetails vendorId={navParams.vendorId} onNavigate={navigate} />}
+                    {currentPage === 'vendor-details' && <VendorDetails vendorId={navParams.vendorId} onNavigate={navigate} />}
           {currentPage === 'reports' && <Reports onNavigate={navigate} initialTab={navParams.tab || 'vendors'} />}
           {currentPage === 'audit-logs' && <AuditLogs onNavigate={navigate} />}
           {currentPage === 'profile' && <Profile onNavigate={navigate} />}

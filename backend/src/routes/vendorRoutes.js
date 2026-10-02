@@ -18,9 +18,6 @@ router.post('/', validateVendorCreationScope, vendorController.createVendor);
 // GET /api/vendors/:id - Detail view (scope verified)
 router.get('/:id', verifyVendorScope, vendorController.getVendorById);
 
-// PUT /api/vendors/:id - Edit vendor (scope verified)
-router.put('/:id', verifyVendorScope, vendorController.updateVendor);
-
 // PATCH /api/vendors/:id/status - Status transition (scope verified)
 router.patch('/:id/status', verifyVendorScope, vendorController.updateVendorStatus);
 
