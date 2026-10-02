@@ -27,6 +27,7 @@ import FieldManagers from './pages/FieldManagers';
 import AgentDirectory from './pages/AgentDirectory';
 import ShopVisits from './pages/ShopVisits';
 import FieldShopVisitModal from './components/FieldShopVisitModal';
+import { managerOnboardingService } from './services/api';
 
 
 class GlobalErrorBoundary extends React.Component {
@@ -140,6 +141,23 @@ function AppInner() {
   const [authPage, setAuthPage] = useState('login'); // 'login' | 'forgot-password' | 'reset-password'
   const [navParams, setNavParams] = useState({});
   const [onboardModalOpen, setOnboardModalOpen] = useState(false);
+  const [fieldVisitModalOpen, setFieldVisitModalOpen] = useState(false);
+  const [pendingFieldVisitId, setPendingFieldVisitId] = useState(null);
+  const [pendingPrefill, setPendingPrefill] = useState({});
+
+  const openOnboard = () => {
+    setFieldVisitModalOpen(true);
+    setOnboardModalOpen(false);
+    setPendingFieldVisitId(null);
+    setPendingPrefill({});
+  };
+
+  const handleFieldVisitProceed = (fieldVisitId, prefillData) => {
+    setFieldVisitModalOpen(false);
+    setPendingFieldVisitId(fieldVisitId);
+    setPendingPrefill(prefillData || {});
+    setOnboardModalOpen(true);
+  };
 
   const navigate = (page, params = {}) => {
     setNavParams(params);
@@ -267,7 +285,6 @@ function AppInner() {
                     prefill={pendingPrefill}
                     fieldVisitId={pendingFieldVisitId}
                     onSubmit={async (formData) => {
-                      const { managerOnboardingService } = await import('./services/api');
                       const res = await managerOnboardingService.submitVendorOnboarding({
                         ...formData,
                         fieldVisitId: pendingFieldVisitId
