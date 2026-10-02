@@ -2,8 +2,8 @@ const express = require('express');
 const router = express.Router();
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { checkRole } = require('../middleware/roleMiddleware');
+const shopVisitController = require('../controllers/shopVisitController');
 const {
-  createFieldVisit,
   submitVendorOnboarding,
   getManagerOnboardings,
   getAdminOnboardings,
@@ -15,8 +15,8 @@ const {
 router.use(authMiddleware);
 router.use(checkRole());
 
-// Manager routes
-router.post('/field-visit', createFieldVisit);
+// Manager routes - Canonical Field Shop Visit
+router.post('/field-visit', shopVisitController.createShopVisit);
 router.post('/submit', submitVendorOnboarding);
 router.get('/', getManagerOnboardings);
 

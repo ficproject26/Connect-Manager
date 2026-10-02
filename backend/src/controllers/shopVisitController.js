@@ -71,12 +71,19 @@ const createShopVisit = async (req, res) => {
     const {
       shopName,
       category,
+      businessCategory,
       shopPhoto,
+      storefrontPhoto,
       voiceNote,
+      audioVoiceNote,
       interestedStatus,
+      interestStatus,
       notInterestedReason,
+      otherReason,
+      customReason,
       vendorId,
       pincodeCode,
+      pincode,
       pincodeId,
       divisionId,
       districtId,
@@ -87,22 +94,61 @@ const createShopVisit = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Shop name is required' });
     }
 
+    const resolvedStatus = (interestedStatus || interestStatus || 'NO').toUpperCase() === 'YES' ? 'YES' : 'NO';
+    const resolvedCategory = category || businessCategory || 'Products';
+    const resolvedPhoto = shopPhoto || storefrontPhoto || null;
+    const resolvedVoice = voiceNote || audioVoiceNote || null;
+    const resolvedReason = notInterestedReason || (resolvedStatus === 'YES' ? 'Interested in Onboarding' : 'Not specified');
+    const resolvedOther = otherReason || customReason || null;
+
+    // Idempotency: check for duplicate visit created within last 15 seconds by this manager
+    const fifteenSecsAgo = new Date(Date.now() - 15000);
+    const existingVisits = await db.shopVisits.find();
+    const duplicate = existingVisits.find(v =>
+      (v.recordedById === user.id || v.managerId === String(user.id || user._id)) &&
+      (v.shopName || '').toLowerCase() === shopName.trim().toLowerCase() &&
+      new Date(v.createdAt) >= fifteenSecsAgo
+    );
+    if (duplicate) {
+      return res.status(200).json({
+        success: true,
+        message: 'Shop visit already recorded',
+        data: duplicate
+      });
+    }
+
+    const territory = {
+      pincodeCode: user.scope?.pincodeCode || user.pincode || pincodeCode || pincode || null,
+      pincode: user.scope?.pincodeCode || user.pincode || pincodeCode || pincode || null,
+      pincodeId: user.pincodeId || pincodeId || null,
+      divisionId: user.divisionId || divisionId || null,
+      districtId: user.districtId || districtId || null,
+      stateId: user.stateId || stateId || 'state_ka'
+    };
+
     const newVisit = await db.shopVisits.insertOne({
       shopName: shopName.trim(),
-      category: category || 'Products',
-      shopPhoto: shopPhoto || null,
-      voiceNote: voiceNote || null,
-      interestedStatus: interestedStatus || 'NO', // 'YES' | 'NO'
-      notInterestedReason: notInterestedReason || (interestedStatus === 'YES' ? 'Interested in Onboarding' : 'Not specified'),
+      category: resolvedCategory,
+      businessCategory: resolvedCategory,
+      shopPhoto: resolvedPhoto,
+      storefrontPhoto: resolvedPhoto,
+      voiceNote: resolvedVoice,
+      audioVoiceNote: resolvedVoice,
+      interestedStatus: resolvedStatus,
+      interestStatus: resolvedStatus,
+      notInterestedReason: resolvedReason,
+      otherReason: resolvedOther,
       vendorId: vendorId || null,
-      pincodeCode: pincodeCode || user.scope?.pincodeCode || null,
-      pincodeId: pincodeId || user.pincodeId || null,
-      divisionId: divisionId || user.divisionId || null,
-      districtId: districtId || user.districtId || null,
-      stateId: stateId || user.stateId || 'state_ka',
+      ...territory,
+      managerId: String(user.id || user._id),
+      managerName: user.name,
+      managerRole: user.role,
+      managerLevel: user.role,
       recordedById: user.id,
       recordedByName: user.name,
-      recordedByRole: user.role
+      recordedByRole: user.role,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
     });
 
     // Create audit log

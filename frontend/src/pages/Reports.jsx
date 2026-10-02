@@ -40,7 +40,6 @@ import {
   Sparkles,
   ChevronRight
 } from 'lucide-react';
-import ShopVisitModal from '../components/ShopVisitModal';
 import GenerateReportModal from '../components/GenerateReportModal';
 
 const MAIN_CATEGORIES = [
@@ -104,7 +103,6 @@ const Reports = ({ onNavigate }) => {
   const [searchVisit, setSearchVisit] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [modalOpen, setModalOpen] = useState(false);
   const [selectedVisit, setSelectedVisit] = useState(null);
 
   // --- SUBMITTED TEAM REPORTS STATE ---
@@ -289,29 +287,6 @@ const Reports = ({ onNavigate }) => {
             <span>Generate Report</span>
           </button>
 
-          {/* Start Shop Visit Button */}
-          <button
-            type="button"
-            className="btn btn-primary"
-            onClick={() => setModalOpen(true)}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: 6,
-              background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-              color: '#ffffff',
-              border: 'none',
-              padding: '9px 18px',
-              borderRadius: 9,
-              fontWeight: 700,
-              fontSize: '0.85rem',
-              cursor: 'pointer',
-              boxShadow: '0 4px 12px rgba(245, 158, 11, 0.28)',
-              whiteSpace: 'nowrap'
-            }}
-          >
-            <PlusCircle size={16} /> Start Shop Visit
-          </button>
         </div>
       </div>
 
@@ -696,26 +671,6 @@ const Reports = ({ onNavigate }) => {
                         <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: '4px 0 14px' }}>
                           No visit records submitted under this view scope.
                         </p>
-                        <button
-                          type="button"
-                          onClick={() => setModalOpen(true)}
-                          className="btn btn-primary"
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: 6,
-                            background: '#f59e0b',
-                            color: '#0f172a',
-                            border: 'none',
-                            padding: '8px 16px',
-                            borderRadius: 8,
-                            fontWeight: 700,
-                            fontSize: '0.84rem',
-                            cursor: 'pointer'
-                          }}
-                        >
-                          <PlusCircle size={15} /> Record New Shop Visit
-                        </button>
                       </td>
                     </tr>
                   ) : (
@@ -2198,18 +2153,6 @@ const Reports = ({ onNavigate }) => {
         </div>
       )}
 
-      {/* Shop Visit Creation Modal */}
-      {modalOpen && (
-        <ShopVisitModal
-          onClose={() => setModalOpen(false)}
-          onVisitCreated={(newVisit) => {
-            if (newVisit) {
-              setVisits(prev => [newVisit, ...prev.filter(v => (v._id || v.id) !== (newVisit._id || newVisit.id))]);
-            }
-            loadVisits(1);
-          }}
-        />
-      )}
 
       {/* Generate Report Modal (Period Selector, Live Ingestion, Preview & Confirm) */}
       {isGenerateModalOpen && (
