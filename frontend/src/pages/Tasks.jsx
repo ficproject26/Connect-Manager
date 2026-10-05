@@ -871,8 +871,12 @@ const Tasks = ({ onNavigate }) => {
                   <td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                       <ClipboardList size={36} style={{ color: '#cbd5e1' }} />
-                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>No tasks match your filters</div>
-                      <div style={{ fontSize: '0.8rem' }}>Try clearing filters or search keywords</div>
+                      <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
+                        {tasks.length === 0 ? 'No tasks found for your assigned territory.' : 'No tasks match your filters'}
+                      </div>
+                      <div style={{ fontSize: '0.8rem' }}>
+                        {tasks.length === 0 ? 'Any new tasks created or assigned for your territory will appear here automatically.' : 'Try clearing filters or search keywords'}
+                      </div>
                     </div>
                   </td>
                 </tr>

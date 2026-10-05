@@ -10,6 +10,9 @@ router.use(checkRole());
 // GET /api/qc-tasks/tasks - List tasks
 router.get('/tasks', taskController.getTasks);
 
+// GET /api/qc-tasks/tasks/:id - Get single task with territory validation
+router.get('/tasks/:id', taskController.getTaskById);
+
 // POST /api/qc-tasks/tasks - Create task
 router.post('/tasks', taskController.createTask);
 

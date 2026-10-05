@@ -594,7 +594,15 @@
     "assignedManagerName": "Muruga",
     "assignedManagerRole": "pincode_manager",
     "category": "KYC Verification",
-    "completionDetails": null,
+    "completionDetails": {
+      "workCompleted": "sdfghjkl",
+      "resolutionDetails": "sdfghjkl",
+      "completionPhotos": [
+        "/uploads/1791194783359_ChatGPT_Image_Jul_24__2026__03_56_37_PM.png"
+      ],
+      "completedAt": "2026-10-05T10:06:27.603Z",
+      "completedBy": "Muruga"
+    },
     "createdAt": "2026-10-01T11:30:07.754Z",
     "createdByAdminId": "ADM-PIN-608A42",
     "createdByAdminName": "Maran",
@@ -609,14 +617,16 @@
     "pincode": "636112",
     "priority": "Low",
     "qcIssueId": null,
-    "remarks": "",
+    "remarks": "sdfghjkl",
     "state": "Tamil Nadu",
-    "status": "Accepted",
+    "status": "Completed",
     "suspendRequest": null,
     "taskNumber": "QCT-54207754",
     "title": "e3",
-    "updatedAt": "2026-10-05T09:24:31.735Z",
-    "lastUpdate": "2026-10-05T09:24:31.735Z"
+    "updatedAt": "2026-10-05T10:06:27.604Z",
+    "lastUpdate": "2026-10-05T10:06:27.603Z",
+    "completedDate": "2026-10-05T10:06:27.603Z",
+    "progress": 100
   },
   {
     "_id": "TSK-1790933737526-72C6Q",

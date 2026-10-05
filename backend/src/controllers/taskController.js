@@ -1,67 +1,212 @@
 const db = require('../config/db');
-const { getScopeFilter } = require('../middleware/scopeMiddleware');
 const { broadcastNotification } = require('../routes/notificationRoutes');
 const { publishEntityEvent } = require('../realtime');
 
-// GET /api/qc-tasks/tasks - Get scoped operational & QC tasks
+const normalize = (s) => (s || '').toString().trim().toLowerCase();
+
+/**
+ * Resolves the authenticated manager's territory profile and hierarchical level.
+ * Source of truth: Authenticated manager JWT identity + database record.
+ */
+const getManagerTerritoryProfile = async (user) => {
+  const role = normalize(user.role);
+  const levelNum = Number(user.level);
+  const levelStr = normalize(user.level);
+
+  let level = 'other';
+  if (['admin', 'super_admin', 'super-admin', 'system_admin'].includes(role) || user.email === 'admin@example.com') {
+    level = 'admin';
+  } else if (role === 'pincode_manager' || role === 'pincode_agent' || role.includes('pincode') || levelNum === 4 || levelStr === 'pincode') {
+    level = 'pincode';
+  } else if (role === 'division_manager' || role.includes('division') || levelNum === 3 || levelStr === 'division') {
+    level = 'division';
+  } else if (role === 'district_manager' || role.includes('district') || levelNum === 2 || levelStr === 'district') {
+    level = 'district';
+  } else if (role === 'state_manager' || role.includes('state') || levelNum === 1 || levelStr === 'state') {
+    level = 'state';
+  }
+
+  let stateId = user.stateId;
+  let state = user.state || user.stateName || user.assignedState || '';
+  let districtId = user.districtId;
+  let district = user.district || user.districtName || user.assignedDistrict || '';
+  let divisionId = user.divisionId;
+  let division = user.division || user.divisionName || user.assignedDivision || '';
+  let pincodeId = user.pincodeId;
+  let pincode = user.pincode || user.pincodeCode || user.assignedPincode || '';
+
+  // If any territory fields are missing from user, enrich from managers collection
+  if (!state || !district || (level === 'division' && !division) || (level === 'pincode' && !pincode)) {
+    const mgrDoc = await db.managers.findOne({
+      $or: [
+        { id: user.id },
+        { _id: user.id },
+        { email: user.email },
+        { managerId: user.managerId }
+      ]
+    }).catch(() => null);
+
+    if (mgrDoc) {
+      stateId = stateId || mgrDoc.stateId;
+      state = state || mgrDoc.state || mgrDoc.assignedState || '';
+      districtId = districtId || mgrDoc.districtId || mgrDoc.assignedDistrictId;
+      district = district || mgrDoc.district || mgrDoc.assignedDistrict || '';
+      divisionId = divisionId || mgrDoc.divisionId || mgrDoc.assignedDivisionId;
+      division = division || mgrDoc.division || mgrDoc.assignedDivision || '';
+      pincodeId = pincodeId || mgrDoc.pincodeId || mgrDoc.assignedPincodeId;
+      pincode = pincode || mgrDoc.pincode || mgrDoc.pincodeCode || mgrDoc.assignedPincode || '';
+    }
+  }
+
+  return {
+    managerId: user.managerId || user.id || user._id,
+    level,
+    stateId: normalize(stateId),
+    state: normalize(state),
+    districtId: normalize(districtId),
+    district: normalize(district),
+    divisionId: normalize(divisionId),
+    division: normalize(division),
+    pincodeId: normalize(pincodeId),
+    pincode: normalize(pincode)
+  };
+};
+
+/**
+ * Validates whether a specific task falls strictly within the manager's authorized territory.
+ * Strict Hierarchical Access:
+ * - State Manager: All tasks inside assigned State (all districts, divisions, pincodes).
+ * - District Manager: ONLY tasks inside assigned District (all divisions, pincodes inside that district).
+ * - Division Manager: ONLY tasks inside assigned Division (all pincodes inside that division).
+ * - Pincode Manager: ONLY tasks assigned to/created for assigned Pincode.
+ */
+const isTaskInManagerTerritory = (task, profile) => {
+  if (!task || !profile) return false;
+
+  // Pan-India access for system administrators
+  if (profile.level === 'admin') return true;
+
+  const tStateId = normalize(task.stateId);
+  const tState = normalize(task.state || task.stateName);
+  const tDistId = normalize(task.districtId);
+  const tDist = normalize(task.district || task.districtName);
+  const tDivId = normalize(task.divisionId);
+  const tDiv = normalize(task.division || task.divisionName);
+  const tPinId = normalize(task.pincodeId);
+  const tPin = normalize(task.pincode || task.pincodeCode);
+  const tLoc = normalize(task.location);
+
+  // State check: must match stateId, state name, or location string
+  const matchState = () => {
+    if (profile.stateId && tStateId && profile.stateId === tStateId) return true;
+    if (profile.state && tState && profile.state === tState) return true;
+    if (profile.state && tLoc && tLoc.includes(profile.state)) return true;
+    return false;
+  };
+
+  // District check: must match state AND district
+  const matchDistrict = () => {
+    if (!matchState()) return false;
+    if (profile.districtId && tDistId && profile.districtId === tDistId) return true;
+    if (profile.district && tDist && profile.district === tDist) return true;
+    if (profile.district && tLoc && tLoc.includes(profile.district)) return true;
+    return false;
+  };
+
+  // Division check: must match state AND district AND division
+  const matchDivision = () => {
+    if (!matchDistrict()) return false;
+    if (profile.divisionId && tDivId && profile.divisionId === tDivId) return true;
+    if (profile.division && tDiv && profile.division === tDiv) return true;
+    return false;
+  };
+
+  // Pincode check: most restrictive, must match state, district, division (if specified) AND pincode
+  const matchPincode = () => {
+    if ((tState || tStateId) && !matchState()) return false;
+    if ((tDist || tDistId) && !matchDistrict()) return false;
+    if ((tDiv || tDivId) && !matchDivision()) return false;
+
+    if (profile.pincodeId && tPinId && profile.pincodeId === tPinId) return true;
+    if (profile.pincode && tPin && profile.pincode === tPin) return true;
+    if (profile.pincode && tLoc && tLoc.includes(profile.pincode)) return true;
+    return false;
+  };
+
+  switch (profile.level) {
+    case 'state':
+      return matchState();
+    case 'district':
+      return matchDistrict();
+    case 'division':
+      return matchDivision();
+    case 'pincode':
+      return matchPincode();
+    default:
+      return false;
+  }
+};
+
+// GET /api/qc-tasks/tasks - Get scoped operational & QC tasks strictly by territory
 const getTasks = async (req, res) => {
   try {
     const user = req.user;
-    const scopeFilter = getScopeFilter(user);
     const { status, category, priority, search, state, district, division, pincode, agentId, agentRole } = req.query;
 
+    // Resolve authenticated manager's territory profile (source of truth)
+    const territoryProfile = await getManagerTerritoryProfile(user);
+
+    // Fetch tasks from database
     const allTasks = await db.tasks.find();
 
-    let filtered = allTasks.filter(t => {
-      // Scope authorization filtering based on authenticated manager
-      if (user.role === 'state_manager') {
-        const uState = (user.state || user.assignedState || '').toLowerCase();
-        const tState = (t.state || t.stateName || '').toLowerCase();
-        if (user.stateId && t.stateId && t.stateId !== user.stateId && (!uState || !tState || uState !== tState)) return false;
-      }
-      if (user.role === 'district_manager') {
-        const uDist = (user.district || '').toLowerCase();
-        const tDist = (t.district || '').toLowerCase();
-        if (user.districtId && t.districtId && t.districtId !== user.districtId && (!uDist || !tDist || uDist !== tDist)) return false;
-      }
-      if (user.role === 'division_manager') {
-        const uDiv = (user.division || '').toLowerCase();
-        const tDiv = (t.division || '').toLowerCase();
-        if (user.divisionId && t.divisionId && t.divisionId !== user.divisionId && (!uDiv || !tDiv || uDiv !== tDiv)) return false;
-      }
-      if (user.role === 'pincode_manager') {
-        const uPin = String(user.pincode || user.pincodeCode || '');
-        const tPin = String(t.pincode || '');
-        if (user.pincodeId && t.pincodeId && t.pincodeId !== user.pincodeId && (!uPin || !tPin || uPin !== tPin)) return false;
-      }
+    // 1. Mandatory Strict Territory Enforcement
+    let filtered = allTasks.filter(t => isTaskInManagerTerritory(t, territoryProfile));
 
-      // Query-level optional filters
-      if (status && status !== 'All' && t.status !== status) return false;
-      if (category && category !== 'All' && t.category !== category) return false;
-      if (priority && priority !== 'All' && t.priority !== priority) return false;
-      if (state && t.state && !t.state.toLowerCase().includes(state.toLowerCase())) return false;
-      if (district && t.district && !t.district.toLowerCase().includes(district.toLowerCase())) return false;
-      if (division && t.division && !t.division.toLowerCase().includes(division.toLowerCase())) return false;
-      if (pincode && t.pincode && !String(t.pincode).includes(String(pincode))) return false;
-      if (agentId && t.assignedAgentId !== agentId && t.assignedManagerId !== agentId) return false;
-      if (agentRole && t.assignedManagerRole !== agentRole && t.assignedAgentRole !== agentRole) return false;
+    // 2. Query-level user UI filters (can only narrow down within authorized territory)
+    if (status && status !== 'All') {
+      filtered = filtered.filter(t => t.status === status);
+    }
+    if (category && category !== 'All') {
+      filtered = filtered.filter(t => t.category === category);
+    }
+    if (priority && priority !== 'All') {
+      filtered = filtered.filter(t => t.priority === priority);
+    }
+    if (state && state.trim()) {
+      filtered = filtered.filter(t => (t.state || '').toLowerCase().includes(state.trim().toLowerCase()));
+    }
+    if (district && district.trim()) {
+      filtered = filtered.filter(t => (t.district || '').toLowerCase().includes(district.trim().toLowerCase()));
+    }
+    if (division && division.trim()) {
+      filtered = filtered.filter(t => (t.division || '').toLowerCase().includes(division.trim().toLowerCase()));
+    }
+    if (pincode && String(pincode).trim()) {
+      filtered = filtered.filter(t => String(t.pincode || '').includes(String(pincode).trim()));
+    }
+    if (agentId && agentId.trim()) {
+      filtered = filtered.filter(t => t.assignedAgentId === agentId || t.assignedManagerId === agentId);
+    }
+    if (agentRole && agentRole.trim()) {
+      filtered = filtered.filter(t => t.assignedManagerRole === agentRole || t.assignedAgentRole === agentRole);
+    }
 
-      // Search filter
-      if (search && search.trim()) {
-        const q = search.toLowerCase();
-        const matchTitle = (t.taskNumber || '').toLowerCase().includes(q);
+    // Search filter
+    if (search && search.trim()) {
+      const q = search.toLowerCase();
+      filtered = filtered.filter(t => {
+        const matchTitle = (t.taskNumber || '').toLowerCase().includes(q) || (t.title || '').toLowerCase().includes(q);
         const matchVendor = (t.vendor || '').toLowerCase().includes(q);
         const matchDesc = (t.description || '').toLowerCase().includes(q);
         const matchLoc = (t.location || '').toLowerCase().includes(q);
-        const matchAssignee = (t.assignedManagerName || t.assignedAgentName || '').toLowerCase().includes(q);
-        if (!matchTitle && !matchVendor && !matchDesc && !matchLoc && !matchAssignee) return false;
-      }
-
-      return true;
-    });
+        const matchAssignee = (t.assignedManagerName || t.assignedAgentName || t.assignedTo || '').toLowerCase().includes(q);
+        const matchPin = String(t.pincode || '').includes(q);
+        return matchTitle || matchVendor || matchDesc || matchLoc || matchAssignee || matchPin;
+      });
+    }
 
     // Sort by createdAt descending
-    filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    filtered.sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0));
 
     const enriched = filtered.map(t => {
       const assignmentStatus = t.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(t.status) ? 'ACCEPTED' : (t.status === 'Rejected' ? 'REJECTED' : t.status === 'Cancelled' ? 'CANCELLED' : 'ACCEPTED'));
@@ -192,6 +337,15 @@ const updateTaskStatus = async (req, res) => {
     const task = await db.tasks.findById(id);
     if (!task) {
       return res.status(404).json({ success: false, message: 'Task not found in database' });
+    }
+
+    // ── Strict Territory Authorization Check ──
+    const territoryProfile = await getManagerTerritoryProfile(user);
+    if (!isTaskInManagerTerritory(task, territoryProfile)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Task is outside your assigned territory.'
+      });
     }
 
     const currentUserId = String(user.id || user._id || user.managerId || '').trim();
@@ -543,6 +697,15 @@ const submitSuspendRequest = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Task not found in database' });
     }
 
+    // ── Strict Territory Authorization Check ──
+    const territoryProfile = await getManagerTerritoryProfile(user);
+    if (!isTaskInManagerTerritory(task, territoryProfile)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Task is outside your assigned territory.'
+      });
+    }
+
     const updatedTask = await db.tasks.findByIdAndUpdate(id, {
       $set: {
         status: 'Suspended',
@@ -573,9 +736,38 @@ const submitSuspendRequest = async (req, res) => {
   }
 };
 
+// GET /api/qc-tasks/tasks/:id - Get single task with strict territory validation
+const getTaskById = async (req, res) => {
+  try {
+    const user = req.user;
+    const { id } = req.params;
+
+    const task = await db.tasks.findById(id);
+    if (!task) {
+      return res.status(404).json({ success: false, message: 'Task not found in database' });
+    }
+
+    const territoryProfile = await getManagerTerritoryProfile(user);
+    if (!isTaskInManagerTerritory(task, territoryProfile)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: Task is outside your assigned territory.'
+      });
+    }
+
+    res.json({ success: true, data: task });
+  } catch (err) {
+    console.error('Error fetching task by ID:', err);
+    res.status(500).json({ success: false, message: 'Failed to retrieve task' });
+  }
+};
+
 module.exports = {
   getTasks,
+  getTaskById,
   createTask,
   updateTaskStatus,
-  submitSuspendRequest
+  submitSuspendRequest,
+  getManagerTerritoryProfile,
+  isTaskInManagerTerritory
 };

@@ -1630,5 +1630,41 @@
     "type": "task_updated",
     "updatedAt": "2026-10-05T09:45:25.315Z",
     "userId": "mgr_test_wf_01"
+  },
+  {
+    "_id": "6e6750a1-1a1e-4fd8-9e5a-fdf043a168f6",
+    "createdAt": "2026-10-05T09:56:32.840Z",
+    "id": "6e6750a1-1a1e-4fd8-9e5a-fdf043a168f6",
+    "isRead": false,
+    "message": "Muruga marked task QCT-54207754 as Accepted.",
+    "recordId": "TSK-1790854207754-0RYO8",
+    "title": "Task QCT-54207754 Accepted",
+    "type": "task_updated",
+    "updatedAt": "2026-10-05T09:56:32.840Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "6a81247d-4d2b-4bb1-beb7-ad5704879bff",
+    "createdAt": "2026-10-05T09:56:34.885Z",
+    "id": "6a81247d-4d2b-4bb1-beb7-ad5704879bff",
+    "isRead": false,
+    "message": "Muruga marked task QCT-54207754 as In Progress.",
+    "recordId": "TSK-1790854207754-0RYO8",
+    "title": "Task QCT-54207754 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-05T09:56:34.885Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "5c220834-4571-400f-a368-001f0aeb688f",
+    "createdAt": "2026-10-05T10:06:27.626Z",
+    "id": "5c220834-4571-400f-a368-001f0aeb688f",
+    "isRead": false,
+    "message": "Muruga marked task QCT-54207754 as Completed.",
+    "recordId": "TSK-1790854207754-0RYO8",
+    "title": "Task QCT-54207754 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-05T10:06:27.626Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
   }
 ]

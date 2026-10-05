@@ -12316,5 +12316,79 @@
     "userId": "mgr_test_wf_01",
     "userName": "Workflow Tester",
     "userRole": "pincode_agent"
+  },
+  {
+    "_id": "2c834166-7040-41ba-b3bb-b596b129a636",
+    "action": "Task Accepted",
+    "createdAt": "2026-10-05T09:56:32.828Z",
+    "details": "Task QCT-54207754 status changed to Accepted",
+    "id": "2c834166-7040-41ba-b3bb-b596b129a636",
+    "recordId": "TSK-1790854207754-0RYO8",
+    "recordType": "task",
+    "timestamp": "2026-10-05T09:56:32.827Z",
+    "updatedAt": "2026-10-05T09:56:32.828Z",
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "userName": "Muruga",
+    "userRole": "pincode_manager"
+  },
+  {
+    "_id": "945ffa01-67b0-42c2-90ad-7ce6d02c93e1",
+    "action": "Task In Progress",
+    "createdAt": "2026-10-05T09:56:34.858Z",
+    "details": "Task QCT-54207754 status changed to In Progress",
+    "id": "945ffa01-67b0-42c2-90ad-7ce6d02c93e1",
+    "recordId": "TSK-1790854207754-0RYO8",
+    "recordType": "task",
+    "timestamp": "2026-10-05T09:56:34.858Z",
+    "updatedAt": "2026-10-05T09:56:34.858Z",
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "userName": "Muruga",
+    "userRole": "pincode_manager"
+  },
+  {
+    "_id": "4d6c3a0e-4fce-4330-a006-af2c3f44d0f5",
+    "action": "Task Completed",
+    "createdAt": "2026-10-05T10:06:27.611Z",
+    "details": "Task QCT-54207754 status changed to Completed",
+    "id": "4d6c3a0e-4fce-4330-a006-af2c3f44d0f5",
+    "recordId": "TSK-1790854207754-0RYO8",
+    "recordType": "task",
+    "timestamp": "2026-10-05T10:06:27.610Z",
+    "updatedAt": "2026-10-05T10:06:27.611Z",
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "userName": "Muruga",
+    "userRole": "pincode_manager"
+  },
+  {
+    "_id": "6ac3793b4dcb8bf879bd2ccc",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_status_changed",
+    "ipAddress": "13.127.127.107",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin rejected vendor \"Harshath\". Reason: Registration application rejected",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "6ac371f5110cffec520a12d6",
+      "vendorName": "Harshath",
+      "oldStatus": "Pending",
+      "newStatus": "Rejected",
+      "reason": "Registration application rejected",
+      "timestamp": "2026-10-05T10:17:31.759Z"
+    },
+    "timestamp": "2026-10-05T10:17:31.768Z",
+    "__v": 0
   }
 ]
