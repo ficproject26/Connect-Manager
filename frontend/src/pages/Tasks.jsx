@@ -1565,135 +1565,6 @@ const Tasks = ({ onNavigate }) => {
                         {subtitle}
                       </div>
                     </div>
-
-                    {/* Banner Action Buttons for Assigned Manager */}
-                    {isAssigned && (
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
-                        {isPendingAcceptance && (
-                          <>
-                            <button
-                              type="button"
-                              onClick={() => handleAccept(selectedTask)}
-                              disabled={actionLoading}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                padding: '8px 14px',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: '#10b981',
-                                color: '#ffffff',
-                                fontSize: '0.82rem',
-                                fontWeight: 700,
-                                cursor: actionLoading ? 'not-allowed' : 'pointer',
-                                boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
-                              }}
-                            >
-                              <Check size={14} />
-                              <span>Accept Task</span>
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => openRejectModal(selectedTask)}
-                              disabled={actionLoading}
-                              style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '5px',
-                                padding: '8px 14px',
-                                borderRadius: '8px',
-                                border: 'none',
-                                background: '#ef4444',
-                                color: '#ffffff',
-                                fontSize: '0.82rem',
-                                fontWeight: 700,
-                                cursor: actionLoading ? 'not-allowed' : 'pointer',
-                                boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
-                              }}
-                            >
-                              <X size={14} />
-                              <span>Reject Task</span>
-                            </button>
-                          </>
-                        )}
-
-                        {isAccepted && (
-                          <button
-                            type="button"
-                            onClick={() => handleStart(selectedTask)}
-                            disabled={actionLoading}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '8px 16px',
-                              borderRadius: '8px',
-                              border: 'none',
-                              background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
-                              color: '#ffffff',
-                              fontSize: '0.84rem',
-                              fontWeight: 700,
-                              cursor: actionLoading ? 'not-allowed' : 'pointer',
-                              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
-                            }}
-                          >
-                            <Play size={14} />
-                            <span>Start Work</span>
-                          </button>
-                        )}
-
-                        {isInProgress && (
-                          <button
-                            type="button"
-                            onClick={() => openCompletionModal(selectedTask, false)}
-                            disabled={actionLoading}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '8px 16px',
-                              borderRadius: '8px',
-                              border: 'none',
-                              background: 'linear-gradient(135deg, #059669, #047857)',
-                              color: '#ffffff',
-                              fontSize: '0.84rem',
-                              fontWeight: 700,
-                              cursor: actionLoading ? 'not-allowed' : 'pointer',
-                              boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)'
-                            }}
-                          >
-                            <CheckCircle2 size={14} />
-                            <span>Complete Task</span>
-                          </button>
-                        )}
-
-                        {isRework && (
-                          <button
-                            type="button"
-                            onClick={() => openCompletionModal(selectedTask, true)}
-                            disabled={actionLoading}
-                            style={{
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                              padding: '8px 16px',
-                              borderRadius: '8px',
-                              border: 'none',
-                              background: 'linear-gradient(135deg, #e11d48, #be123c)',
-                              color: '#ffffff',
-                              fontSize: '0.84rem',
-                              fontWeight: 700,
-                              cursor: actionLoading ? 'not-allowed' : 'pointer',
-                              boxShadow: '0 2px 6px rgba(225, 29, 72, 0.3)'
-                            }}
-                          >
-                            <RefreshCw size={14} />
-                            <span>Submit Rework</span>
-                          </button>
-                        )}
-                      </div>
-                    )}
                   </div>
                 );
               })()}
@@ -1971,27 +1842,6 @@ const Tasks = ({ onNavigate }) => {
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                       <button
                         type="button"
-                        onClick={() => openRejectModal(selectedTask)}
-                        disabled={actionLoading}
-                        style={{
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: '#ef4444',
-                          color: '#ffffff',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          cursor: actionLoading ? 'not-allowed' : 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px'
-                        }}
-                      >
-                        <X size={14} />
-                        <span>Reject Task</span>
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => handleAccept(selectedTask)}
                         disabled={actionLoading}
                         style={{
@@ -2011,6 +1861,28 @@ const Tasks = ({ onNavigate }) => {
                       >
                         <Check size={14} />
                         <span>Accept Task</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => openRejectModal(selectedTask)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: '#ef4444',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          boxShadow: '0 2px 6px rgba(239, 68, 68, 0.2)'
+                        }}
+                      >
+                        <X size={14} />
+                        <span>Reject Task</span>
                       </button>
                     </div>
                   );
