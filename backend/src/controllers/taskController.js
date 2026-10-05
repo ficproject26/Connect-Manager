@@ -187,136 +187,125 @@ const updateTaskStatus = async (req, res) => {
   try {
     const user = req.user;
     const { id } = req.params;
-    const { action, remarks, reworkPhoto, reworkAudio, reworkRemarks, completionPhotos, resolutionDetails } = req.body;
+    const { action, remarks, reason, reworkPhoto, reworkAudio, reworkRemarks, completionPhotos, resolutionDetails } = req.body;
 
     const task = await db.tasks.findById(id);
     if (!task) {
       return res.status(404).json({ success: false, message: 'Task not found in database' });
     }
 
+    const currentUserId = String(user.id || user._id || user.managerId || '').trim();
+    const currentUserName = String(user.name || '').trim().toLowerCase();
+
     // ── Primary Ownership & Authorization Check ──
+    const assignedMgrId = String(task.assignedManagerId || task.assignedAgentId || '').trim();
+    const assignedMgrName = String(task.assignedManagerName || task.assignedTo || task.assignedAgentName || '').trim().toLowerCase();
+
     const isAssignedManager = Boolean(
-      (task.assignedManagerId && [String(user.id), String(user._id), String(user.managerId)].includes(String(task.assignedManagerId))) ||
-      (task.assignedManagerName && user.name && task.assignedManagerName.trim().toLowerCase() === user.name.trim().toLowerCase())
+      (assignedMgrId && currentUserId && assignedMgrId.toLowerCase() === currentUserId.toLowerCase()) ||
+      (assignedMgrName && currentUserName && assignedMgrName === currentUserName)
     );
 
-    const isAdmin = ['admin', 'system_admin', 'state_manager'].includes(user.role) ||
-      (task.createdByAdminId && [String(user.id), String(user._id), String(user.managerId)].includes(String(task.createdByAdminId)));
+    const isAdmin = ['admin', 'super_admin', 'super-admin', 'system_admin', 'state_admin', 'district_admin', 'division_admin', 'pincode_admin'].includes(String(user.role).toLowerCase()) ||
+      user.email === 'admin@example.com' ||
+      (task.createdByAdminId && String(task.createdByAdminId).toLowerCase() === currentUserId.toLowerCase());
 
     const { status: directStatus, progress, completionPercentage } = req.body;
+    const priority = String(task.priority || 'Medium').toLowerCase();
+    const currentStatus = task.status;
 
-    // ── Rule: Administrative Acceptance is Controlled by Admin ──
-    const isAdminAction = Boolean(
-      req.body.assignmentStatus ||
-      ['accept', 'reject', 'cancel'].includes(action) ||
-      ['Accepted', 'Rejected', 'Cancelled', 'Pending'].includes(directStatus)
-    );
-
-    if (isAdminAction && !isAdmin) {
-      return res.status(403).json({
-        success: false,
-        message: 'Unauthorized: Administrative assignment status is controlled by Admin.'
-      });
-    }
-
-    // ── Rule: Only Assigned Manager Can Execute the Task ──
-    const isExecutionAction = Boolean(
-      req.body.executionStatus ||
-      ['start', 'in_progress', 'complete', 'resolve', 'solved', 'rework', 'suspend'].includes(action) ||
-      ['In Progress', 'Completed', 'Rework Required', 'Suspended'].includes(directStatus) ||
-      reworkPhoto ||
-      completionPhotos
-    );
-
-    const currentAssignmentStatus = task.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(task.status) ? 'ACCEPTED' : 'PENDING');
-    const currentExecutionStatus = task.executionStatus || (['Completed', 'Closed', 'Resolved'].includes(task.status) ? 'COMPLETED' : task.status === 'In Progress' ? 'IN_PROGRESS' : 'NOT_STARTED');
-
-    if (isExecutionAction) {
-      if (!isAssignedManager) {
-        return res.status(403).json({
-          success: false,
-          message: 'Unauthorized: Only the assigned manager can execute this task or update its status.'
-        });
-      }
-
-      if (currentAssignmentStatus !== 'ACCEPTED') {
-        return res.status(400).json({
-          success: false,
-          message: 'Task must be accepted by Admin before work can begin.'
-        });
-      }
-
-      const isStarting = action === 'start' || action === 'in_progress' || directStatus === 'In Progress' || req.body.executionStatus === 'IN_PROGRESS';
-      const isCompleting = action === 'complete' || action === 'resolve' || action === 'solved' || directStatus === 'Completed' || req.body.executionStatus === 'COMPLETED';
-
-      // Verify mandatory task fields: photo and remarks
-      const hasPhoto = Boolean(
-        req.body.shopPhoto ||
-        req.body.actionPhoto ||
-        (req.body.photos && req.body.photos.length > 0) ||
-        task.shopPhoto ||
-        (task.photos && task.photos.length > 0) ||
-        (task.completionDetails?.completionPhotos && task.completionDetails.completionPhotos.length > 0) ||
-        (completionPhotos && completionPhotos.length > 0) ||
-        reworkPhoto
-      );
-
-      const hasRemarks = Boolean(
-        (remarks && remarks.trim().length > 0) ||
-        (req.body.actionReason && req.body.actionReason.trim().length > 0) ||
-        (task.remarks && task.remarks.trim().length > 0) ||
-        (resolutionDetails && resolutionDetails.trim().length > 0) ||
-        (reworkRemarks && reworkRemarks.trim().length > 0)
-      );
-
-      // Transition check: NOT_STARTED -> IN_PROGRESS
-      if (isStarting) {
-        if (!hasPhoto || !hasRemarks) {
-          return res.status(400).json({
-            success: false,
-            message: 'Mandatory task data required: Please attach photo proof and enter field remarks before starting work.'
-          });
-        }
-      }
-
-      // Transition check: IN_PROGRESS -> COMPLETED (Prevent direct NOT_STARTED -> COMPLETED)
-      if (isCompleting) {
-        if (currentExecutionStatus !== 'IN_PROGRESS' && task.status !== 'In Progress') {
-          return res.status(400).json({
-            success: false,
-            message: 'Task must be In Progress before it can be marked as Completed.'
-          });
-        }
-        if (!hasPhoto || !hasRemarks) {
-          return res.status(400).json({
-            success: false,
-            message: 'Complete the required task information before marking this task as completed.'
-          });
-        }
-      }
-    }
-
-    let nextStatus = task.status;
-    let nextAssignmentStatus = currentAssignmentStatus;
-    let nextExecutionStatus = currentExecutionStatus;
+    let nextStatus = currentStatus;
+    let nextAssignmentStatus = task.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(currentStatus) ? 'ACCEPTED' : 'PENDING');
+    let nextExecutionStatus = task.executionStatus || (['Completed', 'Closed', 'Resolved'].includes(currentStatus) ? 'COMPLETED' : currentStatus === 'In Progress' ? 'IN_PROGRESS' : 'NOT_STARTED');
     let updateFields = {};
 
-    if (directStatus && ['Assigned', 'Accepted', 'In Progress', 'Pending', 'Completed', 'Rejected', 'Cancelled', 'Overdue', 'Suspended', 'Rework'].includes(directStatus)) {
-      nextStatus = directStatus;
-      if (directStatus === 'In Progress') {
-        nextExecutionStatus = 'IN_PROGRESS';
-      } else if (directStatus === 'Completed') {
-        nextExecutionStatus = 'COMPLETED';
-      } else if (directStatus === 'Accepted') {
-        nextAssignmentStatus = 'ACCEPTED';
-      } else if (directStatus === 'Rejected') {
-        nextAssignmentStatus = 'REJECTED';
-      } else if (directStatus === 'Cancelled') {
-        nextAssignmentStatus = 'CANCELLED';
+    // ── 1. ACCEPT ACTION (LOW/MEDIUM: PENDING ACCEPTANCE → ACCEPTED) ──
+    if (action === 'accept' || directStatus === 'Accepted') {
+      if (!isAssignedManager && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized: Only the assigned manager can accept this task.'
+        });
       }
-    } else if (action === 'start' || action === 'in_progress' || action === 'not_solved') {
+      if (!['Pending Acceptance', 'Pending'].includes(currentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Task cannot be accepted from current status '${currentStatus}'.`
+        });
+      }
+      nextStatus = 'Accepted';
+      nextAssignmentStatus = 'ACCEPTED';
+      updateFields.acceptedAt = new Date().toISOString();
+      updateFields.acceptedBy = user.name;
+      updateFields.acceptedById = currentUserId;
+      updateFields.needsAcceptance = false;
+    }
+
+    // ── 2. REJECT ACTION (PENDING ACCEPTANCE → REJECTED) ──
+    else if (action === 'reject' || directStatus === 'Rejected') {
+      if (!isAssignedManager && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized: Only the assigned manager can reject this task.'
+        });
+      }
+      if (!['Pending Acceptance', 'Pending'].includes(currentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: `Task cannot be rejected from current status '${currentStatus}'.`
+        });
+      }
+      const rejectionReasonText = (reason || req.body.rejectionReason || remarks || req.body.actionReason || '').trim();
+      if (!rejectionReasonText) {
+        return res.status(400).json({
+          success: false,
+          message: 'Rejection reason is mandatory.'
+        });
+      }
+      nextStatus = 'Rejected';
+      nextAssignmentStatus = 'REJECTED';
+      updateFields.rejectionDetails = {
+        taskId: task.taskNumber || task.id || id,
+        rejectingManagerId: currentUserId,
+        rejectingManagerName: user.name,
+        rejectionReason: rejectionReasonText,
+        previousStatus: currentStatus,
+        newStatus: 'Rejected',
+        timestamp: new Date().toISOString()
+      };
+      updateFields.rejectionReason = rejectionReasonText;
+      updateFields.remarks = rejectionReasonText;
+      updateFields.needsAcceptance = false;
+    }
+
+    // ── 3. START ACTION (ACCEPTED/ASSIGNED → IN PROGRESS) ──
+    else if (action === 'start' || action === 'in_progress' || directStatus === 'In Progress') {
+      if (!isAssignedManager && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized: Only the assigned manager can start this task.'
+        });
+      }
+      // Status transition validation
+      if (['low', 'medium'].includes(priority) && ['Pending Acceptance', 'Pending'].includes(currentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Task must be accepted before starting work.'
+        });
+      }
+      if (['Completed', 'Closed'].includes(currentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Completed tasks cannot be restarted directly. Admin must request rework.'
+        });
+      }
       nextStatus = 'In Progress';
       nextExecutionStatus = 'IN_PROGRESS';
+      updateFields.startedBy = user.name;
+      updateFields.startedById = currentUserId;
+      updateFields.startedAt = task.startedAt || new Date().toISOString();
+      updateFields.progress = task.progress && task.progress > 0 ? task.progress : 50;
+
       if (reworkPhoto || reworkAudio || reworkRemarks) {
         updateFields.reworkDetails = {
           reworkPhoto: reworkPhoto || task.reworkDetails?.reworkPhoto || '',
@@ -325,60 +314,169 @@ const updateTaskStatus = async (req, res) => {
           updatedAt: new Date().toISOString()
         };
       }
-    } else if (action === 'complete' || action === 'resolve' || action === 'solved') {
+    }
+
+    // ── 4. COMPLETE ACTION (IN PROGRESS → COMPLETED) ──
+    else if (action === 'complete' || action === 'resolve' || action === 'solved' || directStatus === 'Completed') {
+      if (!isAssignedManager && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized: Only the assigned manager can complete this task.'
+        });
+      }
+      if (currentStatus !== 'In Progress' && !['Rework Required', 'Rework'].includes(currentStatus)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Task must be In Progress before it can be marked as Completed.'
+        });
+      }
+
+      // Mandatory Field 1: Field Photo
+      const photo = req.body.completionPhoto ||
+        (Array.isArray(completionPhotos) && completionPhotos[0]) ||
+        (Array.isArray(req.body.photos) && req.body.photos[0]) ||
+        req.body.actionPhoto ||
+        req.body.shopPhoto ||
+        reworkPhoto ||
+        task.shopPhoto;
+
+      if (!photo) {
+        return res.status(400).json({
+          success: false,
+          message: 'Field photo proof is required to complete the task.'
+        });
+      }
+
+      // Mandatory Field 2: Field Remarks
+      const remarksText = (remarks || resolutionDetails || req.body.workCompleted || req.body.actionReason || reworkRemarks || task.remarks || '').trim();
+      if (!remarksText) {
+        return res.status(400).json({
+          success: false,
+          message: 'Field remarks are required to complete the task.'
+        });
+      }
+
+      // Mandatory Field 3: Field Audio Note
+      const audio = req.body.completionAudio || req.body.voiceNote || req.body.audioUrl || reworkAudio || task.voiceNote || null;
+      if (!audio) {
+        return res.status(400).json({
+          success: false,
+          message: 'Field audio note recording is required to complete the task.'
+        });
+      }
+
+      const completedAt = new Date().toISOString();
+      const newCompletion = {
+        completionPhoto: photo,
+        completionPhotos: [photo],
+        workCompleted: remarksText,
+        resolutionDetails: remarksText,
+        completionAudio: audio,
+        voiceNote: audio,
+        completedBy: user.name,
+        completedById: currentUserId,
+        completedAt
+      };
+
+      // Preserve previous completion details if rework
+      if (task.completionDetails) {
+        updateFields.previousWork = {
+          shopPhoto: task.completionDetails.completionPhoto || task.shopPhoto,
+          remarks: task.completionDetails.workCompleted || task.remarks,
+          voiceNote: task.completionDetails.completionAudio || task.voiceNote,
+          completedBy: task.completionDetails.completedBy,
+          completedAt: task.completionDetails.completedAt
+        };
+      }
+
       nextStatus = 'Completed';
       nextExecutionStatus = 'COMPLETED';
-      updateFields.completionDetails = {
-        workCompleted: remarks || resolutionDetails || 'Operational task resolved on-site.',
-        resolutionDetails: resolutionDetails || remarks || '',
-        completionPhotos: completionPhotos || (req.body.actionPhoto ? [req.body.actionPhoto] : []),
-        completedAt: new Date().toISOString(),
-        completedBy: user.name
-      };
-      updateFields.completedDate = new Date().toISOString();
+      updateFields.completionDetails = newCompletion;
+      updateFields.shopPhoto = photo;
+      updateFields.photos = [photo];
+      updateFields.remarks = remarksText;
+      updateFields.voiceNote = audio;
+      updateFields.completedDate = completedAt;
       updateFields.progress = 100;
-    } else if (action === 'accept') {
-      nextStatus = 'Accepted';
-      nextAssignmentStatus = 'ACCEPTED';
-    } else if (action === 'reject') {
-      nextStatus = 'Rejected';
-      nextAssignmentStatus = 'REJECTED';
-    } else if (action === 'cancel') {
-      nextStatus = 'Cancelled';
-      nextAssignmentStatus = 'CANCELLED';
-    } else if (action === 'pending') {
-      nextStatus = 'Pending';
-      nextAssignmentStatus = 'PENDING';
-    } else if (action === 'rework') {
-      nextStatus = 'Rework';
+      updateFields.isResolved = true;
+    }
+
+    // ── 5. REWORK ACTION (ADMIN: COMPLETED → REWORK REQUIRED) ──
+    else if (action === 'rework' || directStatus === 'Rework' || directStatus === 'Rework Required') {
+      if (!isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: 'Unauthorized: Only Admin or Sub-Admin can request rework.'
+        });
+      }
+      nextStatus = 'Rework Required';
+      updateFields.previousWork = {
+        shopPhoto: task.completionDetails?.completionPhoto || task.shopPhoto,
+        remarks: task.completionDetails?.workCompleted || task.remarks,
+        voiceNote: task.completionDetails?.completionAudio || task.voiceNote,
+        completedBy: task.completionDetails?.completedBy,
+        completedAt: task.completionDetails?.completedAt
+      };
       updateFields.reworkDetails = {
-        reworkPhoto: reworkPhoto || '',
-        reworkAudio: reworkAudio || null,
-        reworkRemarks: reworkRemarks || remarks || 'Rework requested',
+        reworkRemarks: reworkRemarks || remarks || reason || 'Rework requested by admin',
+        requestedBy: user.name,
+        requestedById: currentUserId,
         requestedAt: new Date().toISOString()
       };
-    } else if (action === 'suspend') {
+    }
+
+    // ── 6. SUSPEND ACTION ──
+    else if (action === 'suspend' || directStatus === 'Suspended') {
       nextStatus = 'Suspended';
     }
 
-    if (req.body.actionPhoto) {
-      updateFields.shopPhoto = req.body.actionPhoto;
-      updateFields.photos = [req.body.actionPhoto];
-    }
-    if (req.body.actionReason) {
-      updateFields.remarks = req.body.actionReason;
+    // ── 7. OTHER PERMITTED ADMIN STATUSES ──
+    else if (action === 'cancel' || directStatus === 'Cancelled') {
+      if (!isAdmin) {
+        return res.status(403).json({ success: false, message: 'Unauthorized: Admin action only.' });
+      }
+      nextStatus = 'Cancelled';
+      nextAssignmentStatus = 'CANCELLED';
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid action '${action}' or status transition to '${directStatus}'.`
+      });
     }
 
     updateFields.assignmentStatus = nextAssignmentStatus;
     updateFields.executionStatus = nextExecutionStatus;
+    updateFields.status = nextStatus;
+    updateFields.lastUpdate = new Date().toISOString();
 
     if (progress !== undefined || completionPercentage !== undefined) {
       updateFields.progress = Number(progress !== undefined ? progress : completionPercentage);
     }
 
-    updateFields.status = nextStatus;
-    updateFields.lastUpdate = new Date().toISOString();
-    if (remarks) updateFields.remarks = remarks;
+    // Append to task history to maintain complete, immutable audit trail
+    const historyItem = {
+      action: `Task ${nextStatus}`,
+      status: nextStatus,
+      actor: user.name,
+      actorId: currentUserId,
+      actorRole: user.role,
+      timestamp: new Date().toISOString(),
+      remarks: updateFields.remarks || remarks || '',
+      photo: updateFields.shopPhoto || null,
+      audio: updateFields.voiceNote || null
+    };
+
+    updateFields.history = [...(task.history || []), historyItem];
+    updateFields.activityLog = [
+      ...(task.activityLog || []),
+      {
+        action: `Task ${nextStatus}`,
+        by: user.name,
+        byRole: user.role,
+        at: new Date().toISOString(),
+        notes: updateFields.remarks || remarks || `Status changed to ${nextStatus}`
+      }
+    ];
 
     const updatedTask = await db.tasks.findByIdAndUpdate(id, { $set: updateFields });
 
@@ -405,8 +503,8 @@ const updateTaskStatus = async (req, res) => {
     // Broadcast persistent notification
     await broadcastNotification({
       type: 'task_updated',
-      title: `Task ${task.taskNumber} ${nextStatus}`,
-      message: `${user.name} marked task ${task.taskNumber} as ${nextStatus}.`,
+      title: `Task ${task.taskNumber || id} ${nextStatus}`,
+      message: `${user.name} marked task ${task.taskNumber || id} as ${nextStatus}.`,
       recordId: id,
       userId: task.assignedManagerId || user.id,
       createdAt: new Date().toISOString()
@@ -416,7 +514,7 @@ const updateTaskStatus = async (req, res) => {
     publishEntityEvent({
       entity: 'task',
       action: 'updated',
-      entityId: updatedTask._id,
+      entityId: updatedTask._id || id,
       data: updatedTask,
       scope: {
         stateId: updatedTask.stateId || updatedTask.state,

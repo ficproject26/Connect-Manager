@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   CheckSquare,
   CheckCircle2,
@@ -29,12 +29,16 @@ import {
   Maximize2,
   ExternalLink,
   Upload,
-  Pause
+  Pause,
+  AlertTriangle,
+  RotateCcw,
+  Ban
 } from 'lucide-react';
 import { taskService, agentService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
+import VoiceRecorder from '../components/VoiceRecorder';
 
 const Tasks = ({ onNavigate }) => {
   const { user } = useAuth();
@@ -43,8 +47,8 @@ const Tasks = ({ onNavigate }) => {
   // Ownership rule: Only the assigned manager gets task execution rights.
   // Hierarchical managers get territory visibility but read-only access.
   const isAssignedToUser = (task) => {
-    if (!task) return false;
-    const taskMgrId = String(task.assignedManagerId || task.raw?.assignedManagerId || '');
+    if (!task || !user) return false;
+    const taskMgrId = String(task.assignedManagerId || task.raw?.assignedManagerId || task.raw?.assignedAgentId || '');
     const myIds = [
       String(user?.id || ''),
       String(user?._id || ''),
@@ -52,9 +56,14 @@ const Tasks = ({ onNavigate }) => {
       String(user?.scope?.managerId || '')
     ].filter(Boolean);
     const idMatch = myIds.some(id => id && taskMgrId && id.toLowerCase() === taskMgrId.toLowerCase());
-    const nameMatch = Boolean(task.assignedTo && user?.name && task.assignedTo.trim().toLowerCase() === user.name.trim().toLowerCase());
-    const rawMgrName = Boolean(task.raw?.assignedManagerName && user?.name && task.raw.assignedManagerName.trim().toLowerCase() === user.name.trim().toLowerCase());
-    return Boolean(idMatch || nameMatch || rawMgrName);
+    const userName = (user?.name || '').trim().toLowerCase();
+    const taskAssignedTo = (task.assignedTo || '').trim().toLowerCase();
+    const rawMgrName = (task.raw?.assignedManagerName || '').trim().toLowerCase();
+    const rawAgentName = (task.raw?.assignedAgentName || '').trim().toLowerCase();
+    const isNamed = userName && taskAssignedTo && taskAssignedTo !== 'unassigned' && taskAssignedTo !== 'assigned agent';
+    const nameMatch = Boolean(isNamed && taskAssignedTo === userName);
+    const rawNameMatch = Boolean(userName && ((rawMgrName && rawMgrName === userName) || (rawAgentName && rawAgentName === userName)));
+    return Boolean(idMatch || nameMatch || rawNameMatch);
   };
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,12 +78,21 @@ const Tasks = ({ onNavigate }) => {
   const [actionReason, setActionReason] = useState('');
   const [actionPhoto, setActionPhoto] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
-  const [reworkMode, setReworkMode] = useState(false);
-  const [reworkPhoto, setReworkPhoto] = useState('');
-  const [reworkReason, setReworkReason] = useState('');
-  const [reworkAudio, setReworkAudio] = useState(null);
-  const [reworkRecording, setReworkRecording] = useState(false);
-  const reworkMediaRef = React.useRef(null);
+
+  // Reject Modal state
+  const [rejectModalTask, setRejectModalTask] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [rejectError, setRejectError] = useState('');
+  const [rejectLoading, setRejectLoading] = useState(false);
+
+  // Completion / Rework Modal state
+  const [completionModalTask, setCompletionModalTask] = useState(null);
+  const [completionPhoto, setCompletionPhoto] = useState('');
+  const [completionRemarks, setCompletionRemarks] = useState('');
+  const [completionAudio, setCompletionAudio] = useState('');
+  const [completionError, setCompletionError] = useState('');
+  const [completionLoading, setCompletionLoading] = useState(false);
+  const [isReworkMode, setIsReworkMode] = useState(false);
 
   // Agents list (kept for task display use only)
   const [agentsList, setAgentsList] = useState([]);
@@ -131,10 +149,10 @@ const Tasks = ({ onNavigate }) => {
             territory: territoryStr,
             priority: t.priority || 'Medium',
             dueDate: formattedDue,
-            status: t.status || 'Assigned',
+            status: t.status || 'Pending Acceptance',
             progress: t.progress !== undefined ? t.progress : (['Completed', 'Closed'].includes(t.status) ? 100 : t.status === 'In Progress' ? 50 : 0),
-            assignedTo: t.assignedAgentName || t.assignedManagerName || user?.name || 'Assigned Agent',
-            assignedManagerRole: t.assignedAgentRole || t.assignedManagerRole || user?.role || 'pincode_agent',
+            assignedTo: t.assignedAgentName || t.assignedManagerName || 'Unassigned',
+            assignedManagerRole: t.assignedAgentRole || t.assignedManagerRole || '',
             assignedDate: t.assignedDate || t.createdAt,
             completedDate: t.completedDate || t.completionDetails?.completedAt || null,
             lastUpdate: t.lastUpdate || t.updatedAt || null,
@@ -151,6 +169,10 @@ const Tasks = ({ onNavigate }) => {
             description: t.description || 'Field operational deliverable and compliance task.',
             remarks: t.remarks || '',
             completionDetails: t.completionDetails,
+            previousWork: t.previousWork,
+            rejectionDetails: t.rejectionDetails,
+            rejectionReason: t.rejectionReason,
+            adminReview: t.adminReview,
             raw: t
           };
         });
@@ -185,42 +207,11 @@ const Tasks = ({ onNavigate }) => {
 
   // Tasks are generated by system workflows only â€” no manual assignment.
 
-  const handleDirectStatusChange = async (taskId, nextStatus) => {
-    setActionLoading(true);
-    try {
-      const payload = {
-        status: nextStatus,
-        executionStatus: nextStatus === 'In Progress' ? 'IN_PROGRESS' : nextStatus === 'Completed' ? 'COMPLETED' : undefined,
-        actionPhoto: actionPhoto || selectedTask?.shopPhoto || null,
-        actionReason: actionReason || selectedTask?.remarks || null,
-        remarks: actionReason || selectedTask?.remarks || null
-      };
-      const res = await taskService.updateTaskStatus(taskId, undefined, payload);
-      if (res && res.success) {
-        setSelectedTask(prev => prev ? {
-          ...prev,
-          status: nextStatus,
-          executionStatus: nextStatus === 'In Progress' ? 'IN_PROGRESS' : nextStatus === 'Completed' ? 'COMPLETED' : prev.executionStatus,
-          progress: nextStatus === 'Completed' ? 100 : nextStatus === 'In Progress' ? 50 : prev.progress
-        } : null);
-        await fetchTasks();
-      } else {
-        alert(res?.message || 'Failed to update task status.');
-      }
-    } catch (err) {
-      console.error('Failed to change status:', err);
-      alert(err.message || 'Failed to update task status.');
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  
   const openTaskModal = (taskItem) => {
     setSelectedTask(taskItem);
     const prevRemarks = taskItem.completionDetails?.workCompleted || 
                         taskItem.completionDetails?.resolutionDetails || 
-                        taskItem.previousWork?.workCompleted || 
+                        taskItem.previousWork?.remarks || 
                         taskItem.remarks || '';
     const prevPhoto = taskItem.shopPhoto || 
                       (taskItem.photos && taskItem.photos[0]) || 
@@ -228,228 +219,205 @@ const Tasks = ({ onNavigate }) => {
                       taskItem.previousWork?.shopPhoto || '';
     setActionReason(prevRemarks);
     setActionPhoto(prevPhoto);
-    setReworkMode(false);
-    setReworkPhoto(taskItem.reworkDetails?.reworkPhoto || '');
-    setReworkReason(taskItem.reworkDetails?.reworkRemarks || '');
-    setReworkAudio(taskItem.reworkDetails?.reworkAudio || null);
-    setReworkRecording(false);
   };
 
-  // â”€â”€ Rework audio recording helpers â”€â”€
-  const startReworkRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mr = new MediaRecorder(stream);
-      const chunks = [];
-      mr.ondataavailable = (e) => chunks.push(e.data);
-      mr.onstop = () => {
-        const blob = new Blob(chunks, { type: 'audio/webm' });
-        const reader = new FileReader();
-        reader.onload = (ev) => setReworkAudio(ev.target.result);
-        reader.readAsDataURL(blob);
-        stream.getTracks().forEach(t => t.stop());
-      };
-      mr.start();
-      reworkMediaRef.current = mr;
-      setReworkRecording(true);
-    } catch {
-      alert('Microphone access denied. Please allow microphone to record audio.');
-    }
-  };
-
-  const stopReworkRecording = () => {
-    if (reworkMediaRef.current && reworkRecording) {
-      reworkMediaRef.current.stop();
-      setReworkRecording(false);
-    }
-  };
-
-  const handleReworkPhotoUpload = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setReworkPhoto(uploadEvent.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handlePhotoUpload = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setActionPhoto(uploadEvent.target.result);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleReworkSubmit = async () => {
-    if (!selectedTask) return;
-    const taskId = selectedTask._id || selectedTask.id;
-    setActionLoading(true);
-    try {
-      await taskService.updateTaskStatus(taskId, 'start', {
-        remarks: reworkReason || 'Rework initiated on field',
-        reworkPhoto: reworkPhoto || '',
-        reworkAudio: reworkAudio || '',
-        reworkRemarks: reworkReason || 'Rework started'
-      });
-      setSelectedTask(prev => ({
-        ...prev,
-        status: 'In Progress',
-        reworkDetails: {
-          reworkPhoto,
-          reworkAudio,
-          reworkRemarks: reworkReason
-        }
-      }));
-      setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? {
-        ...t,
-        status: 'In Progress',
-        reworkDetails: {
-          reworkPhoto,
-          reworkAudio,
-          reworkRemarks: reworkReason
-        }
-      } : t));
-      setReworkMode(false);
-      fetchTasks();
-    } catch (e) {
-      console.warn('Rework submit notice:', e.message);
-      setSelectedTask(prev => ({ ...prev, status: 'In Progress' }));
-      setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'In Progress' } : t));
-      setReworkMode(false);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleTaskAction = async (decision) => {
-    if (!selectedTask) return;
-    const taskId = selectedTask._id || selectedTask.id;
-    setActionLoading(true);
-    try {
-      if (decision === 'start') {
-        const isReworkDecision = selectedTask?.status === 'Rework Required';
-        await taskService.updateTaskStatus(taskId, 'start', {
-          remarks: actionReason || (isReworkDecision ? 'Rework initiated on field' : 'Work started on field'),
-          ...(isReworkDecision ? {
-            reworkPhoto: actionPhoto || selectedTask.shopPhoto || '',
-            reworkAudio: reworkAudio || '',
-            reworkRemarks: actionReason || 'Rework started'
-          } : {})
-        });
-        setSelectedTask(prev => ({ ...prev, status: 'In Progress' }));
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'In Progress' } : t));
-      } else if (decision === 'solved') {
-        const photoToSave = actionPhoto || selectedTask.shopPhoto;
-        await taskService.updateTaskStatus(taskId, 'complete', {
-          workCompleted: actionReason || 'Field deliverable completed and verified',
-          resolutionDetails: actionReason || 'Resolved on ground',
-          completionPhotos: photoToSave ? [photoToSave] : [],
-          remarks: actionReason || 'Task Solved'
-        });
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { 
-          ...t, 
-          status: 'Completed', 
-          isResolved: true, 
-          resolutionStatus: 'Resolved',
-          shopPhoto: photoToSave || t.shopPhoto 
-        } : t));
-        setSelectedTask(null);
-        fetchTasks();
-      } else if (decision === 'suspend') {
-        const photoToSave = actionPhoto || selectedTask.shopPhoto;
-        await taskService.submitSuspendRequest(taskId, {
-          suspendReason: actionReason || 'Field operation obstructed / requires review',
-          explanation: actionReason || 'Suspension requested by field manager',
-          supportingPhotos: photoToSave ? [photoToSave] : [],
-          remarks: actionReason || ''
-        });
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'Suspend Requested' } : t));
-        setSelectedTask(null);
-        fetchTasks();
-      } else if (decision === 'not_solved') {
-        const photoToSave = actionPhoto || selectedTask.shopPhoto;
-        await taskService.updateTaskStatus(taskId, 'not_solved', {
-          workCompleted: 'Field inspection conducted â€” task pending resolution',
-          remarks: actionReason || 'Task Not Solved / In Progress',
-          completionPhotos: photoToSave ? [photoToSave] : []
-        });
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'In Progress' } : t));
-        setSelectedTask(null);
-        fetchTasks();
-      }
-    } catch (e) {
-      console.warn('Task action notice:', e.message);
-      if (decision === 'solved') {
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'Completed', isResolved: true, resolutionStatus: 'Resolved' } : t));
-        setSelectedTask(null);
-      } else if (decision === 'suspend') {
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'Suspend Requested' } : t));
-        setSelectedTask(null);
-      } else if (decision === 'not_solved') {
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? { ...t, status: 'In Progress' } : t));
-        setSelectedTask(null);
-      }
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleUpdateStatus = async (taskItem, targetAction = null) => {
+  const handleAccept = async (taskItem) => {
     const taskId = taskItem._id || taskItem.id;
-    let action = targetAction;
-    let nextStatus = taskItem.status;
-
-    if (!action) {
-      if (taskItem.status === 'Pending Acceptance') {
-        action = 'accept';
-        nextStatus = 'Accepted';
-      } else if (taskItem.status === 'Accepted' || taskItem.status === 'Assigned') {
-        action = 'start';
-        nextStatus = 'In Progress';
-      } else if (taskItem.status === 'In Progress') {
-        action = 'complete';
-        nextStatus = 'Completed';
-      } else if (taskItem.status === 'Completed') {
-        return;
+    setActionLoading(true);
+    try {
+      const res = await taskService.updateTaskStatus(taskId, 'accept');
+      if (res && res.success) {
+        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? {
+          ...t,
+          status: 'Accepted',
+          assignmentStatus: 'ACCEPTED'
+        } : t));
+        if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
+          setSelectedTask(prev => ({ ...prev, status: 'Accepted', assignmentStatus: 'ACCEPTED' }));
+        }
+        await fetchTasks();
+      } else {
+        alert(res?.message || 'Failed to accept task.');
       }
-    } else {
-      if (action === 'accept') nextStatus = 'Accepted';
-      else if (action === 'start') nextStatus = 'In Progress';
-      else if (action === 'complete') nextStatus = 'Completed';
+    } catch (err) {
+      console.error('Accept task error:', err);
+      alert(err.message || 'Failed to accept task.');
+    } finally {
+      setActionLoading(false);
     }
+  };
 
-    if (action) {
-      try {
-        await taskService.updateTaskStatus(taskId, action, {
-          workCompleted: 'Field action updated from Manager Portal',
-          remarks: `Task transitioned to ${nextStatus}`
-        });
-      } catch (e) {
-        console.warn('Server task update warning:', e.message);
+  const openRejectModal = (taskItem) => {
+    setRejectModalTask(taskItem);
+    setRejectReason('');
+    setRejectError('');
+  };
+
+  const handleRejectSubmit = async () => {
+    if (!rejectModalTask) return;
+    const trimmed = (rejectReason || '').trim();
+    if (!trimmed) {
+      setRejectError('Rejection reason is mandatory.');
+      return;
+    }
+    const taskId = rejectModalTask._id || rejectModalTask.id;
+    setRejectLoading(true);
+    setRejectError('');
+    try {
+      const res = await taskService.updateTaskStatus(taskId, 'reject', { reason: trimmed });
+      if (res && res.success) {
+        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? {
+          ...t,
+          status: 'Rejected',
+          assignmentStatus: 'REJECTED',
+          rejectionReason: trimmed,
+          remarks: trimmed
+        } : t));
+        if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
+          setSelectedTask(prev => ({
+            ...prev,
+            status: 'Rejected',
+            assignmentStatus: 'REJECTED',
+            rejectionReason: trimmed,
+            remarks: trimmed
+          }));
+        }
+        setRejectModalTask(null);
+        await fetchTasks();
+      } else {
+        setRejectError(res?.message || 'Failed to reject task.');
       }
+    } catch (err) {
+      console.error('Reject task error:', err);
+      setRejectError(err.message || 'Failed to reject task.');
+    } finally {
+      setRejectLoading(false);
     }
+  };
 
-    setTasks(prev => prev.map(t => {
-      if ((t._id || t.id) !== taskId) return t;
-      return { 
-        ...t, 
-        status: nextStatus,
-        completedAt: nextStatus === 'Completed' ? new Date().toISOString() : t.completedAt
+  const handleStart = async (taskItem) => {
+    const taskId = taskItem._id || taskItem.id;
+    setActionLoading(true);
+    try {
+      const res = await taskService.updateTaskStatus(taskId, 'start');
+      if (res && res.success) {
+        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? {
+          ...t,
+          status: 'In Progress',
+          executionStatus: 'IN_PROGRESS',
+          progress: 50
+        } : t));
+        if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
+          setSelectedTask(prev => ({
+            ...prev,
+            status: 'In Progress',
+            executionStatus: 'IN_PROGRESS',
+            progress: 50
+          }));
+        }
+        await fetchTasks();
+      } else {
+        alert(res?.message || 'Failed to start task.');
+      }
+    } catch (err) {
+      console.error('Start task error:', err);
+      alert(err.message || 'Failed to start task.');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const openCompletionModal = (taskItem, rework = false) => {
+    setCompletionModalTask(taskItem);
+    setIsReworkMode(rework || taskItem.status === 'Rework Required');
+    setCompletionPhoto('');
+    setCompletionRemarks('');
+    setCompletionAudio('');
+    setCompletionError('');
+  };
+
+  const handleCompletionPhotoUpload = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        setCompletionPhoto(uploadEvent.target.result);
       };
-    }));
+      reader.readAsDataURL(file);
+    }
+  };
 
-    if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
-      setSelectedTask(prev => ({
-        ...prev,
-        status: nextStatus,
-        completedAt: nextStatus === 'Completed' ? new Date().toISOString() : prev.completedAt
-      }));
+  const handleCompletionSubmit = async () => {
+    if (!completionModalTask) return;
+    const taskId = completionModalTask._id || completionModalTask.id;
+    const trimmedRemarks = (completionRemarks || '').trim();
+
+    if (!completionPhoto) {
+      setCompletionError('Field photo proof is required to complete the task.');
+      return;
+    }
+    if (!trimmedRemarks) {
+      setCompletionError('Field remarks are required to complete the task.');
+      return;
+    }
+    if (!completionAudio) {
+      setCompletionError('Field audio note is required. Please record or upload a voice note.');
+      return;
+    }
+
+    setCompletionLoading(true);
+    setCompletionError('');
+
+    try {
+      const payload = {
+        completionPhoto,
+        completionPhotos: [completionPhoto],
+        remarks: trimmedRemarks,
+        workCompleted: trimmedRemarks,
+        resolutionDetails: trimmedRemarks,
+        completionAudio,
+        voiceNote: completionAudio
+      };
+      if (isReworkMode) {
+        payload.reworkPhoto = completionPhoto;
+        payload.reworkRemarks = trimmedRemarks;
+        payload.reworkAudio = completionAudio;
+      }
+
+      const res = await taskService.updateTaskStatus(taskId, 'complete', payload);
+      if (res && res.success) {
+        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? {
+          ...t,
+          status: 'Completed',
+          executionStatus: 'COMPLETED',
+          progress: 100,
+          isResolved: true,
+          resolutionStatus: 'Resolved',
+          shopPhoto: completionPhoto,
+          voiceNote: completionAudio,
+          remarks: trimmedRemarks,
+          completionDetails: {
+            completionPhoto,
+            completionPhotos: [completionPhoto],
+            workCompleted: trimmedRemarks,
+            completionAudio,
+            completedBy: user?.name || 'Assigned Manager',
+            completedAt: new Date().toISOString()
+          }
+        } : t));
+        if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
+          setSelectedTask(null);
+        }
+        setCompletionModalTask(null);
+        await fetchTasks();
+      } else {
+        setCompletionError(res?.message || 'Failed to complete task.');
+      }
+    } catch (err) {
+      console.error('Complete task error:', err);
+      setCompletionError(err.message || 'Failed to complete task.');
+    } finally {
+      setCompletionLoading(false);
     }
   };
 
@@ -509,6 +477,10 @@ const Tasks = ({ onNavigate }) => {
         return { bg: '#fef3c7', text: '#92400e', label: 'Pending Acceptance' };
       case 'Accepted':
         return { bg: '#dbeafe', text: '#1e40af', label: 'Accepted' };
+      case 'Rejected':
+        return { bg: '#fee2e2', text: '#991b1b', label: 'Rejected' };
+      case 'Rework Required':
+        return { bg: '#fff1f2', text: '#be123c', label: 'Rework Required' };
       default:
         return { bg: '#fef3c7', text: '#92400e', label: status || 'Pending' };
     }
@@ -726,12 +698,14 @@ const Tasks = ({ onNavigate }) => {
           }}
         >
           <option value="All">All Statuses</option>
-          <option value="Assigned">Assigned</option>
+          <option value="Pending Acceptance">Pending Acceptance</option>
           <option value="Accepted">Accepted</option>
           <option value="In Progress">In Progress</option>
-          <option value="Pending">Pending</option>
           <option value="Completed">Completed</option>
+          <option value="Rework Required">Rework Required</option>
           <option value="Rejected">Rejected</option>
+          <option value="Assigned">Assigned</option>
+          <option value="Pending">Pending</option>
           <option value="Cancelled">Cancelled</option>
           <option value="Overdue">Overdue</option>
           <option value="Suspended">Suspended</option>
@@ -981,9 +955,60 @@ const Tasks = ({ onNavigate }) => {
                           {/* Only the assigned manager gets task execution action buttons */}
                           {isAssignedToUser(item) && (
                             <>
-                              {['Assigned', 'Accepted'].includes(item.status) && (
+                              {/* 1. Pending Acceptance: Accept & Reject */}
+                              {['Pending Acceptance', 'Pending'].includes(item.status) && (
+                                <>
+                                  <button
+                                    onClick={() => handleAccept(item)}
+                                    disabled={actionLoading}
+                                    title="Accept Task Allocation"
+                                    style={{
+                                      padding: '4px 10px',
+                                      fontSize: '0.74rem',
+                                      fontWeight: 700,
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      background: '#10b981',
+                                      color: '#ffffff',
+                                      cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    <Check size={12} />
+                                    <span>Accept</span>
+                                  </button>
+                                  <button
+                                    onClick={() => openRejectModal(item)}
+                                    disabled={actionLoading}
+                                    title="Reject Task Allocation"
+                                    style={{
+                                      padding: '4px 10px',
+                                      fontSize: '0.74rem',
+                                      fontWeight: 700,
+                                      borderRadius: '6px',
+                                      border: 'none',
+                                      background: '#ef4444',
+                                      color: '#ffffff',
+                                      cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: '4px'
+                                    }}
+                                  >
+                                    <X size={12} />
+                                    <span>Reject</span>
+                                  </button>
+                                </>
+                              )}
+
+                              {/* 2. Accepted (or Assigned for High priority): Start */}
+                              {(item.status === 'Accepted' || (item.status === 'Assigned' && item.priority === 'High')) && (
                                 <button
-                                  onClick={() => openTaskModal(item)}
+                                  onClick={() => handleStart(item)}
+                                  disabled={actionLoading}
+                                  title="Start Work on Task"
                                   style={{
                                     padding: '4px 10px',
                                     fontSize: '0.74rem',
@@ -992,15 +1017,48 @@ const Tasks = ({ onNavigate }) => {
                                     border: 'none',
                                     background: '#4f46e5',
                                     color: '#ffffff',
-                                    cursor: 'pointer'
+                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
                                   }}
                                 >
-                                  Start
+                                  <Play size={12} />
+                                  <span>Start</span>
                                 </button>
                               )}
-                              {item.status === 'Rework Required' && (
+
+                              {/* 3. In Progress: Complete (Opens completion form modal) */}
+                              {item.status === 'In Progress' && (
                                 <button
-                                  onClick={() => openTaskModal(item)}
+                                  onClick={() => openCompletionModal(item, false)}
+                                  disabled={actionLoading}
+                                  title="Complete Task with Proof"
+                                  style={{
+                                    padding: '4px 10px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: '#059669',
+                                    color: '#ffffff',
+                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
+                                  }}
+                                >
+                                  <CheckCircle2 size={12} />
+                                  <span>Complete</span>
+                                </button>
+                              )}
+
+                              {/* 4. Rework Required: Submit Rework */}
+                              {['Rework Required', 'Rework'].includes(item.status) && (
+                                <button
+                                  onClick={() => openCompletionModal(item, true)}
+                                  disabled={actionLoading}
+                                  title="Submit Rework"
                                   style={{
                                     padding: '4px 10px',
                                     fontSize: '0.74rem',
@@ -1009,27 +1067,14 @@ const Tasks = ({ onNavigate }) => {
                                     border: 'none',
                                     background: '#e11d48',
                                     color: '#ffffff',
-                                    cursor: 'pointer'
+                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '4px'
                                   }}
                                 >
-                                  Start Rework
-                                </button>
-                              )}
-                              {item.status === 'In Progress' && (
-                                <button
-                                  onClick={() => openTaskModal(item)}
-                                  style={{
-                                    padding: '4px 10px',
-                                    fontSize: '0.74rem',
-                                    fontWeight: 700,
-                                    borderRadius: '6px',
-                                    border: 'none',
-                                    background: '#10b981',
-                                    color: '#ffffff',
-                                    cursor: 'pointer'
-                                  }}
-                                >
-                                  Complete
+                                  <RefreshCw size={12} />
+                                  <span>Rework</span>
                                 </button>
                               )}
                             </>
@@ -1344,66 +1389,73 @@ const Tasks = ({ onNavigate }) => {
                 )}
               </div>
 
-                            {/* 2. Start Work Action / Status Banner */}
+              {/* 2. Status Banner */}
               {(() => {
                 const status = selectedTask?.status;
                 const isAssigned = isAssignedToUser(selectedTask);
-                const isSuspended = ['Suspend Requested', 'Suspended'].includes(status);
                 const isCompleted = ['Completed', 'Resolved', 'Closed'].includes(status);
                 const isClosed = status === 'Closed';
                 const isInProgress = status === 'In Progress';
-                const isRework = status === 'Rework Required';
-                const hasProofPhoto = Boolean(
-                  actionPhoto ||
-                  (selectedTask.photos && selectedTask.photos.length > 0 && selectedTask.photos[0] !== '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg') ||
-                  selectedTask.shopPhoto
-                );
-                const hasFieldRemarks = Boolean(actionReason && actionReason.trim().length > 0);
-                const mandatoryFieldsCompleted = hasProofPhoto && hasFieldRemarks;
-                const canStart = isAssigned && !isSuspended && !isCompleted && !isInProgress;
+                const isRework = ['Rework Required', 'Rework'].includes(status);
+                const isPendingAcceptance = ['Pending Acceptance', 'Pending'].includes(status);
+                const isAccepted = status === 'Accepted' || (status === 'Assigned' && selectedTask.priority === 'High');
+                const isRejected = status === 'Rejected';
 
                 let bg = '#eff6ff';
                 let border = '1px solid #bfdbfe';
                 let titleColor = '#1e40af';
                 let subColor = '#3b82f6';
                 let title = `Field Work Status: ${status || 'Pending'}`;
-                let subtitle = 'Click Start Work when you begin on-ground inspection.';
+                let subtitle = 'Review the task details and status.';
 
-                if (isSuspended) {
-                  bg = 'linear-gradient(135deg, #fff7ed, #ffedd5)';
-                  border = '1px solid #fed7aa';
-                  titleColor = '#c2410c';
-                  subColor = '#ea580c';
-                  title = status === 'Suspend Requested' ? 'â¸ï¸ Field Work Status: Suspend Requested' : 'â¸ï¸ Field Work Status: Suspended';
-                  subtitle = 'Suspension request has been submitted and is awaiting review. Work is paused.';
-                } else if (isClosed) {
-                  bg = 'linear-gradient(135deg, #f8fafc, #f1f5f9)';
-                  border = '1px solid #cbd5e1';
-                  titleColor = '#334155';
-                  subColor = '#475569';
-                  title = 'âœ” Field Work Status: Closed';
-                  subtitle = 'Admin has accepted the completion details and closed the task.';
-                } else if (isCompleted) {
-                  bg = 'linear-gradient(135deg, #f0fdf4, #dcfce7)';
-                  border = '1px solid #86efac';
-                  titleColor = '#15803d';
-                  subColor = '#16a34a';
-                  title = 'âœ… Field Work Status: Completed';
-                  subtitle = 'Field verification and inspection completed successfully.';
-                } else if (isRework) {
-                  bg = 'linear-gradient(135deg, #fff1f2, #ffe4e6)';
-                  border = '1px solid #fecdd3';
-                  titleColor = '#be123c';
-                  subColor = '#e11d48';
-                  title = 'âš ï¸ Field Work Status: Rework Required';
-                  subtitle = 'Admin has requested rework. Click Start Rework to begin correcting findings.';
+                if (isPendingAcceptance) {
+                  bg = 'linear-gradient(135deg, #fffbeb, #fef3c7)';
+                  border = '1px solid #fde68a';
+                  titleColor = '#92400e';
+                  subColor = '#b45309';
+                  title = '⏳ Status: Pending Acceptance';
+                  subtitle = isAssigned 
+                    ? 'Review the task requirements below and either Accept or Reject this allocation.'
+                    : `Awaiting acceptance by assigned manager (${selectedTask.assignedTo}).`;
+                } else if (isAccepted) {
+                  bg = 'linear-gradient(135deg, #eff6ff, #dbeafe)';
+                  border = '1px solid #bfdbfe';
+                  titleColor = '#1e40af';
+                  subColor = '#2563eb';
+                  title = '📋 Status: Accepted & Ready to Start';
+                  subtitle = isAssigned
+                    ? 'Task accepted. Click Start Work when you are ready to begin on-ground inspection.'
+                    : `Task accepted by ${selectedTask.assignedTo}. Work will start on ground.`;
                 } else if (isInProgress) {
                   bg = '#f5f3ff';
                   border = '1px solid #ddd6fe';
                   titleColor = '#6d28d9';
                   subColor = '#7c3aed';
-                  title = 'ðŸŸ¢ Work In Progress';
-                  subtitle = 'Task execution is active. Capture proof and submit resolution below.';
+                  title = '🟢 Status: Work In Progress';
+                  subtitle = isAssigned
+                    ? 'Task execution is active. When done, click Complete Task to submit photo proof, remarks, and voice note.'
+                    : `Inspection is actively underway by assigned manager (${selectedTask.assignedTo}).`;
+                } else if (isRework) {
+                  bg = 'linear-gradient(135deg, #fff1f2, #ffe4e6)';
+                  border = '1px solid #fecdd3';
+                  titleColor = '#be123c';
+                  subColor = '#e11d48';
+                  title = '⚠️ Status: Rework Required';
+                  subtitle = 'Admin has requested rework. Check notes and submit corrected deliverables.';
+                } else if (isCompleted) {
+                  bg = 'linear-gradient(135deg, #f0fdf4, #dcfce7)';
+                  border = '1px solid #86efac';
+                  titleColor = '#15803d';
+                  subColor = '#16a34a';
+                  title = isClosed ? '✔ Status: Closed' : '✅ Status: Completed';
+                  subtitle = 'Field verification deliverables submitted and verified successfully.';
+                } else if (isRejected) {
+                  bg = 'linear-gradient(135deg, #fef2f2, #fee2e2)';
+                  border = '1px solid #fca5a5';
+                  titleColor = '#991b1b';
+                  subColor = '#dc2626';
+                  title = '🚫 Status: Rejected';
+                  subtitle = 'This task allocation was rejected. Rejection details are shown below.';
                 }
 
                 return (
@@ -1428,102 +1480,139 @@ const Tasks = ({ onNavigate }) => {
                       </div>
                     </div>
 
-                    {canStart && !isRework && (
-                      <button
-                        type="button"
-                        onClick={() => handleDirectStatusChange(selectedTask._id, 'In Progress')}
-                        disabled={actionLoading || !mandatoryFieldsCompleted}
-                        title={!mandatoryFieldsCompleted ? 'Upload photo proof and enter field remarks before starting work.' : 'Start work on this task'}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: mandatoryFieldsCompleted ? 'linear-gradient(135deg, #4f46e5, #4338ca)' : '#cbd5e1',
-                          color: mandatoryFieldsCompleted ? '#ffffff' : '#64748b',
-                          fontSize: '0.84rem',
-                          fontWeight: 700,
-                          cursor: (mandatoryFieldsCompleted && !actionLoading) ? 'pointer' : 'not-allowed',
-                          boxShadow: mandatoryFieldsCompleted ? '0 2px 6px rgba(79, 70, 229, 0.3)' : 'none'
-                        }}
-                      >
-                        <Play size={14} />
-                        <span>{actionLoading ? 'Starting...' : mandatoryFieldsCompleted ? 'Start Work' : 'Start Work (Locked)'}</span>
-                      </button>
-                    )}
-                    {isPincodeManager && canStart && isRework && !reworkMode && (
-                      <button
-                        type="button"
-                        onClick={() => { setReworkMode(true); setReworkPhoto(''); setReworkReason(''); setReworkAudio(null); }}
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          padding: '8px 16px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: 'linear-gradient(135deg, #e11d48, #be123c)',
-                          color: '#ffffff',
-                          fontSize: '0.84rem',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          boxShadow: '0 2px 6px rgba(225, 29, 72, 0.3)'
-                        }}
-                      >
-                        <RefreshCw size={14} />
-                        <span>Start Rework</span>
-                      </button>
-                    )}
+                    {/* Banner Action Buttons for Assigned Manager */}
+                    {isAssigned && (
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                        {isPendingAcceptance && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleAccept(selectedTask)}
+                              disabled={actionLoading}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: '#10b981',
+                                color: '#ffffff',
+                                fontSize: '0.82rem',
+                                fontWeight: 700,
+                                cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
+                              }}
+                            >
+                              <Check size={14} />
+                              <span>Accept Task</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => openRejectModal(selectedTask)}
+                              disabled={actionLoading}
+                              style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '5px',
+                                padding: '8px 14px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                background: '#ef4444',
+                                color: '#ffffff',
+                                fontSize: '0.82rem',
+                                fontWeight: 700,
+                                cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                boxShadow: '0 2px 6px rgba(239, 68, 68, 0.3)'
+                              }}
+                            >
+                              <X size={14} />
+                              <span>Reject Task</span>
+                            </button>
+                          </>
+                        )}
 
-                    {isInProgress && (
-                      <span style={{
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        background: '#ede9fe',
-                        color: '#6d28d9',
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        border: '1px solid #ddd6fe'
-                      }}>
-                        IN PROGRESS
-                      </span>
-                    )}
+                        {isAccepted && (
+                          <button
+                            type="button"
+                            onClick={() => handleStart(selectedTask)}
+                            disabled={actionLoading}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
+                              color: '#ffffff',
+                              fontSize: '0.84rem',
+                              fontWeight: 700,
+                              cursor: actionLoading ? 'not-allowed' : 'pointer',
+                              boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
+                            }}
+                          >
+                            <Play size={14} />
+                            <span>Start Work</span>
+                          </button>
+                        )}
 
-                    {isSuspended && (
-                      <span style={{
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        background: '#ffedd5',
-                        color: '#c2410c',
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        border: '1px solid #fed7aa'
-                      }}>
-                        {status === 'Suspend Requested' ? 'SUSPEND REQUESTED' : 'SUSPENDED'}
-                      </span>
-                    )}
+                        {isInProgress && (
+                          <button
+                            type="button"
+                            onClick={() => openCompletionModal(selectedTask, false)}
+                            disabled={actionLoading}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: 'linear-gradient(135deg, #059669, #047857)',
+                              color: '#ffffff',
+                              fontSize: '0.84rem',
+                              fontWeight: 700,
+                              cursor: actionLoading ? 'not-allowed' : 'pointer',
+                              boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)'
+                            }}
+                          >
+                            <CheckCircle2 size={14} />
+                            <span>Complete Task</span>
+                          </button>
+                        )}
 
-                    {isCompleted && (
-                      <span style={{
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        background: isClosed ? '#f1f5f9' : '#dcfce7',
-                        color: isClosed ? '#334155' : '#15803d',
-                        padding: '4px 10px',
-                        borderRadius: '20px',
-                        border: isClosed ? '1px solid #cbd5e1' : '1px solid #86efac'
-                      }}>
-                        {isClosed ? 'CLOSED' : 'COMPLETED'}
-                      </span>
+                        {isRework && (
+                          <button
+                            type="button"
+                            onClick={() => openCompletionModal(selectedTask, true)}
+                            disabled={actionLoading}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              padding: '8px 16px',
+                              borderRadius: '8px',
+                              border: 'none',
+                              background: 'linear-gradient(135deg, #e11d48, #be123c)',
+                              color: '#ffffff',
+                              fontSize: '0.84rem',
+                              fontWeight: 700,
+                              cursor: actionLoading ? 'not-allowed' : 'pointer',
+                              boxShadow: '0 2px 6px rgba(225, 29, 72, 0.3)'
+                            }}
+                          >
+                            <RefreshCw size={14} />
+                            <span>Submit Rework</span>
+                          </button>
+                        )}
+                      </div>
                     )}
                   </div>
                 );
               })()}
 
-
-              {/* Rework Form â€” shown after clicking Start Rework */}
+              {/* Rework Reason / Admin Review Notice */}
               {selectedTask?.adminReview?.remarks && (
                 <div style={{
                   background: '#fff1f2',
@@ -1544,337 +1633,214 @@ const Tasks = ({ onNavigate }) => {
                 </div>
               )}
 
-              {isPincodeManager && selectedTask?.status === 'Rework Required' && reworkMode && (
+              {/* Rejection Notice if rejected */}
+              {(selectedTask?.status === 'Rejected' || selectedTask?.rejectionDetails) && (
                 <div style={{
-                  background: 'linear-gradient(135deg, #fff1f2, #ffe4e6)',
-                  border: '1.5px solid #fecdd3',
-                  borderRadius: '14px',
-                  padding: '18px 18px 14px',
+                  background: '#fef2f2',
+                  border: '1.5px solid #fecaca',
+                  borderRadius: '12px',
+                  padding: '12px 16px',
                   marginBottom: '16px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <RefreshCw size={16} style={{ color: '#be123c' }} />
-                      <span style={{ fontSize: '0.87rem', fontWeight: 800, color: '#be123c' }}>Rework Submission Form</span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => { setReworkMode(false); stopReworkRecording(); }}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#be123c', fontSize: '18px', lineHeight: 1, fontWeight: 700 }}
-                    >Ã—</button>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', fontWeight: 800, color: '#991b1b', textTransform: 'uppercase', marginBottom: '4px' }}>
+                    <Ban size={14} /> Rejection Reason & Details
                   </div>
-
-                  {/* Rework Photo */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#be123c' }}>
-                        <Camera size={15} /> Rework Photo
-                      </div>
-                      <label htmlFor="rework-photo-input" style={{
-                        display: 'inline-flex', alignItems: 'center', gap: '4px',
-                        padding: '4px 10px', borderRadius: '6px', background: '#fecdd3',
-                        color: '#be123c', border: '1px solid #fda4af', fontSize: '0.75rem',
-                        fontWeight: 700, cursor: 'pointer'
-                      }}>
-                        <Upload size={12} /> {reworkPhoto ? 'Change' : 'Upload Photo'}
-                      </label>
-                      <input id="rework-photo-input" type="file" accept="image/*" onChange={handleReworkPhotoUpload} style={{ display: 'none' }} />
-                    </div>
-                    {reworkPhoto ? (
-                      <div style={{ position: 'relative', borderRadius: '10px', overflow: 'hidden', border: '1px solid #fecdd3' }}>
-                        <img src={reworkPhoto} alt="Rework proof" style={{ width: '100%', height: '140px', objectFit: 'cover', display: 'block' }} onError={e => { e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg'; }} />
-                        <span style={{ position: 'absolute', bottom: 6, left: 8, fontSize: '10px', fontWeight: 700, background: 'rgba(190,18,60,0.75)', color: '#fff', padding: '2px 8px', borderRadius: '4px' }}>Rework Proof Attached</span>
-                      </div>
-                    ) : (
-                      <label htmlFor="rework-photo-input" style={{ height: '90px', background: '#fff', borderRadius: '10px', border: '2px dashed #fda4af', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '5px', cursor: 'pointer', color: '#be123c' }}>
-                        <Camera size={24} style={{ color: '#fda4af' }} />
-                        <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>Click to upload rework inspection photo</span>
-                        <span style={{ fontSize: '0.7rem', color: '#fda4af' }}>PNG, JPG or JPEG</span>
-                      </label>
-                    )}
+                  <div style={{ fontSize: '0.84rem', color: '#7f1d1d', fontWeight: 600 }}>
+                    {selectedTask.rejectionDetails?.rejectionReason || selectedTask.rejectionReason || selectedTask.remarks || 'No specific reason provided.'}
                   </div>
-
-                  {/* Rework Reason */}
-                  <div style={{ marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#be123c', marginBottom: '6px' }}>
-                      <FileText size={15} /> Rework Reason / Field Remarks
-                    </div>
-                    <textarea
-                      rows={3}
-                      value={reworkReason}
-                      onChange={(e) => setReworkReason(e.target.value)}
-                      placeholder="Describe rework findings, corrective steps taken, or issues identified during rework..."
-                      style={{ width: '100%', padding: '9px 11px', borderRadius: '8px', border: '1.5px solid #fda4af', background: '#fff', fontSize: '0.83rem', color: '#1e293b', outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}
-                    />
-                  </div>
-
-                  {/* Rework Audio */}
-                  <div style={{ marginBottom: '14px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#be123c', marginBottom: '8px' }}>
-                      <Mic size={15} /> Audio Note
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                      {!reworkRecording ? (
-                        <button
-                          type="button"
-                          onClick={startReworkRecording}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 14px', borderRadius: '8px', border: 'none', background: reworkAudio ? '#fecdd3' : 'linear-gradient(135deg, #be123c, #9f1239)', color: reworkAudio ? '#be123c' : '#fff', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer' }}
-                        >
-                          <Mic size={14} /> {reworkAudio ? 'Re-record Audio' : 'Start Recording'}
-                        </button>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={stopReworkRecording}
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', padding: '7px 14px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #ef4444, #dc2626)', color: '#fff', fontSize: '0.8rem', fontWeight: 700, cursor: 'pointer', animation: 'pulse 1s infinite' }}
-                        >
-                          â¹ Stop Recording
-                        </button>
-                      )}
-                      {reworkRecording && (
-                        <span style={{ fontSize: '0.75rem', color: '#be123c', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          ðŸ”´ Recording...
-                        </span>
-                      )}
-                    </div>
-                    {reworkAudio && !reworkRecording && (
-                      <div style={{ marginTop: '10px', background: '#fff', borderRadius: '8px', padding: '8px 12px', border: '1px solid #fda4af' }}>
-                        <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#be123c', marginBottom: '4px' }}>ðŸŽ™ Rework Audio Recorded</div>
-                        <audio controls src={reworkAudio} style={{ width: '100%', height: '32px' }} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Submit Rework */}
-                  <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                    <button
-                      type="button"
-                      onClick={() => { setReworkMode(false); stopReworkRecording(); }}
-                      style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #fda4af', background: '#fff', color: '#be123c', fontSize: '0.83rem', fontWeight: 700, cursor: 'pointer' }}
-                    >Cancel</button>
-                    <button
-                      type="button"
-                      onClick={() => handleTaskAction('start')}
-                      disabled={actionLoading}
-                      style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '8px 18px', borderRadius: '8px', border: 'none', background: actionLoading ? '#fda4af' : 'linear-gradient(135deg, #e11d48, #be123c)', color: '#fff', fontSize: '0.83rem', fontWeight: 700, cursor: actionLoading ? 'not-allowed' : 'pointer', boxShadow: '0 2px 6px rgba(225,29,72,0.3)' }}
-                    >
-                      <RefreshCw size={14} />
-                      <span>{actionLoading ? 'Submitting...' : 'Submit & Start Rework'}</span>
-                    </button>
+                  <div style={{ fontSize: '0.72rem', color: '#991b1b', marginTop: '4px' }}>
+                    Rejected by {selectedTask.rejectionDetails?.rejectingManagerName || selectedTask.assignedTo || 'Assigned Manager'}
+                    {selectedTask.rejectionDetails?.timestamp ? ` on ${new Date(selectedTask.rejectionDetails.timestamp).toLocaleString('en-IN')}` : ''}
                   </div>
                 </div>
               )}
 
-              {/* 3. Photo Upload Section */}
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '14px 16px',
-                marginBottom: '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                    <Camera size={16} style={{ color: selectedTask?.status === 'Rework Required' ? '#be123c' : '#2563eb' }} />
-                    <span>{!isAssignedToUser(selectedTask) ? 'Field Photo (Read-Only)' : selectedTask?.status === 'Rework Required' ? 'Previous Field Photo (Read-Only)' : ['Completed','Resolved','Closed'].includes(selectedTask?.status) ? 'Photo Proof (Read-Only)' : 'Photo Upload'}</span>
-                    {selectedTask?.status === 'Rework Required' && (
-                      <span style={{ fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '20px', border: '1px solid #fecaca' }}>ORIGINAL WORK</span>
-                    )}
+              {/* Completed Task Deliverables Section (Read-Only proof of work) */}
+              {(['Completed', 'Closed', 'Resolved'].includes(selectedTask?.status) || selectedTask?.completionDetails) && (
+                <div style={{
+                  background: '#f0fdf4',
+                  border: '1.5px solid #bbf7d0',
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 800, color: '#166534' }}>
+                      <CheckCircle2 size={16} style={{ color: '#15803d' }} />
+                      <span>Completed Deliverables Proof</span>
+                    </div>
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: '#dcfce7', color: '#15803d', padding: '2px 8px', borderRadius: '4px', border: '1px solid #86efac' }}>
+                      VERIFIED ON GROUND
+                    </span>
                   </div>
-                  {isAssignedToUser(selectedTask) && !['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status) && (
-                    <>
-                      <label
-                        htmlFor="task-action-photo-input"
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          padding: '5px 12px',
-                          borderRadius: '6px',
-                          background: '#eff6ff',
-                          color: '#2563eb',
-                          border: '1px solid #bfdbfe',
-                          fontSize: '0.78rem',
-                          fontWeight: 700,
-                          cursor: 'pointer'
-                        }}
-                      >
-                        <Upload size={13} />
-                        <span>{actionPhoto ? 'Change Photo' : 'Upload Photo'}</span>
-                      </label>
-                      <input
-                        id="task-action-photo-input"
-                        type="file"
-                        accept="image/*"
-                        onChange={handlePhotoUpload}
-                        style={{ display: 'none' }}
-                      />
-                    </>
-                  )}
-                </div>
 
-                {actionPhoto ? (
-                  <div style={{ position: 'relative', width: '100%', borderRadius: '10px', overflow: 'hidden', border: '1px solid #e2e8f0', background: '#f8fafc' }}>
-                    <img 
-                      src={actionPhoto} 
-                      alt="Field verification capture"
-                      style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
-                      onError={(e) => {
-                        e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg';
-                      }}
-                    />
+                  {/* Photo Proof */}
+                  {(selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto) && (
+                    <div style={{ marginBottom: '12px' }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        Field Photo Proof
+                      </div>
+                      <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #86efac' }}>
+                        <img
+                          src={selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto}
+                          alt="Verification Proof"
+                          style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
+                          onError={(e) => { e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg'; }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setPreviewPhoto(selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto)}
+                          style={{
+                            position: 'absolute',
+                            bottom: '8px',
+                            right: '8px',
+                            background: 'rgba(0,0,0,0.65)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '4px',
+                            padding: '3px 8px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          <Maximize2 size={12} /> View Full
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Field Remarks */}
+                  <div style={{ marginBottom: '12px' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', marginBottom: '4px', textTransform: 'uppercase' }}>
+                      Field Remarks & Resolution
+                    </div>
                     <div style={{
-                      position: 'absolute',
-                      bottom: '8px',
-                      left: '8px',
-                      right: '8px',
-                      display: 'flex',
-                      justifyContent: 'space-between',
-                      alignItems: 'center'
+                      padding: '8px 12px',
+                      background: '#ffffff',
+                      border: '1px solid #bbf7d0',
+                      borderRadius: '8px',
+                      fontSize: '0.82rem',
+                      color: '#1e293b'
                     }}>
-                      <span style={{
-                        fontSize: '10px',
-                        fontWeight: 700,
-                        background: 'rgba(0,0,0,0.65)',
-                        color: '#ffffff',
-                        padding: '2px 8px',
-                        borderRadius: '4px'
-                      }}>
-                        Field Proof Attached
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => setPreviewPhoto(actionPhoto)}
-                        style={{
-                          background: 'rgba(0,0,0,0.65)',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '4px',
-                          padding: '2px 8px',
-                          fontSize: '11px',
-                          fontWeight: 600,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '3px'
-                        }}
-                      >
-                        <Maximize2 size={12} /> View Full
-                      </button>
+                      {selectedTask.completionDetails?.workCompleted || selectedTask.completionDetails?.resolutionDetails || selectedTask.remarks || 'Deliverable conducted and verified.'}
                     </div>
                   </div>
-                ) : (
-                  (!isAssignedToUser(selectedTask) || ['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status)) ? (
-                    <div style={{ height: '70px', background: '#f8fafc', borderRadius: '10px', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', color: '#94a3b8' }}>
-                      <Camera size={20} style={{ color: '#cbd5e1' }} />
-                      <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>{!isAssignedToUser(selectedTask) ? 'No field photo submitted yet by assigned manager' : selectedTask?.status === 'Rework Required' ? 'No previous field photo recorded' : 'No field photo captured'}</span>
-                    </div>
-                  ) : (
-                    <label
-                      htmlFor="task-action-photo-input"
-                      style={{
-                        height: '110px',
-                        background: '#f8fafc',
-                        borderRadius: '10px',
-                        border: '2px dashed #cbd5e1',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        cursor: 'pointer',
-                        color: 'var(--text-muted)'
-                      }}
-                    >
-                      <Camera size={26} style={{ color: '#94a3b8' }} />
-                      <span style={{ fontSize: '0.82rem', fontWeight: 600 }}>Click to upload shop or storefront inspection photo</span>
-                      <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>PNG, JPG or JPEG from field device</span>
-                    </label>
-                  )
-                )}
-              </div>
 
-              {/* 4. Reason / Field Remarks Input */}
-              <div style={{
-                background: '#ffffff',
-                border: '1px solid var(--border)',
-                borderRadius: '12px',
-                padding: '14px 16px',
-                marginBottom: '16px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px' }}>
-                  <FileText size={16} style={{ color: '#d97706' }} />
-                  <span>
-                    {!isAssignedToUser(selectedTask) ? 'Field Remarks (Read-Only)' : selectedTask?.status === 'Rework Required' ? 'Previous Field Remarks (Read-Only)' : ['Completed','Resolved','Closed'].includes(selectedTask?.status) ? 'Field Remarks (Read-Only)' : 'Reason / Field Remarks'}
-                  </span>
-                  {selectedTask?.status === 'Rework Required' && (
-                    <span style={{ marginLeft: '6px', fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '20px', border: '1px solid #fecaca' }}>ORIGINAL SUBMISSION</span>
+                  {/* Audio Note */}
+                  {(selectedTask.completionDetails?.completionAudio || selectedTask.voiceNote) && (
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        Field Audio Note
+                      </div>
+                      <div style={{ background: '#ffffff', padding: '8px 12px', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+                        <audio controls src={selectedTask.completionDetails?.completionAudio || selectedTask.voiceNote} style={{ width: '100%', height: '32px' }} />
+                      </div>
+                    </div>
                   )}
-                  {['Completed','Resolved','Closed'].includes(selectedTask?.status) && (
-                    <span style={{ marginLeft: '6px', fontSize: '10px', fontWeight: 700, background: selectedTask?.status === 'Closed' ? '#f1f5f9' : '#dcfce7', color: selectedTask?.status === 'Closed' ? '#334155' : '#15803d', padding: '2px 8px', borderRadius: '20px', border: selectedTask?.status === 'Closed' ? '1px solid #cbd5e1' : '1px solid #86efac' }}>{selectedTask?.status === 'Closed' ? 'CLOSED' : 'COMPLETED'}</span>
+
+                  <div style={{ fontSize: '0.72rem', color: '#15803d', fontWeight: 600, marginTop: '8px', borderTop: '1px dashed #86efac', paddingTop: '6px' }}>
+                    Completed by: <strong>{selectedTask.completionDetails?.completedBy || selectedTask.assignedTo || 'Assigned Manager'}</strong>
+                    {selectedTask.completionDetails?.completedAt ? ` • ${new Date(selectedTask.completionDetails.completedAt).toLocaleString('en-IN')}` : ''}
+                  </div>
+                </div>
+              )}
+
+              {/* Previous Submission (for tasks that underwent Rework) */}
+              {selectedTask?.previousWork && (
+                <div style={{
+                  background: '#fff1f2',
+                  border: '1.5px solid #fecdd3',
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 800, color: '#9f1239' }}>
+                      <RotateCcw size={15} />
+                      <span>Previous Submission (Prior to Rework)</span>
+                    </div>
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#991b1b', padding: '2px 8px', borderRadius: '4px', border: '1px solid #fecaca' }}>
+                      READ-ONLY ARCHIVE
+                    </span>
+                  </div>
+
+                  {selectedTask.previousWork.shopPhoto && (
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9f1239', marginBottom: '3px' }}>PREVIOUS PHOTO</div>
+                      <img
+                        src={selectedTask.previousWork.shopPhoto}
+                        alt="Previous Work"
+                        style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #fecdd3' }}
+                        onError={(e) => { e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg'; }}
+                      />
+                    </div>
+                  )}
+
+                  {selectedTask.previousWork.remarks && (
+                    <div style={{ marginBottom: '10px' }}>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9f1239', marginBottom: '3px' }}>PREVIOUS REMARKS</div>
+                      <div style={{ padding: '8px 10px', background: '#fff', borderRadius: '6px', border: '1px solid #fecdd3', fontSize: '0.8rem', color: '#4c0519' }}>
+                        {selectedTask.previousWork.remarks}
+                      </div>
+                    </div>
+                  )}
+
+                  {selectedTask.previousWork.voiceNote && (
+                    <div>
+                      <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9f1239', marginBottom: '3px' }}>PREVIOUS AUDIO NOTE</div>
+                      <audio controls src={selectedTask.previousWork.voiceNote} style={{ width: '100%', height: '30px' }} />
+                    </div>
                   )}
                 </div>
-                {(!isAssignedToUser(selectedTask) || ['Completed','Resolved','Closed','Rework Required'].includes(selectedTask?.status)) ? (
-                  <div style={{
-                    width: '100%',
-                    padding: '10px 12px',
-                    borderRadius: '8px',
-                    border: '1px solid ' + (selectedTask?.status === 'Rework Required' ? '#fecdd3' : '#e2e8f0'),
-                    background: selectedTask?.status === 'Rework Required' ? '#fff1f2' : '#f0fdf4',
-                    fontSize: '0.84rem',
-                    color: selectedTask?.status === 'Rework Required' ? '#881337' : '#374151',
-                    minHeight: '72px',
-                    whiteSpace: 'pre-wrap',
-                    wordBreak: 'break-word',
-                    lineHeight: '1.5',
-                    boxSizing: 'border-box'
-                  }}>
-                    {actionReason || <span style={{ color: '#9ca3af', fontStyle: 'italic' }}>No previous remarks recorded.</span>}
-                  </div>
-                ) : (
-                  <textarea
-                    rows={3}
-                    value={actionReason}
-                    onChange={(e) => setActionReason(e.target.value)}
-                    placeholder="Enter reason, inspection findings, resolution summary, or suspend justification..."
-                    style={{
-                      width: '100%',
-                      padding: '10px 12px',
-                      borderRadius: '8px',
-                      border: '1px solid var(--border)',
-                      background: '#f8fafc',
-                      fontSize: '0.84rem',
-                      color: 'var(--text-main)',
-                      outline: 'none',
-                      resize: 'vertical',
-                      boxSizing: 'border-box'
-                    }}
-                  />
-                )}
-              </div>
+              )}
 
-              {/* 5. Voice note & Meta info */}
-              {selectedTask.voiceNote && (
+              {/* In Progress Callout */}
+              {selectedTask?.status === 'In Progress' && (
                 <div style={{
                   background: '#f8fafc',
                   border: '1px solid #e2e8f0',
-                  borderRadius: '10px',
-                  padding: '10px 14px',
-                  marginBottom: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px'
+                  borderRadius: '12px',
+                  padding: '14px 16px',
+                  marginBottom: '16px'
                 }}>
-                  <Volume2 size={16} style={{ color: '#4f46e5', flexShrink: 0 }} />
-                  <div style={{ flex: 1 }}>
-                    <div style={{ fontSize: '0.75rem', fontWeight: 700, color: '#4f46e5', marginBottom: '4px' }}>Field Audio Note</div>
-                    <audio controls src={selectedTask.voiceNote} style={{ width: '100%', height: '32px' }} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '0.84rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
+                    <ClipboardList size={16} style={{ color: '#4f46e5' }} />
+                    <span>Inspection Deliverable Requirements</span>
                   </div>
+                  <p style={{ fontSize: '0.8rem', color: '#64748b', margin: '0 0 10px', lineHeight: 1.5 }}>
+                    To mark this task as completed, the assigned manager must record all 3 deliverables: a field inspection photo, notes/remarks, and a voice note recording.
+                  </p>
+                  {isAssignedToUser(selectedTask) && (
+                    <button
+                      type="button"
+                      onClick={() => openCompletionModal(selectedTask, false)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '8px',
+                        border: 'none',
+                        background: '#059669',
+                        color: '#ffffff',
+                        fontSize: '0.82rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <CheckCircle2 size={14} />
+                      <span>Open Completion Form</span>
+                    </button>
+                  )}
                 </div>
               )}
             </div>
 
-            {/* Modal Footer: Solved, Suspend, Not Solved, and Close */}
+            {/* Modal Footer */}
             <div style={{
               padding: '14px 22px',
               borderTop: '1px solid var(--border)',
@@ -1885,220 +1851,184 @@ const Tasks = ({ onNavigate }) => {
               flexWrap: 'wrap',
               gap: '10px'
             }}>
-              {/* Decision Action Buttons — Controlled by Ownership & Mandatory Validation */}
+              {/* Ownership & Action Controls */}
               {(() => {
                 const isAssigned = isAssignedToUser(selectedTask);
-                const hasProofPhoto = Boolean(
-                  actionPhoto ||
-                  (selectedTask.photos && selectedTask.photos.length > 0 && selectedTask.photos[0] !== '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg') ||
-                  selectedTask.shopPhoto
-                );
-                const hasFieldRemarks = Boolean(actionReason && actionReason.trim().length > 0);
-                const mandatoryFieldsCompleted = hasProofPhoto && hasFieldRemarks;
+                const status = selectedTask?.status;
 
                 // Rule: Non-assigned Managers get NO execution action buttons. Read-only only.
                 if (!isAssigned) {
                   return (
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '8px',
-                        padding: '8px 16px',
+                        padding: '6px 14px',
                         borderRadius: '8px',
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        fontSize: '0.82rem',
+                        background: '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        fontSize: '0.8rem',
                         fontWeight: 700,
                         color: '#475569'
                       }}>
-                        <ShieldCheck size={16} style={{ color: '#0284c7' }} />
-                        <span>Assigned Manager: {selectedTask.assignedTo || selectedTask.assignedManagerName || 'Assigned Manager'} (Read-Only)</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
-                        <span style={{
-                          padding: '5px 12px',
-                          borderRadius: '6px',
-                          background: '#eff6ff',
-                          color: '#1d4ed8',
-                          fontSize: '0.82rem',
-                          fontWeight: 800,
-                          border: '1px solid #bfdbfe'
-                        }}>
-                          {selectedTask.status || 'Accepted'}
-                        </span>
+                        <ShieldCheck size={15} style={{ color: '#0284c7' }} />
+                        <span>Assigned Manager: {selectedTask.assignedTo || 'Unassigned'} (Read-Only)</span>
                       </div>
                     </div>
                   );
                 }
 
-                if (selectedTask?.status === 'Rework Required') {
+                // If Assigned: show contextual buttons based on workflow stage
+                if (['Pending Acceptance', 'Pending'].includes(status)) {
                   return (
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '8px 16px',
-                      borderRadius: '8px',
-                      background: 'linear-gradient(135deg, #fff1f2, #ffe4e6)',
-                      border: '1.5px solid #fecdd3',
-                      fontSize: '0.82rem',
-                      fontWeight: 700,
-                      color: '#be123c'
-                    }}>
-                      <RefreshCw size={14} /> Rework Required — Previous work is preserved above
-                    </div>
-                  );
-                }
-
-                const isTerminal = ['Completed', 'Resolved', 'Closed', 'Suspend Requested', 'Suspended'].includes(selectedTask?.status);
-                if (isTerminal) {
-                  const isCompleted = selectedTask?.status === 'Completed' || selectedTask?.status === 'Resolved';
-                  return (
-                    <div style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      padding: '9px 18px',
-                      borderRadius: '10px',
-                      background: isCompleted ? 'linear-gradient(135deg, #dcfce7, #f0fdf4)' : 'linear-gradient(135deg, #fff7ed, #ffedd5)',
-                      border: isCompleted ? '1.5px solid #86efac' : '1.5px solid #fed7aa',
-                      fontSize: '0.84rem',
-                      fontWeight: 700,
-                      color: isCompleted ? '#15803d' : '#c2410c'
-                    }}>
-                      {selectedTask?.status === 'Closed' ? (
-                        <><CheckCircle2 size={16} /> Task Closed (Accepted by Admin) — Completed</>
-                      ) : isCompleted ? (
-                        <><CheckCircle2 size={16} /> Task Completed — All Work Submitted</>
-                      ) : (
-                        <><AlertCircle size={16} /> Suspension Requested — Awaiting Review</>
-                      )}
-                    </div>
-                  );
-                }
-
-                return (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                    {/* Admin Status Display (Read-Only — Manager cannot change Admin acceptance) */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: 700, color: 'var(--text-muted)' }}>Status:</span>
-                      <span style={{
-                        padding: '5px 12px',
-                        borderRadius: '6px',
-                        background: selectedTask.status === 'In Progress' ? '#ede9fe' : '#eff6ff',
-                        color: selectedTask.status === 'In Progress' ? '#6d28d9' : '#1d4ed8',
-                        fontSize: '0.82rem',
-                        fontWeight: 800,
-                        border: `1px solid ${selectedTask.status === 'In Progress' ? '#ddd6fe' : '#bfdbfe'}`
-                      }}>
-                        {selectedTask.status || 'Accepted'}
-                      </span>
-                    </div>
-
-                    {/* Quick Complete:
-                        AVAILABLE only when: status === 'In Progress' AND mandatoryFieldsCompleted
-                        Otherwise: LOCKED / DISABLED
-                    */}
-                    <button
-                      type="button"
-                      disabled={actionLoading || selectedTask.status !== 'In Progress' || !mandatoryFieldsCompleted}
-                      onClick={() => handleDirectStatusChange(selectedTask._id, 'Completed')}
-                      title={
-                        selectedTask.status !== 'In Progress'
-                          ? 'Task must be In Progress before it can be marked as Completed.'
-                          : !mandatoryFieldsCompleted
-                            ? 'Complete the required task information before marking this task as completed.'
-                            : 'Mark Task as Completed'
-                      }
-                      style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '8px 14px',
-                        borderRadius: '8px',
-                        border: 'none',
-                        background: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted)
-                          ? 'linear-gradient(135deg, #10b981, #059669)'
-                          : '#e2e8f0',
-                        color: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted)
-                          ? '#ffffff'
-                          : '#94a3b8',
-                        fontSize: '0.82rem',
-                        fontWeight: 700,
-                        cursor: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted && !actionLoading)
-                          ? 'pointer'
-                          : 'not-allowed',
-                        boxShadow: (selectedTask.status === 'In Progress' && mandatoryFieldsCompleted)
-                          ? '0 2px 6px rgba(16,185,129,0.3)'
-                          : 'none'
-                      }}
-                    >
-                      <CheckCircle2 size={14} />
-                      <span>{selectedTask.status !== 'In Progress' || !mandatoryFieldsCompleted ? 'Complete (Locked)' : 'Complete'}</span>
-                    </button>
-
-                    {/* Quick In Progress:
-                        - ACTIVE if status === 'In Progress'
-                        - AVAILABLE if status !== 'In Progress' AND mandatoryFieldsCompleted
-                        - LOCKED if !mandatoryFieldsCompleted
-                    */}
-                    {selectedTask.status === 'In Progress' ? (
-                      <span style={{
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        padding: '8px 14px',
-                        borderRadius: '8px',
-                        background: '#ede9fe',
-                        color: '#6d28d9',
-                        fontSize: '0.82rem',
-                        fontWeight: 800,
-                        border: '1px solid #ddd6fe'
-                      }}>
-                        <Play size={14} />
-                        <span>In Progress (Active)</span>
-                      </span>
-                    ) : (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
                       <button
                         type="button"
-                        disabled={actionLoading || !mandatoryFieldsCompleted}
-                        onClick={() => handleDirectStatusChange(selectedTask._id, 'In Progress')}
-                        title={
-                          !mandatoryFieldsCompleted
-                            ? 'Complete the required task information (photo & remarks) before starting work.'
-                            : 'Start work on this task'
-                        }
+                        onClick={() => openRejectModal(selectedTask)}
+                        disabled={actionLoading}
                         style={{
+                          padding: '8px 16px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: '#ef4444',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <X size={14} />
+                        <span>Reject Task</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAccept(selectedTask)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: '#10b981',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          boxShadow: '0 2px 6px rgba(16, 185, 129, 0.3)'
+                        }}
+                      >
+                        <Check size={14} />
+                        <span>Accept Task</span>
+                      </button>
+                    </div>
+                  );
+                }
+
+                if (status === 'Accepted' || (status === 'Assigned' && selectedTask.priority === 'High')) {
+                  return (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleStart(selectedTask)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #4f46e5, #4338ca)',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '6px',
-                          padding: '8px 14px',
-                          borderRadius: '8px',
-                          border: 'none',
-                          background: mandatoryFieldsCompleted
-                            ? 'linear-gradient(135deg, #6366f1, #4f46e5)'
-                            : '#e2e8f0',
-                          color: mandatoryFieldsCompleted
-                            ? '#ffffff'
-                            : '#94a3b8',
-                          fontSize: '0.82rem',
-                          fontWeight: 700,
-                          cursor: (mandatoryFieldsCompleted && !actionLoading) ? 'pointer' : 'not-allowed',
-                          boxShadow: mandatoryFieldsCompleted ? '0 2px 6px rgba(99,102,241,0.3)' : 'none'
+                          boxShadow: '0 2px 6px rgba(79, 70, 229, 0.3)'
                         }}
                       >
                         <Play size={14} />
-                        <span>{mandatoryFieldsCompleted ? 'In Progress' : 'In Progress (Locked)'}</span>
+                        <span>Start Work</span>
                       </button>
-                    )}
+                    </div>
+                  );
+                }
 
-                    {!mandatoryFieldsCompleted && (
-                      <span style={{ fontSize: '0.74rem', color: '#dc2626', fontWeight: 600 }}>
-                        * Photo proof & remarks required to unlock actions
-                      </span>
-                    )}
+                if (status === 'In Progress') {
+                  return (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => openCompletionModal(selectedTask, false)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #059669, #047857)',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 6px rgba(5, 150, 105, 0.3)'
+                        }}
+                      >
+                        <CheckCircle2 size={14} />
+                        <span>Complete Task</span>
+                      </button>
+                    </div>
+                  );
+                }
+
+                if (['Rework Required', 'Rework'].includes(status)) {
+                  return (
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => openCompletionModal(selectedTask, true)}
+                        disabled={actionLoading}
+                        style={{
+                          padding: '8px 18px',
+                          borderRadius: '8px',
+                          border: 'none',
+                          background: 'linear-gradient(135deg, #e11d48, #be123c)',
+                          color: '#ffffff',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          cursor: actionLoading ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          boxShadow: '0 2px 6px rgba(225, 29, 72, 0.3)'
+                        }}
+                      >
+                        <RefreshCw size={14} />
+                        <span>Submit Rework</span>
+                      </button>
+                    </div>
+                  );
+                }
+
+                // Terminal states
+                return (
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    color: status === 'Rejected' ? '#dc2626' : '#15803d'
+                  }}>
+                    {status === 'Rejected' ? <Ban size={15} /> : <CheckCircle2 size={15} />}
+                    <span>Status: {status}</span>
                   </div>
                 );
               })()}
@@ -2119,6 +2049,408 @@ const Tasks = ({ onNavigate }) => {
                 }}
               >
                 Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Rejection Reason Modal */}
+      {rejectModalTask && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div 
+            onClick={() => !rejectLoading && setRejectModalTask(null)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)' }}
+          />
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '480px',
+            background: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              padding: '18px 22px',
+              borderBottom: '1px solid #fee2e2',
+              background: '#fef2f2',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: '#fee2e2', color: '#dc2626', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <AlertCircle size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '0.96rem', fontWeight: 800, margin: 0, color: '#991b1b' }}>
+                    Reject Task Allocation
+                  </h3>
+                  <div style={{ fontSize: '0.72rem', color: '#b91c1c' }}>
+                    {rejectModalTask.taskNumber || rejectModalTask.id} • {rejectModalTask.vendor || rejectModalTask.shopName}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !rejectLoading && setRejectModalTask(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#991b1b' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px 22px' }}>
+              <p style={{ fontSize: '0.82rem', color: '#475569', margin: '0 0 12px', lineHeight: 1.5 }}>
+                Please provide the mandatory reason for rejecting this task. This reason will be recorded in the task history and reviewed by administration.
+              </p>
+
+              <div style={{ marginBottom: '14px' }}>
+                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px', textTransform: 'uppercase' }}>
+                  Rejection Reason <span style={{ color: '#dc2626' }}>*</span>
+                </label>
+                <textarea
+                  rows={4}
+                  value={rejectReason}
+                  onChange={(e) => setRejectReason(e.target.value)}
+                  placeholder="Explain why this task cannot be accepted (e.g., outside territory, merchant unavailable, wrong location)..."
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #fca5a5',
+                    fontSize: '0.84rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {rejectError && (
+                <div style={{
+                  padding: '8px 12px',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  color: '#dc2626',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginBottom: '14px'
+                }}>
+                  <AlertCircle size={14} />
+                  <span>{rejectError}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setRejectModalTask(null)}
+                  disabled={rejectLoading}
+                  style={{
+                    padding: '8px 16px',
+                    borderRadius: '8px',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontSize: '0.82rem',
+                    fontWeight: 600,
+                    cursor: rejectLoading ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={handleRejectSubmit}
+                  disabled={rejectLoading}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#dc2626',
+                    color: '#ffffff',
+                    fontSize: '0.82rem',
+                    fontWeight: 700,
+                    cursor: rejectLoading ? 'not-allowed' : 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 2px 6px rgba(220, 38, 38, 0.3)'
+                  }}
+                >
+                  {rejectLoading ? 'Rejecting...' : 'Confirm Rejection'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 7. Dedicated Completion / Rework Modal */}
+      {completionModalTask && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          zIndex: 10000,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '16px'
+        }}>
+          <div 
+            onClick={() => !completionLoading && setCompletionModalTask(null)}
+            style={{ position: 'absolute', inset: 0, background: 'rgba(15, 23, 42, 0.65)', backdropFilter: 'blur(4px)' }}
+          />
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '580px',
+            maxHeight: '90vh',
+            background: '#ffffff',
+            borderRadius: '16px',
+            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
+          }}>
+            {/* Header */}
+            <div style={{
+              padding: '18px 22px',
+              borderBottom: '1px solid var(--border)',
+              background: isReworkMode ? '#fff1f2' : '#f0fdf4',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '8px',
+                  background: isReworkMode ? '#fecdd3' : '#dcfce7',
+                  color: isReworkMode ? '#be123c' : '#15803d',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {isReworkMode ? <RefreshCw size={18} /> : <CheckCircle2 size={18} />}
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '0.98rem', fontWeight: 800, margin: 0, color: isReworkMode ? '#9f1239' : '#14532d' }}>
+                    {isReworkMode ? 'Submit Task Rework Deliverables' : 'Complete Task Deliverables'}
+                  </h3>
+                  <div style={{ fontSize: '0.74rem', color: isReworkMode ? '#be123c' : '#166534' }}>
+                    {completionModalTask.taskNumber || completionModalTask.id} • {completionModalTask.vendor || completionModalTask.shopName}
+                  </div>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => !completionLoading && setCompletionModalTask(null)}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div style={{ padding: '20px 22px', overflowY: 'auto', flex: 1 }}>
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: '10px',
+                padding: '10px 14px',
+                marginBottom: '16px',
+                fontSize: '0.78rem',
+                color: '#475569',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={15} style={{ color: '#0284c7', flexShrink: 0 }} />
+                <span>All 3 fields below (<strong>Photo</strong>, <strong>Remarks</strong>, and <strong>Audio Note</strong>) are mandatory to complete field verification.</span>
+              </div>
+
+              {/* Field 1: Photo Proof */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: 700, color: '#1e293b', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Camera size={14} style={{ color: '#2563eb' }} />
+                    <span>1. Field Photo Proof <span style={{ color: '#dc2626' }}>*</span></span>
+                  </label>
+                  {completionPhoto && (
+                    <button
+                      type="button"
+                      onClick={() => setCompletionPhoto('')}
+                      style={{ fontSize: '0.72rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
+                    >
+                      Remove
+                    </button>
+                  )}
+                </div>
+
+                {completionPhoto ? (
+                  <div style={{ position: 'relative', width: '100%', height: '140px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
+                    <img src={completionPhoto} alt="Completion Proof" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <span style={{ position: 'absolute', bottom: 6, left: 8, fontSize: '10px', fontWeight: 700, background: 'rgba(0,0,0,0.65)', color: '#fff', padding: '2px 8px', borderRadius: '4px' }}>
+                      Photo Proof Attached
+                    </span>
+                  </div>
+                ) : (
+                  <label style={{
+                    height: '100px',
+                    borderRadius: '10px',
+                    border: '2px dashed #cbd5e1',
+                    background: '#f8fafc',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '4px',
+                    cursor: 'pointer',
+                    color: '#64748b'
+                  }}>
+                    <Camera size={22} style={{ color: '#94a3b8' }} />
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>Click to upload storefront or inspection photo</span>
+                    <span style={{ fontSize: '0.68rem', color: '#94a3b8' }}>PNG, JPG or JPEG from device</span>
+                    <input type="file" accept="image/*" onChange={handleCompletionPhotoUpload} style={{ display: 'none' }} />
+                  </label>
+                )}
+              </div>
+
+              {/* Field 2: Remarks */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
+                  <FileText size={14} style={{ color: '#d97706' }} />
+                  <span>2. Field Remarks & Inspection Findings <span style={{ color: '#dc2626' }}>*</span></span>
+                </label>
+                <textarea
+                  rows={3}
+                  value={completionRemarks}
+                  onChange={(e) => setCompletionRemarks(e.target.value)}
+                  placeholder="Detail on-ground findings, verification actions conducted, status of compliance deliverables..."
+                  style={{
+                    width: '100%',
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    border: '1.5px solid #cbd5e1',
+                    fontSize: '0.84rem',
+                    color: '#0f172a',
+                    outline: 'none',
+                    resize: 'vertical',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Field 3: Voice Note */}
+              <div style={{ marginBottom: '16px' }}>
+                <label style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '0.78rem', fontWeight: 700, color: '#1e293b', marginBottom: '6px' }}>
+                  <Mic size={14} style={{ color: '#7c3aed' }} />
+                  <span>3. Field Audio Note (Voice Recording) <span style={{ color: '#dc2626' }}>*</span></span>
+                </label>
+                <VoiceRecorder
+                  onVoiceNoteUploaded={(url) => setCompletionAudio(url)}
+                  onAudioRecorded={(url) => setCompletionAudio(url)}
+                />
+                {completionAudio && (
+                  <div style={{ marginTop: '8px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.74rem', color: '#16a34a', fontWeight: 700 }}>
+                    <CheckCircle size={14} />
+                    <span>Audio note successfully attached and ready for submission.</span>
+                  </div>
+                )}
+              </div>
+
+              {/* Error Banner */}
+              {completionError && (
+                <div style={{
+                  padding: '9px 12px',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: '8px',
+                  color: '#dc2626',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  marginBottom: '10px'
+                }}>
+                  <AlertCircle size={15} />
+                  <span>{completionError}</span>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              padding: '14px 22px',
+              borderTop: '1px solid var(--border)',
+              background: '#f8fafc',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: '10px'
+            }}>
+              <button
+                type="button"
+                onClick={() => setCompletionModalTask(null)}
+                disabled={completionLoading}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontSize: '0.82rem',
+                  fontWeight: 600,
+                  cursor: completionLoading ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCompletionSubmit}
+                disabled={completionLoading}
+                style={{
+                  padding: '8px 20px',
+                  borderRadius: '8px',
+                  border: 'none',
+                  background: isReworkMode ? 'linear-gradient(135deg, #e11d48, #be123c)' : 'linear-gradient(135deg, #10b981, #059669)',
+                  color: '#ffffff',
+                  fontSize: '0.84rem',
+                  fontWeight: 700,
+                  cursor: completionLoading ? 'not-allowed' : 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  boxShadow: isReworkMode ? '0 2px 6px rgba(225, 29, 72, 0.3)' : '0 2px 6px rgba(16, 185, 129, 0.3)'
+                }}
+              >
+                {completionLoading ? (
+                  <span>Submitting...</span>
+                ) : (
+                  <>
+                    <CheckCircle2 size={15} />
+                    <span>{isReworkMode ? 'Submit Rework' : 'Complete & Submit Task'}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>
