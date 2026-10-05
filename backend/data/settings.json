@@ -11,5 +11,19 @@
     "territoryAlertRadiusKm": 15,
     "createdAt": "2026-09-25T13:45:23.298Z",
     "updatedAt": "2026-09-25T13:45:23.298Z"
+  },
+  {
+    "_id": "a84ae084-58f9-4b83-a86f-a6dabd3a08b4",
+    "autoAssignTasks": true,
+    "createdAt": "2026-09-30T03:45:11.993Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "a84ae084-58f9-4b83-a86f-a6dabd3a08b4",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-09-30T03:45:11.993Z",
+    "userId": "usr_mgr_1790580930154_8uge"
   }
 ]

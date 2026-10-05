@@ -11,10 +11,9 @@
     "__v": 0,
     "isRead": true,
     "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790580930154_8uge"
+      "6ab4c2ec5df0d82cb7a09cac"
     ],
-    "updatedAt": "2026-09-29T07:16:12.119Z"
+    "updatedAt": "2026-10-02T12:47:09.972Z"
   },
   {
     "_id": "6ab4f6df1311030bfd3447a2",
@@ -29,9 +28,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.711Z"
+    "updatedAt": "2026-10-01T12:27:23.892Z"
   },
   {
     "_id": "6ab6178d2555c67bd9bc7198",
@@ -46,9 +47,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.717Z"
+    "updatedAt": "2026-10-01T12:27:23.910Z"
   },
   {
     "_id": "6ab618da2555c67bd9bc7246",
@@ -63,9 +66,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.723Z"
+    "updatedAt": "2026-10-01T12:27:23.926Z"
   },
   {
     "_id": "6ab624b7c3c80ae7e778e73f",
@@ -80,9 +85,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.731Z"
+    "updatedAt": "2026-10-01T12:27:23.949Z"
   },
   {
     "_id": "6ab65d79c3c80ae7e778f58c",
@@ -97,9 +104,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.742Z"
+    "updatedAt": "2026-10-01T12:27:23.967Z"
   },
   {
     "_id": "6ab65da3c3c80ae7e778f599",
@@ -114,9 +123,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.750Z"
+    "updatedAt": "2026-10-01T12:27:23.995Z"
   },
   {
     "_id": "6ab4f6df1311030bfd3447a2",
@@ -129,11 +140,13 @@
     "read": false,
     "receiver": "6a926325caf3cb00e6b9a590",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.757Z",
+    "updatedAt": "2026-10-01T12:27:24.022Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -147,11 +160,13 @@
     "read": false,
     "receiver": "6a926325caf3cb00e6b9a590",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.764Z",
+    "updatedAt": "2026-10-01T12:27:24.059Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -165,11 +180,13 @@
     "read": false,
     "receiver": "6a9120a73cbecf25841b8d87",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.773Z",
+    "updatedAt": "2026-10-01T12:27:24.076Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -183,11 +200,13 @@
     "read": false,
     "receiver": "6a9120a73cbecf25841b8d87",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.780Z",
+    "updatedAt": "2026-10-01T12:27:24.099Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -201,11 +220,13 @@
     "read": false,
     "receiver": "6ab5f81fb8654beabd8f91b5",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.785Z",
+    "updatedAt": "2026-10-01T12:27:24.115Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -219,11 +240,13 @@
     "read": false,
     "receiver": "6ab3ca2d7ee04aa0f057fcf1",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.793Z",
+    "updatedAt": "2026-10-01T12:27:24.135Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -237,11 +260,13 @@
     "read": false,
     "receiver": "6ab5f81fb8654beabd8f91b5",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.800Z",
+    "updatedAt": "2026-10-01T12:27:24.153Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -257,9 +282,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.806Z"
+    "updatedAt": "2026-10-01T12:27:24.177Z"
   },
   {
     "_id": "6ab754e0c3c80ae7e778fad1",
@@ -274,9 +301,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.813Z"
+    "updatedAt": "2026-10-01T12:27:24.200Z"
   },
   {
     "_id": "6ab749c3c3c80ae7e778f91c",
@@ -289,11 +318,13 @@
     "read": false,
     "receiver": "6ab5f81fb8654beabd8f91b5",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.823Z",
+    "updatedAt": "2026-10-01T12:27:24.219Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -307,11 +338,13 @@
     "read": false,
     "receiver": "6ab64f46c3c80ae7e778f144",
     "title": "New Target Assigned",
-    "updatedAt": "2026-09-29T07:16:12.829Z",
+    "updatedAt": "2026-10-01T12:27:24.239Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -327,9 +360,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.837Z"
+    "updatedAt": "2026-10-01T12:27:24.258Z"
   },
   {
     "_id": "6ab76b6345152c228d4639a6",
@@ -344,9 +379,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.847Z"
+    "updatedAt": "2026-10-01T12:27:24.275Z"
   },
   {
     "_id": "6ab76b6645152c228d4639b0",
@@ -361,39 +398,11 @@
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-09-29T07:16:12.855Z"
-  },
-  {
-    "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
-    "createdAt": "2026-09-26T09:51:20.086Z",
-    "id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
-    "isRead": true,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as Completed.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 Completed",
-    "type": "task_updated",
-    "updatedAt": "2026-09-29T07:16:12.863Z",
-    "userId": "user_state_1",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge"
-    ]
-  },
-  {
-    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "type": "task_updated",
-    "title": "Task TSK-100005 Completed",
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
-    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
-    "userId": "user_state_1",
-    "isRead": true,
-    "createdAt": "2026-09-26T10:17:29.078Z",
-    "updatedAt": "2026-09-29T07:16:12.869Z",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge"
-    ]
+    "updatedAt": "2026-10-01T12:27:24.294Z"
   },
   {
     "_id": "NOTIF-1790414127807-0AM4",
@@ -416,7 +425,8 @@
     "priority": "normal",
     "readBy": [
       "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac"
     ],
     "scope": {
       "state": null,
@@ -434,7 +444,41 @@
     },
     "title": "Task Update: TSK-100234 is In Progress",
     "type": "task_update",
-    "updatedAt": "2026-09-29T07:16:12.876Z"
+    "updatedAt": "2026-10-01T04:35:58.380Z"
+  },
+  {
+    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "createdAt": "2026-09-26T09:51:19.729Z",
+    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-01T12:27:24.382Z",
+    "userId": "user_state_1",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
+  },
+  {
+    "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
+    "createdAt": "2026-09-26T09:51:20.086Z",
+    "id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
+    "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as Completed.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-01T12:27:24.315Z",
+    "userId": "user_state_1",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
   },
   {
     "_id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
@@ -446,24 +490,11 @@
     "userId": "user_state_1",
     "isRead": true,
     "createdAt": "2026-09-26T10:15:28.017Z",
-    "updatedAt": "2026-09-29T07:16:12.883Z",
+    "updatedAt": "2026-10-01T12:27:24.358Z",
     "readBy": [
-      "usr_mgr_1790580930154_8uge"
-    ]
-  },
-  {
-    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "createdAt": "2026-09-26T09:51:19.729Z",
-    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "isRead": true,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-09-29T07:16:12.892Z",
-    "userId": "user_state_1",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -476,9 +507,11 @@
     "userId": "user_state_1",
     "isRead": true,
     "createdAt": "2026-09-26T10:15:28.362Z",
-    "updatedAt": "2026-09-29T07:16:12.899Z",
+    "updatedAt": "2026-10-01T12:27:24.409Z",
     "readBy": [
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -491,9 +524,28 @@
     "userId": "user_state_1",
     "isRead": true,
     "createdAt": "2026-09-26T10:17:28.488Z",
-    "updatedAt": "2026-09-29T07:16:12.904Z",
+    "updatedAt": "2026-10-01T12:27:24.891Z",
     "readBy": [
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
+  },
+  {
+    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "type": "task_updated",
+    "title": "Task TSK-100005 Completed",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
+    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
+    "userId": "user_state_1",
+    "isRead": true,
+    "createdAt": "2026-09-26T10:17:29.078Z",
+    "updatedAt": "2026-10-01T12:27:24.332Z",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -505,10 +557,12 @@
     "recordId": "65d3185e-a6df-427b-a565-c00481726817",
     "title": "Task TSK-100006 In Progress",
     "type": "task_updated",
-    "updatedAt": "2026-09-29T07:16:12.915Z",
+    "updatedAt": "2026-10-01T12:27:24.921Z",
     "userId": "user_state_1",
     "readBy": [
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -520,10 +574,12 @@
     "recordId": "65d3185e-a6df-427b-a565-c00481726817",
     "title": "Task TSK-100006 Completed",
     "type": "task_updated",
-    "updatedAt": "2026-09-29T07:16:12.922Z",
+    "updatedAt": "2026-10-01T12:27:24.948Z",
     "userId": "user_state_1",
     "readBy": [
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
     ]
   },
   {
@@ -546,7 +602,8 @@
     },
     "priority": "normal",
     "readBy": [
-      "usr_mgr_1790580930154_8uge"
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac"
     ],
     "scope": {
       "state": "Tamil Nadu",
@@ -564,7 +621,64 @@
     },
     "title": "Vendor Approved: Empire",
     "type": "vendor_status",
-    "updatedAt": "2026-09-29T07:16:12.929Z"
+    "updatedAt": "2026-10-02T12:53:42.722Z"
+  },
+  {
+    "_id": "NOTIF-1790659045582-GA75",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-09-29T05:17:25.582Z",
+    "entityId": "6ab6591ec3c80ae7e778f48b",
+    "entityType": "vendor",
+    "id": "NOTIF-1790659045582-GA75",
+    "isRead": true,
+    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "6ab6591ec3c80ae7e778f48b",
+      "vendorName": "y",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Maran",
+      "pincode": "636112"
+    },
+    "priority": "normal",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem Urban Division",
+      "pincode": "636112",
+      "targetUserId": null,
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: y",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-02T12:53:42.787Z"
+  },
+  {
+    "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "createdAt": "2026-09-29T06:03:52.439Z",
+    "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as In Progress.",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "title": "Task TSK-100012 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-01T12:27:25.013Z",
+    "userId": "user_state_1",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
   },
   {
     "_id": "NOTIF-1790589311649-NBEH",
@@ -574,7 +688,7 @@
     "entityId": "ven_311361",
     "entityType": "vendor",
     "id": "NOTIF-1790589311649-NBEH",
-    "isRead": false,
+    "isRead": true,
     "message": "Food merchant 'Balu' was onboarded in PIN 635126 (Salem) by Murugan. Awaiting Pincode Admin clearance.",
     "metadata": {
       "vendorId": "ven_311361",
@@ -585,7 +699,9 @@
       "category": "Food"
     },
     "priority": "normal",
-    "readBy": [],
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
     "scope": {
       "state": "Tamil Nadu",
       "district": "Salem",
@@ -601,7 +717,7 @@
     },
     "title": "New Vendor Onboarded: Balu",
     "type": "vendor_onboarding",
-    "updatedAt": "2026-09-28T09:55:11.650Z"
+    "updatedAt": "2026-10-02T12:53:42.837Z"
   },
   {
     "_id": "NOTIF-1790603729917-YBVD",
@@ -611,7 +727,7 @@
     "entityId": "6ab6591ec3c80ae7e778f48b",
     "entityType": "vendor",
     "id": "NOTIF-1790603729917-YBVD",
-    "isRead": false,
+    "isRead": true,
     "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
     "metadata": {
       "vendorId": "6ab6591ec3c80ae7e778f48b",
@@ -622,7 +738,10 @@
       "pincode": "636112"
     },
     "priority": "normal",
-    "readBy": [],
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ],
     "scope": {
       "state": "Tamil Nadu",
       "district": "Salem",
@@ -639,68 +758,603 @@
     },
     "title": "Vendor Approved: y",
     "type": "vendor_status",
-    "updatedAt": "2026-09-28T13:55:29.917Z"
-  },
-  {
-    "_id": "NOTIF-1790659045582-GA75",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-09-29T05:17:25.582Z",
-    "entityId": "6ab6591ec3c80ae7e778f48b",
-    "entityType": "vendor",
-    "id": "NOTIF-1790659045582-GA75",
-    "isRead": false,
-    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "6ab6591ec3c80ae7e778f48b",
-      "vendorName": "y",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Maran",
-      "pincode": "636112"
-    },
-    "priority": "normal",
-    "readBy": [],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Salem Urban Division",
-      "pincode": "636112",
-      "targetUserId": null,
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: y",
-    "type": "vendor_status",
-    "updatedAt": "2026-09-29T05:17:25.582Z"
-  },
-  {
-    "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
-    "createdAt": "2026-09-29T06:03:52.439Z",
-    "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
-    "isRead": false,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as In Progress.",
-    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
-    "title": "Task TSK-100012 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-09-29T06:03:52.439Z",
-    "userId": "user_state_1"
+    "updatedAt": "2026-10-02T12:53:42.885Z"
   },
   {
     "_id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
     "createdAt": "2026-09-29T06:03:52.444Z",
     "id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
-    "isRead": false,
+    "isRead": true,
     "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as Completed.",
     "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
     "title": "Task TSK-100012 Completed",
     "type": "task_updated",
-    "updatedAt": "2026-09-29T06:03:52.444Z",
-    "userId": "user_state_1"
+    "updatedAt": "2026-10-01T12:27:25.034Z",
+    "userId": "user_state_1",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
+  },
+  {
+    "_id": "NOTIF-1790852939641-FS2Y",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:08:59.641Z",
+    "entityId": "TSK-1790852939634-LW3ZH",
+    "entityType": "task",
+    "id": "NOTIF-1790852939641-FS2Y",
+    "isRead": true,
+    "message": "Task QCT-52939634 (Medium Priority) was assigned to Muruga. Due: 2026-10-08.",
+    "metadata": {
+      "taskId": "TSK-1790852939634-LW3ZH",
+      "taskNumber": "QCT-52939634",
+      "title": "onboaring",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "createdByName": "Maran",
+      "priority": "Medium"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: onboaring",
+    "type": "task_created",
+    "updatedAt": "2026-10-02T12:53:42.936Z"
+  },
+  {
+    "_id": "NOTIF-1790853216580-10XG",
+    "actionUrl": "/state-admin/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:13:36.580Z",
+    "entityId": "TSK-1790852939634-LW3ZH",
+    "entityType": "task",
+    "id": "NOTIF-1790853216580-10XG",
+    "isRead": true,
+    "message": "Task 'onboaring' updated to 'Accepted' by Muruga. Note: Task transitioned to Accepted",
+    "metadata": {
+      "taskId": "TSK-1790852939634-LW3ZH",
+      "taskNumber": "QCT-52939634",
+      "title": "onboaring",
+      "oldStatus": "Pending Acceptance",
+      "newStatus": "Accepted",
+      "updatedBy": "Muruga"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Task Update: QCT-52939634 is Accepted",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:42.977Z"
+  },
+  {
+    "_id": "NOTIF-1790853222634-SCDI",
+    "actionUrl": "/state-admin/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:13:42.634Z",
+    "entityId": "TSK-1790852939634-LW3ZH",
+    "entityType": "task",
+    "id": "NOTIF-1790853222634-SCDI",
+    "isRead": true,
+    "message": "Task 'onboaring' updated to 'In Progress' by Muruga. Note: Rework initiated on field",
+    "metadata": {
+      "taskId": "TSK-1790852939634-LW3ZH",
+      "taskNumber": "QCT-52939634",
+      "title": "onboaring",
+      "oldStatus": "Accepted",
+      "newStatus": "In Progress",
+      "updatedBy": "Muruga"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Task Update: QCT-52939634 is In Progress",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:43.022Z"
+  },
+  {
+    "_id": "NOTIF-1790853341477-UKRK",
+    "actionUrl": "/state-admin/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:15:41.477Z",
+    "entityId": "TSK-1790852939634-LW3ZH",
+    "entityType": "task",
+    "id": "NOTIF-1790853341477-UKRK",
+    "isRead": true,
+    "message": "Task 'onboaring' updated to 'Completed' by Muruga. Note: Task transitioned to Completed",
+    "metadata": {
+      "taskId": "TSK-1790852939634-LW3ZH",
+      "taskNumber": "QCT-52939634",
+      "title": "onboaring",
+      "oldStatus": "In Progress",
+      "newStatus": "Completed",
+      "updatedBy": "Muruga"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Task Update: QCT-52939634 is Completed",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:43.066Z"
+  },
+  {
+    "_id": "NOTIF-1790853363572-9PFP",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:16:03.572Z",
+    "entityId": "TSK-1790852939634-LW3ZH",
+    "entityType": "task",
+    "id": "NOTIF-1790853363572-9PFP",
+    "isRead": true,
+    "message": "Admin Maran requested rework for 'onboaring'. Remarks: Needs correction.",
+    "metadata": {
+      "taskId": "TSK-1790852939634-LW3ZH",
+      "taskNumber": "QCT-52939634",
+      "decision": "rework",
+      "reworkReason": "",
+      "reviewedBy": "Maran"
+    },
+    "priority": "high",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "Rework Requested: QCT-52939634",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:43.116Z"
+  },
+  {
+    "_id": "NOTIF-1790854027222-V2K4",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:27:07.222Z",
+    "entityId": "TSK-1790854027219-VOSMW",
+    "entityType": "task",
+    "id": "NOTIF-1790854027222-V2K4",
+    "isRead": true,
+    "message": "Task QCT-54027219 (High Priority) was assigned to Muruga. Due: 2026-10-02.",
+    "metadata": {
+      "taskId": "TSK-1790854027219-VOSMW",
+      "taskNumber": "QCT-54027219",
+      "title": "Onboarding",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "createdByName": "Maran",
+      "priority": "High"
+    },
+    "priority": "high",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: Onboarding",
+    "type": "task_created",
+    "updatedAt": "2026-10-02T12:53:43.154Z"
+  },
+  {
+    "_id": "NOTIF-1790854148750-8T4W",
+    "actionUrl": "/state-admin/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:29:08.750Z",
+    "entityId": "TSK-1790854027219-VOSMW",
+    "entityType": "task",
+    "id": "NOTIF-1790854148750-8T4W",
+    "isRead": true,
+    "message": "Task 'Onboarding' updated to 'In Progress' by Muruga. Note: Rework initiated on field",
+    "metadata": {
+      "taskId": "TSK-1790854027219-VOSMW",
+      "taskNumber": "QCT-54027219",
+      "title": "Onboarding",
+      "oldStatus": "Assigned",
+      "newStatus": "In Progress",
+      "updatedBy": "Muruga"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Task Update: QCT-54027219 is In Progress",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:43.197Z"
+  },
+  {
+    "_id": "NOTIF-1790854207767-LDOA",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:30:07.768Z",
+    "entityId": "TSK-1790854207754-0RYO8",
+    "entityType": "task",
+    "id": "NOTIF-1790854207767-LDOA",
+    "isRead": true,
+    "message": "Task QCT-54207754 (Low Priority) was assigned to Muruga. Due: 2026-10-02.",
+    "metadata": {
+      "taskId": "TSK-1790854207754-0RYO8",
+      "taskNumber": "QCT-54207754",
+      "title": "e3",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "createdByName": "Maran",
+      "priority": "Low"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: e3",
+    "type": "task_created",
+    "updatedAt": "2026-10-02T12:53:43.239Z"
+  },
+  {
+    "_id": "NOTIF-1790854347671-KX2E",
+    "actionUrl": "/state-admin/tasks",
+    "category": "task",
+    "createdAt": "2026-10-01T11:32:27.671Z",
+    "entityId": "TSK-1790854027219-VOSMW",
+    "entityType": "task",
+    "id": "NOTIF-1790854347671-KX2E",
+    "isRead": true,
+    "message": "Task 'Onboarding' updated to 'Completed' by Muruga. Note: Task transitioned to Completed",
+    "metadata": {
+      "taskId": "TSK-1790854027219-VOSMW",
+      "taskNumber": "QCT-54027219",
+      "title": "Onboarding",
+      "oldStatus": "In Progress",
+      "newStatus": "Completed",
+      "updatedBy": "Muruga"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Task Update: QCT-54027219 is Completed",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:43.281Z"
+  },
+  {
+    "_id": "NOTIF-1790856481981-AXGL",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-01T12:08:01.981Z",
+    "entityId": "ven_481360",
+    "entityType": "vendor",
+    "id": "NOTIF-1790856481981-AXGL",
+    "isRead": true,
+    "message": "Services merchant 'reo' was onboarded in PIN 636112 (Salem) by Muruga. Awaiting Pincode Admin clearance.",
+    "metadata": {
+      "vendorId": "ven_481360",
+      "vendorName": "reo",
+      "creatorId": "usr_mgr_1790666281762_1jqk",
+      "creatorName": "Muruga",
+      "pincode": "636112",
+      "category": "Services"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Attur",
+      "pincode": "636112",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "New Vendor Onboarded: reo",
+    "type": "vendor_onboarding",
+    "updatedAt": "2026-10-02T12:53:43.325Z"
+  },
+  {
+    "_id": "NOTIF-1790856601070-N1CB",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-01T12:10:01.070Z",
+    "entityId": "ven_481360",
+    "entityType": "vendor",
+    "id": "NOTIF-1790856601070-N1CB",
+    "isRead": true,
+    "message": "Pincode Admin Maran approved merchant 'reo'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "ven_481360",
+      "vendorName": "reo",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Maran",
+      "pincode": "636112"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Attur",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: reo",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-02T12:53:43.364Z"
+  },
+  {
+    "_id": "NOTIF-1790856611362-FLD8",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-01T12:10:11.362Z",
+    "entityId": "6ab76e3445152c228d463a87",
+    "entityType": "vendor",
+    "id": "NOTIF-1790856611362-FLD8",
+    "isRead": true,
+    "message": "Pincode Admin Maran approved merchant 'harshini'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "6ab76e3445152c228d463a87",
+      "vendorName": "harshini",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Maran",
+      "pincode": "636112"
+    },
+    "priority": "normal",
+    "readBy": [
+      "usr_mgr_1790666281762_1jqk",
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Attur Division",
+      "pincode": "636112",
+      "targetUserId": "REG-20260828-8093",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: harshini",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-02T12:53:43.421Z"
+  },
+  {
+    "_id": "NOTIF-1790923636071-4V58",
+    "actionUrl": "/state-admin/tasks",
+    "category": "task",
+    "createdAt": "2026-10-02T06:47:16.071Z",
+    "entityId": "TSK-1790854207754-0RYO8",
+    "entityType": "task",
+    "id": "NOTIF-1790923636071-4V58",
+    "isRead": true,
+    "message": "Task 'e3' updated to 'Accepted' by Muruga. Note: Task transitioned to Accepted",
+    "metadata": {
+      "taskId": "TSK-1790854207754-0RYO8",
+      "taskNumber": "QCT-54207754",
+      "title": "e3",
+      "oldStatus": "Pending Acceptance",
+      "newStatus": "Accepted",
+      "updatedBy": "Muruga"
+    },
+    "priority": "normal",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Task Update: QCT-54207754 is Accepted",
+    "type": "task_update",
+    "updatedAt": "2026-10-02T12:53:43.477Z"
+  },
+  {
+    "_id": "NOTIF-1790933737588-6DS9",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-02T09:35:37.588Z",
+    "entityId": "TSK-1790933737526-72C6Q",
+    "entityType": "task",
+    "id": "NOTIF-1790933737588-6DS9",
+    "isRead": true,
+    "message": "Task QCT-33737526 (Medium Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-04.",
+    "metadata": {
+      "taskId": "TSK-1790933737526-72C6Q",
+      "taskNumber": "QCT-33737526",
+      "title": "Onboarding issue",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "assignedManagerRole": "Pincode Manager",
+      "assignedManagerLevel": 4,
+      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "createdByName": "Maran",
+      "priority": "Medium"
+    },
+    "priority": "normal",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: Onboarding issue",
+    "type": "task_created",
+    "updatedAt": "2026-10-02T12:53:43.520Z"
   }
 ]

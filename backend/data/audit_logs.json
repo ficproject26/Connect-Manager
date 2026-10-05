@@ -5114,50 +5114,16 @@
     "userRole": "admin"
   },
   {
-    "_id": "6a8efa3a31ac7dd9a9d337d3",
+    "_id": "6a8efa3e31ac7dd9a9d337d4",
     "__v": 0,
     "action": "vendor_suspended",
-    "details": "Admin changed status for vendor \"SS\" from \"Approved\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
+    "details": "Admin changed status for vendor \"sri\" from \"Active\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
     "deviceInfo": {
       "browser": "Unknown Browser",
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a8efa3a31ac7dd9a9d337d3",
-    "ipAddress": "172.69.87.167",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "metadata": {
-      "adminId": "6a8d22c11bc647d92ae36337",
-      "adminName": "Super Admin",
-      "vendorId": "6a8e8efd5668db4807b03795",
-      "vendorName": "SS",
-      "oldStatus": "Approved",
-      "newStatus": "Suspended",
-      "reason": "Account marked as Suspended by Administrator",
-      "timestamp": "2026-08-26T14:37:46.904Z"
-    },
-    "status": "success",
-    "timestamp": "2026-08-26T14:37:46.905Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "admin"
-  },
-  {
-    "_id": "6a8efa4331ac7dd9a9d337d5",
-    "__v": 0,
-    "action": "vendor_suspended",
-    "details": "Admin changed status for vendor \"KS shops\" from \"Active\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a8efa4331ac7dd9a9d337d5",
+    "id": "6a8efa3e31ac7dd9a9d337d4",
     "ipAddress": "172.69.179.19",
     "location": {
       "city": "Local",
@@ -5166,15 +5132,15 @@
     "metadata": {
       "adminId": "6a8d22c11bc647d92ae36337",
       "adminName": "Super Admin",
-      "vendorId": "6a8e8f3b5668db4807b03846",
-      "vendorName": "KS shops",
+      "vendorId": "6a8e8a695668db4807b026fc",
+      "vendorName": "sri",
       "oldStatus": "Active",
       "newStatus": "Suspended",
       "reason": "Account marked as Suspended by Administrator",
-      "timestamp": "2026-08-26T14:37:55.052Z"
+      "timestamp": "2026-08-26T14:37:50.603Z"
     },
     "status": "success",
-    "timestamp": "2026-08-26T14:37:55.052Z",
+    "timestamp": "2026-08-26T14:37:50.604Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
@@ -5216,16 +5182,16 @@
     "userRole": "admin"
   },
   {
-    "_id": "6a8efa3e31ac7dd9a9d337d4",
+    "_id": "6a8efa4331ac7dd9a9d337d5",
     "__v": 0,
     "action": "vendor_suspended",
-    "details": "Admin changed status for vendor \"sri\" from \"Active\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
+    "details": "Admin changed status for vendor \"KS shops\" from \"Active\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
     "deviceInfo": {
       "browser": "Unknown Browser",
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a8efa3e31ac7dd9a9d337d4",
+    "id": "6a8efa4331ac7dd9a9d337d5",
     "ipAddress": "172.69.179.19",
     "location": {
       "city": "Local",
@@ -5234,15 +5200,49 @@
     "metadata": {
       "adminId": "6a8d22c11bc647d92ae36337",
       "adminName": "Super Admin",
-      "vendorId": "6a8e8a695668db4807b026fc",
-      "vendorName": "sri",
+      "vendorId": "6a8e8f3b5668db4807b03846",
+      "vendorName": "KS shops",
       "oldStatus": "Active",
       "newStatus": "Suspended",
       "reason": "Account marked as Suspended by Administrator",
-      "timestamp": "2026-08-26T14:37:50.603Z"
+      "timestamp": "2026-08-26T14:37:55.052Z"
     },
     "status": "success",
-    "timestamp": "2026-08-26T14:37:50.604Z",
+    "timestamp": "2026-08-26T14:37:55.052Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "admin"
+  },
+  {
+    "_id": "6a8efa3a31ac7dd9a9d337d3",
+    "__v": 0,
+    "action": "vendor_suspended",
+    "details": "Admin changed status for vendor \"SS\" from \"Approved\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a8efa3a31ac7dd9a9d337d3",
+    "ipAddress": "172.69.87.167",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "metadata": {
+      "adminId": "6a8d22c11bc647d92ae36337",
+      "adminName": "Super Admin",
+      "vendorId": "6a8e8efd5668db4807b03795",
+      "vendorName": "SS",
+      "oldStatus": "Approved",
+      "newStatus": "Suspended",
+      "reason": "Account marked as Suspended by Administrator",
+      "timestamp": "2026-08-26T14:37:46.904Z"
+    },
+    "status": "success",
+    "timestamp": "2026-08-26T14:37:46.905Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
@@ -5420,6 +5420,30 @@
     "userRole": "admin"
   },
   {
+    "_id": "6a9136794769d37ac14ed8e1",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a9136794769d37ac14ed8e1",
+    "ipAddress": "205.254.163.150,13.232.104.229, 104.23.160.38",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-08-28T07:19:21.105Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "admin"
+  },
+  {
     "_id": "6a9135ce9aaf3f7f249ced11",
     "__v": 0,
     "action": "login_success",
@@ -5507,30 +5531,6 @@
     "timestamp": "2026-08-28T06:46:04.441Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "admin"
-  },
-  {
-    "_id": "6a9136794769d37ac14ed8e1",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a9136794769d37ac14ed8e1",
-    "ipAddress": "205.254.163.150,13.232.104.229, 104.23.160.38",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-08-28T07:19:21.105Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "admin"
@@ -5700,28 +5700,28 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a92d5a38fa3e2eb39115a85",
+    "_id": "6a93dcc02fad406699f95c51",
     "__v": 0,
-    "action": "login_failed",
-    "details": "Login attempt failed - Account not found",
+    "action": "login_success",
+    "details": "Successful user authentication",
     "deviceInfo": {
       "browser": "Unknown Browser",
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a92d5a38fa3e2eb39115a85",
-    "ipAddress": "205.254.163.150, 172.70.218.82",
+    "id": "6a93dcc02fad406699f95c51",
+    "ipAddress": "106.51.198.7, 172.69.123.199",
     "location": {
       "city": "Local",
       "country": "India"
     },
-    "status": "failed",
-    "timestamp": "2026-08-29T12:50:43.976Z",
+    "status": "success",
+    "timestamp": "2026-08-30T07:33:20.174Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "node",
-    "userEmail": "admin@connect.app",
-    "userId": null,
-    "userRole": "guest"
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
   },
   {
     "_id": "6a92ddfc9043a2db666e03f3",
@@ -5748,28 +5748,28 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a93dcc02fad406699f95c51",
+    "_id": "6a92d5a38fa3e2eb39115a85",
     "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
+    "action": "login_failed",
+    "details": "Login attempt failed - Account not found",
     "deviceInfo": {
       "browser": "Unknown Browser",
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a93dcc02fad406699f95c51",
-    "ipAddress": "106.51.198.7, 172.69.123.199",
+    "id": "6a92d5a38fa3e2eb39115a85",
+    "ipAddress": "205.254.163.150, 172.70.218.82",
     "location": {
       "city": "Local",
       "country": "India"
     },
-    "status": "success",
-    "timestamp": "2026-08-30T07:33:20.174Z",
+    "status": "failed",
+    "timestamp": "2026-08-29T12:50:43.976Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "node",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
+    "userEmail": "admin@connect.app",
+    "userId": null,
+    "userRole": "guest"
   },
   {
     "_id": "6a92d5c28fa3e2eb39115a86",
@@ -5820,6 +5820,30 @@
     "userRole": "super-admin"
   },
   {
+    "_id": "6a9180c5a9da9b92bf49b69e",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a9180c5a9da9b92bf49b69e",
+    "ipAddress": "205.254.163.150,35.154.238.98, 172.70.218.82",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-08-28T12:36:21.536Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "admin"
+  },
+  {
     "_id": "6a92e1ce2a7fc2447d9740d3",
     "__v": 0,
     "action": "login_failed",
@@ -5868,7 +5892,7 @@
     "userRole": "admin"
   },
   {
-    "_id": "6a9180c5a9da9b92bf49b69e",
+    "_id": "6a93e0671f0d73cb15bc50a7",
     "__v": 0,
     "action": "login_success",
     "details": "Successful user authentication",
@@ -5877,19 +5901,43 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a9180c5a9da9b92bf49b69e",
-    "ipAddress": "205.254.163.150,35.154.238.98, 172.70.218.82",
+    "id": "6a93e0671f0d73cb15bc50a7",
+    "ipAddress": "106.51.198.7,13.232.84.202, 104.23.160.119",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "success",
-    "timestamp": "2026-08-28T12:36:21.536Z",
+    "timestamp": "2026-08-30T07:48:55.700Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/151.0.0.0 Safari/537.36",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "admin"
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6a92e2242a7fc2447d9740d5",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a92e2242a7fc2447d9740d5",
+    "ipAddress": "205.254.163.150,13.206.195.71, 172.69.94.102",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-08-29T13:44:04.853Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
   },
   {
     "_id": "6a92e1cb2a7fc2447d9740d2",
@@ -5909,78 +5957,6 @@
     },
     "status": "failed",
     "timestamp": "2026-08-29T13:42:35.256Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
-    "_id": "6a93d9412fad406699f95c4a",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a93d9412fad406699f95c4a",
-    "ipAddress": "106.51.198.7,3.110.215.133, 172.69.87.167",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-08-30T07:18:25.891Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
-    "_id": "6a92c9636cdeb377dbe1bbb5",
-    "__v": 0,
-    "action": "login_failed",
-    "details": "Login attempt failed - Account not found",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a92c9636cdeb377dbe1bbb5",
-    "ipAddress": "205.254.163.150,13.206.195.71, 172.71.198.98",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "failed",
-    "timestamp": "2026-08-29T11:58:27.698Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "north@example.com",
-    "userId": null,
-    "userRole": "guest"
-  },
-  {
-    "_id": "6a93e0671f0d73cb15bc50a7",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a93e0671f0d73cb15bc50a7",
-    "ipAddress": "106.51.198.7,13.232.84.202, 104.23.160.119",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-08-30T07:48:55.700Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
@@ -6012,7 +5988,7 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a92e2242a7fc2447d9740d5",
+    "_id": "6a93d9412fad406699f95c4a",
     "__v": 0,
     "action": "login_success",
     "details": "Successful user authentication",
@@ -6021,14 +5997,14 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a92e2242a7fc2447d9740d5",
-    "ipAddress": "205.254.163.150,13.206.195.71, 172.69.94.102",
+    "id": "6a93d9412fad406699f95c4a",
+    "ipAddress": "106.51.198.7,3.110.215.133, 172.69.87.167",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "success",
-    "timestamp": "2026-08-29T13:44:04.853Z",
+    "timestamp": "2026-08-30T07:18:25.891Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
@@ -6084,6 +6060,30 @@
     "userRole": "admin"
   },
   {
+    "_id": "6a92c9636cdeb377dbe1bbb5",
+    "__v": 0,
+    "action": "login_failed",
+    "details": "Login attempt failed - Account not found",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a92c9636cdeb377dbe1bbb5",
+    "ipAddress": "205.254.163.150,13.206.195.71, 172.71.198.98",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "timestamp": "2026-08-29T11:58:27.698Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "userEmail": "north@example.com",
+    "userId": null,
+    "userRole": "guest"
+  },
+  {
     "_id": "6a93dbf92fad406699f95c4f",
     "__v": 0,
     "action": "login_success",
@@ -6132,30 +6132,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a92c541e3b1757ca3046e2c",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a92c541e3b1757ca3046e2c",
-    "ipAddress": "205.254.163.150,13.206.119.137, 162.158.227.32",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-08-29T11:40:49.090Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "admin"
-  },
-  {
     "_id": "6a93dd1e1f0d73cb15bc50a5",
     "__v": 0,
     "action": "login_success",
@@ -6178,6 +6154,30 @@
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
+  },
+  {
+    "_id": "6a92c541e3b1757ca3046e2c",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a92c541e3b1757ca3046e2c",
+    "ipAddress": "205.254.163.150,13.206.119.137, 162.158.227.32",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-08-29T11:40:49.090Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "admin"
   },
   {
     "_id": "6a92a1ef18500459e17eddd0",
@@ -6560,30 +6560,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a9405fc3c097f501dea348a",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a9405fc3c097f501dea348a",
-    "ipAddress": "106.51.198.7, 172.69.131.237",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-08-30T10:29:16.501Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6a953a9d8f13f90ea3bd183f",
     "__v": 0,
     "action": "login_success",
@@ -6608,7 +6584,7 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a94036d3c097f501dea3488",
+    "_id": "6a9405fc3c097f501dea348a",
     "__v": 0,
     "action": "login_success",
     "details": "Successful user authentication",
@@ -6617,16 +6593,16 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a94036d3c097f501dea3488",
-    "ipAddress": "106.51.198.7, 172.68.175.91",
+    "id": "6a9405fc3c097f501dea348a",
+    "ipAddress": "106.51.198.7, 172.69.131.237",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "success",
-    "timestamp": "2026-08-30T10:18:21.654Z",
+    "timestamp": "2026-08-30T10:29:16.501Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "node",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -6651,6 +6627,30 @@
     "timestamp": "2026-08-30T10:35:23.613Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6a94036d3c097f501dea3488",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a94036d3c097f501dea3488",
+    "ipAddress": "106.51.198.7, 172.68.175.91",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-08-30T10:18:21.654Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "node",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -6796,30 +6796,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a9586ad10172a404071225d",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a9586ad10172a404071225d",
-    "ipAddress": "106.51.198.7, 172.69.131.238",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-08-31T13:50:37.385Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "node",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6a9586f2c0fa1df21f29dada",
     "__v": 0,
     "action": "login_success",
@@ -6837,6 +6813,30 @@
     },
     "status": "success",
     "timestamp": "2026-08-31T13:51:46.049Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "node",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6a9586ad10172a404071225d",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a9586ad10172a404071225d",
+    "ipAddress": "106.51.198.7, 172.69.131.238",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-08-31T13:50:37.385Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "node",
     "userEmail": "admin@example.com",
@@ -7180,30 +7180,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6a98fb9c02e75e43af1ff3ed",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a98fb9c02e75e43af1ff3ed",
-    "ipAddress": "106.51.198.7, 104.23.160.165",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-09-03T04:46:20.861Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6a98fbf702e75e43af1ff3ef",
     "__v": 0,
     "action": "login_success",
@@ -7221,6 +7197,30 @@
     },
     "status": "success",
     "timestamp": "2026-09-03T04:47:51.848Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6a98fb9c02e75e43af1ff3ed",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a98fb9c02e75e43af1ff3ed",
+    "ipAddress": "106.51.198.7, 104.23.160.165",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-09-03T04:46:20.861Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
@@ -7444,6 +7444,30 @@
     "userRole": "super-admin"
   },
   {
+    "_id": "6a9ba8e4f975fc745eba683c",
+    "__v": 0,
+    "action": "login_failed",
+    "details": "Login attempt failed - Account not found",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6a9ba8e4f975fc745eba683c",
+    "ipAddress": "152.57.47.219, 172.68.175.11",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "timestamp": "2026-09-05T05:30:12.526Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
+    "userEmail": "amit@example.com",
+    "userId": null,
+    "userRole": "guest"
+  },
+  {
     "_id": "6a9ba8e2f975fc745eba683b",
     "__v": 0,
     "action": "login_failed",
@@ -7468,7 +7492,7 @@
     "userRole": "guest"
   },
   {
-    "_id": "6a9ba8e4f975fc745eba683c",
+    "_id": "6a9ba8e8f975fc745eba683e",
     "__v": 0,
     "action": "login_failed",
     "details": "Login attempt failed - Account not found",
@@ -7477,14 +7501,14 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6a9ba8e4f975fc745eba683c",
-    "ipAddress": "152.57.47.219, 172.68.175.11",
+    "id": "6a9ba8e8f975fc745eba683e",
+    "ipAddress": "152.57.47.219, 172.68.175.92",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "failed",
-    "timestamp": "2026-09-05T05:30:12.526Z",
+    "timestamp": "2026-09-05T05:30:16.507Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
     "userEmail": "amit@example.com",
@@ -7538,30 +7562,6 @@
     "userEmail": "north@example.com",
     "userId": "6a92e1f28275e6e237360ff0",
     "userRole": "super-admin"
-  },
-  {
-    "_id": "6a9ba8e8f975fc745eba683e",
-    "__v": 0,
-    "action": "login_failed",
-    "details": "Login attempt failed - Account not found",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6a9ba8e8f975fc745eba683e",
-    "ipAddress": "152.57.47.219, 172.68.175.92",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "failed",
-    "timestamp": "2026-09-05T05:30:16.507Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/152.0.0.0 Safari/537.36",
-    "userEmail": "amit@example.com",
-    "userId": null,
-    "userRole": "guest"
   },
   {
     "_id": "6a9bc0fdf975fc745eba6842",
@@ -8064,7 +8064,7 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab257423b730c6324cc0751",
+    "_id": "6ab219579c818a1013090873",
     "__v": 0,
     "action": "login_success",
     "details": "Successful user authentication",
@@ -8073,16 +8073,16 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6ab257423b730c6324cc0751",
-    "ipAddress": "::ffff:127.0.0.1",
+    "id": "6ab219579c818a1013090873",
+    "ipAddress": "::ffff:205.254.163.153",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "success",
-    "timestamp": "2026-09-22T10:24:02.606Z",
+    "timestamp": "2026-09-22T05:59:51.891Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "curl/8.18.0",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -8112,7 +8112,7 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab219579c818a1013090873",
+    "_id": "6ab257423b730c6324cc0751",
     "__v": 0,
     "action": "login_success",
     "details": "Successful user authentication",
@@ -8121,16 +8121,16 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6ab219579c818a1013090873",
-    "ipAddress": "::ffff:205.254.163.153",
+    "id": "6ab257423b730c6324cc0751",
+    "ipAddress": "::ffff:127.0.0.1",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "success",
-    "timestamp": "2026-09-22T05:59:51.891Z",
+    "timestamp": "2026-09-22T10:24:02.606Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "userAgent": "curl/8.18.0",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -8280,7 +8280,7 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab384c33b730c6324cc078c",
+    "_id": "6ab3817a3b730c6324cc0784",
     "__v": 0,
     "action": "login_success",
     "details": "Successful user authentication",
@@ -8289,16 +8289,64 @@
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6ab384c33b730c6324cc078c",
+    "id": "6ab3817a3b730c6324cc0784",
     "ipAddress": "106.51.198.7",
     "location": {
       "city": "Local",
       "country": "India"
     },
     "status": "success",
-    "timestamp": "2026-09-23T07:50:27.304Z",
+    "timestamp": "2026-09-23T07:36:26.695Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab4b213674fbdab1850615b",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab4b213674fbdab1850615b",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-09-24T05:16:03.042Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "curl/8.21.0",
+    "userEmail": "dora@gmail.com",
+    "userId": "6ab4ad5f674fbdab18506159",
+    "userRole": "admin"
+  },
+  {
+    "_id": "6ab41553674fbdab1850614d",
+    "__v": 0,
+    "action": "login_failed",
+    "details": "Failed password attempt 1/10",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab41553674fbdab1850614d",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "timestamp": "2026-09-23T18:07:15.559Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "node",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -8328,30 +8376,6 @@
     "userRole": "guest"
   },
   {
-    "_id": "6ab3817a3b730c6324cc0784",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab3817a3b730c6324cc0784",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-09-23T07:36:26.695Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6ab3804a3b730c6324cc0780",
     "__v": 0,
     "action": "login_success",
@@ -8369,30 +8393,6 @@
     },
     "status": "success",
     "timestamp": "2026-09-23T07:31:22.674Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
-    "_id": "6ab37f6d3b730c6324cc077e",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab37f6d3b730c6324cc077e",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-09-23T07:27:41.299Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
@@ -8424,30 +8424,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab4b213674fbdab1850615b",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab4b213674fbdab1850615b",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-09-24T05:16:03.042Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "curl/8.21.0",
-    "userEmail": "dora@gmail.com",
-    "userId": "6ab4ad5f674fbdab18506159",
-    "userRole": "admin"
-  },
-  {
     "_id": "6ab25b1b3b730c6324cc075b",
     "__v": 0,
     "action": "login_success",
@@ -8467,6 +8443,54 @@
     "timestamp": "2026-09-22T10:40:27.109Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "curl/8.18.0",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab384c33b730c6324cc078c",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab384c33b730c6324cc078c",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-09-23T07:50:27.304Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab37f6d3b730c6324cc077e",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab37f6d3b730c6324cc077e",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-09-23T07:27:41.299Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -8568,30 +8592,6 @@
     "userRole": "admin"
   },
   {
-    "_id": "6ab381a73b730c6324cc0786",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab381a73b730c6324cc0786",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-09-23T07:37:11.789Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6ab4a2a6674fbdab18506157",
     "__v": 0,
     "action": "login_success",
@@ -8616,30 +8616,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab41553674fbdab1850614d",
-    "__v": 0,
-    "action": "login_failed",
-    "details": "Failed password attempt 1/10",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab41553674fbdab1850614d",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "failed",
-    "timestamp": "2026-09-23T18:07:15.559Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "node",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6ab3853f3b730c6324cc0790",
     "__v": 0,
     "action": "login_success",
@@ -8659,6 +8635,54 @@
     "timestamp": "2026-09-23T07:52:31.668Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab381a73b730c6324cc0786",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab381a73b730c6324cc0786",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-09-23T07:37:11.789Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab37f473b730c6324cc077c",
+    "__v": 0,
+    "action": "login_success",
+    "details": "Successful user authentication",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab37f473b730c6324cc077c",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "timestamp": "2026-09-23T07:27:03.518Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
     "userRole": "super-admin"
@@ -8736,30 +8760,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab37f473b730c6324cc077c",
-    "__v": 0,
-    "action": "login_success",
-    "details": "Successful user authentication",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab37f473b730c6324cc077c",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "status": "success",
-    "timestamp": "2026-09-23T07:27:03.518Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6ab368903b730c6324cc0761",
     "__v": 0,
     "action": "vendor_activated",
@@ -8787,6 +8787,40 @@
     },
     "status": "success",
     "timestamp": "2026-09-23T05:50:08.837Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab281243b730c6324cc0760",
+    "__v": 0,
+    "action": "vendor_activated",
+    "details": "Admin approved vendor \"Nive\" (nive@gmail.com)",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab281243b730c6324cc0760",
+    "ipAddress": "106.51.198.7",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "metadata": {
+      "adminId": "6a8d22c11bc647d92ae36337",
+      "adminName": "Super Admin",
+      "vendorId": "6ab0c7c76d77b63731432c77",
+      "vendorName": "Nive",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-09-22T13:22:44.813Z"
+    },
+    "status": "success",
+    "timestamp": "2026-09-22T13:22:44.814Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
@@ -8862,40 +8896,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab281243b730c6324cc0760",
-    "__v": 0,
-    "action": "vendor_activated",
-    "details": "Admin approved vendor \"Nive\" (nive@gmail.com)",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab281243b730c6324cc0760",
-    "ipAddress": "106.51.198.7",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "metadata": {
-      "adminId": "6a8d22c11bc647d92ae36337",
-      "adminName": "Super Admin",
-      "vendorId": "6ab0c7c76d77b63731432c77",
-      "vendorName": "Nive",
-      "oldStatus": "Pending",
-      "newStatus": "Approved",
-      "reason": "Direct registration approved",
-      "timestamp": "2026-09-22T13:22:44.813Z"
-    },
-    "status": "success",
-    "timestamp": "2026-09-22T13:22:44.814Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6ab4c3dd5df0d82cb7a09cad",
     "__v": 0,
     "action": "vendor_activated",
@@ -8930,16 +8930,16 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab4d731b1353d05b8d61c96",
+    "_id": "6ab4d707b1353d05b8d61c94",
     "__v": 0,
     "action": "vendor_suspended",
-    "details": "Admin changed status for vendor \"Anbu\" from \"Approved\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
+    "details": "Admin changed status for vendor \"Forge India Connect HR\" from \"rejected\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
     "deviceInfo": {
       "browser": "Unknown Browser",
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6ab4d731b1353d05b8d61c96",
+    "id": "6ab4d707b1353d05b8d61c94",
     "ipAddress": "106.51.198.7",
     "location": {
       "city": "Local",
@@ -8948,16 +8948,16 @@
     "metadata": {
       "adminId": "6a8d22c11bc647d92ae36337",
       "adminName": "Super Admin",
-      "vendorId": "6ab4d647457d2cf75d44f064",
-      "vendorName": "Anbu",
-      "oldStatus": "Approved",
+      "vendorId": "6a8d49b240fa5bf27930dcbb",
+      "vendorName": "Forge India Connect HR",
+      "oldStatus": "rejected",
       "newStatus": "Suspended",
       "reason": "Account marked as Suspended by Administrator",
-      "timestamp": "2026-09-24T07:54:25.130Z"
+      "timestamp": "2026-09-24T07:53:43.138Z"
     },
     "status": "success",
-    "timestamp": "2026-09-24T07:54:25.130Z",
-    "updatedAt": "2026-09-26T05:54:25.510Z",
+    "timestamp": "2026-09-24T07:53:43.139Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
@@ -8998,16 +8998,16 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab4d707b1353d05b8d61c94",
+    "_id": "6ab4d731b1353d05b8d61c96",
     "__v": 0,
     "action": "vendor_suspended",
-    "details": "Admin changed status for vendor \"Forge India Connect HR\" from \"rejected\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
+    "details": "Admin changed status for vendor \"Anbu\" from \"Approved\" to \"Suspended\". Reason: Account marked as Suspended by Administrator",
     "deviceInfo": {
       "browser": "Unknown Browser",
       "os": "Unknown OS",
       "deviceType": "Desktop"
     },
-    "id": "6ab4d707b1353d05b8d61c94",
+    "id": "6ab4d731b1353d05b8d61c96",
     "ipAddress": "106.51.198.7",
     "location": {
       "city": "Local",
@@ -9016,16 +9016,16 @@
     "metadata": {
       "adminId": "6a8d22c11bc647d92ae36337",
       "adminName": "Super Admin",
-      "vendorId": "6a8d49b240fa5bf27930dcbb",
-      "vendorName": "Forge India Connect HR",
-      "oldStatus": "rejected",
+      "vendorId": "6ab4d647457d2cf75d44f064",
+      "vendorName": "Anbu",
+      "oldStatus": "Approved",
       "newStatus": "Suspended",
       "reason": "Account marked as Suspended by Administrator",
-      "timestamp": "2026-09-24T07:53:43.138Z"
+      "timestamp": "2026-09-24T07:54:25.130Z"
     },
     "status": "success",
-    "timestamp": "2026-09-24T07:53:43.139Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "timestamp": "2026-09-24T07:54:25.130Z",
+    "updatedAt": "2026-09-26T05:54:25.510Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
     "userId": "6a8d22c11bc647d92ae36337",
@@ -9216,40 +9216,6 @@
     "userRole": "super-admin"
   },
   {
-    "_id": "6ab618cee6f86d451440045e",
-    "__v": 0,
-    "action": "vendor_activated",
-    "details": "Admin approved vendor \"Bommi\" (bommi@gmail.com)",
-    "deviceInfo": {
-      "browser": "Unknown Browser",
-      "os": "Unknown OS",
-      "deviceType": "Desktop"
-    },
-    "id": "6ab618cee6f86d451440045e",
-    "ipAddress": "205.254.163.153",
-    "location": {
-      "city": "Local",
-      "country": "India"
-    },
-    "metadata": {
-      "adminId": "6a8d22c11bc647d92ae36337",
-      "adminName": "Super Admin",
-      "vendorId": "6ab6168d457d2cf75d466c48",
-      "vendorName": "Bommi",
-      "oldStatus": "Pending",
-      "newStatus": "Approved",
-      "reason": "Direct registration approved",
-      "timestamp": "2026-09-25T06:46:38.839Z"
-    },
-    "status": "success",
-    "timestamp": "2026-09-25T06:46:38.840Z",
-    "updatedAt": "2026-09-25T13:48:30.378Z",
-    "userAgent": "",
-    "userEmail": "admin@example.com",
-    "userId": "6a8d22c11bc647d92ae36337",
-    "userRole": "super-admin"
-  },
-  {
     "_id": "6ab4d6d1b1353d05b8d61c93",
     "__v": 0,
     "action": "vendor_activated",
@@ -9277,6 +9243,40 @@
     },
     "status": "success",
     "timestamp": "2026-09-24T07:52:49.829Z",
+    "updatedAt": "2026-09-25T13:48:30.378Z",
+    "userAgent": "",
+    "userEmail": "admin@example.com",
+    "userId": "6a8d22c11bc647d92ae36337",
+    "userRole": "super-admin"
+  },
+  {
+    "_id": "6ab618cee6f86d451440045e",
+    "__v": 0,
+    "action": "vendor_activated",
+    "details": "Admin approved vendor \"Bommi\" (bommi@gmail.com)",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "id": "6ab618cee6f86d451440045e",
+    "ipAddress": "205.254.163.153",
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "metadata": {
+      "adminId": "6a8d22c11bc647d92ae36337",
+      "adminName": "Super Admin",
+      "vendorId": "6ab6168d457d2cf75d466c48",
+      "vendorName": "Bommi",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-09-25T06:46:38.839Z"
+    },
+    "status": "success",
+    "timestamp": "2026-09-25T06:46:38.840Z",
     "updatedAt": "2026-09-25T13:48:30.378Z",
     "userAgent": "",
     "userEmail": "admin@example.com",
@@ -10600,5 +10600,1297 @@
     "targetUserRole": "state_manager",
     "timestamp": "2026-09-29T13:51:13.534Z",
     "updatedAt": "2026-09-29T13:51:13.749Z"
+  },
+  {
+    "_id": "6abc8beb7ff2862ecee7b96f",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:11:23.064Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8beb7ff2862ecee7b970",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:11:23.175Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8c997ff2862ecee7b971",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:14:17.004Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8c997ff2862ecee7b972",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:14:17.118Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8ca97ff2862ecee7b973",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:14:33.777Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8ca97ff2862ecee7b974",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:14:33.892Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8caf7ff2862ecee7b975",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:14:39.906Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8cb07ff2862ecee7b976",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:14:40.698Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8cd27ff2862ecee7b977",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:15:14.027Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc8cd27ff2862ecee7b978",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:15:14.107Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc92447ff2862ecee7b979",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:38:28.032Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc92447ff2862ecee7b97a",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:38:28.134Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc93287ff2862ecee7b97b",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:42:16.204Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc93287ff2862ecee7b97c",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:42:16.295Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc93477ff2862ecee7b97d",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:42:47.199Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc93477ff2862ecee7b97e",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:42:47.287Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97237ff2862ecee7b97f",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:15.656Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97237ff2862ecee7b980",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:15.901Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97257ff2862ecee7b981",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:17.608Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97257ff2862ecee7b982",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:17.665Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97287ff2862ecee7b983",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:20.374Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97287ff2862ecee7b984",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:20.517Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97297ff2862ecee7b985",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:21.301Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc97297ff2862ecee7b986",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T04:59:21.433Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc98467ff2862ecee7b987",
+    "userId": null,
+    "userEmail": "admin@example.com",
+    "userRole": "guest",
+    "action": "login_failed",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Login attempt failed - Account not found",
+    "timestamp": "2026-09-30T05:04:06.815Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc98fc7ff2862ecee7b989",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:07:08.272Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc993e7ff2862ecee7b98b",
+    "userId": "6abc986678d7803cf6a444da",
+    "userEmail": "north@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:08:14.869Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc99477ff2862ecee7b98d",
+    "userId": "6abc986778d7803cf6a444db",
+    "userEmail": "amit@example.com",
+    "userRole": "agent",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:08:23.645Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc99537ff2862ecee7b98f",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:08:35.802Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc996b7ff2862ecee7b991",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:08:59.026Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc996c7ff2862ecee7b992",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Failed password attempt 1/10",
+    "timestamp": "2026-09-30T05:09:00.355Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc996e7ff2862ecee7b993",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_failed",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "failed",
+    "details": "Failed password attempt 2/10",
+    "timestamp": "2026-09-30T05:09:02.708Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc99737ff2862ecee7b995",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:09:07.289Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc99747ff2862ecee7b997",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:09:08.412Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abc99767ff2862ecee7b999",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T05:09:10.560Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcb507597c1350407b6e63",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "205.254.163.151",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T07:06:47.361Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcc147597c1350407b6f29",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T07:59:03.609Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf5bacafeb25632474278",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:42:50.327Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf641eaebfd961ca98bce",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:45:05.169Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf655eaebfd961ca98bd3",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:45:25.909Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf66aeaebfd961ca98bd6",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:45:46.274Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf674eaebfd961ca98bda",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:45:56.333Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf67ceaebfd961ca98bdc",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:46:04.521Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf684eaebfd961ca98bde",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:46:12.037Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf68eeaebfd961ca98be0",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:46:22.661Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf694eaebfd961ca98be2",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:46:28.430Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf69deaebfd961ca98be6",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:46:37.904Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf6b8eaebfd961ca98be8",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:47:04.181Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcf6c5eaebfd961ca98beb",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T11:47:17.966Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcfd8424d7ccb5f500227a",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T12:16:04.090Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcfd8c24d7ccb5f500227c",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T12:16:12.847Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcfda624d7ccb5f500227f",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T12:16:38.087Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abcfe6d24d7ccb5f5002284",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT; Windows NT 10.0; en-IN) WindowsPowerShell/5.1.26100.9444",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T12:19:57.382Z",
+    "__v": 0
+  },
+  {
+    "_id": "6abd125cdd63c10437e4ad2f",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "::1",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/153.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-09-30T13:45:00.814Z",
+    "__v": 0
+  },
+  {
+    "_id": "920410ad-2a94-4b61-be16-f7bcd0fe5ab0",
+    "action": "Status Changed",
+    "createdAt": "2026-10-01T06:56:02.165Z",
+    "id": "920410ad-2a94-4b61-be16-f7bcd0fe5ab0",
+    "module": "Vendors",
+    "newValue": {
+      "status": "Active",
+      "notes": "Status changed from Approved to Active"
+    },
+    "previousValue": {
+      "status": "Approved",
+      "notes": ""
+    },
+    "recordId": "ven_311361",
+    "timestamp": "2026-10-01T06:56:02.165Z",
+    "updatedAt": "2026-10-01T06:56:02.165Z",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager"
+  },
+  {
+    "_id": "6abe0d793c4400f34fa4807a",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-10-01T07:36:25.261Z",
+    "__v": 0
+  },
+  {
+    "_id": "347d691c-a07a-4b32-8c54-5631123858bf",
+    "action": "VENDOR_CREATED",
+    "createdAt": "2026-10-01T12:08:01.916Z",
+    "details": "Vendor 'reo' onboarded. Category: Services. Assigned Pincode: 636112.",
+    "id": "347d691c-a07a-4b32-8c54-5631123858bf",
+    "ip": "65.2.151.184",
+    "recordId": "ven_481360",
+    "updatedAt": "2026-10-01T12:08:01.916Z",
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "userName": "Muruga",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "9d55a7a3-6b28-4f1a-b80f-83a31f12fdbb",
+    "action": "VENDOR_PINCODE_ACCEPTED",
+    "createdAt": "2026-10-01T12:10:01.014Z",
+    "details": "Pincode Admin approved vendor. Forwarded for KYC audit.",
+    "id": "9d55a7a3-6b28-4f1a-b80f-83a31f12fdbb",
+    "ip": "127.0.0.1",
+    "recordId": "ven_481360",
+    "updatedAt": "2026-10-01T12:10:01.014Z",
+    "userId": "ADM-PIN-608A42",
+    "userName": "Maran",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "e827e584-4697-4866-8dbb-de9b7092e373",
+    "action": "VENDOR_PINCODE_ACCEPTED",
+    "createdAt": "2026-10-01T12:10:11.306Z",
+    "details": "Pincode Admin approved vendor. Forwarded for KYC audit.",
+    "id": "e827e584-4697-4866-8dbb-de9b7092e373",
+    "ip": "127.0.0.1",
+    "recordId": "6ab76e3445152c228d463a87",
+    "updatedAt": "2026-10-01T12:10:11.306Z",
+    "userId": "ADM-PIN-608A42",
+    "userName": "Maran",
+    "userRole": "Pincode Admin"
+  },
+  {
+    "_id": "6abf3019d0e7421eccce53d1",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) connect-app-admin-desktop/1.0.0 Chrome/126.0.6478.234 Electron/31.7.7 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-10-02T04:16:25.008Z",
+    "__v": 0
   }
 ]

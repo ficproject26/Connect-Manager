@@ -23,7 +23,8 @@
     "updatedAt": "2026-08-26T13:24:01.428Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "district"
   },
   {
     "_id": "6a8ee95ab346b0af44cf2029",
@@ -49,7 +50,8 @@
     "updatedAt": "2026-08-28T07:22:17.045Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "district"
   },
   {
     "_id": "6a8ffe58b346b0af44cf2036",
@@ -108,7 +110,8 @@
     "bloodGroup": "O+",
     "fullAddress": "",
     "preferredLanguage": "English",
-    "profilePhoto": ""
+    "profilePhoto": "",
+    "level": "state"
   },
   {
     "_id": "6a90220ab346b0af44cf20e4",
@@ -134,7 +137,8 @@
     "updatedAt": "2026-08-27T11:39:55.921Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "state"
   },
   {
     "_id": "6a9022fbb346b0af44cf211a",
@@ -165,7 +169,8 @@
     "updatedAt": "2026-08-27T11:45:56.790Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "district"
   },
   {
     "_id": "6a9023aeb346b0af44cf211e",
@@ -196,7 +201,8 @@
     "updatedAt": "2026-08-27T11:47:05.533Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "division"
   },
   {
     "_id": "6a90246db346b0af44cf2129",
@@ -227,7 +233,8 @@
     "updatedAt": "2026-08-27T11:53:59.198Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "pincode"
   },
   {
     "_id": "6a902f09b346b0af44cf214a",
@@ -258,7 +265,8 @@
     "updatedAt": "2026-08-27T12:37:36.891Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "state"
   },
   {
     "_id": "6a903007b346b0af44cf214e",
@@ -289,7 +297,8 @@
     "updatedAt": "2026-09-26T06:45:02.122Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "state"
   },
   {
     "_id": "6a9120a73cbecf25841b8d87",
@@ -320,7 +329,8 @@
     "updatedAt": "2026-08-28T06:37:22.332Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "pincode"
   },
   {
     "_id": "6a9180a5caf3cb00e6b9a398",
@@ -344,7 +354,8 @@
     "performanceScore": 0,
     "createdAt": "2026-08-28T12:35:49.697Z",
     "updatedAt": "2026-09-02T09:10:45.608Z",
-    "__v": 0
+    "__v": 0,
+    "level": "pincode"
   },
   {
     "_id": "6a926325caf3cb00e6b9a590",
@@ -375,7 +386,8 @@
     "updatedAt": "2026-09-03T04:49:10.017Z",
     "__v": 0,
     "isActive": true,
-    "isApproved": true
+    "isApproved": true,
+    "level": "district"
   },
   {
     "_id": "6a95529d2b7b15bdd1b64ad7",
@@ -489,7 +501,8 @@
       "accountNumber": "123456789012",
       "ifscCode": "SBIN0001428",
       "accountHolder": ""
-    }
+    },
+    "level": "state"
   },
   {
     "_id": "6aa23689caf3cb00e6b9d23b",
@@ -648,7 +661,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "state"
   },
   {
     "_id": "6ab36545a44b2df48377ace3",
@@ -675,7 +689,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "pincode"
   },
   {
     "_id": "6ab3758bafa07587f56111c3",
@@ -866,7 +881,8 @@
     "__v": 0,
     "isActive": false,
     "isApproved": false,
-    "isPaid": false
+    "isPaid": false,
+    "level": "pincode"
   },
   {
     "_id": "6ab3b0ba7ee04aa0f057f290",
@@ -961,7 +977,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "pincode"
   },
   {
     "_id": "6ab4f4fd1311030bfd34460d",
@@ -1055,7 +1072,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "pincode"
   },
   {
     "_id": "6ab4f7221311030bfd3447df",
@@ -1082,7 +1100,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "pincode"
   },
   {
     "_id": "6ab4f73f1311030bfd344813",
@@ -1109,7 +1128,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "pincode"
   },
   {
     "_id": "6ab4f7a11311030bfd344853",
@@ -1136,7 +1156,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "pincode"
   },
   {
     "_id": "6ab4f82d1311030bfd3448ba",
@@ -1163,7 +1184,8 @@
     "__v": 0,
     "isActive": true,
     "isApproved": true,
-    "isPaid": true
+    "isPaid": true,
+    "level": "district"
   },
   {
     "_id": "6ab507531311030bfd344e1d",
@@ -1258,7 +1280,8 @@
     "__v": 0,
     "isActive": false,
     "isApproved": false,
-    "isPaid": true
+    "isPaid": true,
+    "level": "division"
   },
   {
     "_id": "6ab5fbd8b8654beabd8f92a4",
@@ -1418,7 +1441,8 @@
     "performanceScore": 0,
     "createdAt": "2026-09-26T09:51:59.589Z",
     "updatedAt": "2026-09-26T09:51:59.589Z",
-    "__v": 0
+    "__v": 0,
+    "level": "pincode"
   },
   {
     "_id": "6ab79e8c071d56fd60635115",
@@ -1442,6 +1466,7 @@
     "performanceScore": 0,
     "createdAt": "2026-09-26T10:29:33.007Z",
     "updatedAt": "2026-09-26T10:29:34.619Z",
-    "__v": 0
+    "__v": 0,
+    "level": "state"
   }
 ]

@@ -38,14 +38,14 @@ const FieldManagers = () => {
   const fetchManagers = async () => {
     try {
       setLoading(true);
-      const res = await managerService.getManagerDirectory();
-      if (res.success) {
-        const currentId = user?.id || user?._id;
+      const res = await managerService.getManagerDirectory({}, user);
+      if (res && res.success) {
+        const currentId = String(user?.id || user?._id || '');
         const rawAll = res.all || [...(res.peers || []), ...(res.subordinates || res.data || [])];
-        const all = rawAll.filter(m => !m.isSelf && m.id !== currentId);
+        const all = rawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
         setAllManagers(all);
-        setPeersList((res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && m.id !== currentId));
-        setSubordinatesList((res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && m.id !== currentId));
+        setPeersList((res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId));
+        setSubordinatesList((res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId));
       }
     } catch (err) {
       console.error('Failed to load manager directory:', err);

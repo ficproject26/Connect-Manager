@@ -19,34 +19,75 @@ const getLowerLevelManagers = async (req, res) => {
       uniqueUsers.push(u);
     }
 
-    let peerRoleFilter = user.role;
-    let subordinateRoleFilter = [];
-    let peerLocationFilter = {};
-    let subordinateLocationFilter = {};
+    const norm = (s) => (s ? String(s).trim().toLowerCase() : '');
+    const userRole = norm(user.role);
 
-    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
+    const userStateId = norm(user.stateId || user.assignedStateId || user.regionId || user.scope?.stateId);
+    const userStateName = norm(user.state || user.stateName || user.assignedState || user.scope?.stateName);
 
-    if (isGlobalAdmin) {
-      peerLocationFilter = {};
-      subordinateRoleFilter = ['state_manager', 'district_manager', 'division_manager', 'pincode_manager'];
-      subordinateLocationFilter = {};
-    } else if (user.role === 'state_manager') {
-      peerLocationFilter = { stateId: user.stateId };
-      subordinateRoleFilter = ['district_manager', 'division_manager', 'pincode_manager'];
-      subordinateLocationFilter = { stateId: user.stateId };
-    } else if (user.role === 'district_manager') {
-      peerLocationFilter = { districtId: user.districtId };
-      subordinateRoleFilter = ['division_manager', 'pincode_manager'];
-      subordinateLocationFilter = { districtId: user.districtId };
-    } else if (user.role === 'division_manager') {
-      peerLocationFilter = { divisionId: user.divisionId };
-      subordinateRoleFilter = ['pincode_manager'];
-      subordinateLocationFilter = { divisionId: user.divisionId };
-    } else if (user.role === 'pincode_manager') {
-      peerLocationFilter = { pincodeId: user.pincodeId };
-      subordinateRoleFilter = [];
-      subordinateLocationFilter = {};
-    }
+    const userDistrictId = norm(user.districtId || user.assignedDistrictId || user.scope?.districtId);
+    const userDistrictName = norm(user.district || user.districtName || user.assignedDistrict || user.scope?.districtName);
+
+    const userDivisionId = norm(user.divisionId || user.assignedDivisionId || user.scope?.divisionId);
+    const userDivisionName = norm(user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName);
+
+    const userPincodeId = norm(user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId);
+    const userPincode = norm(user.pincode || user.pincodeCode || user.scope?.pincodeCode);
+
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(userRole) || 
+      user.email === 'admin@example.com' || 
+      String(user.id || user._id) === 'user_admin';
+
+    // Determine level: 1 = state, 2 = district, 3 = division, 4 = pincode
+    const getLevel = (r) => {
+      const nr = norm(r);
+      if (nr.includes('state')) return 1;
+      if (nr.includes('district')) return 2;
+      if (nr.includes('division') || nr.includes('divisional')) return 3;
+      if (nr.includes('pincode')) return 4;
+      return 99;
+    };
+
+    const userLevel = getLevel(userRole);
+
+    const matchState = (u) => {
+      if (isGlobalAdmin) return true;
+      const uStateId = norm(u.stateId || u.regionId || u.assignedStateId);
+      const uStateName = norm(u.stateName || u.state || u.assignedState);
+      if (userStateId && uStateId && userStateId === uStateId) return true;
+      if (userStateName && uStateName && userStateName === uStateName) return true;
+      return !userStateId && !userStateName;
+    };
+
+    const matchDistrict = (u) => {
+      if (!matchState(u)) return false;
+      if (userLevel === 1 || isGlobalAdmin) return true;
+      const uDistrictId = norm(u.districtId || u.assignedDistrictId);
+      const uDistrictName = norm(u.districtName || u.district || u.assignedDistrict);
+      if (userDistrictId && uDistrictId && userDistrictId === uDistrictId) return true;
+      if (userDistrictName && uDistrictName && userDistrictName === uDistrictName) return true;
+      return !userDistrictId && !userDistrictName;
+    };
+
+    const matchDivision = (u) => {
+      if (!matchDistrict(u)) return false;
+      if (userLevel <= 2 || isGlobalAdmin) return true;
+      const uDivisionId = norm(u.divisionId || u.assignedDivisionId);
+      const uDivisionName = norm(u.divisionName || u.division || u.assignedDivision);
+      if (userDivisionId && uDivisionId && userDivisionId === uDivisionId) return true;
+      if (userDivisionName && uDivisionName && userDivisionName === uDivisionName) return true;
+      return !userDivisionId && !userDivisionName;
+    };
+
+    const matchPincode = (u) => {
+      if (!matchDivision(u)) return false;
+      if (userLevel <= 3 || isGlobalAdmin) return true;
+      const uPincodeId = norm(u.pincodeId || u.assignedPincodeId);
+      const uPin = norm(u.pincodeCode || u.pincode || u.assignedPincode);
+      if (userPincodeId && uPincodeId && userPincodeId === uPincodeId) return true;
+      if (userPincode && uPin && userPincode === uPin) return true;
+      return !userPincodeId && !userPincode;
+    };
 
     // Helper to format role titles
     const formatRoleTitle = (role) => {
@@ -64,26 +105,28 @@ const getLowerLevelManagers = async (req, res) => {
     const rawPeers = uniqueUsers.filter(u => {
       const uId = String(u._id || u.id || '');
       if (uId === currentUserId) return false;
-      const uRole = String(u.role || '').toLowerCase();
-      if (uRole !== String(peerRoleFilter || '').toLowerCase()) return false;
-      if (peerLocationFilter.stateId && String(u.stateId || '') !== String(peerLocationFilter.stateId)) return false;
-      if (peerLocationFilter.districtId && String(u.districtId || '') !== String(peerLocationFilter.districtId)) return false;
-      if (peerLocationFilter.divisionId && String(u.divisionId || '') !== String(peerLocationFilter.divisionId)) return false;
-      if (peerLocationFilter.pincodeId && String(u.pincodeId || '') !== String(peerLocationFilter.pincodeId)) return false;
+      const uLevel = getLevel(u.role);
+      if (uLevel !== userLevel && !isGlobalAdmin) return false;
+
+      if (userLevel === 1) return matchState(u);
+      if (userLevel === 2) return matchDistrict(u);
+      if (userLevel === 3) return matchDivision(u);
+      if (userLevel === 4) return matchPincode(u);
       return true;
     });
 
-    // Filter subordinates (under, excluding current user)
-    const rawSubordinates = subordinateRoleFilter.length > 0 ? uniqueUsers.filter(u => {
+    // Filter subordinates (under current user's level, excluding current user)
+    const rawSubordinates = uniqueUsers.filter(u => {
       const uId = String(u._id || u.id || '');
       if (uId === currentUserId) return false;
-      const uRole = String(u.role || '').toLowerCase();
-      if (!subordinateRoleFilter.some(sr => sr.toLowerCase() === uRole)) return false;
-      if (subordinateLocationFilter.stateId && String(u.stateId || '') !== String(subordinateLocationFilter.stateId)) return false;
-      if (subordinateLocationFilter.districtId && String(u.districtId || '') !== String(subordinateLocationFilter.districtId)) return false;
-      if (subordinateLocationFilter.divisionId && String(u.divisionId || '') !== String(subordinateLocationFilter.divisionId)) return false;
-      return true;
-    }) : [];
+      const uLevel = getLevel(u.role);
+      if (uLevel <= userLevel && !isGlobalAdmin) return false;
+
+      if (userLevel === 1) return matchState(u);
+      if (userLevel === 2) return matchDistrict(u);
+      if (userLevel === 3) return matchDivision(u);
+      return isGlobalAdmin;
+    });
 
     // Helper to populate manager details
     const populateManager = async (m, relation) => {

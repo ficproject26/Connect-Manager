@@ -618,5 +618,21 @@
     "createdAt": "2026-09-29T05:04:23.181Z",
     "updatedAt": "2026-09-29T05:04:23.181Z",
     "__v": 0
+  },
+  {
+    "_id": "6abca9af597c1350407b6deb",
+    "districtId": "DIST-TN-TVUR",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "name": "Thiruvarur",
+    "code": "TVUR",
+    "headquarters": "",
+    "description": "",
+    "notes": "",
+    "status": "Active",
+    "createdBy": "6abc986678d7803cf6a444d9",
+    "updatedBy": "6abc986678d7803cf6a444d9",
+    "createdAt": "2026-09-30T06:18:23.467Z",
+    "updatedAt": "2026-09-30T06:18:23.467Z",
+    "__v": 0
   }
 ]
