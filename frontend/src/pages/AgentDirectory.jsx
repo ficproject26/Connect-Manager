@@ -43,12 +43,9 @@ const AgentDirectory = ({ onNavigate }) => {
   const fetchAgents = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
     try {
-      const res = await agentService.getAgents();
-      if (res && res.success && Array.isArray(res.agents)) {
-        setAgents(res.agents);
-      } else {
-        setAgents([]);
-      }
+      const res = await agentService.getAgents({}, user);
+      const list = (res && res.success && (Array.isArray(res.agents) ? res.agents : (Array.isArray(res.data) ? res.data : []))) || [];
+      setAgents(list);
     } catch (err) {
       console.error('Failed to load agents:', err);
       setAgents([]);
@@ -165,52 +162,11 @@ const AgentDirectory = ({ onNavigate }) => {
   const isStateManager = managerRole.includes('state');
 
   // Hierarchical Scoping Rules:
-  // - Pincode Manager: ONLY Pincode Agents in their assigned pincode
-  // - Division Manager: Division Agent + Pincode Agents in their division
-  // - District Manager: District Agent + Division Agent + Pincode Agents in their district
-  // - State Manager: State + District + Division + Pincode Agents in their state
+  // Hierarchical Scoping Rules:
+  // agents returned by agentService.getAgents are already strictly scoped to the manager's authorized territory
   const hierarchicalAgents = useMemo(() => {
-    return agents.filter(agent => {
-      const aLevel = resolveLevelStr(agent.level, agent.role);
-
-      if (isPincodeManager) {
-        if (!aLevel.includes('pincode')) return false;
-        if (user?.pincode && agent.pincode && String(agent.pincode).trim() !== String(user.pincode).trim()) {
-          return false;
-        }
-        return true;
-      }
-
-      if (isDivisionManager) {
-        const isAllowed = aLevel.includes('division') || aLevel.includes('pincode');
-        if (!isAllowed) return false;
-        if (user?.division && agent.division && String(agent.division).toLowerCase() !== String(user.division).toLowerCase()) {
-          return false;
-        }
-        return true;
-      }
-
-      if (isDistrictManager) {
-        const isAllowed = aLevel.includes('district') || aLevel.includes('division') || aLevel.includes('pincode');
-        if (!isAllowed) return false;
-        if (user?.district && agent.district && String(agent.district).toLowerCase() !== String(user.district).toLowerCase()) {
-          return false;
-        }
-        return true;
-      }
-
-      if (isStateManager) {
-        const isAllowed = aLevel.includes('state') || aLevel.includes('district') || aLevel.includes('division') || aLevel.includes('pincode');
-        if (!isAllowed) return false;
-        if (user?.state && agent.state && String(agent.state).toLowerCase() !== String(user.state).toLowerCase()) {
-          return false;
-        }
-        return true;
-      }
-
-      return true;
-    });
-  }, [agents, user, isPincodeManager, isDivisionManager, isDistrictManager, isStateManager]);
+    return agents;
+  }, [agents]);
 
   const filteredAgents = useMemo(() => {
     return hierarchicalAgents.filter(agent => {
@@ -250,6 +206,11 @@ const AgentDirectory = ({ onNavigate }) => {
     return hierarchicalAgents.reduce((sum, a) => sum + (a.vendorOnboardings || 0), 0);
   }, [hierarchicalAgents]);
 
+  const resolvedPincode = user?.pincode || user?.pincodeCode || user?.scope?.pincodeCode || '';
+  const resolvedDivision = user?.division || user?.divisionName || user?.scope?.divisionName || '';
+  const resolvedDistrict = user?.district || user?.districtName || user?.scope?.districtName || '';
+  const resolvedState = user?.state || user?.stateName || user?.scope?.stateName || '';
+
   return (
     <div style={{ maxWidth: '1400px', margin: '0 auto', paddingBottom: '40px' }}>
       {/* 1. Header */}
@@ -280,13 +241,13 @@ const AgentDirectory = ({ onNavigate }) => {
           </div>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px', margin: 0 }}>
             {isPincodeManager 
-              ? `Pincode Field Agents operating under PIN ${user?.pincode || '636114'} (${user?.division || 'Attur'})`
+              ? `Pincode Field Agents operating under PIN ${resolvedPincode || 'Assigned Territory'}${resolvedDivision ? ` (${resolvedDivision})` : ''}`
               : isDivisionManager
-              ? `Division & Pincode Agents operating under ${user?.division || 'Attur'} Division`
+              ? `Division & Pincode Agents operating under ${resolvedDivision || 'Assigned'} Division`
               : isDistrictManager
-              ? `District, Division & Pincode Agents operating across ${user?.district || 'Salem'} District`
+              ? `District, Division & Pincode Agents operating across ${resolvedDistrict || 'Assigned'} District`
               : isStateManager
-              ? `State, District, Division & Pincode Agents operating across ${user?.state || 'Tamil Nadu'}`
+              ? `State, District, Division & Pincode Agents operating across ${resolvedState || 'Assigned Territory'}`
               : 'Ground customer onboarding agents, lead distributors, and franchise partners operating under your jurisdiction'
             }
           </p>

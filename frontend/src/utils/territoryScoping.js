@@ -66,28 +66,28 @@ export const resolveUserTerritoryProfile = (user) => {
   }
 
   // Pincode extraction
-  let pincode = user.pincode || user.pincodeCode || user.assignedPincode || user.territory?.pincode || '';
+  let pincode = user.pincode || user.pincodeCode || user.scope?.pincodeCode || user.assignedPincode || user.territory?.pincode || '';
   if (!pincode && user.targetJurisdiction) {
     const pinMatch = String(user.targetJurisdiction).match(/(\d{6})/);
     if (pinMatch) pincode = pinMatch[1];
   }
   pincode = normalize(pincode);
-  const pincodeId = normalize(user.pincodeId || user.assignedPincodeId);
+  const pincodeId = normalize(user.pincodeId || user.scope?.pincodeId || user.assignedPincodeId);
 
   // Division extraction
-  let division = user.division || user.divisionName || user.assignedDivision || user.territory?.division || '';
+  let division = user.division || user.divisionName || user.scope?.divisionName || user.assignedDivision || user.territory?.division || '';
   division = normalize(division);
-  const divisionId = normalize(user.divisionId || user.assignedDivisionId);
+  const divisionId = normalize(user.divisionId || user.scope?.divisionId || user.assignedDivisionId);
 
   // District extraction
-  let district = user.district || user.districtName || user.assignedDistrict || user.territory?.district || '';
+  let district = user.district || user.districtName || user.scope?.districtName || user.assignedDistrict || user.territory?.district || '';
   district = normalize(district);
-  const districtId = normalize(user.districtId || user.assignedDistrictId);
+  const districtId = normalize(user.districtId || user.scope?.districtId || user.assignedDistrictId);
 
   // State extraction
-  let state = user.state || user.stateName || user.assignedState || user.territory?.state || '';
+  let state = user.state || user.stateName || user.scope?.stateName || user.scope?.regionName || user.assignedState || user.territory?.state || '';
   state = normalize(state);
-  const stateId = normalize(user.stateId || user.assignedStateId);
+  const stateId = normalize(user.stateId || user.scope?.stateId || user.regionId || user.scope?.regionId || user.assignedStateId);
 
   return {
     level,
@@ -135,6 +135,13 @@ export const isTaskInManagerTerritory = (task, profile) => {
   // Operational managers must NOT see mock or benchmark dummy tasks
   if (isMockOrTestTask(task)) return false;
 
+  // Direct assignment check: Tasks assigned directly to this manager are always accessible
+  const managerId = normalize(profile.rawUser?.id || profile.rawUser?._id || profile.rawUser?.managerId);
+  const taskAssigneeId = normalize(task.assignedManagerId || task.assignedAgentId);
+  if (managerId && taskAssigneeId && managerId === taskAssigneeId) {
+    return true;
+  }
+
   const tStateId = normalize(task.stateId);
   const tState = normalize(task.state || task.stateName);
   const tDistId = normalize(task.districtId);
@@ -147,63 +154,45 @@ export const isTaskInManagerTerritory = (task, profile) => {
 
   // Helper: State check
   const matchState = () => {
-    if (!profile.state && !profile.stateId) return true;
-    if (!tState && !tStateId && !tLoc) return true;
     if (profile.stateId && tStateId && profile.stateId === tStateId) return true;
     if (profile.state && tState && (profile.state === tState || tState.includes(profile.state) || profile.state.includes(tState))) return true;
     if (profile.state && tLoc && tLoc.includes(profile.state)) return true;
+    if (!profile.state && !profile.stateId) return true;
     return false;
   };
 
   // Helper: District check
   const matchDistrict = () => {
     if (!matchState()) return false;
-    if (!profile.district && !profile.districtId) return true;
-    if (!tDist && !tDistId && !tLoc) return true;
     if (profile.districtId && tDistId && profile.districtId === tDistId) return true;
     if (profile.district && tDist && (profile.district === tDist || tDist.includes(profile.district) || profile.district.includes(tDist))) return true;
     if (profile.district && tLoc && tLoc.includes(profile.district)) return true;
+    if (!profile.district && !profile.districtId) return true;
     return false;
   };
 
   // Helper: Division check
   const matchDivision = () => {
     if (!matchDistrict()) return false;
-    if (!profile.division && !profile.divisionId) return true;
-    if (!tDiv && !tDivId && !tLoc) return true;
     if (profile.divisionId && tDivId && profile.divisionId === tDivId) return true;
     if (profile.division && tDiv && (profile.division === tDiv || tDiv.includes(profile.division) || profile.division.includes(tDiv))) return true;
     if (profile.division && tLoc && tLoc.includes(profile.division)) return true;
+    if (!profile.division && !profile.divisionId) return true;
     return false;
   };
 
   switch (profile.level) {
     case 'state':
-      if (!profile.state && !profile.stateId) return true;
-      if (profile.stateId && tStateId && profile.stateId === tStateId) return true;
-      if (profile.state && tState && (profile.state === tState || tState.includes(profile.state) || profile.state.includes(tState))) return true;
-      if (profile.state && tLoc && tLoc.includes(profile.state)) return true;
-      return false;
+      return matchState();
 
     case 'district':
-      if (tState && !matchState()) return false;
-      if (profile.districtId && tDistId && profile.districtId === tDistId) return true;
-      if (profile.district && tDist && (profile.district === tDist || tDist.includes(profile.district) || profile.district.includes(tDist))) return true;
-      if (profile.district && tLoc && tLoc.includes(profile.district)) return true;
-      return false;
+      return matchDistrict();
 
     case 'division':
-      if (tState && !matchState()) return false;
-      if (tDist && !matchDistrict()) return false;
-      if (profile.divisionId && tDivId && profile.divisionId === tDivId) return true;
-      if (profile.division && tDiv && (profile.division === tDiv || tDiv.includes(profile.division) || profile.division.includes(tDiv))) return true;
-      if (profile.division && tLoc && tLoc.includes(profile.division)) return true;
-      return false;
+      return matchDivision();
 
     case 'pincode':
-      if (tState && !matchState()) return false;
-      if (tDist && !matchDistrict()) return false;
-      if (tDiv && !matchDivision()) return false;
+      // Match directly by pincode ID or pincode code
       if (profile.pincodeId && tPinId && profile.pincodeId === tPinId) return true;
       if (profile.pincode && tPin && profile.pincode === tPin) return true;
       if (profile.pincode && tLoc && tLoc.includes(profile.pincode)) return true;

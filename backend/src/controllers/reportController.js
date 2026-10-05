@@ -212,36 +212,39 @@ const getDashboardStats = async (req, res) => {
 
     const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
 
+    const isManagerRole = (r) => ['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(r);
+    const allManagersList = allUsers.filter(u => isManagerRole(u.role));
+
     if (isGlobalAdmin) {
-      scopedManagers = allUsers;
+      scopedManagers = allManagersList;
       const sCount = scopedManagers.filter(u => u.role === 'state_manager').length;
       const dCount = scopedManagers.filter(u => u.role === 'district_manager').length;
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${sCount} State | ${dCount} District | ${vCount} Division | ${pCount} Pincode`;
     } else if (user.role === 'state_manager') {
-      scopedManagers = allUsers.filter(u => !user.stateId || u.stateId === user.stateId || u.state === user.state);
+      scopedManagers = allManagersList.filter(u => !user.stateId || u.stateId === user.stateId || u.state === user.state);
       const sCount = scopedManagers.filter(u => u.role === 'state_manager').length;
       const dCount = scopedManagers.filter(u => u.role === 'district_manager').length;
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${sCount} State | ${dCount} District | ${vCount} Division | ${pCount} Pincode`;
     } else if (user.role === 'district_manager') {
-      scopedManagers = allUsers.filter(u => !user.districtId || u.districtId === user.districtId || u.district === user.district);
+      scopedManagers = allManagersList.filter(u => !user.districtId || u.districtId === user.districtId || u.district === user.district);
       const dCount = scopedManagers.filter(u => u.role === 'district_manager').length;
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${dCount} District | ${vCount} Division | ${pCount} Pincode`;
     } else if (user.role === 'division_manager') {
-      scopedManagers = allUsers.filter(u => !user.divisionId || u.divisionId === user.divisionId || u.division === user.division);
+      scopedManagers = allManagersList.filter(u => !user.divisionId || u.divisionId === user.divisionId || u.division === user.division);
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${vCount} Division | ${pCount} Pincode`;
     } else if (user.role === 'pincode_manager') {
-      scopedManagers = allUsers.filter(u => !user.pincodeId || u.pincodeId === user.pincodeId || u.pincode === user.pincode);
+      scopedManagers = allManagersList.filter(u => !user.pincodeId || u.pincodeId === user.pincodeId || u.pincode === user.pincode);
       managersBreakdownText = `${scopedManagers.length} Pincode Managers`;
     } else {
-      scopedManagers = allUsers;
+      scopedManagers = allManagersList;
       managersBreakdownText = `${scopedManagers.length} Managers`;
     }
 

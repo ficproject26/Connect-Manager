@@ -106,10 +106,11 @@ const Tasks = ({ onNavigate }) => {
     if (showSpinner) setRefreshing(true);
     try {
       const queryParams = buildTerritoryQueryParams(territoryProfile);
-      const res = await taskService.getTasks(queryParams);
-      if (res && res.success && Array.isArray(res.data)) {
+      const res = await taskService.getTasks(queryParams, user);
+      const rawList = (res && res.success && (Array.isArray(res.tasks) ? res.tasks : (Array.isArray(res.data) ? res.data : []))) || [];
+      if (rawList.length > 0) {
         // Enforce strict territory boundaries & exclude mock/test tasks
-        const territoryScoped = res.data.filter(t => isTaskInManagerTerritory(t, territoryProfile));
+        const territoryScoped = rawList.filter(t => isTaskInManagerTerritory(t, territoryProfile));
 
         const mapped = territoryScoped.map(t => {
           let formattedDue = 'Pending';

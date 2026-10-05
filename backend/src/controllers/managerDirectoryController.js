@@ -119,16 +119,27 @@ const getLowerLevelManagers = async (req, res) => {
       return true;
     });
 
-    // Filter subordinates (under current user's level, excluding current user)
+    // Filter subordinates (under current user's level, or for pincode managers, supervising branch managers)
     const rawSubordinates = uniqueUsers.filter(u => {
       const uId = String(u._id || u.id || '');
       if (uId === currentUserId) return false;
       const uLevel = getLevel(u.role);
-      if (uLevel <= userLevel && !isGlobalAdmin) return false;
 
-      if (userLevel === 1) return matchState(u);
-      if (userLevel === 2) return matchDistrict(u);
-      if (userLevel === 3) return matchDivision(u);
+      if (userLevel <= 3) {
+        if (uLevel <= userLevel && !isGlobalAdmin) return false;
+        if (userLevel === 1) return matchState(u);
+        if (userLevel === 2) return matchDistrict(u);
+        if (userLevel === 3) return matchDivision(u);
+        return isGlobalAdmin;
+      } else if (userLevel === 4) {
+        // Pincode Manager: Managers within the assigned Pincode hierarchy branch (Division, District, State)
+        if (uLevel < userLevel) {
+          if (uLevel === 1) return matchState(u);
+          if (uLevel === 2) return matchDistrict(u);
+          if (uLevel === 3) return matchDivision(u);
+        }
+        return false;
+      }
       return isGlobalAdmin;
     });
 

@@ -13,9 +13,9 @@ const isAgentInScope = (agent, user) => {
 
   const norm = (s) => (s || '').toString().trim().toLowerCase();
 
-  const userStateId = norm(user.stateId || user.regionId);
-  const userState = norm(user.state || user.stateName || user.assignedState);
-  const agentStateId = norm(agent.stateId || agent.regionId);
+  const userStateId = norm(user.stateId || user.regionId || user.scope?.stateId);
+  const userState = norm(user.state || user.stateName || user.assignedState || user.scope?.stateName);
+  const agentStateId = norm(agent.stateId || agent.regionId || agent.territory?.stateId);
   const agentState = norm(agent.territory?.state || agent.state || agent.assignedState);
 
   const matchState = () => {
@@ -25,9 +25,9 @@ const isAgentInScope = (agent, user) => {
     return false;
   };
 
-  const userDistrictId = norm(user.districtId);
-  const userDistrict = norm(user.district || user.districtName || user.assignedDistrict);
-  const agentDistrictId = norm(agent.districtId);
+  const userDistrictId = norm(user.districtId || user.scope?.districtId);
+  const userDistrict = norm(user.district || user.districtName || user.assignedDistrict || user.scope?.districtName);
+  const agentDistrictId = norm(agent.districtId || agent.territory?.districtId);
   const agentDistrict = norm(agent.territory?.district || agent.district || agent.assignedDistrict);
 
   const matchDistrict = () => {
@@ -38,9 +38,9 @@ const isAgentInScope = (agent, user) => {
     return false;
   };
 
-  const userDivisionId = norm(user.divisionId);
-  const userDivision = norm(user.division || user.divisionName || user.assignedDivision);
-  const agentDivisionId = norm(agent.divisionId);
+  const userDivisionId = norm(user.divisionId || user.scope?.divisionId);
+  const userDivision = norm(user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName);
+  const agentDivisionId = norm(agent.divisionId || agent.territory?.divisionId);
   const agentDivision = norm(agent.territory?.division || agent.division || agent.assignedDivision);
 
   const matchDivision = () => {
@@ -51,9 +51,9 @@ const isAgentInScope = (agent, user) => {
     return false;
   };
 
-  const userPincodeId = norm(user.pincodeId);
-  const userPincode = norm(user.pincode || user.pincodeCode || user.pincodeId);
-  const agentPincodeId = norm(agent.pincodeId);
+  const userPincodeId = norm(user.pincodeId || user.scope?.pincodeId);
+  const userPincode = norm(user.pincode || user.pincodeCode || user.scope?.pincodeCode || user.pincodeId);
+  const agentPincodeId = norm(agent.pincodeId || agent.territory?.pincodeId);
   const agentPincode = norm(agent.territory?.pincode || agent.pincode || agent.pincodeCode);
 
   // For pincode_manager: match directly by pincode code or ID (no chain through division
@@ -129,7 +129,12 @@ const normalizeAgent = (a) => {
     role: typeof a.role === 'string' ? a.role : `${computedLevel}_agent`,
     mobile: String(a.mobile || a.phone || ''),
     phone: String(a.phone || a.mobile || ''),
+    pincode,
     pincodeCode: pincode,
+    pincodeId: a.pincodeId || a.territory?.pincodeId || null,
+    divisionId: a.divisionId || a.territory?.divisionId || null,
+    districtId: a.districtId || a.territory?.districtId || null,
+    stateId: a.stateId || a.territory?.stateId || null,
     state,
     district,
     division,
