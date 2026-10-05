@@ -80,13 +80,17 @@ const getLowerLevelManagers = async (req, res) => {
     };
 
     const matchPincode = (u) => {
-      if (!matchDivision(u)) return false;
+      if (!matchState(u)) return false;
       if (userLevel <= 3 || isGlobalAdmin) return true;
       const uPincodeId = norm(u.pincodeId || u.assignedPincodeId);
       const uPin = norm(u.pincodeCode || u.pincode || u.assignedPincode);
+      // Match directly by pincode ID or code — do NOT chain through division
+      // because division names can differ for the same geographic pincode area
       if (userPincodeId && uPincodeId && userPincodeId === uPincodeId) return true;
       if (userPincode && uPin && userPincode === uPin) return true;
-      return !userPincodeId && !userPincode;
+      // Fallback: if no pincode data on either side, use district match
+      if (!uPincodeId && !uPin) return matchDistrict(u);
+      return false;
     };
 
     // Helper to format role titles

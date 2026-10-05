@@ -56,12 +56,20 @@ const isAgentInScope = (agent, user) => {
   const agentPincodeId = norm(agent.pincodeId);
   const agentPincode = norm(agent.territory?.pincode || agent.pincode || agent.pincodeCode);
 
-  const matchPincode = () => {
-    if (!matchDivision()) return false;
+  // For pincode_manager: match directly by pincode code or ID (no chain through division
+  // because division names can differ between agents and managers for the same real area).
+  // Fallback: if pincode info missing on either side, fall back to district match.
+  const matchPincodeDirect = () => {
     if (userPincodeId && agentPincodeId && userPincodeId === agentPincodeId) return true;
     if (userPincode && agentPincode && userPincode === agentPincode) return true;
-    if (!userPincodeId && !userPincode) return true;
+    // If agent has no pincode data but is in the same district, include them
+    if (!agentPincodeId && !agentPincode) return matchDistrict();
     return false;
+  };
+
+  const matchPincode = () => {
+    if (!matchState()) return false;
+    return matchPincodeDirect();
   };
 
   switch (role) {
