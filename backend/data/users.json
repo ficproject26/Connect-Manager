@@ -4904,5 +4904,32 @@
     "isPaid": true,
     "rejectionReason": "",
     "updatedAt": "2026-10-05T09:33:57.076Z"
+  },
+  {
+    "_id": "6ac371f5110cffec520a12d6",
+    "email": "vjsshop@gmail.com",
+    "address": "65, jai, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804",
+    "agentId": "6ac36ea8a88225edb997bc8c",
+    "assignedAgent": "6ac36ea8a88225edb997bc8c",
+    "assignedDistrict": "Tiruvannamalai",
+    "assignedDivision": "Tiruvannamalai",
+    "assignedState": "Tamil Nadu",
+    "businessName": "VJS shop",
+    "category": "Jobs",
+    "contactPerson": "siddhu",
+    "createdAt": "2026-10-05T09:46:29.412Z",
+    "createdVia": "agent",
+    "joiningType": "agent",
+    "kycStatus": "pending",
+    "name": "VJS shop",
+    "onboardedBy": "6ac36ea8a88225edb997bc8c",
+    "password": "$2a$10$uztcVRrWfeBFuUWfhMjUvO8mwHbkCtnT.cNlFDAEhrK4jjTwJjdsS",
+    "phone": "8543212345",
+    "pincode": "606804",
+    "registrationId": "REG-20261005-9162",
+    "registrationSource": "agent",
+    "role": "Vendor",
+    "status": "pending",
+    "vendorType": "Jobs"
   }
 ]

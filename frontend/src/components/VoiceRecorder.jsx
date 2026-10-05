@@ -48,12 +48,16 @@ const VoiceRecorder = ({ onVoiceNoteUploaded, onAudioRecorded }) => {
         const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
         const localUrl = URL.createObjectURL(audioBlob);
         setAudioUrl(localUrl);
-        // Immediately notify parent so state is populated
-        notifyParent(localUrl);
 
-        // Upload to server
-        const audioFile = new File([audioBlob], `voicenote_${Date.now()}.webm`, { type: 'audio/webm' });
-        await handleUpload(audioFile, localUrl);
+        // Convert to base64 data URL as persistent fallback
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          const base64Audio = reader.result;
+          notifyParent(base64Audio || localUrl);
+          const audioFile = new File([audioBlob], `voicenote_${Date.now()}.webm`, { type: 'audio/webm' });
+          handleUpload(audioFile, base64Audio || localUrl);
+        };
+        reader.readAsDataURL(audioBlob);
       };
 
       mediaRecorder.start();
@@ -102,8 +106,13 @@ const VoiceRecorder = ({ onVoiceNoteUploaded, onAudioRecorded }) => {
     if (file) {
       const localUrl = URL.createObjectURL(file);
       setAudioUrl(localUrl);
-      notifyParent(localUrl);
-      handleUpload(file, localUrl);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Audio = reader.result;
+        notifyParent(base64Audio || localUrl);
+        handleUpload(file, base64Audio || localUrl);
+      };
+      reader.readAsDataURL(file);
     }
   };
 

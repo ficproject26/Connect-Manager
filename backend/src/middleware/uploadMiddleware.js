@@ -19,18 +19,18 @@ const storage = multer.diskStorage({
 });
 
 const fileFilter = (req, file, cb) => {
-  const allowed = ['.pdf', '.jpg', '.jpeg', '.png'];
+  const allowed = ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.webm', '.wav', '.mp3', '.ogg', '.m4a'];
   const ext = path.extname(file.originalname).toLowerCase();
-  if (allowed.includes(ext)) {
+  if (allowed.includes(ext) || (file.mimetype && (file.mimetype.startsWith('image/') || file.mimetype.startsWith('audio/')))) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only PDF, JPG, and PNG files are accepted.'));
+    cb(new Error('Invalid file type. Only PDF, images, and audio files are accepted.'));
   }
 };
 
 const upload = multer({
   storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+  limits: { fileSize: 25 * 1024 * 1024 }, // 25MB limit
   fileFilter
 });
 

@@ -1048,5 +1048,302 @@
     "title": "Auth Check Task",
     "updatedAt": "2026-10-05T09:44:31.616Z",
     "vendor": "Store Alpha"
+  },
+  {
+    "_id": "c7bd9a03-efa4-40a3-89a9-03d0754b5e8d",
+    "assignedManagerId": "mgr_test_wf_01",
+    "assignedManagerName": "Workflow Tester",
+    "assignedTo": "Workflow Tester",
+    "assignmentStatus": "ACCEPTED",
+    "createdAt": "2026-10-05T09:45:21.578Z",
+    "executionStatus": "COMPLETED",
+    "id": "c7bd9a03-efa4-40a3-89a9-03d0754b5e8d",
+    "priority": "Low",
+    "status": "Completed",
+    "title": "Low Priority Test Task",
+    "updatedAt": "2026-10-05T09:45:22.763Z",
+    "vendor": "Test Vendor Store",
+    "acceptedAt": "2026-10-05T09:45:21.729Z",
+    "acceptedBy": "Workflow Tester",
+    "acceptedById": "mgr_test_wf_01",
+    "activityLog": [
+      {
+        "action": "Task Accepted",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:21.729Z",
+        "notes": "Status changed to Accepted"
+      },
+      {
+        "action": "Task In Progress",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:22.309Z",
+        "notes": "Status changed to In Progress"
+      },
+      {
+        "action": "Task Completed",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:22.762Z",
+        "notes": "Storefront verified and signage photographed successfully."
+      }
+    ],
+    "history": [
+      {
+        "action": "Task Accepted",
+        "status": "Accepted",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:21.729Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      },
+      {
+        "action": "Task In Progress",
+        "status": "In Progress",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:22.309Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      },
+      {
+        "action": "Task Completed",
+        "status": "Completed",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:22.762Z",
+        "remarks": "Storefront verified and signage photographed successfully.",
+        "photo": "http://field.proof/photo.jpg",
+        "audio": "http://field.proof/voice.webm"
+      }
+    ],
+    "lastUpdate": "2026-10-05T09:45:22.762Z",
+    "needsAcceptance": false,
+    "progress": 100,
+    "startedAt": "2026-10-05T09:45:22.309Z",
+    "startedBy": "Workflow Tester",
+    "startedById": "mgr_test_wf_01",
+    "completedDate": "2026-10-05T09:45:22.762Z",
+    "completionDetails": {
+      "completionPhoto": "http://field.proof/photo.jpg",
+      "completionPhotos": [
+        "http://field.proof/photo.jpg"
+      ],
+      "workCompleted": "Storefront verified and signage photographed successfully.",
+      "resolutionDetails": "Storefront verified and signage photographed successfully.",
+      "completionAudio": "http://field.proof/voice.webm",
+      "voiceNote": "http://field.proof/voice.webm",
+      "completedBy": "Workflow Tester",
+      "completedById": "mgr_test_wf_01",
+      "completedAt": "2026-10-05T09:45:22.762Z"
+    },
+    "isResolved": true,
+    "photos": [
+      "http://field.proof/photo.jpg"
+    ],
+    "remarks": "Storefront verified and signage photographed successfully.",
+    "shopPhoto": "http://field.proof/photo.jpg",
+    "voiceNote": "http://field.proof/voice.webm"
+  },
+  {
+    "_id": "48732f0e-eb8a-442b-a0c0-cf5882d64eba",
+    "assignedManagerId": "mgr_test_wf_01",
+    "assignedManagerName": "Workflow Tester",
+    "assignedTo": "Workflow Tester",
+    "assignmentStatus": "REJECTED",
+    "createdAt": "2026-10-05T09:45:23.010Z",
+    "executionStatus": "NOT_STARTED",
+    "id": "48732f0e-eb8a-442b-a0c0-cf5882d64eba",
+    "priority": "Medium",
+    "status": "Rejected",
+    "title": "Medium Priority Task for Rejection",
+    "updatedAt": "2026-10-05T09:45:23.368Z",
+    "vendor": "Med Store",
+    "activityLog": [
+      {
+        "action": "Task Rejected",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:23.368Z",
+        "notes": "Store permanently closed"
+      }
+    ],
+    "history": [
+      {
+        "action": "Task Rejected",
+        "status": "Rejected",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:23.368Z",
+        "remarks": "Store permanently closed",
+        "photo": null,
+        "audio": null
+      }
+    ],
+    "lastUpdate": "2026-10-05T09:45:23.368Z",
+    "needsAcceptance": false,
+    "rejectionDetails": {
+      "taskId": "48732f0e-eb8a-442b-a0c0-cf5882d64eba",
+      "rejectingManagerId": "mgr_test_wf_01",
+      "rejectingManagerName": "Workflow Tester",
+      "rejectionReason": "Store permanently closed",
+      "previousStatus": "Pending Acceptance",
+      "newStatus": "Rejected",
+      "timestamp": "2026-10-05T09:45:23.368Z"
+    },
+    "rejectionReason": "Store permanently closed",
+    "remarks": "Store permanently closed"
+  },
+  {
+    "_id": "86a6b1a9-2ed2-4da2-a349-99d507c17bc2",
+    "assignedManagerId": "mgr_test_wf_01",
+    "assignedManagerName": "Workflow Tester",
+    "assignedTo": "Workflow Tester",
+    "assignmentStatus": "ACCEPTED",
+    "createdAt": "2026-10-05T09:45:23.581Z",
+    "executionStatus": "COMPLETED",
+    "id": "86a6b1a9-2ed2-4da2-a349-99d507c17bc2",
+    "priority": "High",
+    "status": "Completed",
+    "title": "High Priority Task Direct Assignment",
+    "updatedAt": "2026-10-05T09:45:24.897Z",
+    "vendor": "High Priority Merchant",
+    "activityLog": [
+      {
+        "action": "Task In Progress",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:23.678Z",
+        "notes": "Status changed to In Progress"
+      },
+      {
+        "action": "Task Completed",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:23.923Z",
+        "notes": "High priority urgent audit resolved."
+      },
+      {
+        "action": "Task Rework Required",
+        "by": "Super Admin",
+        "byRole": "super_admin",
+        "at": "2026-10-05T09:45:24.590Z",
+        "notes": "Store photo is blurry, take clearer photo"
+      },
+      {
+        "action": "Task Completed",
+        "by": "Workflow Tester",
+        "byRole": "pincode_agent",
+        "at": "2026-10-05T09:45:24.897Z",
+        "notes": "Clear photo captured in high resolution and verified."
+      }
+    ],
+    "history": [
+      {
+        "action": "Task In Progress",
+        "status": "In Progress",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:23.678Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      },
+      {
+        "action": "Task Completed",
+        "status": "Completed",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:23.923Z",
+        "remarks": "High priority urgent audit resolved.",
+        "photo": "http://high.proof/photo.jpg",
+        "audio": "http://high.proof/voice.webm"
+      },
+      {
+        "action": "Task Rework Required",
+        "status": "Rework Required",
+        "actor": "Super Admin",
+        "actorId": "admin_01",
+        "actorRole": "super_admin",
+        "timestamp": "2026-10-05T09:45:24.590Z",
+        "remarks": "Store photo is blurry, take clearer photo",
+        "photo": null,
+        "audio": null
+      },
+      {
+        "action": "Task Completed",
+        "status": "Completed",
+        "actor": "Workflow Tester",
+        "actorId": "mgr_test_wf_01",
+        "actorRole": "pincode_agent",
+        "timestamp": "2026-10-05T09:45:24.897Z",
+        "remarks": "Clear photo captured in high resolution and verified.",
+        "photo": "http://high.proof/clear_photo.jpg",
+        "audio": "http://high.proof/new_voice.webm"
+      }
+    ],
+    "lastUpdate": "2026-10-05T09:45:24.897Z",
+    "progress": 100,
+    "startedAt": "2026-10-05T09:45:23.678Z",
+    "startedBy": "Workflow Tester",
+    "startedById": "mgr_test_wf_01",
+    "completedDate": "2026-10-05T09:45:24.897Z",
+    "completionDetails": {
+      "completionPhoto": "http://high.proof/clear_photo.jpg",
+      "completionPhotos": [
+        "http://high.proof/clear_photo.jpg"
+      ],
+      "workCompleted": "Clear photo captured in high resolution and verified.",
+      "resolutionDetails": "Clear photo captured in high resolution and verified.",
+      "completionAudio": "http://high.proof/new_voice.webm",
+      "voiceNote": "http://high.proof/new_voice.webm",
+      "completedBy": "Workflow Tester",
+      "completedById": "mgr_test_wf_01",
+      "completedAt": "2026-10-05T09:45:24.897Z"
+    },
+    "isResolved": true,
+    "photos": [
+      "http://high.proof/clear_photo.jpg"
+    ],
+    "remarks": "Clear photo captured in high resolution and verified.",
+    "shopPhoto": "http://high.proof/clear_photo.jpg",
+    "voiceNote": "http://high.proof/new_voice.webm",
+    "previousWork": {
+      "shopPhoto": "http://high.proof/photo.jpg",
+      "remarks": "High priority urgent audit resolved.",
+      "voiceNote": "http://high.proof/voice.webm",
+      "completedBy": "Workflow Tester",
+      "completedAt": "2026-10-05T09:45:23.923Z"
+    },
+    "reworkDetails": {
+      "reworkRemarks": "Store photo is blurry, take clearer photo",
+      "requestedBy": "Super Admin",
+      "requestedById": "admin_01",
+      "requestedAt": "2026-10-05T09:45:24.590Z"
+    }
+  },
+  {
+    "_id": "ddcca162-8c67-4607-b6d9-d03e23eb8323",
+    "assignedManagerId": "mgr_test_wf_01",
+    "assignedManagerName": "Workflow Tester",
+    "assignedTo": "Workflow Tester",
+    "assignmentStatus": "PENDING",
+    "createdAt": "2026-10-05T09:45:25.361Z",
+    "id": "ddcca162-8c67-4607-b6d9-d03e23eb8323",
+    "priority": "Low",
+    "status": "Pending Acceptance",
+    "title": "Auth Check Task",
+    "updatedAt": "2026-10-05T09:45:25.361Z",
+    "vendor": "Store Alpha"
   }
 ]

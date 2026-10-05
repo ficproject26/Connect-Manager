@@ -34,7 +34,7 @@ import {
   RotateCcw,
   Ban
 } from 'lucide-react';
-import { taskService, agentService } from '../services/api';
+import { taskService, agentService, uploadService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
@@ -88,6 +88,8 @@ const Tasks = ({ onNavigate }) => {
   // Completion / Rework Modal state
   const [completionModalTask, setCompletionModalTask] = useState(null);
   const [completionPhoto, setCompletionPhoto] = useState('');
+  const [photoPreview, setPhotoPreview] = useState('');
+  const [photoUploading, setPhotoUploading] = useState(false);
   const [completionRemarks, setCompletionRemarks] = useState('');
   const [completionAudio, setCompletionAudio] = useState('');
   const [completionError, setCompletionError] = useState('');
@@ -327,28 +329,91 @@ const Tasks = ({ onNavigate }) => {
     }
   };
 
+  const compressImage = (file, maxWidth = 1200, quality = 0.75) => {
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = () => resolve('');
+        reader.readAsDataURL(file);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        };
+        img.onerror = () => resolve(e.target.result);
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
   const openCompletionModal = (taskItem, rework = false) => {
     setCompletionModalTask(taskItem);
     setIsReworkMode(rework || taskItem.status === 'Rework Required');
     setCompletionPhoto('');
+    setPhotoPreview('');
+    setPhotoUploading(false);
     setCompletionRemarks('');
     setCompletionAudio('');
     setCompletionError('');
   };
 
-  const handleCompletionPhotoUpload = (e) => {
+  const handleCompletionPhotoUpload = async (e) => {
     const file = e.target.files && e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        setCompletionPhoto(uploadEvent.target.result);
-      };
-      reader.readAsDataURL(file);
+    if (!file) return;
+
+    setPhotoUploading(true);
+    setCompletionError('');
+
+    try {
+      // 1. Immediately create compressed data URL for instant client-side preview
+      const compressedDataUrl = await compressImage(file, 1200, 0.75);
+      setPhotoPreview(compressedDataUrl);
+      setCompletionPhoto(compressedDataUrl);
+
+      // 2. Upload file to server via uploadService for clean server URL
+      try {
+        const uploadRes = await uploadService.uploadDocument(file);
+        if (uploadRes && uploadRes.success && uploadRes.file?.url) {
+          setCompletionPhoto(uploadRes.file.url);
+        }
+      } catch (uploadErr) {
+        console.warn('Server photo upload fallback to compressed image:', uploadErr);
+        // Fallback remains compressedDataUrl (~100-200kb), which passes easily
+      }
+    } catch (err) {
+      console.error('Photo processing error:', err);
+      setCompletionError('Failed to process image file. Please try another image.');
+    } finally {
+      setPhotoUploading(false);
     }
+  };
+
+  const removeCompletionPhoto = () => {
+    setCompletionPhoto('');
+    setPhotoPreview('');
   };
 
   const handleCompletionSubmit = async () => {
     if (!completionModalTask) return;
+    if (photoUploading) {
+      setCompletionError('Photo proof is still uploading. Please wait a moment.');
+      return;
+    }
     const taskId = completionModalTask._id || completionModalTask.id;
     const trimmedRemarks = (completionRemarks || '').trim();
 
@@ -2293,10 +2358,10 @@ const Tasks = ({ onNavigate }) => {
                     <Camera size={14} style={{ color: '#2563eb' }} />
                     <span>1. Field Photo Proof <span style={{ color: '#dc2626' }}>*</span></span>
                   </label>
-                  {completionPhoto && (
+                  {(completionPhoto || photoPreview) && (
                     <button
                       type="button"
-                      onClick={() => setCompletionPhoto('')}
+                      onClick={removeCompletionPhoto}
                       style={{ fontSize: '0.72rem', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}
                     >
                       Remove
@@ -2304,9 +2369,25 @@ const Tasks = ({ onNavigate }) => {
                   )}
                 </div>
 
-                {completionPhoto ? (
+                {photoUploading ? (
+                  <div style={{
+                    height: '110px',
+                    borderRadius: '10px',
+                    border: '1.5px dashed #3b82f6',
+                    background: '#eff6ff',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '6px',
+                    color: '#2563eb'
+                  }}>
+                    <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                    <span style={{ fontSize: '0.78rem', fontWeight: 600 }}>Optimizing and uploading photo proof...</span>
+                  </div>
+                ) : (completionPhoto || photoPreview) ? (
                   <div style={{ position: 'relative', width: '100%', height: '140px', borderRadius: '10px', overflow: 'hidden', border: '1px solid #cbd5e1' }}>
-                    <img src={completionPhoto} alt="Completion Proof" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    <img src={photoPreview || completionPhoto} alt="Completion Proof" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <span style={{ position: 'absolute', bottom: 6, left: 8, fontSize: '10px', fontWeight: 700, background: 'rgba(0,0,0,0.65)', color: '#fff', padding: '2px 8px', borderRadius: '4px' }}>
                       Photo Proof Attached
                     </span>
