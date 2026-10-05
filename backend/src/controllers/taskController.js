@@ -86,6 +86,19 @@ const isTaskInManagerTerritory = (task, profile) => {
   // Pan-India access for system administrators
   if (profile.level === 'admin') return true;
 
+  // Operational managers must NOT see mock or benchmark dummy tasks
+  const tId = normalize(task.id || task._id || task.taskNumber);
+  const tTitle = normalize(task.title);
+  const tDesc = normalize(task.description);
+  const tVendor = normalize(task.vendor || task.merchantName || task.shopName);
+  const isMockTask = 
+    tId.startsWith('bench_task_') ||
+    tTitle.includes('benchmark task') ||
+    tTitle.includes('centralized realtime sync test task') ||
+    tVendor.includes('realtime test store') ||
+    tDesc.includes('centralized realtime sync test task');
+  if (isMockTask) return false;
+
   const tStateId = normalize(task.stateId);
   const tState = normalize(task.state || task.stateName);
   const tDistId = normalize(task.districtId);

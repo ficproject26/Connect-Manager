@@ -573,11 +573,12 @@
     "qcIssueId": null,
     "remarks": "",
     "state": "Tamil Nadu",
-    "status": "Assigned",
+    "status": "In Progress",
     "suspendRequest": null,
     "taskNumber": "QCT-54027219",
     "title": "Onboarding",
-    "updatedAt": "2026-10-01T11:27:07.219Z"
+    "updatedAt": "2026-10-05T10:42:01.460Z",
+    "lastUpdate": "2026-10-05T10:42:01.456Z"
   },
   {
     "_id": "TSK-1790854207754-0RYO8",

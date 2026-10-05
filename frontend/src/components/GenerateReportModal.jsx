@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { reportService, taskService } from '../services/api';
+import { resolveUserTerritoryProfile, isTaskInManagerTerritory, buildTerritoryQueryParams } from '../utils/territoryScoping';
 import {
   Calendar,
   Clock,
@@ -34,18 +35,21 @@ const PERIOD_PRESETS = [
 
 export default function GenerateReportModal({ onClose, onReportSubmitted, allVisits = [] }) {
   const { user } = useAuth();
+  const territoryProfile = useMemo(() => resolveUserTerritoryProfile(user), [user]);
   const [allTasks, setAllTasks] = useState([]);
 
-  // Fetch real tasks from database
+  // Fetch real tasks from database strictly within manager territory
   useEffect(() => {
     let isMounted = true;
-    taskService.getTasks().then(res => {
+    const queryParams = buildTerritoryQueryParams(territoryProfile);
+    taskService.getTasks(queryParams).then(res => {
       if (res && res.success && Array.isArray(res.data) && isMounted) {
-        setAllTasks(res.data);
+        const scopedTasks = res.data.filter(t => isTaskInManagerTerritory(t, territoryProfile));
+        setAllTasks(scopedTasks);
       }
     }).catch(() => {});
     return () => { isMounted = false; };
-  }, []);
+  }, [territoryProfile]);
 
   // Wizard Steps: 'select_period' | 'preview'
   const [step, setStep] = useState('select_period');

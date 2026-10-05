@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   CheckSquare,
   CheckCircle2,
@@ -38,11 +38,13 @@ import { taskService, agentService, uploadService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
+import { resolveUserTerritoryProfile, isTaskInManagerTerritory, buildTerritoryQueryParams } from '../utils/territoryScoping';
 import VoiceRecorder from '../components/VoiceRecorder';
 
 const Tasks = ({ onNavigate }) => {
   const { user } = useAuth();
-  const isPincodeManager = (user?.role || '').toLowerCase().includes('pincode');
+  const territoryProfile = useMemo(() => resolveUserTerritoryProfile(user), [user]);
+  const isPincodeManager = territoryProfile.level === 'pincode';
 
   // Ownership rule: Only the assigned manager gets task execution rights.
   // Hierarchical managers get territory visibility but read-only access.
@@ -99,13 +101,17 @@ const Tasks = ({ onNavigate }) => {
   // Agents list (kept for task display use only)
   const [agentsList, setAgentsList] = useState([]);
 
-  // Fetch real tasks from backend API
+  // Fetch real tasks from backend API strictly scoped to authenticated manager territory
   const fetchTasks = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
     try {
-      const res = await taskService.getTasks();
+      const queryParams = buildTerritoryQueryParams(territoryProfile);
+      const res = await taskService.getTasks(queryParams);
       if (res && res.success && Array.isArray(res.data)) {
-        const mapped = res.data.map(t => {
+        // Enforce strict territory boundaries & exclude mock/test tasks
+        const territoryScoped = res.data.filter(t => isTaskInManagerTerritory(t, territoryProfile));
+
+        const mapped = territoryScoped.map(t => {
           let formattedDue = 'Pending';
           if (t.dueDate) {
             try {
@@ -193,7 +199,7 @@ const Tasks = ({ onNavigate }) => {
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [territoryProfile]);
 
   // Listen for ecosystem-wide real-time task events with zero page reload
   useRealtime('task', (event) => {
@@ -488,27 +494,32 @@ const Tasks = ({ onNavigate }) => {
 
   const categories = ['All', 'Compliance', 'Sanitation Issue', 'Infrastructure Repair', 'Vendor Verification', 'KYC Verification', 'Kit Delivery', 'Merchant Support', 'Onboarding', 'Territory Survey', 'General'];
 
-  const filteredTasks = tasks.filter(t => {
-    if (statusFilter !== 'All') {
-      if (statusFilter === 'Pending') {
-        if (!['Pending', 'Pending Acceptance', 'Assigned', 'Accepted'].includes(t.status)) return false;
-      } else if (t.status !== statusFilter) {
-        return false;
+  const filteredTasks = useMemo(() => {
+    return tasks.filter(t => {
+      // Secondary safety guard: double-check task is strictly within manager territory
+      if (!isTaskInManagerTerritory(t.raw || t, territoryProfile)) return false;
+
+      if (statusFilter !== 'All') {
+        if (statusFilter === 'Pending') {
+          if (!['Pending', 'Pending Acceptance', 'Assigned', 'Accepted'].includes(t.status)) return false;
+        } else if (t.status !== statusFilter) {
+          return false;
+        }
       }
-    }
-    if (categoryFilter !== 'All' && t.category !== categoryFilter) return false;
-    if (priorityFilter !== 'All' && t.priority !== priorityFilter) return false;
-    if (search) {
-      const q = search.toLowerCase();
-      const match = (t.title && t.title.toLowerCase().includes(q)) ||
-                    (t.id && t.id.toLowerCase().includes(q)) ||
-                    (t.vendor && t.vendor.toLowerCase().includes(q)) ||
-                    (t.territory && t.territory.toLowerCase().includes(q)) ||
-                    (t.category && t.category.toLowerCase().includes(q));
-      if (!match) return false;
-    }
-    return true;
-  });
+      if (categoryFilter !== 'All' && t.category !== categoryFilter) return false;
+      if (priorityFilter !== 'All' && t.priority !== priorityFilter) return false;
+      if (search) {
+        const q = search.toLowerCase();
+        const match = (t.title && t.title.toLowerCase().includes(q)) ||
+                      (t.id && t.id.toLowerCase().includes(q)) ||
+                      (t.vendor && t.vendor.toLowerCase().includes(q)) ||
+                      (t.territory && t.territory.toLowerCase().includes(q)) ||
+                      (t.category && t.category.toLowerCase().includes(q));
+        if (!match) return false;
+      }
+      return true;
+    });
+  }, [tasks, territoryProfile, statusFilter, categoryFilter, priorityFilter, search]);
 
   const totalCount = tasks.length;
   const inProgressCount = tasks.filter(t => t.status === 'In Progress').length;
@@ -580,7 +591,13 @@ const Tasks = ({ onNavigate }) => {
             </span>
           </div>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px', margin: 0 }}>
-            Field deliverables and operational tasks assigned by Administrators (Pincode Admin: Kumar)
+            {territoryProfile.level === 'pincode' && `Field deliverables strictly scoped to PIN ${territoryProfile.pincode || 'Assigned Territory'}${territoryProfile.division ? ' (' + territoryProfile.division + ')' : ''}`}
+            {territoryProfile.level === 'division' && `Field deliverables strictly scoped to ${territoryProfile.division || 'Assigned'} Division`}
+            {territoryProfile.level === 'district' && `Field deliverables strictly scoped to ${territoryProfile.district || 'Assigned'} District`}
+            {territoryProfile.level === 'state' && `Field deliverables strictly scoped to ${territoryProfile.state || 'Assigned'} State`}
+            {territoryProfile.level === 'admin' && 'Central Field Operations & System Tasks (All Territories)'}
+            {!['pincode', 'division', 'district', 'state', 'admin'].includes(territoryProfile.level) && 'Field deliverables and operational tasks'}
+            {user?.targetAdminName ? ` • Admin: ${user.targetAdminName}` : ''}
           </p>
         </div>
 

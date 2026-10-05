@@ -1155,11 +1155,9 @@
     "pincode": "606804",
     "kycStatus": "pending",
     "location": {
-      "address": "65, jai, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804",
-      "latitude": 12.9716,
-      "longitude": 77.5946
+      "address": "65, jai, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804"
     },
-    "status": "Rejected",
+    "status": "Approved",
     "documents": [],
     "assignedAgent": "6ac36ea8a88225edb997bc8c",
     "joiningType": "agent",
@@ -1185,9 +1183,11 @@
     "aadhaarNumber": "878945464989",
     "address": "65, jai, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804",
     "createdAt": "2026-10-05T09:46:28.878Z",
-    "updatedAt": "2026-10-05T09:46:28.878Z",
+    "updatedAt": "2026-10-05T10:19:35.272Z",
     "__v": 0,
-    "isActive": false
+    "isActive": true,
+    "businessGst": "33AAAAA1111A1Z1",
+    "fullAddress": "65, jai, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804"
   },
   {
     "_id": "6ac377f7a88225edb997bdb3",
@@ -1208,7 +1208,7 @@
       "latitude": 12.9716,
       "longitude": 77.5946
     },
-    "status": "Rejected",
+    "status": "Approved",
     "documents": [],
     "assignedAgent": "6ac36ea8a88225edb997bc8c",
     "joiningType": "agent",
@@ -1236,6 +1236,55 @@
     "createdAt": "2026-10-05T10:12:07.936Z",
     "updatedAt": "2026-10-05T10:12:07.936Z",
     "__v": 0,
-    "isActive": false
+    "isActive": true
+  },
+  {
+    "_id": "6ac37c61a88225edb997be2b",
+    "businessName": "raju",
+    "ownerName": "Raju",
+    "phone": "8543212345",
+    "email": "vjsshop@gmail.com",
+    "category": "Travel",
+    "gst": "",
+    "state": "Tamil Nadu",
+    "district": "Tiruvannamalai",
+    "division": "Tiruvannamalai",
+    "taluk": "Tiruvananamalai",
+    "pincode": "606804",
+    "kycStatus": "pending",
+    "location": {
+      "address": "54, jhg, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804",
+      "latitude": 12.9716,
+      "longitude": 77.5946
+    },
+    "status": "Approved",
+    "documents": [],
+    "assignedAgent": "6ac36ea8a88225edb997bc8c",
+    "joiningType": "agent",
+    "createdVia": "agent",
+    "registrationSource": "agent",
+    "agentId": "6ac36ea8a88225edb997bc8c",
+    "onboardedBy": "6ac36ea8a88225edb997bc8c",
+    "agentName": "Ramesh",
+    "agentRegistrationId": "REG-20261005-9742",
+    "registrationId": "REG-20261005-1389",
+    "role": "Vendor",
+    "name": "raju",
+    "contactPerson": "Raju",
+    "storeType": "Travel",
+    "subCategory": "Travel",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "Tiruvannamalai",
+    "assignedDivision": "Tiruvannamalai",
+    "buildingNo": "54",
+    "streetName": "jhg",
+    "postOffice": "Tandarai",
+    "panNumber": "JHGFD1234F",
+    "aadhaarNumber": "098765432234",
+    "address": "54, jhg, Tandarai, Tiruvananamalai, Tiruvannamalai, Tamil Nadu - 606804",
+    "createdAt": "2026-10-05T10:30:57.883Z",
+    "updatedAt": "2026-10-05T10:30:57.883Z",
+    "__v": 0,
+    "isActive": true
   }
 ]

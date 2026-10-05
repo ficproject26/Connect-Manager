@@ -1666,5 +1666,17 @@
     "type": "task_updated",
     "updatedAt": "2026-10-05T10:06:27.626Z",
     "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "8575f5c9-e521-47b2-84f6-d2ac1270ff27",
+    "createdAt": "2026-10-05T10:42:01.485Z",
+    "id": "8575f5c9-e521-47b2-84f6-d2ac1270ff27",
+    "isRead": false,
+    "message": "Muruga marked task QCT-54027219 as In Progress.",
+    "recordId": "TSK-1790854027219-VOSMW",
+    "title": "Task QCT-54027219 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-05T10:42:01.485Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
   }
 ]
