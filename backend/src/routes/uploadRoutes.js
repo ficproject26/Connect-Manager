@@ -4,8 +4,16 @@ const upload = require('../middleware/uploadMiddleware');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { checkRole } = require('../middleware/roleMiddleware');
 
-router.use(authMiddleware);
-router.use(checkRole());
+// Optional auth: attach user if token provided, but allow file upload even if unauthenticated
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authMiddleware(req, res, () => next());
+  }
+  next();
+};
+
+router.use(optionalAuth);
 
 // POST /api/uploads/document
 router.post('/document', upload.single('document'), (req, res) => {

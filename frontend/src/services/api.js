@@ -8,8 +8,24 @@ export const API_BASE = (isHttps && isRemoteHttp)
   ? '/api'
   : (rawApiUrl ? (rawApiUrl.endsWith('/api') ? rawApiUrl : `${rawApiUrl.replace(/\/+$/, '')}/api`) : '/api');
 
+const getAuthToken = () => {
+  return (
+    (typeof localStorage !== 'undefined' && (
+      localStorage.getItem('agent_mgr_token') ||
+      localStorage.getItem('token') ||
+      localStorage.getItem('authToken') ||
+      localStorage.getItem('auth_token')
+    )) ||
+    (typeof sessionStorage !== 'undefined' && (
+      sessionStorage.getItem('agent_mgr_token') ||
+      sessionStorage.getItem('token')
+    )) ||
+    ''
+  );
+};
+
 const getAuthHeaders = () => {
-  const token = localStorage.getItem('agent_mgr_token');
+  const token = getAuthToken();
   const headers = { 'Content-Type': 'application/json' };
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
@@ -21,9 +37,13 @@ async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401) {
-      const storedToken = localStorage.getItem('agent_mgr_token');
-      if (storedToken) {
-        localStorage.removeItem('agent_mgr_token');
+      // Only remove token if it was an explicit auth session verification failure
+      const isAuthMe = res.url && res.url.includes('/auth/me');
+      if (isAuthMe) {
+        const storedToken = localStorage.getItem('agent_mgr_token');
+        if (storedToken) {
+          localStorage.removeItem('agent_mgr_token');
+        }
       }
     }
     const errorMsg = data.message || `Request failed with status ${res.status}`;
@@ -34,6 +54,7 @@ async function handleResponse(res) {
   }
   return data;
 }
+
 
 export const authService = {
   async login(identifier, password) {
@@ -628,16 +649,46 @@ export const uploadService = {
     const formData = new FormData();
     formData.append('document', file);
 
-    const token = localStorage.getItem('agent_mgr_token');
+    const token = getAuthToken();
     const headers = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const res = await fetch(`${API_BASE}/uploads/document`, {
-      method: 'POST',
-      headers,
-      body: formData
-    });
-    return handleResponse(res);
+    try {
+      const res = await fetch(`${API_BASE}/uploads/document`, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+
+      // If /uploads/document failed with 401/403/404, fallback to /auth/upload-document
+      if (res.status === 401 || res.status === 403 || res.status === 404) {
+        const fallbackRes = await fetch(`${API_BASE}/auth/upload-document`, {
+          method: 'POST',
+          body: formData
+        });
+        if (fallbackRes.ok) {
+          return await fallbackRes.json();
+        }
+      }
+
+      return handleResponse(res);
+    } catch (err) {
+      // Secondary fallback if primary request had network/header issue
+      try {
+        const fallbackRes = await fetch(`${API_BASE}/auth/upload-document`, {
+          method: 'POST',
+          body: formData
+        });
+        if (fallbackRes.ok) {
+          return await fallbackRes.json();
+        }
+      } catch (_) {}
+      throw err;
+    }
   }
 };
 

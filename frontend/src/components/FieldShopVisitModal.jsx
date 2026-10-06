@@ -90,10 +90,11 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
 
     setUploadingPhoto(true);
     try {
-      const res = await uploadService.uploadDocument(file);
-      if (res.success && res.file?.url) {
-        setStorefrontUrl(res.file.url);
+      const uploadedUrl = res?.file?.url || res?.url || res?.data?.url;
+      if (res?.success && uploadedUrl) {
+        setStorefrontUrl(uploadedUrl);
         setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
+        setError('');
       } else {
         setError('Unable to upload storefront photo. Please try again.');
         setStorefrontFile(null);
