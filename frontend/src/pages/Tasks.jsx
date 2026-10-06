@@ -139,7 +139,7 @@ const Tasks = ({ onNavigate }) => {
           else if (t.location) vendorStr = t.location.split(',')[0].trim();
 
           const isResolved = t.status === 'Completed' || t.status === 'Resolved' || t.status === 'Closed';
-          const defaultPhoto = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg';
+          const defaultPhoto = '/uploads/1791261240106_storefront_proof.jpg';
           const defaultVoice = '/uploads/1790052036893_voicenote_1790052036886.webm';
 
           return {
@@ -1643,7 +1643,12 @@ const Tasks = ({ onNavigate }) => {
                           src={selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto}
                           alt="Verification Proof"
                           style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
-                          onError={(e) => { e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg'; }}
+                          onError={(e) => { 
+                            if (!e.target.dataset.triedFallback) {
+                              e.target.dataset.triedFallback = 'true';
+                              e.target.src = '/uploads/1791261240106_storefront_proof.jpg'; 
+                            }
+                          }}
                         />
                         <button
                           type="button"
@@ -1733,7 +1738,12 @@ const Tasks = ({ onNavigate }) => {
                         src={selectedTask.previousWork.shopPhoto}
                         alt="Previous Work"
                         style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #fecdd3' }}
-                        onError={(e) => { e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg'; }}
+                        onError={(e) => { 
+                          if (!e.target.dataset.triedFallback) {
+                            e.target.dataset.triedFallback = 'true';
+                            e.target.src = '/uploads/1791261240106_storefront_proof.jpg'; 
+                          }
+                        }}
                       />
                     </div>
                   )}

@@ -34,6 +34,21 @@ import {
 import StatusBadge from '../components/StatusBadge';
 import { useRealtime } from '../realtime';
 
+const FALLBACK_STOREFRONT_IMAGE = '/uploads/1791261240106_storefront_proof.jpg';
+
+const resolveMediaUrl = (url) => {
+  if (!url) return '';
+  if (url.startsWith('data:') || url.startsWith('blob:')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  const cleanUrl = url.startsWith('/') ? url : `/${url}`;
+  const backendBase = (typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL) || 'http://3.110.88.42:8005';
+  const cleanBase = backendBase.replace(/\/api\/?$/, '').replace(/\/+$/, '');
+  if (typeof window !== 'undefined' && window.location.protocol === 'https:') {
+    return cleanUrl;
+  }
+  return `${cleanBase}${cleanUrl}`;
+};
+
 const VendorDetails = ({ vendorId, onNavigate }) => {
   const [vendor, setVendor] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -592,7 +607,22 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
             <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                  <FileText size={18} color="#f59e0b" /> Verified Storefront Proofs ({vendor.documents?.length || 1})
+                  {(() => {
+                    const allDocs = Array.isArray(vendor.documents) && vendor.documents.length > 0
+                      ? vendor.documents
+                      : (vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo
+                          ? [{
+                              url: vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo,
+                              name: 'Storefront On-Ground Photo.jpg',
+                              type: 'image/jpeg'
+                            }]
+                          : []);
+                    return (
+                      <>
+                        <FileText size={18} color="#f59e0b" /> Verified Storefront Proofs ({allDocs.length || 1})
+                      </>
+                    );
+                  })()}
                 </h3>
                 <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: '12px' }}>
                   On-Ground Photo
@@ -600,137 +630,153 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               </div>
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
-              {vendor.documents?.length > 0 ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  {vendor.documents.map((rawDoc, idx) => {
-                    const doc = typeof rawDoc === 'string'
-                      ? { url: rawDoc, name: rawDoc.split('/').pop() || 'Document', size: 0 }
-                      : (rawDoc || {});
-                    const docUrl = doc.url || '';
-                    const docName = doc.name || `Document ${idx + 1}`;
-                    const isImg = doc.type?.includes('image') || docUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-                    return (
-                      <div key={idx} style={{
-                        background: '#f8fafc',
-                        border: '1px solid #e2e8f0',
-                        borderRadius: '10px',
-                        overflow: 'hidden'
-                      }}>
-                        {isImg && docUrl && (
-                          <div 
-                            onClick={() => setPreviewImage(docUrl)}
-                            style={{
-                              position: 'relative',
-                              width: '100%',
-                              height: '140px',
-                              cursor: 'pointer',
-                              background: '#f1f5f9',
-                              overflow: 'hidden'
-                            }}
-                            title="Click to view full image"
-                          >
-                            <img
-                              src={docUrl}
-                              alt={docName}
-                              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                              onError={(e) => {
-                                e.target.src = '/uploads/1790060901073_a21a2daf887d32a695cca12147ab6006.jpg';
-                              }}
-                            />
-                            <div style={{
-                              position: 'absolute',
-                              inset: 0,
-                              background: 'rgba(0,0,0,0.3)',
-                              opacity: 0,
-                              transition: 'opacity 0.2s',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              color: '#fff',
-                              fontSize: '0.8rem',
-                              fontWeight: 700,
-                              gap: '4px'
-                            }}
-                            onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                            onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
-                            >
-                              <Maximize2 size={16} /> Tap to expand
-                            </div>
-                          </div>
-                        )}
-                        <div style={{
-                          padding: '10px 12px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          gap: '8px'
+              {(() => {
+                const allDocs = Array.isArray(vendor.documents) && vendor.documents.length > 0
+                  ? vendor.documents
+                  : (vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo
+                      ? [{
+                          url: vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo,
+                          name: 'Storefront On-Ground Photo.jpg',
+                          type: 'image/jpeg'
+                        }]
+                      : []);
+
+                return allDocs.length > 0 ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    {allDocs.map((rawDoc, idx) => {
+                      const doc = typeof rawDoc === 'string'
+                        ? { url: rawDoc, name: rawDoc.split('/').pop() || 'Document', size: 0 }
+                        : (rawDoc || {});
+                      const rawUrl = doc.url || '';
+                      const resolvedUrl = resolveMediaUrl(rawUrl);
+                      const docName = doc.name || `Document ${idx + 1}`;
+                      const isImg = doc.type?.includes('image') || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i);
+                      return (
+                        <div key={idx} style={{
+                          background: '#f8fafc',
+                          border: '1px solid #e2e8f0',
+                          borderRadius: '10px',
+                          overflow: 'hidden'
                         }}>
-                          <div style={{ overflow: 'hidden' }}>
-                            <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                              {docName}
-                            </div>
-                            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                              Field Upload • {doc.size ? `${Math.round(doc.size / 1024)} KB` : 'Verified Document'}
-                            </div>
-                          </div>
-                          <div style={{ display: 'flex', gap: '6px' }}>
-                            {docUrl && (
-                              <button
-                                type="button"
-                                onClick={() => setPreviewImage(docUrl)}
-                                style={{
-                                  padding: '4px 8px',
-                                  fontSize: '0.74rem',
-                                  fontWeight: 600,
-                                  background: '#eff6ff',
-                                  color: '#2563eb',
-                                  border: '1px solid #bfdbfe',
-                                  borderRadius: '6px',
-                                  cursor: 'pointer',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '3px'
+                          {isImg && resolvedUrl && (
+                            <div 
+                              onClick={() => setPreviewImage(resolvedUrl)}
+                              style={{
+                                position: 'relative',
+                                width: '100%',
+                                height: '140px',
+                                cursor: 'pointer',
+                                background: '#f1f5f9',
+                                overflow: 'hidden'
+                              }}
+                              title="Click to view full image"
+                            >
+                              <img
+                                src={resolvedUrl}
+                                alt={docName}
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                onError={(e) => {
+                                  if (!e.target.dataset.triedFallback) {
+                                    e.target.dataset.triedFallback = 'true';
+                                    e.target.src = resolveMediaUrl(FALLBACK_STOREFRONT_IMAGE);
+                                  }
                                 }}
+                              />
+                              <div style={{
+                                position: 'absolute',
+                                inset: 0,
+                                background: 'rgba(0,0,0,0.3)',
+                                opacity: 0,
+                                transition: 'opacity 0.2s',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                color: '#fff',
+                                fontSize: '0.8rem',
+                                fontWeight: 700,
+                                gap: '4px'
+                              }}
+                              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                              onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
                               >
-                                <Eye size={12} /> View
-                              </button>
-                            )}
-                            {docUrl && (
-                              <a
-                                href={docUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                download
-                                style={{
-                                  padding: '4px 8px',
-                                  fontSize: '0.74rem',
-                                  fontWeight: 600,
-                                  background: '#f1f5f9',
-                                  color: '#475569',
-                                  border: '1px solid #e2e8f0',
-                                  borderRadius: '6px',
-                                  textDecoration: 'none',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: '3px'
-                                }}
-                              >
-                                <ExternalLink size={12} />
-                              </a>
-                            )}
+                                <Maximize2 size={16} /> Tap to expand
+                              </div>
+                            </div>
+                          )}
+                          <div style={{
+                            padding: '10px 12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            gap: '8px'
+                          }}>
+                            <div style={{ overflow: 'hidden' }}>
+                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {docName}
+                              </div>
+                              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                Field Upload • {doc.size ? `${Math.round(doc.size / 1024)} KB` : 'Verified Document'}
+                              </div>
+                            </div>
+                            <div style={{ display: 'flex', gap: '6px' }}>
+                              {resolvedUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => setPreviewImage(resolvedUrl)}
+                                  style={{
+                                    padding: '4px 8px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 600,
+                                    background: '#eff6ff',
+                                    color: '#2563eb',
+                                    border: '1px solid #bfdbfe',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '3px'
+                                  }}
+                                >
+                                  <Eye size={12} /> View
+                                </button>
+                              )}
+                              {resolvedUrl && (
+                                <a
+                                  href={resolvedUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  download
+                                  style={{
+                                    padding: '4px 8px',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 600,
+                                    background: '#f1f5f9',
+                                    color: '#475569',
+                                    border: '1px solid #e2e8f0',
+                                    borderRadius: '6px',
+                                    textDecoration: 'none',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: '3px'
+                                  }}
+                                >
+                                  <ExternalLink size={12} />
+                                </a>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              ) : (
-                <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
-                  <Store size={32} style={{ color: '#cbd5e1', marginBottom: '6px' }} />
-                  <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>No storefront photos attached</div>
-                  <div style={{ fontSize: '0.74rem' }}>KYC agent will capture photos during verification visit.</div>
-                </div>
-              )}
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
+                    <Store size={32} style={{ color: '#cbd5e1', marginBottom: '6px' }} />
+                    <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>No storefront photos attached</div>
+                    <div style={{ fontSize: '0.74rem' }}>KYC agent will capture photos during verification visit.</div>
+                  </div>
+                );
+              })()}
             </div>
           </div>
         </div>
