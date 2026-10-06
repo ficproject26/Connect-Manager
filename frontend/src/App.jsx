@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
@@ -26,7 +26,7 @@ import FieldManagers from './pages/FieldManagers';
 import AgentDirectory from './pages/AgentDirectory';
 import ShopVisits from './pages/ShopVisits';
 import FieldShopVisitModal from './components/FieldShopVisitModal';
-import { managerOnboardingService } from './services/api';
+import { managerOnboardingService, vendorService } from './services/api';
 
 
 class GlobalErrorBoundary extends React.Component {
@@ -282,13 +282,42 @@ function AppInner() {
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
                   <VendorForm
                     prefill={pendingPrefill}
+                    initialData={pendingPrefill}
                     fieldVisitId={pendingFieldVisitId}
                     onSubmit={async (formData) => {
-                      const res = await managerOnboardingService.submitVendorOnboarding({
+                      const payload = {
                         ...formData,
-                        fieldVisitId: pendingFieldVisitId
-                      });
-                      if (res.success) {
+                        name: formData.name || formData.ownerName || formData.businessName,
+                        mobile: formData.mobile || formData.phone || formData.businessPhone || formData.ownerPhone,
+                        businessName: formData.businessName || formData.shopName,
+                        category: formData.category || formData.businessCategory || 'Products',
+                        fieldVisitId: pendingFieldVisitId,
+                        storefrontPhoto: formData.storefrontPhoto || pendingPrefill?.storefrontPhoto,
+                        shopPhoto: formData.storefrontPhoto || pendingPrefill?.storefrontPhoto,
+                        documents: Array.isArray(formData.documents) && formData.documents.length > 0
+                          ? formData.documents
+                          : (pendingPrefill?.storefrontPhoto
+                              ? [{
+                                  url: pendingPrefill.storefrontPhoto,
+                                  name: 'Storefront On-Ground Photo.jpg',
+                                  filename: pendingPrefill.storefrontPhoto.split('/').pop(),
+                                  type: 'image/jpeg'
+                                }]
+                              : [])
+                      };
+
+                      let res;
+                      try {
+                        res = await managerOnboardingService.submitVendorOnboarding(payload);
+                      } catch (err) {
+                        if (err.status === 404 || (err.message && err.message.includes('404'))) {
+                          res = await vendorService.createVendor(payload);
+                        } else {
+                          throw err;
+                        }
+                      }
+
+                      if (res && (res.success || res.status === 'success')) {
                         setOnboardModalOpen(false);
                         setPendingFieldVisitId(null);
                         setPendingPrefill({});

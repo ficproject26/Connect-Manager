@@ -163,19 +163,61 @@ const PRESET_TIME_SLOTS = [
   { label: 'Food & Dining', slot: '11:00 AM - 11:00 PM' },
   { label: 'Open 24/7', slot: 'Open 24/7' },
 ];
-const VendorForm = ({ initialData, onSubmit, isEditing = false, onCancel }) => {
+const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCancel }) => {
   const { user } = useAuth();
-  const getBlank = () => ({
-    businessName:'',logo:null,logoPreview:null,category:CATEGORIES[0],mobile:'',email:'',
-    address:'',website:'',operatingHours:'09:00 AM - 09:00 PM',businessImages:[],businessImagePreviews:[],
-    stateId:'',districtId:'',divisionId:'',pincodeId:'',
-    name:'',alternatePhone:'',agentName:'',coPartnerName:'',password:'',confirmPassword:'',
-    panNumber:'',aadhaarNumber:'',companyRegNumber:'',
-    gstStatus:'Registered',msmeStatus:'Not Registered',businessLicense:null,
-    gstNumber:'',subCategory:'',description:'',documents:[],
-    accountHolderName:'',bankName:'',bankBranch:'',bankStreet:'',bankCity:'',
-    accountNumber:'',ifsc:'',declaration:false,...initialData
-  });
+  const getBlank = () => {
+    const prefillData = prefill || {};
+    const initData = initialData || {};
+    const effectivePrefill = { ...prefillData, ...initData };
+    const prefillShop = effectivePrefill.shopName || effectivePrefill.businessName || '';
+    const prefillCat = effectivePrefill.businessCategory || effectivePrefill.category || CATEGORIES[0];
+    const prefillDocs = effectivePrefill.storefrontPhoto
+      ? [{ url: effectivePrefill.storefrontPhoto, name: 'Storefront On-Ground Photo.jpg', type: 'image/jpeg' }]
+      : [];
+
+    return {
+      businessName: prefillShop,
+      logo: null,
+      logoPreview: null,
+      category: prefillCat,
+      mobile: effectivePrefill.mobile || effectivePrefill.phone || '',
+      email: effectivePrefill.email || '',
+      address: '',
+      website: '',
+      operatingHours: '09:00 AM - 09:00 PM',
+      businessImages: [],
+      businessImagePreviews: [],
+      stateId: '',
+      districtId: '',
+      divisionId: '',
+      pincodeId: '',
+      name: '',
+      alternatePhone: '',
+      agentName: '',
+      coPartnerName: '',
+      password: '',
+      confirmPassword: '',
+      panNumber: '',
+      aadhaarNumber: '',
+      companyRegNumber: '',
+      gstStatus: 'Registered',
+      msmeStatus: 'Not Registered',
+      businessLicense: null,
+      gstNumber: '',
+      subCategory: '',
+      description: '',
+      documents: prefillDocs,
+      accountHolderName: '',
+      bankName: '',
+      bankBranch: '',
+      bankStreet: '',
+      bankCity: '',
+      accountNumber: '',
+      ifsc: '',
+      declaration: false,
+      ...effectivePrefill
+    };
+  };
   const [step,setStep]=useState(1);
     const [formData,setFormData]=useState(getBlank);
   const [errors,setErrors]=useState({});

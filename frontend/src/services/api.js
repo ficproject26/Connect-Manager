@@ -975,22 +975,52 @@ export const settingsService = {
 export const managerOnboardingService = {
   /** Record a Field Shop Visit */
   async createFieldVisit(data) {
-    const res = await fetch(`${API_BASE}/manager-onboarding/field-visit`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    });
-    return handleResponse(res);
+    try {
+      const res = await fetch(`${API_BASE}/manager-onboarding/field-visit`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(data)
+      });
+      if (res.ok) return await res.json();
+      if (res.status === 404) {
+        return await shopVisitService.createShopVisit(data);
+      }
+      return handleResponse(res);
+    } catch (err) {
+      if (err.status === 404 || (err.message && err.message.includes('404'))) {
+        return await shopVisitService.createShopVisit(data);
+      }
+      throw err;
+    }
   },
 
   /** Submit full Vendor Onboarding (after field visit) */
   async submitVendorOnboarding(data) {
-    const res = await fetch(`${API_BASE}/manager-onboarding/submit`, {
-      method: 'POST',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(data)
-    });
-    return handleResponse(res);
+    const formattedData = {
+      ...data,
+      name: data.name || data.ownerName || data.businessName,
+      mobile: data.mobile || data.phone || data.businessPhone || data.ownerPhone,
+      businessName: data.businessName || data.shopName,
+      category: data.category || data.businessCategory || 'Products'
+    };
+
+    try {
+      const res = await fetch(`${API_BASE}/manager-onboarding/submit`, {
+        method: 'POST',
+        headers: getAuthHeaders(),
+        body: JSON.stringify(formattedData)
+      });
+      if (res.ok) return await res.json();
+      if (res.status === 404) {
+        return await vendorService.createVendor(formattedData);
+      }
+      return handleResponse(res);
+    } catch (err) {
+      if (err.status === 404 || (err.message && err.message.includes('404'))) {
+        return await vendorService.createVendor(formattedData);
+      }
+      throw err;
+    }
   },
 
   /** Get this manager's onboarding records */
