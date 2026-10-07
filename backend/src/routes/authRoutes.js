@@ -23,6 +23,7 @@ router.post('/reset-password', authLimiter, authController.resetPassword);
 
 // Protected auth routes
 router.get('/me', authMiddleware, authController.getMe);
+router.post('/refresh', authMiddleware, authController.refreshToken);
 router.put('/change-password', authMiddleware, authController.changePassword);
 
 module.exports = router;

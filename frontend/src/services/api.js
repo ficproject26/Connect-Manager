@@ -37,13 +37,8 @@ async function handleResponse(res) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) {
     if (res.status === 401) {
-      // Only remove token if it was an explicit auth session verification failure
-      const isAuthMe = res.url && res.url.includes('/auth/me');
-      if (isAuthMe) {
-        const storedToken = localStorage.getItem('agent_mgr_token');
-        if (storedToken) {
-          localStorage.removeItem('agent_mgr_token');
-        }
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('agent_mgr_token');
       }
     }
     const errorMsg = data.message || `Request failed with status ${res.status}`;
@@ -162,6 +157,14 @@ export const authService = {
 
   async getMe() {
     const res = await fetch(`${API_BASE}/auth/me`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async refreshToken() {
+    const res = await fetch(`${API_BASE}/auth/refresh`, {
+      method: 'POST',
       headers: getAuthHeaders()
     });
     return handleResponse(res);

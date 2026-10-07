@@ -212,7 +212,7 @@ const login = async (req, res) => {
       pincodeId: user.pincodeId || null
     };
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
 
     res.json({
       success: true,
@@ -641,7 +641,7 @@ const simulateKyc = async (req, res) => {
       pincodeId: updatedUser.pincodeId
     };
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
 
     const regionObj = (updatedUser.regionId || updatedUser.stateId) ? await db.states.findById(updatedUser.regionId || updatedUser.stateId) : null;
     const state = updatedUser.stateId ? await db.states.findById(updatedUser.stateId) : null;
@@ -1178,7 +1178,7 @@ const verifyOtp = async (req, res) => {
       pincodeId: user.pincodeId
     };
 
-    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '8h' });
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
 
     const regionObj = (user.regionId || user.stateId) ? await db.states.findById(user.regionId || user.stateId) : null;
     const state = user.stateId ? await db.states.findById(user.stateId) : null;
@@ -1227,6 +1227,31 @@ const verifyOtp = async (req, res) => {
   }
 };
 
+const refreshToken = async (req, res) => {
+  try {
+    const user = await db.users.findById(req.user.id);
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User account not found.' });
+    }
+
+    const tokenPayload = {
+      id: user.id || user._id,
+      managerId: user.managerId || user.id || user._id,
+      email: user.email,
+      mobile: user.mobile,
+      role: user.role,
+      level: user.level,
+      name: user.name
+    };
+
+    const token = jwt.sign(tokenPayload, JWT_SECRET, { expiresIn: '7d' });
+    res.json({ success: true, token, user: req.user });
+  } catch (err) {
+    console.error('Refresh token error:', err);
+    res.status(500).json({ success: false, message: 'Failed to refresh authentication token.' });
+  }
+};
+
 module.exports = {
   login,
   register,
@@ -1242,5 +1267,6 @@ module.exports = {
   changePassword,
   forgotPassword,
   resetPassword,
+  refreshToken,
   ROLE_LIMITS
 };

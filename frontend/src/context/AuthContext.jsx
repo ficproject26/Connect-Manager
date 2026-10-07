@@ -39,9 +39,35 @@ const normalizeUser = (u) => {
   };
 };
 
+const isTokenExpired = (tokenStr) => {
+  if (!tokenStr || typeof tokenStr !== 'string') return true;
+  try {
+    const parts = tokenStr.split('.');
+    if (parts.length !== 3) return true;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const payload = JSON.parse(jsonPayload);
+    if (!payload.exp) return false;
+    return Date.now() >= payload.exp * 1000;
+  } catch {
+    return true;
+  }
+};
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(localStorage.getItem('agent_mgr_token') || null);
+  const [token, setToken] = useState(() => {
+    const saved = localStorage.getItem('agent_mgr_token');
+    if (saved && !isTokenExpired(saved)) return saved;
+    if (saved) localStorage.removeItem('agent_mgr_token');
+    return null;
+  });
   const [loading, setLoading] = useState(true);
 
   const logout = () => {
@@ -58,8 +84,8 @@ export const AuthProvider = ({ children }) => {
       return;
     }
 
-    // Immediately purge any stale/legacy mock tokens
-    if (savedToken.startsWith('mock_token_')) {
+    // Immediately purge any stale/legacy mock tokens or expired tokens
+    if (savedToken.startsWith('mock_token_') || isTokenExpired(savedToken)) {
       logout();
       setLoading(false);
       return;
@@ -72,8 +98,7 @@ export const AuthProvider = ({ children }) => {
       } else {
         logout();
       }
-    } catch (err) {
-      console.warn('Session verification failed, logging out:', err);
+    } catch {
       logout();
     } finally {
       setLoading(false);
@@ -92,18 +117,32 @@ export const AuthProvider = ({ children }) => {
     }
   }, [token, user]);
 
+  // Keep session alive while active
+  useEffect(() => {
+    if (!token || !user) return;
+    const interval = setInterval(async () => {
+      try {
+        const res = await authService.refreshToken();
+        if (res.success && res.token) {
+          localStorage.setItem('agent_mgr_token', res.token);
+          setToken(res.token);
+        }
+      } catch {
+        // Silently ignore background refresh failures
+      }
+    }, 6 * 60 * 60 * 1000); // Every 6 hours
+    return () => clearInterval(interval);
+  }, [token, user]);
+
   const login = async (identifier, password) => {
     const res = await authService.login(identifier, password);
     if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
       const token = res.token || res.data?.token;
       const rawUser = res.user || res.data?.user || res.data;
       const user = normalizeUser(rawUser);
-      const status = String(user?.status || '').toLowerCase();
-      if (status === 'active' || status === 'approved' || !user?.status) {
-        localStorage.setItem('agent_mgr_token', token);
-        setToken(token);
-        setUser(user);
-      }
+      localStorage.setItem('agent_mgr_token', token);
+      setToken(token);
+      setUser(user);
       return { success: true, token, user };
     }
     throw new Error(res.message || 'Login failed. Invalid response from server.');
@@ -115,12 +154,9 @@ export const AuthProvider = ({ children }) => {
       const token = res.token || res.data?.token;
       const rawUser = res.user || res.data?.user || res.data;
       const user = normalizeUser(rawUser);
-      const status = String(user?.status || '').toLowerCase();
-      if (status === 'active' || status === 'approved' || !user?.status) {
-        localStorage.setItem('agent_mgr_token', token);
-        setToken(token);
-        setUser(user);
-      }
+      localStorage.setItem('agent_mgr_token', token);
+      setToken(token);
+      setUser(user);
       return { success: true, token, user };
     }
     throw new Error(res.message || 'OTP verification failed.');
