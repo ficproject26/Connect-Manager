@@ -646,13 +646,36 @@ const getSubmittedReports = async (req, res) => {
   }
 };
 
-// GET /api/reports/submitted/:id - Get detail of submitted report
+// GET /api/reports/submitted/:id - Get detail of submitted report with territory scope validation
 const getSubmittedReportById = async (req, res) => {
   try {
+    const user = req.user;
     const report = await db.submittedReports.findById(req.params.id);
     if (!report) {
       return res.status(404).json({ success: false, message: 'Submitted report not found' });
     }
+
+    const isAdmin = ['admin', 'super_admin', 'super-admin'].includes(String(user.role).toLowerCase()) || user.email === 'admin@example.com';
+    const isOwner = String(report.managerId) === String(user.id || user._id);
+
+    let isWithinScope = false;
+    if (user.role === 'state_manager') {
+      isWithinScope = !report.stateId || String(report.stateId) === String(user.stateId);
+    } else if (user.role === 'district_manager') {
+      isWithinScope = !report.districtId || String(report.districtId) === String(user.districtId);
+    } else if (user.role === 'division_manager') {
+      isWithinScope = !report.divisionId || String(report.divisionId) === String(user.divisionId);
+    } else if (user.role === 'pincode_manager') {
+      isWithinScope = !report.pincodeId || String(report.pincodeId) === String(user.pincodeId);
+    }
+
+    if (!isAdmin && !isOwner && !isWithinScope) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: You do not have permission to access reports outside your assigned territory.'
+      });
+    }
+
     res.json({ success: true, data: report });
   } catch (err) {
     console.error('Error fetching submitted report by id:', err);

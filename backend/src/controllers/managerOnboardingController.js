@@ -367,11 +367,20 @@ const approveOnboarding = async (req, res) => {
 
     const role = (user.role || '').toLowerCase();
     const isPincodeAdmin = role === 'pincode_admin' || role === 'pincodeadmin' || role === 'pincode_manager';
-    if (isPincodeAdmin) {
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].some(r => role.includes(r)) || user.email === 'admin@example.com';
+
+    if (!isPincodeAdmin && !isGlobalAdmin) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Only Pincode Managers or Administrators can approve onboarding.' });
+    }
+
+    if (isPincodeAdmin && !isGlobalAdmin) {
       const adminId = String(user.id || user._id);
       const assigned = String(onboarding.assignedPincodeAdminId || '');
       if (assigned && assigned !== adminId) {
         return res.status(403).json({ success: false, message: 'You are not the assigned Pincode Admin for this request.' });
+      }
+      if (user.pincodeId && onboarding.pincodeId && String(user.pincodeId) !== String(onboarding.pincodeId)) {
+        return res.status(403).json({ success: false, message: 'Forbidden: Onboarding is outside your assigned pincode territory.' });
       }
     }
 
@@ -432,6 +441,25 @@ const rejectOnboarding = async (req, res) => {
     const onboarding = await db.managerOnboardings.findById(id);
     if (!onboarding) return res.status(404).json({ success: false, message: 'Onboarding record not found.' });
     if (onboarding.status !== 'PENDING_PINCODE_APPROVAL') return res.status(400).json({ success: false, message: `Cannot reject from status: ${onboarding.status}.` });
+
+    const role = (user.role || '').toLowerCase();
+    const isPincodeAdmin = role === 'pincode_admin' || role === 'pincodeadmin' || role === 'pincode_manager';
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].some(r => role.includes(r)) || user.email === 'admin@example.com';
+
+    if (!isPincodeAdmin && !isGlobalAdmin) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Only Pincode Managers or Administrators can reject onboarding.' });
+    }
+
+    if (isPincodeAdmin && !isGlobalAdmin) {
+      const adminId = String(user.id || user._id);
+      const assigned = String(onboarding.assignedPincodeAdminId || '');
+      if (assigned && assigned !== adminId) {
+        return res.status(403).json({ success: false, message: 'You are not the assigned Pincode Admin for this request.' });
+      }
+      if (user.pincodeId && onboarding.pincodeId && String(user.pincodeId) !== String(onboarding.pincodeId)) {
+        return res.status(403).json({ success: false, message: 'Forbidden: Onboarding is outside your assigned pincode territory.' });
+      }
+    }
 
     const previousStatus = onboarding.status;
     const updated = await db.managerOnboardings.findByIdAndUpdate(id, {

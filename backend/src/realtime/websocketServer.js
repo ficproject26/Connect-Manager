@@ -117,7 +117,7 @@ class RealtimeWebSocketServer {
 
   authenticateClient(ws, token) {
     try {
-      const decoded = jwt.verify(token, JWT_SECRET);
+      const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
       ws.isAuthenticated = true;
       ws.user = {
         id: decoded.id || decoded._id,

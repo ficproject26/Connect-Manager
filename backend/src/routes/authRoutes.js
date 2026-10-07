@@ -4,20 +4,22 @@ const authController = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
-// Public auth routes
-router.post('/login', authController.login);
-router.post('/send-otp', authController.sendOtp);
-router.post('/verify-otp', authController.verifyOtp);
-router.post('/register', authController.register);
+const { authLimiter, otpLimiter, uploadLimiter } = require('../middleware/rateLimitMiddleware');
+
+// Public auth routes with rate limiting protection
+router.post('/login', authLimiter, authController.login);
+router.post('/send-otp', otpLimiter, authController.sendOtp);
+router.post('/verify-otp', otpLimiter, authController.verifyOtp);
+router.post('/register', authLimiter, authController.register);
 router.get('/locations', authController.getRegistrationLocations);
 router.get('/check-capacity', authController.checkCapacity);
-router.post('/simulate-approval', authController.simulateApproval);
-router.post('/simulate-kyc', authController.simulateKyc);
-router.post('/upload-avatar', upload.single('avatar'), authController.uploadAvatar);
-router.post('/upload-document', upload.single('document'), authController.uploadDocument);
+router.post('/simulate-approval', authLimiter, authController.simulateApproval);
+router.post('/simulate-kyc', authLimiter, authController.simulateKyc);
+router.post('/upload-avatar', uploadLimiter, upload.single('avatar'), authController.uploadAvatar);
+router.post('/upload-document', uploadLimiter, upload.single('document'), authController.uploadDocument);
 
-router.post('/forgot-password', authController.forgotPassword);
-router.post('/reset-password', authController.resetPassword);
+router.post('/forgot-password', authLimiter, authController.forgotPassword);
+router.post('/reset-password', authLimiter, authController.resetPassword);
 
 // Protected auth routes
 router.get('/me', authMiddleware, authController.getMe);

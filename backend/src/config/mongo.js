@@ -7,6 +7,9 @@ let db = null;
 
 async function getMongoDb() {
   if (db) return db;
+  if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
+    throw new Error('CRITICAL CONFIGURATION ERROR: MONGODB_URI environment variable is required in production.');
+  }
   const uri = process.env.MONGODB_URI || 'mongodb+srv://Connect-app:Connect123@cluster0.fzj1k5l.mongodb.net/test?retryWrites=true&w=majority';
   try {
     if (!client) {

@@ -16,8 +16,27 @@ function sanitizeQuery(query) {
   const sanitized = {};
   for (const [k, v] of Object.entries(query)) {
     if (v === undefined || v === null) continue;
+    // Strip prototype pollution
+    if (k === '__proto__' || k === 'constructor' || k === 'prototype') continue;
+    // Allow legitimate $or queries but sanitize each branch
+    if (k === '$or' && Array.isArray(v)) {
+      sanitized[k] = v.map(sanitizeQuery);
+      continue;
+    }
+    // Block dangerous NoSQL operators at root query level
+    if (k.startsWith('$')) continue;
+
     if (['_id', 'id', 'stateId', 'districtId', 'divisionId', 'pincodeId'].includes(k) && typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v)) {
       sanitized[k] = { $in: [new ObjectId(v), v] };
+    } else if (v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof RegExp)) {
+      // Disallow dangerous operators inside nested object queries
+      const cleanSub = {};
+      for (const [subK, subV] of Object.entries(v)) {
+        if (subK === '$where' || subK === '$expr') continue;
+        if (subK === '__proto__' || subK === 'constructor' || subK === 'prototype') continue;
+        cleanSub[subK] = subV;
+      }
+      sanitized[k] = cleanSub;
     } else {
       sanitized[k] = v;
     }

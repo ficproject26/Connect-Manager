@@ -268,6 +268,26 @@ const createTask = async (req, res) => {
     const count = await db.tasks.count();
     const taskNumber = `TSK-${100000 + count + 1}`;
 
+    // Verify territory scope: Task destination must fall within creating manager's jurisdiction
+    const territoryProfile = await getManagerTerritoryProfile(user);
+    const targetTaskScope = {
+      stateId: stateId || user.stateId,
+      state: req.body.state || user.state,
+      districtId: districtId || user.districtId,
+      district: req.body.district || user.district,
+      divisionId: divisionId || user.divisionId,
+      division: req.body.division || user.division,
+      pincodeId: pincodeId || user.pincodeId,
+      pincode: pincode || user.pincode
+    };
+
+    if (!isTaskInManagerTerritory(targetTaskScope, territoryProfile)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You cannot create tasks outside your assigned territory.'
+      });
+    }
+
     const newTask = await db.tasks.insertOne({
       taskNumber,
       vendor: vendor || 'Field Operational Task',

@@ -493,22 +493,17 @@ export const managerService = {
       return data;
     }
 
-    // Fallback: If remote backend returned 0 managers due to server-side territory caching,
-    // fetch directory securely via reader token and perform client-side hierarchical scoping.
+    // If primary query needed client-side hierarchical scoping, apply using user credentials
     try {
-      const DIRECTORY_READER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfYWRtaW4iLCJyb2xlIjoic3RhdGVfbWFuYWdlciIsImlhdCI6MTc5MTE3ODk0MSwiZXhwIjoxODIyNzE0OTQxfQ.46XVbnx2FISlsdXUsmpxD7GN-yajtqu45Ul4xP-5xII';
       const fallbackRes = await fetch(`${API_BASE}/managers`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DIRECTORY_READER_TOKEN}`
-        }
+        headers: getAuthHeaders()
       });
       const fallbackData = await handleResponse(fallbackRes);
       if (fallbackData && fallbackData.success && Array.isArray(fallbackData.all) && fallbackData.all.length > 0) {
         return scopeManagersForUser(fallbackData.all, currentUser);
       }
     } catch (err) {
-      console.error('Directory reader fallback failed:', err);
+      console.warn('Directory scoping fetch error:', err);
     }
 
     return data || { success: true, count: 0, all: [], peers: [], subordinates: [], data: [] };
@@ -758,15 +753,10 @@ export const taskService = {
       }
     }
 
-    // Fallback: If remote backend returned 0 tasks due to territory caching or parameter issues,
-    // fetch tasks securely via reader token and filter client-side using territory scoping.
+    // If standard query needed client-side hierarchical scoping, fetch using user credentials
     try {
-      const DIRECTORY_READER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfYWRtaW4iLCJyb2xlIjoic3RhdGVfbWFuYWdlciIsImlhdCI6MTc5MTE3ODk0MSwiZXhwIjoxODIyNzE0OTQxfQ.46XVbnx2FISlsdXUsmpxD7GN-yajtqu45Ul4xP-5xII';
       const fallbackRes = await fetch(`${API_BASE}/qc-tasks/tasks`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DIRECTORY_READER_TOKEN}`
-        }
+        headers: getAuthHeaders()
       });
       const fallbackData = await handleResponse(fallbackRes);
       if (fallbackData && fallbackData.success) {
@@ -915,15 +905,10 @@ export const agentService = {
       }
     }
 
-    // Fallback: If remote backend returned 0 agents due to server-side territory caching,
-    // fetch directory securely via reader token and perform client-side hierarchical scoping.
+    // If standard query needed client-side hierarchical scoping, fetch using user credentials
     try {
-      const DIRECTORY_READER_TOKEN = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6InVzZXJfYWRtaW4iLCJyb2xlIjoic3RhdGVfbWFuYWdlciIsImlhdCI6MTc5MTE3ODk0MSwiZXhwIjoxODIyNzE0OTQxfQ.46XVbnx2FISlsdXUsmpxD7GN-yajtqu45Ul4xP-5xII';
       const fallbackRes = await fetch(`${API_BASE}/operations/agents`, {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${DIRECTORY_READER_TOKEN}`
-        }
+        headers: getAuthHeaders()
       });
       const fallbackData = await handleResponse(fallbackRes);
       if (fallbackData && fallbackData.success) {

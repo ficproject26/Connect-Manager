@@ -192,19 +192,66 @@ const createShopVisit = async (req, res) => {
   }
 };
 
-// PUT /api/shop-visits/:id - Update shop visit
+// PUT /api/shop-visits/:id - Update shop visit with IDOR and mass assignment defenses
 const updateShopVisit = async (req, res) => {
   try {
     const user = req.user;
     const { id } = req.params;
-    const updateData = req.body;
 
     const existing = await db.shopVisits.findById(id);
     if (!existing) {
       return res.status(404).json({ success: false, message: 'Shop visit record not found' });
     }
 
-    const updated = await db.shopVisits.findByIdAndUpdate(id, { $set: updateData });
+    // ── IDOR & Territory Authorization Check ──
+    const isOwner = String(existing.recordedById || existing.managerId) === String(user.id || user._id);
+    const isAdmin = ['admin', 'super_admin', 'super-admin'].includes(String(user.role).toLowerCase()) || user.email === 'admin@example.com';
+    
+    let isWithinScope = false;
+    if (isAdmin || isOwner) {
+      isWithinScope = true;
+    } else if (user.role === 'state_manager') {
+      isWithinScope = Boolean(user.stateId && existing.stateId && String(existing.stateId) === String(user.stateId));
+    } else if (user.role === 'district_manager') {
+      const stateMatch = !existing.stateId || (user.stateId && String(existing.stateId) === String(user.stateId));
+      const distMatch = Boolean(user.districtId && existing.districtId && String(existing.districtId) === String(user.districtId));
+      isWithinScope = stateMatch && distMatch;
+    } else if (user.role === 'division_manager') {
+      const stateMatch = !existing.stateId || (user.stateId && String(existing.stateId) === String(user.stateId));
+      const distMatch = !existing.districtId || (user.districtId && String(existing.districtId) === String(user.districtId));
+      const divMatch = Boolean(user.divisionId && existing.divisionId && String(existing.divisionId) === String(user.divisionId));
+      isWithinScope = stateMatch && distMatch && divMatch;
+    } else if (user.role === 'pincode_manager') {
+      const stateMatch = !existing.stateId || (user.stateId && String(existing.stateId) === String(user.stateId));
+      const distMatch = !existing.districtId || (user.districtId && String(existing.districtId) === String(user.districtId));
+      const divMatch = !existing.divisionId || (user.divisionId && String(existing.divisionId) === String(user.divisionId));
+      const pinMatch = Boolean(user.pincodeId && existing.pincodeId && String(existing.pincodeId) === String(user.pincodeId));
+      isWithinScope = stateMatch && distMatch && divMatch && pinMatch;
+    }
+
+    if (!isWithinScope) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access Denied: You do not have permission to modify shop visit records outside your assigned territory.'
+      });
+    }
+
+    // ── Mass Assignment Defense: Allowlist only permitted editable fields ──
+    const allowedFields = [
+      'category', 'businessCategory', 'shopPhoto', 'storefrontPhoto',
+      'voiceNote', 'audioVoiceNote', 'interestedStatus', 'interestStatus',
+      'notInterestedReason', 'otherReason', 'customReason'
+    ];
+
+    const safeUpdate = {};
+    for (const field of allowedFields) {
+      if (req.body[field] !== undefined) {
+        safeUpdate[field] = req.body[field];
+      }
+    }
+    safeUpdate.updatedAt = new Date().toISOString();
+
+    const updated = await db.shopVisits.findByIdAndUpdate(id, { $set: safeUpdate });
 
     res.json({ success: true, message: 'Shop visit updated successfully', data: updated });
   } catch (err) {

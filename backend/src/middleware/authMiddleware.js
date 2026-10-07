@@ -1,6 +1,10 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 
+if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'agent_manager_secret_key_2026')) {
+  throw new Error('CRITICAL SECURITY CONFIGURATION: A secure, non-default JWT_SECRET must be configured in production environment.');
+}
+
 const JWT_SECRET = process.env.JWT_SECRET || 'agent_manager_secret_key_2026';
 
 const authMiddleware = async (req, res, next) => {
@@ -11,7 +15,11 @@ const authMiddleware = async (req, res, next) => {
     }
 
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, JWT_SECRET);
+    if (!token || token === 'null' || token === 'undefined') {
+      return res.status(401).json({ success: false, message: 'Invalid authentication token.' });
+    }
+
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
 
     const user = await db.users.findById(decoded.id);
     if (!user) {

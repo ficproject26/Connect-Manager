@@ -5,23 +5,108 @@ const path = require('path');
 const dotenv = require('dotenv');
 const db = require('./config/db');
 const { realtimeWebSocketServer } = require('./realtime');
+const { sanitizeInput } = require('./middleware/sanitizeMiddleware');
+const { apiLimiter } = require('./middleware/rateLimitMiddleware');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
 const app = express();
 const PORT = process.env.PORT || 8005;
 
-// Middleware
-app.use(cors({
-  origin: '*',
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
-}));
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ limit: '50mb', extended: true }));
+// Trust reverse proxy (Vercel, AWS ALB, Nginx)
+app.set('trust proxy', 1);
 
-// Serve static uploads
-app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
+// Remove Express fingerprinting
+app.disable('x-powered-by');
+
+// Security Headers Middleware
+app.use((req, res, next) => {
+  // Prevent MIME type sniffing
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  // Prevent clickjacking
+  res.setHeader('X-Frame-Options', 'DENY');
+  // Strict Referrer policy
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  // Permissions Policy restricting unnecessary browser features
+  res.setHeader('Permissions-Policy', 'geolocation=(self), microphone=(self), camera=(), payment=()');
+  // Cross-Origin Isolation
+  res.setHeader('Cross-Origin-Opener-Policy', 'same-origin');
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
+  // Enforce HSTS in production or over HTTPS
+  if (process.env.NODE_ENV === 'production' || req.secure || req.headers['x-forwarded-proto'] === 'https') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
+  }
+
+  // Content Security Policy
+  res.setHeader(
+    'Content-Security-Policy',
+    "default-src 'self'; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; script-src 'self'; connect-src 'self' https: wss: ws:; frame-ancestors 'none'; object-src 'none'; base-uri 'self';"
+  );
+
+  next();
+});
+
+// Explicit CORS Origin Allowlist
+const ALLOWED_ORIGINS = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'http://localhost:3000',
+  'https://connect-manager.vercel.app',
+  'https://manager.ficapp.in'
+];
+
+if (process.env.ALLOWED_ORIGINS) {
+  process.env.ALLOWED_ORIGINS.split(',').forEach(o => {
+    const trimmed = o.trim();
+    if (trimmed && !ALLOWED_ORIGINS.includes(trimmed)) {
+      ALLOWED_ORIGINS.push(trimmed);
+    }
+  });
+}
+
+app.use(cors({
+  origin: (origin, callback) => {
+    // Allow non-browser requests (mobile apps, server-to-server curl, health checks)
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = ALLOWED_ORIGINS.some(allowed => {
+      if (allowed === origin) return true;
+      // Allow dynamic subdomains for configured apex domain if needed
+      if (origin.endsWith('.vercel.app') || origin.endsWith('.ficapp.in')) return true;
+      return false;
+    });
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS Error: Origin '${origin}' is not authorized by access control policy.`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept'],
+  credentials: true,
+  maxAge: 86400
+}));
+
+// Request Body Limits (DoS protection against memory exhaustion)
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ limit: '5mb', extended: true }));
+
+// Global Input Sanitization against NoSQL injection & prototype pollution
+app.use(sanitizeInput);
+
+// Global API rate limiting
+app.use('/api', apiLimiter);
+
+// Serve static uploads with nosniff and caching
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
+  setHeaders: (res) => {
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+  }
+}));
 
 // Health check
 app.get('/api/health', (req, res) => {
@@ -48,7 +133,6 @@ const settingsRoutes = require('./routes/settingsRoutes');
 const realtimeRoutes = require('./routes/realtimeRoutes');
 const managerOnboardingRoutes = require('./routes/managerOnboardingRoutes');
 
-
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
 app.use('/api', locationRoutes); // /api/states, /api/districts, /api/divisions, /api/pincodes
@@ -64,18 +148,25 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/manager-onboarding', managerOnboardingRoutes);
 
-
-// Centralized error handling
+// Centralized production-safe error handling
 app.use((err, req, res, next) => {
-  console.error('Unhandled server error:', err.stack || err.message);
-  res.status(err.status || 500).json({
+  const isProd = process.env.NODE_ENV === 'production';
+  const statusCode = err.status || (err.message && err.message.includes('CORS') ? 403 : 500);
+  
+  if (!isProd) {
+    console.error('Unhandled server error:', err.stack || err.message);
+  } else if (statusCode >= 500) {
+    console.error(`[Server Error] ${req.method} ${req.originalUrl}:`, err.message);
+  }
+
+  res.status(statusCode).json({
     success: false,
-    message: err.message || 'Internal server error occurred.'
+    message: isProd && statusCode >= 500
+      ? 'An unexpected internal server error occurred. Please try again later.'
+      : (err.message || 'An error occurred.')
   });
 });
 
-// Auto-seed if database is clean
-const seedData = require('./seed/seed');
 async function startServer() {
   const server = http.createServer(app);
   realtimeWebSocketServer.attach(server);
@@ -98,4 +189,3 @@ if (require.main === module) {
 }
 
 module.exports = app;
-

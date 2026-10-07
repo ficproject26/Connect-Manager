@@ -52,6 +52,11 @@ const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }
   return { count: 0, limit, isFull: false, remaining: limit };
 };
 
+// Brute force protection tracker for login attempts
+const failedLoginAttempts = new Map();
+const MAX_FAILED_ATTEMPTS = 5;
+const LOCKOUT_DURATION_MS = 15 * 60 * 1000; // 15 minutes
+
 const login = async (req, res) => {
   try {
     const rawIdentifier = String(req.body.identifier || req.body.email || req.body.mobile || '').trim();
@@ -61,17 +66,42 @@ const login = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide email or mobile number, and password.' });
     }
 
+    const lockKey = rawIdentifier.toLowerCase();
+    const attemptRecord = failedLoginAttempts.get(lockKey);
+    if (attemptRecord) {
+      if (attemptRecord.lockedUntil && Date.now() < attemptRecord.lockedUntil) {
+        const remainingMins = Math.ceil((attemptRecord.lockedUntil - Date.now()) / 60000);
+        return res.status(429).json({
+          success: false,
+          message: `Account is temporarily locked due to repeated failed login attempts. Please try again in ${remainingMins} minute(s).`
+        });
+      } else if (attemptRecord.lockedUntil && Date.now() >= attemptRecord.lockedUntil) {
+        failedLoginAttempts.delete(lockKey);
+      }
+    }
+
+    const registerFailure = () => {
+      const current = failedLoginAttempts.get(lockKey) || { count: 0, lockedUntil: 0 };
+      current.count += 1;
+      if (current.count >= MAX_FAILED_ATTEMPTS) {
+        current.lockedUntil = Date.now() + LOCKOUT_DURATION_MS;
+        failedLoginAttempts.set(lockKey, current);
+        return { locked: true, remaining: 0 };
+      }
+      failedLoginAttempts.set(lockKey, current);
+      return { locked: false, remaining: MAX_FAILED_ATTEMPTS - current.count };
+    };
+
     const isEmail = rawIdentifier.includes('@');
     const normalizedEmail = isEmail ? rawIdentifier.toLowerCase() : null;
     const digitsOnly = rawIdentifier.replace(/\D/g, '');
     const cleanMobile = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
 
-    console.log(`[Manager Auth] Login request received for identifier: "${rawIdentifier}" (email: ${normalizedEmail || 'N/A'}, mobile: ${cleanMobile || 'N/A'})`);
-
     // Live MongoDB lookup for manager by email, mobile, phone, loginId, or managerId
     let user = null;
     if (normalizedEmail) {
-      user = await db.users.findOne({ email: { $regex: new RegExp(`^${normalizedEmail}$`, 'i') } });
+      const safeEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      user = await db.users.findOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } });
     }
     if (!user && cleanMobile) {
       user = (await db.users.findOne({ mobile: cleanMobile })) ||
@@ -87,33 +117,37 @@ const login = async (req, res) => {
     }
 
     if (!user) {
-      console.warn(`[Manager Auth] Manager lookup failed for: "${rawIdentifier}". Authentication rejected.`);
-      return res.status(401).json({ success: false, message: 'Manager account not found with the provided email or mobile number.' });
+      const failStatus = registerFailure();
+      if (failStatus.locked) {
+        return res.status(429).json({
+          success: false,
+          message: 'Account temporarily locked due to 5 consecutive failed attempts. Please try again after 15 minutes.'
+        });
+      }
+      return res.status(401).json({
+        success: false,
+        message: `Invalid credentials. Please verify your email/mobile and password. (${failStatus.remaining} attempts remaining before lockout)`
+      });
     }
 
     // Role check: Only regional Managers are authorized
     const userRole = String(user.role || '').toLowerCase();
     const isManagerRole = userRole.includes('manager') || ['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(userRole);
     if (!isManagerRole) {
-      console.warn(`[Manager Auth] Account ${user._id} role "${user.role}" is not authorized for Manager Portal.`);
       return res.status(403).json({ success: false, message: 'Access denied. This portal is exclusively for regional Managers.' });
     }
 
     // Account status check
     const rawStatus = String(user.status || '').toLowerCase().trim();
     const resolvedId = user.managerId || user.id || user._id;
-    console.log(`[Manager Auth] Found manager: ID=${resolvedId}, Role=${user.role}, Status=${rawStatus}`);
 
     if (rawStatus === 'suspended') {
-      console.warn(`[Manager Auth] Suspended manager login attempt: ${user.email || user.mobile}`);
       return res.status(403).json({ success: false, message: 'Account is suspended. Please contact your administrator.' });
     }
     if (rawStatus === 'inactive' || rawStatus === 'deactivated') {
-      console.warn(`[Manager Auth] Inactive manager login attempt: ${user.email || user.mobile}`);
       return res.status(403).json({ success: false, message: 'Account is inactive. Please contact your administrator.' });
     }
     if (rawStatus === 'rejected') {
-      console.warn(`[Manager Auth] Rejected manager login attempt: ${user.email || user.mobile}`);
       return res.status(403).json({ success: false, message: 'Manager registration was rejected. Please contact your administrator.' });
     }
 
@@ -124,18 +158,27 @@ const login = async (req, res) => {
     } else if (user.password && typeof user.password === 'string') {
       if (user.password === password) {
         isMatch = true;
-        const newHash = await bcrypt.hash(password, 10);
+        const newHash = await bcrypt.hash(password, 12);
         await db.users.findByIdAndUpdate(user._id, { passwordHash: newHash, password: null });
-        console.log(`[Manager Auth] Migrated legacy password to bcrypt hash for ${user.email || user._id}`);
       }
     }
 
     if (!isMatch) {
-      console.warn(`[Manager Auth] Password comparison failed for manager: ${user.email || user.mobile}`);
-      return res.status(401).json({ success: false, message: 'Invalid credentials. Incorrect password.' });
+      const failStatus = registerFailure();
+      if (failStatus.locked) {
+        return res.status(429).json({
+          success: false,
+          message: 'Account temporarily locked due to 5 consecutive failed attempts. Please try again after 15 minutes.'
+        });
+      }
+      return res.status(401).json({
+        success: false,
+        message: `Invalid credentials. Please verify your email/mobile and password. (${failStatus.remaining} attempts remaining before lockout)`
+      });
     }
 
-    console.log(`[Manager Auth] Authentication successful for manager: ${user.email || user.mobile} (${resolvedId})`);
+    // Clear failed attempts on successful login
+    failedLoginAttempts.delete(lockKey);
 
     const isApproved = rawStatus === 'active' || rawStatus === 'approved';
     const userStatus = isApproved ? 'active' : (rawStatus || 'under_review');
@@ -252,6 +295,23 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields: Full Name, Email, Mobile, Password, and Role.' });
     }
 
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(String(email).trim())) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
+    }
+
+    const cleanMobile = String(mobile).replace(/\D/g, '');
+    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
+      return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian mobile number.' });
+    }
+
+    if (password.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(password)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.'
+      });
+    }
+
     if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid manager role selected.' });
     }
@@ -325,8 +385,8 @@ const register = async (req, res) => {
       });
     }
 
-    // Hash password
-    const passwordHash = await bcrypt.hash(password, 10);
+    // Hash password with strong cost factor
+    const passwordHash = await bcrypt.hash(password, 12);
     const level = ROLE_LEVELS[role] || 1;
 
     const newUser = await db.users.insertOne({
@@ -436,6 +496,13 @@ const checkCapacity = async (req, res) => {
 
 const simulateApproval = async (req, res) => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        message: 'Security Violation: Simulation endpoints are strictly disabled in production mode.'
+      });
+    }
+
     const { userId } = req.body;
     const targetId = userId || req.user?.id;
 
@@ -446,6 +513,11 @@ const simulateApproval = async (req, res) => {
     const user = await db.users.findById(targetId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Disallow simulating approval on administrative accounts
+    if (['admin', 'super_admin', 'super-admin'].includes(String(user.role).toLowerCase()) || user.email === 'admin@example.com') {
+      return res.status(403).json({ success: false, message: 'Administrative accounts cannot be modified via simulation.' });
     }
 
     // Set to kyc_pending (Admin approval completed, next is KYC)
@@ -462,7 +534,7 @@ const simulateApproval = async (req, res) => {
       userId: updatedUser._id,
       userName: updatedUser.name,
       userRole: updatedUser.role,
-      details: `Regional administrator approved application for ${updatedUser.name} (${updatedUser.role}). Next requirement: KYC document verification.`,
+      details: `Development simulation: Regional administrator approved application for ${updatedUser.name} (${updatedUser.role}). Next requirement: KYC document verification.`,
       ip: req.ip || '127.0.0.1'
     });
 
@@ -515,6 +587,13 @@ const simulateApproval = async (req, res) => {
 
 const simulateKyc = async (req, res) => {
   try {
+    if (process.env.NODE_ENV === 'production') {
+      return res.status(403).json({
+        success: false,
+        message: 'Security Violation: Simulation endpoints are strictly disabled in production mode.'
+      });
+    }
+
     const { userId } = req.body;
     const targetId = userId || req.user?.id;
 
@@ -525,6 +604,11 @@ const simulateKyc = async (req, res) => {
     const user = await db.users.findById(targetId);
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found.' });
+    }
+
+    // Disallow simulating KYC on administrative accounts
+    if (['admin', 'super_admin', 'super-admin'].includes(String(user.role).toLowerCase()) || user.email === 'admin@example.com') {
+      return res.status(403).json({ success: false, message: 'Administrative accounts cannot be modified via simulation.' });
     }
 
     // Set to active & verify KYC
@@ -541,7 +625,7 @@ const simulateKyc = async (req, res) => {
       userId: updatedUser._id,
       userName: updatedUser.name,
       userRole: updatedUser.role,
-      details: `KYC document compliance verified for ${updatedUser.name} (${updatedUser.role}). Manager account fully activated.`,
+      details: `Development simulation: KYC document compliance verified for ${updatedUser.name} (${updatedUser.role}). Manager account fully activated.`,
       ip: req.ip || '127.0.0.1'
     });
 
@@ -857,26 +941,29 @@ const changePassword = async (req, res) => {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Both current and new password are required' });
+      return res.status(400).json({ success: false, message: 'Both current and new password are required.' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    if (newPassword.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long and include an uppercase letter, lowercase letter, and number.'
+      });
     }
 
     const user = await db.users.findById(req.user.id);
     const isMatch = await bcrypt.compare(currentPassword, user.passwordHash);
     if (!isMatch) {
-      return res.status(400).json({ success: false, message: 'Current password is incorrect' });
+      return res.status(400).json({ success: false, message: 'Current password is incorrect.' });
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
     await db.users.findByIdAndUpdate(user._id, { passwordHash });
 
-    res.json({ success: true, message: 'Password updated successfully' });
+    res.json({ success: true, message: 'Password updated successfully.' });
   } catch (err) {
     console.error('Change password error:', err);
-    res.status(500).json({ success: false, message: 'Failed to change password' });
+    res.status(500).json({ success: false, message: 'Failed to change password.' });
   }
 };
 
@@ -884,18 +971,19 @@ const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ success: false, message: 'Email is required' });
+      return res.status(400).json({ success: false, message: 'Email is required.' });
     }
 
     const user = await db.users.findOne({ email: email.trim().toLowerCase() });
     if (!user) {
+      // Prevent user enumeration by returning identical generic success message
       return res.json({
         success: true,
-        message: 'If the email exists in our system, a password reset link has been dispatched.'
+        message: 'If the email address exists in our system, a password reset link has been dispatched.'
       });
     }
 
-    const resetToken = crypto.randomBytes(24).toString('hex');
+    const resetToken = crypto.randomBytes(32).toString('hex');
     const resetExpires = new Date(Date.now() + 3600000).toISOString();
 
     await db.users.findByIdAndUpdate(user._id, {
@@ -903,14 +991,19 @@ const forgotPassword = async (req, res) => {
       resetPasswordExpires: resetExpires
     });
 
-    res.json({
+    // In production, token is dispatched via email/SMS, never returned in API response
+    const responsePayload = {
       success: true,
-      message: 'Password reset link generated.',
-      demoResetToken: resetToken
-    });
+      message: 'If the email address exists in our system, a password reset link has been dispatched.'
+    };
+    if (process.env.NODE_ENV !== 'production') {
+      responsePayload.devResetNotice = 'In non-production mode, resetToken generated successfully.';
+    }
+
+    res.json(responsePayload);
   } catch (err) {
     console.error('Forgot password error:', err);
-    res.status(500).json({ success: false, message: 'Failed to process forgot password request' });
+    res.status(500).json({ success: false, message: 'Failed to process forgot password request.' });
   }
 };
 
@@ -918,23 +1011,26 @@ const resetPassword = async (req, res) => {
   try {
     const { token, newPassword } = req.body;
     if (!token || !newPassword) {
-      return res.status(400).json({ success: false, message: 'Token and new password are required' });
+      return res.status(400).json({ success: false, message: 'Token and new password are required.' });
     }
 
-    if (newPassword.length < 6) {
-      return res.status(400).json({ success: false, message: 'New password must be at least 6 characters' });
+    if (newPassword.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(newPassword)) {
+      return res.status(400).json({
+        success: false,
+        message: 'New password must be at least 8 characters long and include an uppercase letter, lowercase letter, and number.'
+      });
     }
 
     const user = await db.users.findOne({ resetPasswordToken: token });
     if (!user) {
-      return res.status(400).json({ success: false, message: 'Invalid or expired reset token' });
+      return res.status(400).json({ success: false, message: 'Invalid or expired reset token.' });
     }
 
     if (new Date(user.resetPasswordExpires) < new Date()) {
-      return res.status(400).json({ success: false, message: 'Reset token has expired' });
+      return res.status(400).json({ success: false, message: 'Reset token has expired. Please request a new link.' });
     }
 
-    const passwordHash = await bcrypt.hash(newPassword, 10);
+    const passwordHash = await bcrypt.hash(newPassword, 12);
     await db.users.findByIdAndUpdate(user._id, {
       passwordHash,
       resetPasswordToken: null,
@@ -1000,15 +1096,23 @@ const sendOtp = async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    managerOtpStore.set(rawMobile, { otp, expiresAt: Date.now() + OTP_EXPIRY_MS, userId: user._id });
-
-    console.log(`[Manager OTP] Sent to ${rawMobile}: ${otp}`);
-
-    return res.json({
-      success: true,
-      message: `OTP sent successfully to +91 ${rawMobile}. Valid for 5 minutes.`,
-      otp
+    managerOtpStore.set(rawMobile, {
+      otp,
+      attempts: 0,
+      expiresAt: Date.now() + OTP_EXPIRY_MS,
+      userId: user._id
     });
+
+    const responsePayload = {
+      success: true,
+      message: `OTP sent successfully to +91 ${rawMobile}. Valid for 5 minutes.`
+    };
+    // In production, OTP must strictly NEVER be returned in API responses
+    if (process.env.NODE_ENV !== 'production') {
+      responsePayload.otp = otp;
+    }
+
+    return res.json(responsePayload);
   } catch (err) {
     console.error('Send OTP error:', err);
     return res.status(500).json({ success: false, message: 'Failed to send OTP' });
@@ -1034,8 +1138,21 @@ const verifyOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new OTP.' });
     }
 
+    record.attempts = (record.attempts || 0) + 1;
+    if (record.attempts > 3) {
+      managerOtpStore.delete(rawMobile);
+      return res.status(429).json({
+        success: false,
+        message: 'Maximum verification attempts exceeded. Please request a new OTP.'
+      });
+    }
+
     if (record.otp !== code) {
-      return res.status(400).json({ success: false, message: 'Incorrect OTP. Please enter the valid 6-digit verification code.' });
+      const remaining = 3 - record.attempts;
+      return res.status(400).json({
+        success: false,
+        message: `Incorrect OTP. ${remaining} attempt(s) remaining.`
+      });
     }
 
     managerOtpStore.delete(rawMobile);

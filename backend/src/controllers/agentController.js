@@ -256,6 +256,26 @@ const createAgent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Agent name and mobile are required' });
     }
 
+    // Verify creating manager has authority over target agent territory
+    const candidateScope = {
+      stateId: stateId || user.stateId,
+      districtId: districtId || user.districtId,
+      divisionId: divisionId || user.divisionId,
+      pincodeId: pincodeId || user.pincodeId,
+      territory: {
+        stateId: stateId || user.stateId,
+        districtId: districtId || user.districtId,
+        divisionId: divisionId || user.divisionId,
+        pincodeId: pincodeId || user.pincodeId
+      }
+    };
+    if (!isAgentInScope(candidateScope, user)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: You cannot onboard agents outside your assigned territory scope.'
+      });
+    }
+
     const newAgent = await db.agents.insertOne({
       name: name.trim(),
       mobile: mobile.trim(),

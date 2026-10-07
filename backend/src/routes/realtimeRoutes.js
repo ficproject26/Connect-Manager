@@ -17,17 +17,21 @@ router.get('/events', (req, res) => {
     const since = parseInt(req.query.since || '0', 10);
     const token = req.query.token || (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null);
 
+    if (!token) {
+      return res.status(401).json({ success: false, message: 'Authentication required to receive realtime events' });
+    }
+
     let user = null;
-    if (token) {
-      try {
-        user = jwt.verify(token, JWT_SECRET);
-      } catch (e) {}
+    try {
+      user = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+    } catch (e) {
+      return res.status(401).json({ success: false, message: 'Invalid or expired authentication token' });
     }
 
     const events = eventSubscriber.getRecentEvents(since);
 
-    // Territory filtering if authenticated
-    const filteredEvents = user ? events.filter(ev => {
+    // Strict territory filtering according to authenticated manager identity
+    const filteredEvents = events.filter(ev => {
       const role = user.role || '';
       if (['admin', 'super-admin', 'super_admin'].includes(role) || user.email === 'admin@example.com') return true;
       if (!ev.scope) return true;
@@ -36,7 +40,7 @@ router.get('/events', (req, res) => {
       if (user.divisionId && ev.scope.divisionId && String(user.divisionId) !== String(ev.scope.divisionId)) return false;
       if (user.pincodeId && ev.scope.pincodeId && String(user.pincodeId) !== String(ev.scope.pincodeId)) return false;
       return true;
-    }) : events;
+    });
 
     res.json({
       success: true,

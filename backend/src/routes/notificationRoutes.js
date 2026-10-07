@@ -46,7 +46,7 @@ router.get('/stream', (req, res) => {
   }
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -97,13 +97,17 @@ router.get('/', async (req, res) => {
   }
 });
 
-// PATCH /api/notifications/:id/read - Mark single as read in database
+// PATCH /api/notifications/:id/read - Mark single as read with IDOR ownership check
 router.patch('/:id/read', async (req, res) => {
   try {
     const notif = await db.notifications.findById(req.params.id);
-    if (notif) {
-      await db.notifications.findByIdAndUpdate(req.params.id, { $set: { isRead: true } });
+    if (!notif) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
     }
+    if (notif.userId && String(notif.userId) !== String(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: Cannot modify notification belonging to another user' });
+    }
+    await db.notifications.findByIdAndUpdate(req.params.id, { $set: { isRead: true } });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to mark notification read' });
@@ -125,9 +129,16 @@ router.post('/mark-all-read', async (req, res) => {
   }
 });
 
-// DELETE /api/notifications/:id - Delete single notification from database
+// DELETE /api/notifications/:id - Delete single notification with IDOR ownership check
 router.delete('/:id', async (req, res) => {
   try {
+    const notif = await db.notifications.findById(req.params.id);
+    if (!notif) {
+      return res.status(404).json({ success: false, message: 'Notification not found' });
+    }
+    if (notif.userId && String(notif.userId) !== String(req.user.id)) {
+      return res.status(403).json({ success: false, message: 'Access denied: Cannot delete notification belonging to another user' });
+    }
     await db.notifications.deleteOne({ _id: req.params.id });
     res.json({ success: true });
   } catch (err) {
