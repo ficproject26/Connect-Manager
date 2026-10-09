@@ -203,7 +203,7 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '16px',
+      padding: '10px',
       background: 'rgba(15, 23, 42, 0.65)',
       backdropFilter: 'blur(6px)'
     }}>
@@ -332,7 +332,7 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
                   <span>Shop Details &amp; Business Category <span style={{ color: '#ef4444' }}>*</span></span>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 12 }}>
+                <div className="responsive-grid-2" style={{ gap: 12 }}>
                   {/* Shop Name */}
                   <div>
                     <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#475569', marginBottom: 6 }}>

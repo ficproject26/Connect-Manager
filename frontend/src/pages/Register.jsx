@@ -610,7 +610,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
       width: '100%'
     }}>
       {/* 1. Full-Width Top Header Bar */}
-      <header style={{
+      <header className="register-header" style={{
         background: '#ffffff',
         borderBottom: '1px solid var(--border-normal)',
         padding: '12px 32px',
@@ -654,7 +654,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
       </header>
 
       {/* 2. Full-Width Window-Fit Body (Horizontally Aligned) */}
-      <main style={{
+      <main className="register-main" style={{
         flex: 1,
         width: '100%',
         padding: '20px 32px 32px',
@@ -792,11 +792,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                 </span>
               </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(4, 1fr)',
-                gap: '12px'
-              }}>
+              <div className="register-role-grid">
                 {ROLES.map((r) => {
                   const IconComponent = r.icon;
                   const isSelected = role === r.key;
@@ -863,12 +859,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
             </div>
 
             {/* Steps 2 & 4: Balanced Side-by-Side 2-Column Grid (Horizontally Aligned) */}
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: 'minmax(420px, 1.15fr) minmax(380px, 1fr)',
-              gap: '20px',
-              alignItems: 'stretch'
-            }}>
+            <div className="register-columns-grid">
               {/* Left Column Card: 2. Personal Information & Credentials */}
               <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
                 <div className="card-header" style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -961,7 +952,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   </div>
 
                   {/* Email & Mobile (Horizontally Aligned in 2 Columns) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="responsive-grid-2">
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Official Email *</label>
                       <div style={{ position: 'relative' }}>
@@ -997,7 +988,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   </div>
 
                   {/* Date of Birth & Gender (Horizontally Aligned in 2 Columns) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="responsive-grid-2">
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Date of Birth (DOB) *</label>
                       <div style={{ position: 'relative' }}>
@@ -1048,7 +1039,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   </div>
 
                   {/* Passwords (Horizontally Aligned in 2 Columns) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="responsive-grid-2">
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Password *</label>
                       <div style={{ position: 'relative' }}>
@@ -1176,7 +1167,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
                 <div className="card-body" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
                   {/* Row 1: State & District (Horizontally Aligned in 2 Columns) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="responsive-grid-2">
                     {/* State */}
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
@@ -1250,7 +1241,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   </div>
 
                   {/* Row 2: Division & PIN Code (Horizontally Aligned in 2 Columns) */}
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div className="responsive-grid-2">
                     {/* Division */}
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
@@ -1409,11 +1400,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
               </div>
 
               <div className="card-body" style={{ padding: '16px 18px' }}>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: '14px'
-                }}>
+                <div className="responsive-grid-4">
                   {/* 1. Aadhaar Card Upload */}
                   <div style={{
                     border: aadharFile ? '1.5px solid #10b981' : '1px solid var(--border-normal)',
@@ -1793,12 +1780,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
         {/* ----------------- STAGE 1: UNDER REVIEW & SIMULATE ADMIN APPROVAL ----------------- */}
         {flowState === 'under_review' && registeredUser && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(380px, 1.15fr) minmax(380px, 1fr)',
-            gap: '20px',
-            alignItems: 'stretch'
-          }}>
+          <div className="register-columns-grid">
             {/* Left Card: Registered Application Details */}
             <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
               <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -1814,7 +1796,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
               </div>
 
               <div className="card-body" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.84rem' }}>
+                <div className="responsive-grid-2" style={{ fontSize: '0.84rem' }}>
                   <div>
                     <span style={{ color: '#64748b', fontSize: '0.74rem' }}>Full Name:</span>
                     <div style={{ fontWeight: 700, color: '#0f172a' }}>{registeredUser.name}</div>
@@ -1860,7 +1842,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
                     Uploaded KYC Verification Files
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.76rem' }}>
+                  <div className="responsive-grid-2" style={{ gap: '8px', fontSize: '0.76rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155' }}>
                       <FileCheck size={13} style={{ color: '#6366f1' }} /> Aadhaar Card
                     </div>
@@ -1967,12 +1949,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
         {/* ----------------- STAGE 2: KYC PENDING & SIMULATE KYC VERIFICATION ----------------- */}
         {flowState === 'kyc_pending' && registeredUser && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(380px, 1.15fr) minmax(380px, 1fr)',
-            gap: '20px',
-            alignItems: 'stretch'
-          }}>
+          <div className="register-columns-grid">
             {/* Left Card: Registered Application Details */}
             <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
               <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
@@ -1988,7 +1965,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
               </div>
 
               <div className="card-body" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', fontSize: '0.84rem' }}>
+                <div className="responsive-grid-2" style={{ gap: '12px', fontSize: '0.84rem' }}>
                   <div>
                     <span style={{ color: '#64748b', fontSize: '0.74rem' }}>Full Name:</span>
                     <div style={{ fontWeight: 700, color: '#0f172a' }}>{registeredUser.name}</div>
@@ -2029,7 +2006,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   <div style={{ fontSize: '0.72rem', color: '#0369a1', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
                     KYC Documents Awaiting Compliance Clearance
                   </div>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.76rem' }}>
+                  <div className="responsive-grid-2" style={{ gap: '8px', fontSize: '0.76rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0284c7', fontWeight: 600 }}>
                       <FileText size={13} /> Aadhaar Card (Pending)
                     </div>
@@ -2216,12 +2193,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
         {/* ----------------- STAGE 3: APPROVED, KYC VERIFIED & ACTIVATED ----------------- */}
         {flowState === 'approved' && registeredUser && (
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'minmax(380px, 1fr) minmax(380px, 1fr)',
-            gap: '20px',
-            alignItems: 'stretch'
-          }}>
+          <div className="register-columns-grid">
             {/* Left Card: Congratulations & Authorized Profile */}
             <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)', textAlign: 'center', padding: '24px' }}>
               <div style={{

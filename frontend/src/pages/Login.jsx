@@ -168,7 +168,7 @@ const Login = ({ onNavigate }) => {
       />
 
       {/* 1. Sleek Top Header Bar */}
-      <header style={{
+      <header className="login-header" style={{
         background: 'rgba(255, 255, 255, 0.94)',
         backdropFilter: 'blur(10px)',
         borderBottom: '1px solid rgba(226, 232, 240, 0.85)',
@@ -221,7 +221,7 @@ const Login = ({ onNavigate }) => {
         </div>
 
         {/* Live Date/Time Capsule */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div className="login-header-right" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
             display: 'flex',
             alignItems: 'center',
@@ -245,7 +245,7 @@ const Login = ({ onNavigate }) => {
       </header>
 
       {/* 2. Vertically Centered Main Body */}
-      <main style={{
+      <main className="login-main" style={{
         flex: 1,
         width: '100%',
         maxWidth: '490px',
@@ -311,7 +311,7 @@ const Login = ({ onNavigate }) => {
         </div>
 
         {/* Primary Manager Sign-In Card with Asset Header Banner */}
-        <div style={{
+        <div className="login-card" style={{
           background: '#ffffff',
           borderRadius: '16px',
           border: '1px solid rgba(226, 232, 240, 0.9)',
@@ -391,7 +391,7 @@ const Login = ({ onNavigate }) => {
             )}
 
             {/* Mode Selector Tabs */}
-            <div style={{
+            <div className="login-tabs-wrap" style={{
               display: 'flex',
               background: '#f1f5f9',
               borderRadius: '10px',

@@ -232,12 +232,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
       </div>
 
       {/* ─── 2. Top Summary KPI Stats Strip ─── */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-        gap: '16px',
-        marginBottom: '22px'
-      }}>
+      <div className="tasks-kpi-grid" style={{ marginBottom: '22px' }}>
         {/* Card 1: Operational Status */}
         <div style={{
           background: '#ffffff',
@@ -350,7 +345,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
       {/* ─── 3. Main Balanced Multi-Column Content Grid ─── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 320px), 1fr))',
         gap: '20px',
         alignItems: 'start'
       }}>
@@ -364,7 +359,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               </h3>
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px', fontSize: '0.86rem' }}>
+              <div className="responsive-grid-2" style={{ gap: '14px', fontSize: '0.86rem' }}>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Business Category</span>
                   <strong style={{ color: 'var(--text-main)' }}>{vendor.category || 'General'}</strong>
@@ -793,7 +788,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '20px'
+          padding: '10px'
         }}>
           <div style={{ position: 'relative', maxWidth: '88vw', maxHeight: '88vh' }}>
             <button

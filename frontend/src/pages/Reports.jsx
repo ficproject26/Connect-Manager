@@ -504,12 +504,7 @@ const Reports = ({ onNavigate }) => {
         </div>
 
           {/* KPI Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-            gap: 16,
-            marginBottom: 20
-          }}>
+          <div className="tasks-kpi-grid" style={{ marginBottom: 20 }}>
             <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #3b82f6', background: '#ffffff', borderRadius: 12, border: '1px solid var(--border)' }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {viewScope === 'state_managers' ? 'State Manager Visits' : viewScope === 'district_managers' ? 'District Manager Visits' : viewScope === 'division_managers' ? 'Division Manager Visits' : viewScope === 'pincode_managers' ? 'Pincode Manager Visits' : viewScope === 'self' ? 'My Direct Visits' : 'Total Visits Recorded'}
@@ -1016,7 +1011,7 @@ const Reports = ({ onNavigate }) => {
               </span>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: 12 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 170px), 1fr))', gap: 12 }}>
               {/* Search */}
               <div style={{ position: 'relative' }}>
                 <Search size={14} style={{ position: 'absolute', left: 10, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
@@ -1926,7 +1921,7 @@ const Reports = ({ onNavigate }) => {
               </div>
 
               {/* Grid of Visit & Manager Details */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: 14 }}>
+              <div className="responsive-grid-2" style={{ gap: 14 }}>
                 <div style={{ padding: '14px 16px', background: '#ffffff', borderRadius: '12px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: 5 }}>
                     <User size={13} style={{ color: '#0284c7' }} /> Visiting Field Officer
@@ -1987,7 +1982,7 @@ const Reports = ({ onNavigate }) => {
                     </span>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 12 }}>
+                  <div className="responsive-grid-2" style={{ gap: 12 }}>
                     <div style={{
                       padding: '12px 14px',
                       borderRadius: '10px',
@@ -2041,7 +2036,7 @@ const Reports = ({ onNavigate }) => {
 
                   <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))',
                     gap: 10,
                     padding: '12px',
                     background: '#f8fafc',

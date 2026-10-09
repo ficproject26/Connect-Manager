@@ -143,6 +143,7 @@ function AppInner() {
   const [fieldVisitModalOpen, setFieldVisitModalOpen] = useState(false);
   const [pendingFieldVisitId, setPendingFieldVisitId] = useState(null);
   const [pendingPrefill, setPendingPrefill] = useState({});
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   const openOnboard = () => {
     setFieldVisitModalOpen(true);
@@ -161,6 +162,7 @@ function AppInner() {
   const navigate = (page, params = {}) => {
     setNavParams(params);
     setCurrentPage(page);
+    setMobileSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -210,11 +212,20 @@ function AppInner() {
   return (
     <div className="app-shell">
       {/* Role-Aware Sidebar */}
-      <Sidebar currentPage={currentPage} onNavigate={navigate} onOpenOnboard={openOnboard} />
+      <Sidebar 
+        currentPage={currentPage} 
+        onNavigate={navigate} 
+        onOpenOnboard={openOnboard} 
+        mobileOpen={mobileSidebarOpen} 
+        onCloseMobile={() => setMobileSidebarOpen(false)} 
+      />
 
       {/* Main Content Area */}
       <div className="main-content-wrapper">
-        <Navbar onNavigate={navigate} />
+        <Navbar 
+          onNavigate={navigate} 
+          onToggleMobileSidebar={() => setMobileSidebarOpen(prev => !prev)} 
+        />
 
         <main className="content-body">
           {currentPage === 'dashboard' && <Dashboard onNavigate={navigate} />}
@@ -244,7 +255,7 @@ function AppInner() {
             <div style={{
               position: 'fixed', inset: 0, zIndex: 9999,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              padding: '16px'
+              padding: '10px'
             }}>
               <div
                 onClick={() => setOnboardModalOpen(false)}
@@ -252,7 +263,7 @@ function AppInner() {
               />
               <div style={{
                 position: 'relative', width: '100%', maxWidth: 680,
-                maxHeight: 'min(90vh, 820px)',
+                maxHeight: 'min(94vh, 840px)',
                 background: 'var(--bg)', borderRadius: 18,
                 boxShadow: '0 24px 80px rgba(0,0,0,0.3)',
                 display: 'flex', flexDirection: 'column', overflow: 'hidden'

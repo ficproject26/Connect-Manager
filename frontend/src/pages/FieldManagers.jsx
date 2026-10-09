@@ -543,7 +543,7 @@ const FieldManagers = () => {
         </div>
       ) : (
         /* GRID CARDS VIEW */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
           {filteredManagers.map((m) => {
             const avatarBg = getAvatarColor(m.name);
             return (
@@ -660,7 +660,7 @@ const FieldManagers = () => {
           alignItems: 'center',
           justifyContent: 'center',
           zIndex: 9999,
-          padding: '16px',
+          padding: '10px',
           backdropFilter: 'blur(2px)'
         }}>
           <div style={{
@@ -668,6 +668,9 @@ const FieldManagers = () => {
             borderRadius: '12px',
             width: '100%',
             maxWidth: '500px',
+            maxHeight: 'min(92vh, 800px)',
+            display: 'flex',
+            flexDirection: 'column',
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
             overflow: 'hidden',
             border: '1px solid #e2e8f0'
@@ -708,7 +711,7 @@ const FieldManagers = () => {
             </div>
 
             {/* Modal Body */}
-            <div style={{ padding: '20px' }}>
+            <div style={{ padding: '20px', overflowY: 'auto', flex: 1 }}>
               {/* Profile Card Header */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
                 <div style={{
@@ -751,7 +754,7 @@ const FieldManagers = () => {
                   Assigned Territorial Jurisdiction
                 </div>
                 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '0.82rem' }}>
+                <div className="responsive-grid-2" style={{ gap: '10px', fontSize: '0.82rem' }}>
                   <div>
                     <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>State:</span>
                     <strong>{selectedManager.stateName || selectedManager.state || '-'}</strong>

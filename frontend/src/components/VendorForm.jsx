@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { locationService, uploadService } from '../services/api';
 import {
@@ -140,7 +140,7 @@ const RSection = ({ title, icon: Icon, children }) => (
       <Icon size={13} color="var(--primary)"/>
       <span style={{ fontSize:12,fontWeight:700,color:'var(--text-primary)' }}>{title}</span>
     </div>
-    <div style={{ padding:'10px 14px',display:'grid',gridTemplateColumns:'1fr 1fr',gap:'6px 16px' }}>{children}</div>
+    <div className="responsive-grid-2" style={{ padding:'10px 14px', gap:'6px 16px' }}>{children}</div>
   </div>
 );
 
@@ -364,7 +364,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const dashedBox={display:'flex',alignItems:'center',gap:12,padding:'10px 14px',border:'2px dashed var(--border)',borderRadius:'var(--radius-sm)',cursor:'pointer',transition:'border-color 0.2s'};
   const hb={onMouseEnter:e=>e.currentTarget.style.borderColor='var(--primary)',onMouseLeave:e=>e.currentTarget.style.borderColor='var(--border)'};
   const step1=(
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div className="responsive-grid-2" style={{ gap: 16 }}>
       <div style={{gridColumn:'1/-1'}}><Field label="Business / Shop Name" required error={errors.businessName}><input type="text" name="businessName" value={formData.businessName} onChange={onChange} placeholder="e.g. Spice Route Bistro" className="form-input" style={inp(!!errors.businessName)}/></Field></div>
       <div style={{gridColumn:'1/-1'}}>
         <label className="form-label">Shop / Brand Logo</label>
@@ -593,7 +593,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           <span style={{fontWeight:700,fontSize:13}}>Location & Field Jurisdiction</span>
           <span style={{fontSize:11,padding:'2px 10px',borderRadius:20,background:'#ede9fe',color:'var(--primary)',fontWeight:600}}>Constrained to your Scope</span>
         </div>
-        <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:12}}>
+        <div className="responsive-grid-4" style={{ gap: 12 }}>
           <div className="form-group" style={{marginBottom:0}}>
             <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>State {isStateLocked&&<Lock size={11} color="var(--text-muted)"/>}</label>
             <input type="text" disabled className="form-input" value={user?.scope?.stateName||user?.state||'Tamil Nadu'} style={{...inp(),opacity:0.7}}/>
@@ -625,7 +625,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     </div>
   );
   const step2=(
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div className="responsive-grid-2" style={{ gap: 16 }}>
       <div style={{gridColumn:'1/-1'}}><Field label="Owner / Contact Person Name" required error={errors.name}><input type="text" name="name" value={formData.name} onChange={onChange} placeholder="Full legal name" className="form-input" style={inp(!!errors.name)}/></Field></div>
       <Field label="Alternate Phone (Optional)" error={errors.alternatePhone}><input type="tel" name="alternatePhone" value={formData.alternatePhone||''} maxLength={10} onChange={e=>upd('alternatePhone',e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="Alternate number" className="form-input" style={inp(!!errors.alternatePhone)}/></Field>
       <Field label="Agent Name (Optional)"><input type="text" name="agentName" value={formData.agentName||''} onChange={onChange} placeholder="Agent name" className="form-input" style={inp()}/></Field>
@@ -638,7 +638,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   );
 
   const step3=(
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div className="responsive-grid-2" style={{ gap: 16 }}>
       <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10))} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
       <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',e.target.value.replace(/\D/g,'').slice(0,12))} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
       <Field label="GST Number"><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} placeholder="e.g. 29ABCDE1234F1Z5" className="form-input" style={{...inp(),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
@@ -667,7 +667,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   );
 
   const step4=(
-    <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:16}}>
+    <div className="responsive-grid-2" style={{ gap: 16 }}>
       <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={onChange} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
       <Field label="Bank Name" error={errors.bankName}><input type="text" name="bankName" value={formData.bankName} onChange={onChange} placeholder="e.g. HDFC Bank" className="form-input" style={inp(!!errors.bankName)}/></Field>
       <Field label="Bank Branch" error={errors.bankBranch}><input type="text" name="bankBranch" value={formData.bankBranch||''} onChange={onChange} placeholder="Branch name" className="form-input" style={inp(!!errors.bankBranch)}/></Field>

@@ -143,7 +143,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
       <div className="card" style={{ marginBottom: '24px', padding: '18px 20px' }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
           gap: '14px',
           alignItems: 'center'
         }}>

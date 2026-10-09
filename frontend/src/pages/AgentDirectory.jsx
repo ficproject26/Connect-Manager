@@ -325,12 +325,7 @@ const AgentDirectory = ({ onNavigate }) => {
       </div>
 
       {/* 2. KPI Summary Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
-      }}>
+      <div className="tasks-kpi-grid">
         <div style={{
           background: '#ffffff',
           borderRadius: '14px',
@@ -534,7 +529,7 @@ const AgentDirectory = ({ onNavigate }) => {
           overflow: 'hidden'
         }}>
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+            <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Agent Profile</th>
@@ -689,7 +684,7 @@ const AgentDirectory = ({ onNavigate }) => {
         /* Card View */
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
           gap: '16px'
         }}>
           {filteredAgents.map(agent => (
@@ -755,7 +750,7 @@ const AgentDirectory = ({ onNavigate }) => {
                   </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.8rem' }}>
+                <div className="responsive-grid-2" style={{ gap: '8px', fontSize: '0.8rem' }}>
                   <div style={{ background: '#fdf4ff', border: '1px solid #fae8ff', padding: '8px 10px', borderRadius: '8px' }}>
                     <div style={{ fontSize: '10px', color: '#86198f', fontWeight: 700 }}>REFERRALS</div>
                     <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#701a75', marginTop: '2px' }}>{agent.totalReferrals || 0}</div>
@@ -812,7 +807,7 @@ const AgentDirectory = ({ onNavigate }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px'
+          padding: '10px'
         }}>
           <div 
             onClick={() => setSelectedAgent(null)}
@@ -823,10 +818,13 @@ const AgentDirectory = ({ onNavigate }) => {
             position: 'relative',
             width: '100%',
             maxWidth: '540px',
+            maxHeight: 'min(92vh, 800px)',
             background: '#ffffff',
             borderRadius: '16px',
             boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
-            overflow: 'hidden'
+            overflow: 'hidden',
+            display: 'flex',
+            flexDirection: 'column'
           }}>
             <div style={{
               display: 'flex',
@@ -867,10 +865,8 @@ const AgentDirectory = ({ onNavigate }) => {
               </button>
             </div>
 
-            <div style={{ padding: '20px 22px' }}>
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
+            <div style={{ padding: '16px 18px', overflowY: 'auto', flex: 1 }}>
+              <div className="responsive-grid-2" style={{
                 gap: '12px',
                 background: '#f8fafc',
                 padding: '14px',
@@ -915,9 +911,7 @@ const AgentDirectory = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
+              <div className="responsive-grid-3" style={{
                 gap: '10px',
                 marginBottom: '16px'
               }}>

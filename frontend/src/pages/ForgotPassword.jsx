@@ -38,14 +38,7 @@ const ForgotPassword = ({ onNavigate }) => {
       width: '100%'
     }}>
       {/* 1. Clean Top Header Bar */}
-      <header style={{
-        background: '#ffffff',
-        borderBottom: '1px solid var(--border-normal)',
-        padding: '12px 32px',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between'
-      }}>
+      <header className="login-header">
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img 
             src="/assets/forge_badge.png" 
@@ -80,13 +73,7 @@ const ForgotPassword = ({ onNavigate }) => {
       </header>
 
       {/* 2. Full-Screen Window-Fit Body */}
-      <main style={{
-        flex: 1,
-        width: '100%',
-        maxWidth: '1280px',
-        margin: '0 auto',
-        padding: '28px 24px 36px'
-      }}>
+      <main className="login-main">
         {/* Panoramic Hero Welcome Card */}
         <section aria-label="Password recovery banner" className="hero-welcome-card" style={{ marginBottom: '16px' }}>
           <div 
@@ -119,7 +106,7 @@ const ForgotPassword = ({ onNavigate }) => {
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+            <div className="hero-right-col" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
               <div className="hero-quote-box">
                 “ Connecting Businesses <br />Creating Opportunities ”
               </div>
@@ -128,12 +115,7 @@ const ForgotPassword = ({ onNavigate }) => {
         </section>
 
         {/* Main Recovery Card Grid */}
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: 'minmax(320px, 1fr) minmax(360px, 500px)',
-          gap: '20px',
-          alignItems: 'start'
-        }}>
+        <div className="forgot-pass-grid">
           {/* Left Column: Security Instructions */}
           <div className="card" style={{ margin: 0, padding: '22px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '16px' }}>

@@ -346,7 +346,7 @@ const Leaderboard = ({ onNavigate }) => {
           key={tierFilter}
           style={{ 
             display: 'grid', 
-            gridTemplateColumns: top3.length === 1 ? '1fr' : top3.length === 2 ? 'repeat(auto-fit, minmax(280px, 1fr))' : 'repeat(auto-fit, minmax(280px, 1fr))', 
+            gridTemplateColumns: top3.length === 1 ? '1fr' : 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))', 
             gap: '16px', 
             marginBottom: '22px' 
           }}
@@ -376,7 +376,7 @@ const Leaderboard = ({ onNavigate }) => {
       <div className="card" style={{ marginBottom: '20px', padding: '14px 18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           {/* Level Filter Tabs */}
-          <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px', maxWidth: '100%' }}>
             {['All', 'state_manager', 'district_manager', 'division_manager', 'pincode_manager'].map((t) => (
               <button
                 key={t}
@@ -399,7 +399,7 @@ const Leaderboard = ({ onNavigate }) => {
           </div>
 
           {/* Search Box */}
-          <div style={{ position: 'relative', minWidth: '240px', maxWidth: '320px', flex: 1 }}>
+          <div style={{ position: 'relative', minWidth: 'min(100%, 240px)', maxWidth: '320px', flex: 1 }}>
             <input
               type="text"
               placeholder="Search manager or territory..."

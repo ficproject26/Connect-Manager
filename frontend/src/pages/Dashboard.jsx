@@ -306,7 +306,7 @@ const Dashboard = ({ onNavigate }) => {
             </p>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+          <div className="hero-right-col" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             <div className="hero-quote-box">
               “ Connecting Businesses <br />Creating Opportunities ”
             </div>
@@ -981,7 +981,7 @@ const Dashboard = ({ onNavigate }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px'
+          padding: '10px'
         }}>
           <div
             onClick={() => setIsActivitiesModalOpen(false)}

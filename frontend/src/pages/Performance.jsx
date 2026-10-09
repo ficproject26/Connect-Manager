@@ -122,7 +122,7 @@ const Performance = () => {
             </div>
             <div className="card-body">
               {breakdowns.length > 0 ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))', gap: '16px' }}>
                   {breakdowns.map((b, idx) => {
                     const name = b.districtName || b.divisionName || (b.pincodeCode ? `Pincode ${b.pincodeCode}` : `Cluster ${idx + 1}`);
                     const rate = b.totalVendors > 0 ? Math.round((b.activeVendors / b.totalVendors) * 100) : 0;

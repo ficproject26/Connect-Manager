@@ -627,12 +627,7 @@ const Tasks = ({ onNavigate }) => {
       </div>
 
       {/* 2. KPI Summary Cards */}
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
-        gap: '16px',
-        marginBottom: '24px'
-      }}>
+      <div className="tasks-kpi-grid">
         {/* Total */}
         <div style={{
           background: '#ffffff',
@@ -871,8 +866,8 @@ const Tasks = ({ onNavigate }) => {
         boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
         overflow: 'hidden'
       }}>
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
+        <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+          <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Task ID & Summary</th>
@@ -1251,7 +1246,7 @@ const Tasks = ({ onNavigate }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px'
+          padding: '10px'
         }}>
           <div 
             onClick={() => setSelectedTask(null)}
@@ -1262,7 +1257,7 @@ const Tasks = ({ onNavigate }) => {
             position: 'relative',
             width: '100%',
             maxWidth: '680px',
-            maxHeight: '90vh',
+            maxHeight: 'min(92vh, 850px)',
             background: '#ffffff',
             borderRadius: '18px',
             boxShadow: '0 25px 60px rgba(0,0,0,0.28)',
@@ -1405,7 +1400,7 @@ const Tasks = ({ onNavigate }) => {
                 </div>
 
                 {/* Details Grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', fontSize: '0.78rem' }}>
+                <div className="responsive-grid-2" style={{ gap: '10px', fontSize: '0.78rem' }}>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>State / Jurisdiction</span>
                     <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.state || selectedTask.raw?.state, 'Tamil Nadu')}</strong>
@@ -2033,7 +2028,7 @@ const Tasks = ({ onNavigate }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px'
+          padding: '10px'
         }}>
           <div 
             onClick={() => !rejectLoading && setRejectModalTask(null)}
@@ -2179,7 +2174,7 @@ const Tasks = ({ onNavigate }) => {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '16px'
+          padding: '10px'
         }}>
           <div 
             onClick={() => !completionLoading && setCompletionModalTask(null)}
@@ -2189,7 +2184,7 @@ const Tasks = ({ onNavigate }) => {
             position: 'relative',
             width: '100%',
             maxWidth: '580px',
-            maxHeight: '90vh',
+            maxHeight: 'min(92vh, 850px)',
             background: '#ffffff',
             borderRadius: '16px',
             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',

@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings } from 'lucide-react';
+import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings, Menu } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
 
 import { useRealtime } from '../realtime';
 
-const Navbar = ({ onNavigate }) => {
+const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,21 +76,34 @@ const Navbar = ({ onNavigate }) => {
 
   return (
     <header className="top-navbar">
-      {/* 1. Global Search Pill */}
-      <div className="nav-search-box">
-        <Search size={16} className="nav-search-icon" />
-        <input
-          type="text"
-          placeholder="Search managers, vendors, shops, pincodes, tasks..."
-          className="nav-search-input"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && searchQuery.trim() && onNavigate) {
-              onNavigate('vendors', { search: searchQuery.trim() });
-            }
-          }}
-        />
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+        {/* Mobile Sidebar Hamburger Toggle */}
+        <button
+          type="button"
+          className="mobile-menu-btn"
+          onClick={onToggleMobileSidebar}
+          title="Open navigation menu"
+          aria-label="Toggle navigation menu"
+        >
+          <Menu size={18} />
+        </button>
+
+        {/* 1. Global Search Pill */}
+        <div className="nav-search-box">
+          <Search size={16} className="nav-search-icon" />
+          <input
+            type="text"
+            placeholder="Search managers, vendors, shops, pincodes, tasks..."
+            className="nav-search-input"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && searchQuery.trim() && onNavigate) {
+                onNavigate('vendors', { search: searchQuery.trim() });
+              }
+            }}
+          />
+        </div>
       </div>
 
       {/* 2. Top Nav Actions */}

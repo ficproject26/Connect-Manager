@@ -323,7 +323,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
               </h3>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+            <div className="responsive-grid-2" style={{ gap: '12px' }}>
               {/* Shop Name */}
               <div>
                 <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: 5 }}>
