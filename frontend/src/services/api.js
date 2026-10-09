@@ -269,14 +269,13 @@ export function scopeManagersForUser(allRawManagers, currentUser) {
   };
 
   const matchPincode = (m) => {
+    if (isGlobalAdmin) return true;
     if (!matchState(m)) return false;
-    if (userLevel <= 3 || isGlobalAdmin) return true;
     const mPincodeId = norm(m.pincodeId || m.assignedPincodeId);
     const mPin = norm(m.pincodeCode || m.pincode || m.assignedPincode);
-    if (userPincodeId && mPincodeId && userPincodeId === mPincodeId) return true;
     if (userPincode && mPin && userPincode === mPin) return true;
-    // Fallback: If peer has no pincode assigned but is in same district/division
-    return matchDistrict(m);
+    if (userPincodeId && mPincodeId && userPincodeId === mPincodeId) return true;
+    return false;
   };
 
   const formatRoleTitle = (role) => {
@@ -337,26 +336,14 @@ export function scopeManagersForUser(allRawManagers, currentUser) {
       }
     } else if (mLevel > userLevel) {
       let isSubInScope = false;
-      if (userLevel === 1) isSubInScope = matchState(raw);
-      else if (userLevel === 2) isSubInScope = matchDistrict(raw);
-      else if (userLevel === 3) isSubInScope = matchDivision(raw);
+      if (userLevel === 1) isSubInScope = [2, 3, 4].includes(mLevel) && matchState(raw);
+      else if (userLevel === 2) isSubInScope = [3, 4].includes(mLevel) && matchDistrict(raw);
+      else if (userLevel === 3) isSubInScope = mLevel === 4 && matchDivision(raw);
       else if (isGlobalAdmin) isSubInScope = true;
 
       if (isSubInScope) {
         enhancedManager.relation = 'subordinate';
         enhancedManager.relationLabel = 'Under Your Scope (Subordinate)';
-        subordinates.push(enhancedManager);
-      }
-    } else if (userLevel === 4 && mLevel < userLevel) {
-      // For Pincode Manager: Managers within the assigned Pincode hierarchy branch (Division, District, State)
-      let isHierarchyInScope = false;
-      if (mLevel === 1) isHierarchyInScope = matchState(raw);
-      else if (mLevel === 2) isHierarchyInScope = matchDistrict(raw);
-      else if (mLevel === 3) isHierarchyInScope = matchDivision(raw);
-
-      if (isHierarchyInScope) {
-        enhancedManager.relation = 'subordinate';
-        enhancedManager.relationLabel = 'Hierarchy Branch Manager';
         subordinates.push(enhancedManager);
       }
     }
@@ -442,22 +429,37 @@ export function scopeAgentsForUser(rawAgents, currentUser) {
     };
 
     const matchPincode = () => {
+      if (!matchState()) return false;
       if (mPincodeId && aPincodeId && mPincodeId === aPincodeId) return true;
       if (mPincode && aPincode && mPincode === aPincode) return true;
       return false;
     };
 
-    if (mLevel === 4 || role.includes('pincode')) {
-      return matchPincode();
-    }
-    if (mLevel === 3 || role.includes('division')) {
-      return matchDivision();
-    }
-    if (mLevel === 2 || role.includes('district')) {
-      return matchDistrict();
-    }
-    if (mLevel === 1 || role.includes('state')) {
+    const aRole = norm(agent.role);
+    const getAgentLevel = (r) => {
+      if (r.includes('state')) return 1;
+      if (r.includes('district')) return 2;
+      if (r.includes('division') || r.includes('divisional')) return 3;
+      if (r.includes('pincode') || r.includes('field') || r.includes('pin')) return 4;
+      return 4;
+    };
+    const aLevel = Number(agent.level) || getAgentLevel(aRole);
+
+    if (mLevel === 1) {
+      // State Manager: State, District, Division, and Pincode agents in assigned state
       return matchState();
+    } else if (mLevel === 2) {
+      // District Manager: District, Division, and Pincode agents in assigned district (no state agents)
+      if (aLevel === 1) return false;
+      return matchDistrict();
+    } else if (mLevel === 3) {
+      // Division Manager: Division and Pincode agents in assigned division (no state or district agents)
+      if (aLevel === 1 || aLevel === 2) return false;
+      return matchDivision();
+    } else if (mLevel === 4) {
+      // Pincode Manager: ONLY Pincode agents in the exact assigned pincode
+      if (aLevel !== 4) return false;
+      return matchPincode();
     }
     return false;
   }).map(agent => {
@@ -492,24 +494,37 @@ export const managerService = {
       console.warn('Standard manager directory fetch error:', e);
     }
 
-    if (data && data.success && Array.isArray(data.all) && data.all.length > 0) {
-      return data;
+    if (data && data.success) {
+      const all = Array.isArray(data.all) ? data.all : [...(data.peers || []), ...(data.subordinates || data.data || [])];
+      return {
+        ...data,
+        all,
+        data: data.data || data.subordinates || [],
+        subordinates: data.subordinates || [],
+        peers: data.peers || [],
+        count: all.length,
+        stats: data.stats || {
+          total: all.length,
+          peersCount: (data.peers || []).length,
+          subordinatesCount: (data.subordinates || []).length
+        }
+      };
     }
 
-    // If primary query needed client-side hierarchical scoping, apply using user credentials
+    // Fallback only if primary query completely failed
     try {
       const fallbackRes = await fetch(`${API_BASE}/managers`, {
         headers: getAuthHeaders()
       });
       const fallbackData = await handleResponse(fallbackRes);
-      if (fallbackData && fallbackData.success && Array.isArray(fallbackData.all) && fallbackData.all.length > 0) {
+      if (fallbackData && fallbackData.success && Array.isArray(fallbackData.all)) {
         return scopeManagersForUser(fallbackData.all, currentUser);
       }
     } catch (err) {
       console.warn('Directory scoping fetch error:', err);
     }
 
-    return data || { success: true, count: 0, all: [], peers: [], subordinates: [], data: [] };
+    return { success: true, count: 0, all: [], peers: [], subordinates: [], data: [], stats: { total: 0, peersCount: 0, subordinatesCount: 0 } };
   }
 };
 
@@ -903,12 +918,10 @@ export const agentService = {
 
     if (data && data.success) {
       const list = Array.isArray(data.agents) ? data.agents : (Array.isArray(data.data) ? data.data : []);
-      if (list.length > 0) {
-        return { ...data, agents: list, data: list, count: list.length };
-      }
+      return { ...data, agents: list, data: list, count: list.length };
     }
 
-    // If standard query needed client-side hierarchical scoping, fetch using user credentials
+    // If server query completely failed, fallback using client-side scoping
     try {
       const fallbackRes = await fetch(`${API_BASE}/operations/agents`, {
         headers: getAuthHeaders()
@@ -916,17 +929,14 @@ export const agentService = {
       const fallbackData = await handleResponse(fallbackRes);
       if (fallbackData && fallbackData.success) {
         const rawAgents = Array.isArray(fallbackData.agents) ? fallbackData.agents : (Array.isArray(fallbackData.data) ? fallbackData.data : []);
-        if (rawAgents.length > 0) {
-          const scoped = scopeAgentsForUser(rawAgents, currentUser);
-          return { success: true, count: scoped.length, agents: scoped, data: scoped };
-        }
+        const scoped = scopeAgentsForUser(rawAgents, currentUser);
+        return { success: true, count: scoped.length, agents: scoped, data: scoped };
       }
     } catch (err) {
       console.error('Agents reader fallback failed:', err);
     }
 
-    const empty = [];
-    return data ? { ...data, agents: empty, data: empty, count: 0 } : { success: true, count: 0, agents: empty, data: empty };
+    return { success: true, count: 0, agents: [], data: [], total: 0 };
   },
 
   async getAgentHierarchy() {

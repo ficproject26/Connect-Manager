@@ -82,8 +82,8 @@ class Collection {
     try {
       this._mongoCol = mongoDb.collection(this.mongoName);
       const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
-        ? { projection: { kycDocs: 0, kyc: 0 } } 
-        : {};
+        ? { projection: { kycDocs: 0, kyc: 0 }, maxTimeMS: 5000 } 
+        : { maxTimeMS: 5000 };
       const docs = await this._mongoCol.find({}, projection).toArray();
       if (docs && docs.length > 0) {
         this._write(docs);
@@ -113,6 +113,11 @@ class Collection {
           const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, projection).toArray();
           if (mgrDocs && mgrDocs.length > 0) return mgrDocs;
         }
+        // If Mongo returned 0 records but local cache has records, check local cache fallback
+        if (this.cache && this.cache.length > 0) {
+          const cacheMatches = this._filterCache(cleanQuery);
+          if (cacheMatches.length > 0) return cacheMatches;
+        }
         return docs || [];
       } catch (e) {
         console.warn(`[Manager MongoDB] find error in '${this.name}':`, e.message);
@@ -120,14 +125,40 @@ class Collection {
     }
 
     // Fallback to cache if MongoDB is unreachable
+    return this._filterCache(cleanQuery);
+  }
+
+  _matchField(item, key, val) {
+    if (val && typeof val === 'object' && val.$in) {
+      const inList = val.$in.map(v => String(v instanceof ObjectId ? v.toString() : v));
+      const itemVal = String(item[key] || '');
+      return inList.includes(itemVal);
+    }
+    if (val && typeof val === 'object' && val.$regex) {
+      const re = val.$regex instanceof RegExp ? val.$regex : new RegExp(val.$regex, val.$options || 'i');
+      return re.test(String(item[key] || ''));
+    }
+    if (val instanceof RegExp) {
+      return val.test(String(item[key] || ''));
+    }
+    return item[key] === val || String(item[key] || '') === String(val || '');
+  }
+
+  _filterCache(cleanQuery) {
     const records = this.cache || [];
+    if (!cleanQuery || Object.keys(cleanQuery).length === 0) return records;
+
     return records.filter(item => {
+      if (cleanQuery.$or && Array.isArray(cleanQuery.$or)) {
+        const matchesOr = cleanQuery.$or.some(subQuery => {
+          return Object.entries(subQuery).every(([k, v]) => this._matchField(item, k, v));
+        });
+        if (!matchesOr) return false;
+      }
+
       for (const [key, val] of Object.entries(cleanQuery)) {
-        if (val && typeof val === 'object' && val.$in) {
-          if (!val.$in.map(String).includes(String(item[key]))) return false;
-        } else if (item[key] !== val) {
-          return false;
-        }
+        if (key === '$or') continue;
+        if (!this._matchField(item, key, val)) return false;
       }
       return true;
     });
@@ -166,13 +197,13 @@ class Collection {
     }
 
     // Fallback to cache if Mongo is offline
-    const records = this.cache || [];
-    return records.find(item => {
-      for (const [key, val] of Object.entries(cleanQuery)) {
-        if (item[key] !== val) return false;
-      }
-      return true;
-    }) || null;
+    let found = this._filterCache(cleanQuery)[0];
+
+    if (!found && this.name === 'users' && db && db.managers) {
+      found = db.managers._filterCache(cleanQuery)[0];
+    }
+
+    return found || null;
   }
 
   async findById(id) {
@@ -212,7 +243,23 @@ class Collection {
     }
 
     const records = this.cache || [];
-    return records.find(item => String(item._id || item.id) === strId) || null;
+    let found = records.find(item => 
+      String(item._id || item.id || '') === strId || 
+      String(item.code || '') === strId || 
+      String(item.pincodeId || '') === strId || 
+      String(item.managerId || '') === strId
+    );
+
+    if (!found && this.name === 'users' && db.managers && db.managers.cache) {
+      found = db.managers.cache.find(item => 
+        String(item._id || item.id || '') === strId || 
+        String(item.code || '') === strId || 
+        String(item.pincodeId || '') === strId || 
+        String(item.managerId || '') === strId
+      );
+    }
+
+    return found || null;
   }
 
   async insertOne(doc) {

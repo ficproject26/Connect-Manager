@@ -29,9 +29,10 @@ import {
 } from 'lucide-react';
 
 const AgentDirectory = ({ onNavigate }) => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [agents, setAgents] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
   const [levelFilter, setLevelFilter] = useState('All');
@@ -43,11 +44,19 @@ const AgentDirectory = ({ onNavigate }) => {
   const fetchAgents = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
     try {
+      setLoading(true);
+      setError(null);
       const res = await agentService.getAgents({}, user);
-      const list = (res && res.success && (Array.isArray(res.agents) ? res.agents : (Array.isArray(res.data) ? res.data : []))) || [];
-      setAgents(list);
+      if (res && res.success) {
+        const list = (Array.isArray(res.agents) ? res.agents : (Array.isArray(res.data) ? res.data : [])) || [];
+        setAgents(list);
+      } else {
+        setError(res?.message || 'Failed to load agent directory');
+        setAgents([]);
+      }
     } catch (err) {
       console.error('Failed to load agents:', err);
+      setError(err?.message || 'Network error while loading agent directory');
       setAgents([]);
     } finally {
       setLoading(false);
@@ -56,8 +65,10 @@ const AgentDirectory = ({ onNavigate }) => {
   };
 
   useEffect(() => {
-    fetchAgents();
-  }, [user]);
+    if (!authLoading) {
+      fetchAgents();
+    }
+  }, [user, authLoading]);
 
   // Real-time synchronization for agent directory
   useRealtime('agent', () => {
@@ -520,7 +531,26 @@ const AgentDirectory = ({ onNavigate }) => {
       </div>
 
       {/* 4. Directory Content */}
-      {viewMode === 'table' ? (
+      {loading ? (
+        <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <UserCheck size={36} style={{ animation: 'pulse 1.5s infinite', margin: '0 auto 10px', color: 'var(--primary)' }} />
+          <div style={{ fontSize: '0.88rem' }}>Loading field agent directory...</div>
+        </div>
+      ) : error ? (
+        <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <Shield size={34} style={{ margin: '0 auto 10px', color: '#ef4444' }} />
+          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#b91c1c', marginBottom: '4px' }}>
+            {error}
+          </div>
+          <button
+            onClick={() => fetchAgents(true)}
+            className="btn btn-primary btn-sm"
+            style={{ marginTop: '12px', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Retry Loading
+          </button>
+        </div>
+      ) : viewMode === 'table' ? (
         <div style={{
           background: '#ffffff',
           borderRadius: '14px',
@@ -549,7 +579,13 @@ const AgentDirectory = ({ onNavigate }) => {
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <UserCheck size={36} style={{ color: '#cbd5e1' }} />
                         <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>No agents found</div>
-                        <div style={{ fontSize: '0.8rem' }}>No agents match your current search or jurisdiction filters.</div>
+                        <div style={{ fontSize: '0.8rem' }}>
+                          {search
+                            ? `No agents match "${search}".`
+                            : isPincodeManager
+                            ? `No field agents are currently registered under PIN ${resolvedPincode || 'your assigned territory'}.`
+                            : 'No agents match your current territory or filter criteria.'}
+                        </div>
                       </div>
                     </td>
                   </tr>
@@ -687,7 +723,20 @@ const AgentDirectory = ({ onNavigate }) => {
           gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))',
           gap: '16px'
         }}>
-          {filteredAgents.map(agent => (
+          {filteredAgents.length === 0 ? (
+            <div style={{ gridColumn: '1 / -1', background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <UserCheck size={36} style={{ color: '#cbd5e1', margin: '0 auto 8px' }} />
+              <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '4px' }}>No agents found</div>
+              <div style={{ fontSize: '0.8rem' }}>
+                {search
+                  ? `No agents match "${search}".`
+                  : isPincodeManager
+                  ? `No field agents are currently registered under PIN ${resolvedPincode || 'your assigned territory'}.`
+                  : 'No agents match your current territory or filter criteria.'}
+              </div>
+            </div>
+          ) : (
+            filteredAgents.map(agent => (
             <div 
               key={agent._id || agent.id}
               style={{
@@ -794,7 +843,7 @@ const AgentDirectory = ({ onNavigate }) => {
                 </button>
               </div>
             </div>
-          ))}
+          )))}
         </div>
       )}
 

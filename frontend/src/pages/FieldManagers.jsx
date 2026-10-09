@@ -23,11 +23,12 @@ import {
 } from 'lucide-react';
 
 const FieldManagers = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const [allManagers, setAllManagers] = useState([]);
   const [peersList, setPeersList] = useState([]);
   const [subordinatesList, setSubordinatesList] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'equal' | 'under'
   const [roleFilter, setRoleFilter] = useState('All');
@@ -38,6 +39,7 @@ const FieldManagers = () => {
   const fetchManagers = async () => {
     try {
       setLoading(true);
+      setError(null);
       const res = await managerService.getManagerDirectory({}, user);
       if (res && res.success) {
         const currentId = String(user?.id || user?._id || '');
@@ -46,17 +48,22 @@ const FieldManagers = () => {
         setAllManagers(all);
         setPeersList((res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId));
         setSubordinatesList((res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId));
+      } else {
+        setError(res?.message || 'Failed to load directory data');
       }
     } catch (err) {
       console.error('Failed to load manager directory:', err);
+      setError(err?.message || 'Network error while loading directory');
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchManagers();
-  }, [user]);
+    if (!authLoading) {
+      fetchManagers();
+    }
+  }, [user, authLoading]);
 
   useRealtime('manager', () => {
     fetchManagers();
@@ -430,14 +437,36 @@ const FieldManagers = () => {
           <Users size={30} style={{ animation: 'pulse 1.5s infinite', margin: '0 auto 10px', color: 'var(--primary)' }} />
           <div style={{ fontSize: '0.88rem' }}>Loading manager hierarchy directory...</div>
         </div>
+      ) : error ? (
+        <div className="card" style={{ padding: '36px', textAlign: 'center', color: 'var(--text-muted)' }}>
+          <Shield size={34} style={{ margin: '0 auto 10px', color: '#ef4444' }} />
+          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#b91c1c', marginBottom: '4px' }}>
+            {error}
+          </div>
+          <button
+            onClick={() => fetchManagers()}
+            className="btn btn-primary btn-sm"
+            style={{ marginTop: '12px', padding: '6px 16px', borderRadius: '6px', cursor: 'pointer' }}
+          >
+            Retry Loading
+          </button>
+        </div>
       ) : filteredManagers.length === 0 ? (
         <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
           <Users size={34} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '4px' }}>
-            No managers found
+            {activeTab === 'under' && (user?.role || '').toLowerCase().includes('pincode')
+              ? 'No Subordinate Managers (Level 4 Base)'
+              : 'No managers found'}
           </div>
-          <div style={{ fontSize: '0.82rem' }}>
-            {search ? `No managers matching "${search}"` : 'No managers available in this category for your assigned jurisdiction.'}
+          <div style={{ fontSize: '0.82rem', maxWidth: '500px', margin: '0 auto' }}>
+            {search
+              ? `No managers matching "${search}"`
+              : activeTab === 'under' && (user?.role || '').toLowerCase().includes('pincode')
+              ? 'As a Pincode Manager (Level 4), you operate at the direct ground level with no subordinate manager tiers beneath you. Please check the "Equal Level" tab to view peer managers within your pincode.'
+              : activeTab === 'equal'
+              ? 'No other managers at your hierarchy rank are assigned within your jurisdiction.'
+              : 'No managers available in this category for your assigned jurisdiction.'}
           </div>
         </div>
       ) : viewMode === 'table' ? (

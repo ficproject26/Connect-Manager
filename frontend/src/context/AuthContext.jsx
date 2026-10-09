@@ -8,33 +8,41 @@ const AuthContext = createContext(null);
 const normalizeUser = (u) => {
   if (!u) return null;
   const scope = u.scope || {};
+  const territory = u.territory || {};
   return {
     ...u,
     id: u.id || u._id,
     _id: u._id || u.id,
     managerId: u.managerId || u.id || u._id,
-    stateId: u.stateId || scope.stateId || u.regionId || scope.regionId || null,
-    state: u.state || u.stateName || scope.stateName || scope.regionName || null,
-    stateName: u.stateName || u.state || scope.stateName || null,
-    districtId: u.districtId || scope.districtId || null,
-    district: u.district || u.districtName || scope.districtName || null,
-    districtName: u.districtName || u.district || scope.districtName || null,
-    divisionId: u.divisionId || scope.divisionId || null,
-    division: u.division || u.divisionName || scope.divisionName || null,
-    divisionName: u.divisionName || u.division || scope.divisionName || null,
-    pincodeId: u.pincodeId || scope.pincodeId || null,
-    pincode: u.pincode || u.pincodeCode || scope.pincodeCode || null,
-    pincodeCode: u.pincodeCode || u.pincode || scope.pincodeCode || null,
+    stateId: u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || null,
+    state: u.state || u.stateName || territory.state || scope.stateName || scope.regionName || null,
+    stateName: u.stateName || u.state || territory.state || scope.stateName || null,
+    districtId: u.districtId || territory.districtId || scope.districtId || null,
+    district: u.district || u.districtName || territory.district || scope.districtName || null,
+    districtName: u.districtName || u.district || territory.district || scope.districtName || null,
+    divisionId: u.divisionId || territory.divisionId || scope.divisionId || null,
+    division: u.division || u.divisionName || territory.division || scope.divisionName || null,
+    divisionName: u.divisionName || u.division || territory.division || scope.divisionName || null,
+    pincodeId: u.pincodeId || territory.pincodeId || scope.pincodeId || null,
+    pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
+    pincodeCode: u.pincodeCode || u.pincode || territory.pincodeCode || territory.pincode || scope.pincodeCode || null,
+    territory: {
+      ...territory,
+      state: u.state || u.stateName || territory.state || scope.stateName || null,
+      district: u.district || u.districtName || territory.district || scope.districtName || null,
+      division: u.division || u.divisionName || territory.division || scope.divisionName || null,
+      pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null
+    },
     scope: {
       ...scope,
-      stateId: u.stateId || scope.stateId || u.regionId || scope.regionId || null,
-      stateName: u.state || u.stateName || scope.stateName || null,
-      districtId: u.districtId || scope.districtId || null,
-      districtName: u.district || u.districtName || scope.districtName || null,
-      divisionId: u.divisionId || scope.divisionId || null,
-      divisionName: u.division || u.divisionName || scope.divisionName || null,
-      pincodeId: u.pincodeId || scope.pincodeId || null,
-      pincodeCode: u.pincode || u.pincodeCode || scope.pincodeCode || null
+      stateId: u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || null,
+      stateName: u.state || u.stateName || territory.state || scope.stateName || null,
+      districtId: u.districtId || territory.districtId || scope.districtId || null,
+      districtName: u.district || u.districtName || territory.district || scope.districtName || null,
+      divisionId: u.divisionId || territory.divisionId || scope.divisionId || null,
+      divisionName: u.division || u.divisionName || territory.division || scope.divisionName || null,
+      pincodeId: u.pincodeId || territory.pincodeId || scope.pincodeId || null,
+      pincodeCode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null
     }
   };
 };
@@ -61,7 +69,27 @@ const isTokenExpired = (tokenStr) => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const saved = localStorage.getItem('agent_mgr_token');
+    if (saved && !isTokenExpired(saved)) {
+      try {
+        const parts = saved.split('.');
+        const base64Url = parts[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+            .join('')
+        );
+        const parsed = JSON.parse(jsonPayload);
+        return normalizeUser(parsed);
+      } catch (e) {
+        return null;
+      }
+    }
+    return null;
+  });
   const [token, setToken] = useState(() => {
     const saved = localStorage.getItem('agent_mgr_token');
     if (saved && !isTokenExpired(saved)) return saved;
@@ -93,13 +121,13 @@ export const AuthProvider = ({ children }) => {
 
     try {
       const res = await authService.getMe();
-      if (res.success && res.user) {
+      if (res && res.success && res.user) {
         setUser(normalizeUser(res.user));
-      } else {
+      } else if (res && (res.status === 401 || res.message?.includes('Unauthorized') || res.message?.includes('Invalid token'))) {
         logout();
       }
-    } catch {
-      logout();
+    } catch (err) {
+      console.warn('[AuthContext] initAuth network warning:', err?.message);
     } finally {
       setLoading(false);
     }

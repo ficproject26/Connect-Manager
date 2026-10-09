@@ -1,32 +1,50 @@
 const db = require('../config/db');
 const { publishEntityEvent } = require('../realtime');
 
+const norm = (s) => (s !== undefined && s !== null ? String(s).trim().toLowerCase() : '');
+
 // Check if an agent falls within the user's hierarchical scope
 const isAgentInScope = (agent, user) => {
   if (!agent || !user) return false;
-  const role = (user.role || '').toLowerCase();
+  const userRole = norm(user.role);
 
   // Central administrators & system administrators have full pan-India scope
-  if (['admin', 'super-admin', 'super_admin', 'central_admin'].includes(role) || user.email === 'admin@example.com' || user._id === 'user_admin' || user.id === 'user_admin') {
+  if (['admin', 'super-admin', 'super_admin', 'central_admin'].some(r => userRole.includes(r)) || 
+      user.email === 'admin@example.com' || 
+      user._id === 'user_admin' || 
+      user.id === 'user_admin') {
     return true;
   }
 
-  const norm = (s) => (s || '').toString().trim().toLowerCase();
+  // Determine manager level: 1 = state, 2 = district, 3 = division, 4 = pincode
+  let userLevel = 4;
+  if (userRole.includes('state') || user.level === 1 || user.level === 'state') userLevel = 1;
+  else if (userRole.includes('district') || user.level === 2 || user.level === 'district') userLevel = 2;
+  else if (userRole.includes('division') || userRole.includes('divisional') || user.level === 3 || user.level === 'division') userLevel = 3;
+  else if (userRole.includes('pincode') || user.level === 4 || user.level === 'pincode') userLevel = 4;
 
-  const userStateId = norm(user.stateId || user.regionId || user.scope?.stateId);
+  const rawAgentRole = (agent.role && typeof agent.role === 'object') ? (agent.role.name || agent.role.code || '') : (agent.role || '');
+  const agentLevel = norm(agent.level || agent.roleLevel || rawAgentRole || 'pincode');
+  const isStateAgent = agentLevel.includes('state') || agentLevel === '1';
+  const isDistrictAgent = agentLevel.includes('district') || agentLevel === '2';
+  const isDivisionAgent = agentLevel.includes('division') || agentLevel.includes('divisional') || agentLevel === '3';
+  const isPincodeAgent = agentLevel.includes('pincode') || agentLevel === '4' || (!isStateAgent && !isDistrictAgent && !isDivisionAgent);
+
+  const userStateId = norm(user.stateId || user.assignedStateId || user.regionId || user.scope?.stateId);
   const userState = norm(user.state || user.stateName || user.assignedState || user.scope?.stateName);
+
   const agentStateId = norm(agent.stateId || agent.regionId || agent.territory?.stateId);
   const agentState = norm(agent.territory?.state || agent.state || agent.assignedState);
 
   const matchState = () => {
     if (userStateId && agentStateId && userStateId === agentStateId) return true;
     if (userState && agentState && userState === agentState) return true;
-    if (!userStateId && !userState) return true;
     return false;
   };
 
-  const userDistrictId = norm(user.districtId || user.scope?.districtId);
+  const userDistrictId = norm(user.districtId || user.assignedDistrictId || user.scope?.districtId);
   const userDistrict = norm(user.district || user.districtName || user.assignedDistrict || user.scope?.districtName);
+
   const agentDistrictId = norm(agent.districtId || agent.territory?.districtId);
   const agentDistrict = norm(agent.territory?.district || agent.district || agent.assignedDistrict);
 
@@ -34,12 +52,12 @@ const isAgentInScope = (agent, user) => {
     if (!matchState()) return false;
     if (userDistrictId && agentDistrictId && userDistrictId === agentDistrictId) return true;
     if (userDistrict && agentDistrict && userDistrict === agentDistrict) return true;
-    if (!userDistrictId && !userDistrict) return true;
     return false;
   };
 
-  const userDivisionId = norm(user.divisionId || user.scope?.divisionId);
+  const userDivisionId = norm(user.divisionId || user.assignedDivisionId || user.scope?.divisionId);
   const userDivision = norm(user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName);
+
   const agentDivisionId = norm(agent.divisionId || agent.territory?.divisionId);
   const agentDivision = norm(agent.territory?.division || agent.division || agent.assignedDivision);
 
@@ -47,44 +65,40 @@ const isAgentInScope = (agent, user) => {
     if (!matchDistrict()) return false;
     if (userDivisionId && agentDivisionId && userDivisionId === agentDivisionId) return true;
     if (userDivision && agentDivision && userDivision === agentDivision) return true;
-    if (!userDivisionId && !userDivision) return true;
     return false;
   };
 
-  const userPincodeId = norm(user.pincodeId || user.scope?.pincodeId);
-  const userPincode = norm(user.pincode || user.pincodeCode || user.scope?.pincodeCode || user.pincodeId);
+  const userPincodeId = norm(user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId);
+  const userPincode = norm(user.pincode || user.pincodeCode || user.assignedPincode || user.scope?.pincodeCode);
+
   const agentPincodeId = norm(agent.pincodeId || agent.territory?.pincodeId);
   const agentPincode = norm(agent.territory?.pincode || agent.pincode || agent.pincodeCode);
 
-  // For pincode_manager: match directly by pincode code or ID (no chain through division
-  // because division names can differ between agents and managers for the same real area).
-  // Fallback: if pincode info missing on either side, fall back to district match.
-  const matchPincodeDirect = () => {
-    if (userPincodeId && agentPincodeId && userPincodeId === agentPincodeId) return true;
+  const matchPincode = () => {
+    if (!matchState()) return false;
     if (userPincode && agentPincode && userPincode === agentPincode) return true;
-    // If agent has no pincode data but is in the same district, include them
-    if (!agentPincodeId && !agentPincode) return matchDistrict();
+    if (userPincodeId && agentPincodeId && userPincodeId === agentPincodeId) return true;
     return false;
   };
 
-  const matchPincode = () => {
-    if (!matchState()) return false;
-    return matchPincodeDirect();
-  };
-
-  switch (role) {
-    case 'state_admin':
-    case 'state_manager':
-      return matchState();
-    case 'district_manager':
-      return matchDistrict();
-    case 'division_manager':
-      return matchDivision();
-    case 'pincode_manager':
-      return matchPincode();
-    default:
-      return false;
+  if (userLevel === 1) {
+    // State Manager: State, District, Division, and Pincode agents in the assigned state
+    return matchState();
+  } else if (userLevel === 2) {
+    // District Manager: District, Division, and Pincode agents in the assigned district
+    if (isStateAgent) return false;
+    return matchDistrict();
+  } else if (userLevel === 3) {
+    // Division Manager: Division and Pincode agents in the assigned division
+    if (isStateAgent || isDistrictAgent) return false;
+    return matchDivision();
+  } else if (userLevel === 4) {
+    // Pincode Manager: ONLY Pincode agents in the exact assigned pincode
+    if (!isPincodeAgent) return false;
+    return matchPincode();
   }
+
+  return false;
 };
 
 const normalizeAgent = (a) => {
@@ -206,11 +220,22 @@ const getAgents = async (req, res) => {
       return true;
     });
 
+    const activeCount = filtered.filter(a => {
+      const s = String(a.status || '').toLowerCase();
+      return s === 'active' || s === 'approved';
+    }).length;
+
     res.json({
       success: true,
       count: filtered.length,
       agents: filtered,
-      data: filtered
+      data: filtered,
+      stats: {
+        totalAgents: filtered.length,
+        activeOnGround: activeCount,
+        totalReferrals: filtered.reduce((acc, a) => acc + (Number(a.totalReferrals) || 0), 0),
+        vendorsOnboarded: filtered.reduce((acc, a) => acc + (Number(a.vendorOnboardings) || 0), 0)
+      }
     });
   } catch (err) {
     console.error('Error fetching agents:', err);

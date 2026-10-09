@@ -101,19 +101,26 @@ const login = async (req, res) => {
     let user = null;
     if (normalizedEmail) {
       const safeEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      user = await db.users.findOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } });
+      user = (await db.users.findOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } })) ||
+             (await db.managers.findOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } }));
     }
     if (!user && cleanMobile) {
       user = (await db.users.findOne({ mobile: cleanMobile })) ||
              (await db.users.findOne({ phone: cleanMobile })) ||
              (await db.users.findOne({ mobile: rawIdentifier })) ||
-             (await db.users.findOne({ phone: rawIdentifier }));
+             (await db.users.findOne({ phone: rawIdentifier })) ||
+             (await db.managers.findOne({ mobile: cleanMobile })) ||
+             (await db.managers.findOne({ phone: cleanMobile }));
     }
     if (!user) {
       user = (await db.users.findOne({ loginId: rawIdentifier.toLowerCase() })) ||
              (await db.users.findOne({ managerId: rawIdentifier })) ||
              (await db.users.findOne({ _id: rawIdentifier })) ||
-             (await db.users.findOne({ id: rawIdentifier }));
+             (await db.users.findOne({ id: rawIdentifier })) ||
+             (await db.managers.findOne({ loginId: rawIdentifier.toLowerCase() })) ||
+             (await db.managers.findOne({ managerId: rawIdentifier })) ||
+             (await db.managers.findOne({ _id: rawIdentifier })) ||
+             (await db.managers.findOne({ id: rawIdentifier }));
     }
 
     if (!user) {
@@ -865,20 +872,63 @@ const uploadAvatar = async (req, res) => {
 
 const getMe = async (req, res) => {
   try {
-    const user = await db.users.findById(req.user.id);
+    let user = await db.users.findById(req.user.id);
+    if (!user) {
+      user = await db.managers.findById(req.user.id);
+    }
+    if (!user) {
+      user = req.user;
+    }
     if (!user) {
       return res.status(404).json({ success: false, message: 'Manager not found' });
     }
 
-    const stateObj = user.stateId ? await db.states.findById(user.stateId) : null;
-    const districtObj = user.districtId ? await db.districts.findById(user.districtId) : null;
-    const divisionObj = user.divisionId ? await db.divisions.findById(user.divisionId) : null;
-    const pincodeObj = user.pincodeId ? await db.pincodes.findById(user.pincodeId) : null;
+    const stateId = user.stateId || user.assignedStateId || user.scope?.stateId || req.user?.stateId || null;
+    let stateName = user.state || user.stateName || user.assignedState || user.scope?.stateName || req.user?.stateName || req.user?.state || null;
 
-    const resolvedState = user.state || user.assignedState || stateObj?.name || null;
-    const resolvedDistrict = user.district || user.assignedDistrict || districtObj?.name || null;
-    const resolvedDivision = user.division || user.assignedDivision || divisionObj?.name || null;
-    const resolvedPincode = user.pincode || user.assignedPincode || pincodeObj?.code || null;
+    const districtId = user.districtId || user.assignedDistrictId || user.scope?.districtId || req.user?.districtId || null;
+    let districtName = user.district || user.districtName || user.assignedDistrict || user.scope?.districtName || req.user?.districtName || req.user?.district || null;
+
+    const divisionId = user.divisionId || user.assignedDivisionId || user.scope?.divisionId || req.user?.divisionId || null;
+    let divisionName = user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName || req.user?.divisionName || req.user?.division || null;
+
+    let pincodeId = user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId || req.user?.pincodeId || null;
+    let pincodeCode = user.pincode || user.pincodeCode || user.assignedPincode || user.scope?.pincodeCode || req.user?.pincodeCode || req.user?.pincode || null;
+    let pincodeArea = user.area || user.pincodeArea || user.scope?.pincodeArea || req.user?.pincodeArea || null;
+
+    // Resolve pincode if needed
+    if (pincodeCode) {
+      const pinObj = (await db.pincodes.findOne({ code: pincodeCode })) || (await db.pincodes.findById(pincodeCode));
+      if (pinObj) {
+        if (!pincodeId) pincodeId = pinObj._id || pinObj.id || pinObj.pincodeId;
+        if (!pincodeArea) pincodeArea = pinObj.area || pinObj.name || pinObj.areaName || null;
+        if (!divisionName && pinObj.division) divisionName = pinObj.division;
+        if (!districtName && pinObj.district) districtName = pinObj.district;
+        if (!stateName && pinObj.state) stateName = pinObj.state;
+      }
+    } else if (pincodeId) {
+      const pinObj = (await db.pincodes.findById(pincodeId)) || (await db.pincodes.findOne({ _id: pincodeId })) || (await db.pincodes.findOne({ code: pincodeId }));
+      if (pinObj) {
+        pincodeCode = String(pinObj.code || pinObj.pincode || '').trim() || null;
+        if (!pincodeArea) pincodeArea = pinObj.area || pinObj.name || pinObj.areaName || null;
+        if (!divisionName && pinObj.division) divisionName = pinObj.division;
+        if (!districtName && pinObj.district) districtName = pinObj.district;
+        if (!stateName && pinObj.state) stateName = pinObj.state;
+      }
+    }
+
+    if (!divisionName && divisionId) {
+      const divObj = await db.divisions.findById(divisionId);
+      if (divObj) divisionName = divObj.name;
+    }
+    if (!districtName && districtId) {
+      const distObj = await db.districts.findById(districtId);
+      if (distObj) districtName = distObj.name;
+    }
+    if (!stateName && stateId) {
+      const stateObj = await db.states.findById(stateId);
+      if (stateObj) stateName = stateObj.name;
+    }
 
     const rolePrefix = user.role === 'state_manager' ? 'STM'
       : user.role === 'district_manager' ? 'DTM'
@@ -889,8 +939,8 @@ const getMe = async (req, res) => {
     res.json({
       success: true,
       user: {
-        id: user._id,
-        _id: user._id,
+        id: user._id || user.id,
+        _id: user._id || user.id,
         managerId,
         name: user.name,
         email: user.email,
@@ -900,14 +950,19 @@ const getMe = async (req, res) => {
         managerType: user.role,
         level: user.level,
         status: user.status,
-        state: resolvedState,
-        stateId: user.stateId || null,
-        district: resolvedDistrict,
-        districtId: user.districtId || null,
-        division: resolvedDivision,
-        divisionId: user.divisionId || null,
-        pincode: resolvedPincode,
-        pincodeId: user.pincodeId || null,
+        state: stateName,
+        stateName: stateName,
+        stateId: stateId,
+        district: districtName,
+        districtName: districtName,
+        districtId: districtId,
+        division: divisionName,
+        divisionName: divisionName,
+        divisionId: divisionId,
+        pincode: pincodeCode,
+        pincodeCode: pincodeCode,
+        pincodeId: pincodeId,
+        pincodeArea: pincodeArea,
         adminApprovalStatus: user.adminApprovalStatus || 'approved',
         kycStatus: user.kycStatus || 'Verified',
         dob: user.dob || null,
@@ -915,18 +970,30 @@ const getMe = async (req, res) => {
         address: user.address || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
+        territory: {
+          state: stateName,
+          stateId: stateId,
+          district: districtName,
+          districtId: districtId,
+          division: divisionName,
+          divisionId: divisionId,
+          pincode: pincodeCode,
+          pincodeId: pincodeId,
+          pincodeCode: pincodeCode,
+          area: pincodeArea
+        },
         scope: {
-          regionId: user.stateId || null,
-          regionName: resolvedState,
-          stateId: user.stateId || null,
-          stateName: resolvedState,
-          districtId: user.districtId || null,
-          districtName: resolvedDistrict,
-          divisionId: user.divisionId || null,
-          divisionName: resolvedDivision,
-          pincodeId: user.pincodeId || null,
-          pincodeCode: resolvedPincode,
-          pincodeArea: pincodeObj?.areaName || null
+          regionId: stateId,
+          regionName: stateName,
+          stateId: stateId,
+          stateName: stateName,
+          districtId: districtId,
+          districtName: districtName,
+          divisionId: divisionId,
+          divisionName: divisionName,
+          pincodeId: pincodeId,
+          pincodeCode: pincodeCode,
+          pincodeArea: pincodeArea
         }
       }
     });

@@ -39,5 +39,33 @@
     "theme": "light",
     "updatedAt": "2026-10-05T07:57:02.566Z",
     "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "06bdcca1-9403-47f0-a9c8-ddaf2ca86853",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-05T12:10:17.099Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "06bdcca1-9403-47f0-a9c8-ddaf2ca86853",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-05T12:10:17.099Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "8092c4d3-4ed6-4c5a-a235-4c64943a3dbe",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-09T11:43:06.833Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "8092c4d3-4ed6-4c5a-a235-4c64943a3dbe",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-09T11:43:06.833Z",
+    "userId": "8c388b32-5e53-43ed-8c69-f265cbae2cbc"
   }
 ]

@@ -4,7 +4,7 @@
     "receiver": "6a926325caf3cb00e6b9a590",
     "title": "New Target Assigned",
     "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "read": false,
+    "read": true,
     "priority": "high",
     "category": "target_assigned",
     "createdAt": "2026-09-24T10:09:13.315Z",
@@ -13,14 +13,14 @@
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ],
-    "updatedAt": "2026-10-02T12:47:09.972Z"
+    "updatedAt": "2026-10-08T10:48:59.338Z"
   },
   {
     "_id": "6ab4f6df1311030bfd3447a2",
     "receiver": "6a926325caf3cb00e6b9a590",
     "title": "New Target Assigned",
     "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "read": false,
+    "read": true,
     "priority": "high",
     "category": "target_assigned",
     "createdAt": "2026-09-24T10:09:35.811Z",
@@ -140,7 +140,7 @@
     "read": false,
     "receiver": "6a926325caf3cb00e6b9a590",
     "title": "New Target Assigned",
-    "updatedAt": "2026-10-01T12:27:24.022Z",
+    "updatedAt": "2026-10-08T10:23:33.533Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
@@ -160,7 +160,7 @@
     "read": false,
     "receiver": "6a926325caf3cb00e6b9a590",
     "title": "New Target Assigned",
-    "updatedAt": "2026-10-01T12:27:24.059Z",
+    "updatedAt": "2026-10-08T10:26:23.860Z",
     "isRead": true,
     "readBy": [
       "6a8d22c11bc647d92ae36337",
@@ -405,6 +405,40 @@
     "updatedAt": "2026-10-01T12:27:24.294Z"
   },
   {
+    "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
+    "createdAt": "2026-09-26T09:51:20.086Z",
+    "id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
+    "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as Completed.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-01T12:27:24.315Z",
+    "userId": "user_state_1",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
+  },
+  {
+    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "type": "task_updated",
+    "title": "Task TSK-100005 Completed",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
+    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
+    "userId": "user_state_1",
+    "isRead": true,
+    "createdAt": "2026-09-26T10:17:29.078Z",
+    "updatedAt": "2026-10-01T12:27:24.332Z",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
+  },
+  {
     "_id": "NOTIF-1790414127807-0AM4",
     "actionUrl": "/state-admin/tasks",
     "category": "task",
@@ -447,40 +481,6 @@
     "updatedAt": "2026-10-01T04:35:58.380Z"
   },
   {
-    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "createdAt": "2026-09-26T09:51:19.729Z",
-    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "isRead": true,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-10-01T12:27:24.382Z",
-    "userId": "user_state_1",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
-    "createdAt": "2026-09-26T09:51:20.086Z",
-    "id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
-    "isRead": true,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as Completed.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 Completed",
-    "type": "task_updated",
-    "updatedAt": "2026-10-01T12:27:24.315Z",
-    "userId": "user_state_1",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
     "_id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
     "id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
     "type": "task_updated",
@@ -491,6 +491,23 @@
     "isRead": true,
     "createdAt": "2026-09-26T10:15:28.017Z",
     "updatedAt": "2026-10-01T12:27:24.358Z",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
+  },
+  {
+    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "createdAt": "2026-09-26T09:51:19.729Z",
+    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-01T12:27:24.382Z",
+    "userId": "user_state_1",
     "readBy": [
       "usr_mgr_1790580930154_8uge",
       "6ab4c2ec5df0d82cb7a09cac",
@@ -525,23 +542,6 @@
     "isRead": true,
     "createdAt": "2026-09-26T10:17:28.488Z",
     "updatedAt": "2026-10-01T12:27:24.891Z",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "type": "task_updated",
-    "title": "Task TSK-100005 Completed",
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
-    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
-    "userId": "user_state_1",
-    "isRead": true,
-    "createdAt": "2026-09-26T10:17:29.078Z",
-    "updatedAt": "2026-10-01T12:27:24.332Z",
     "readBy": [
       "usr_mgr_1790580930154_8uge",
       "6ab4c2ec5df0d82cb7a09cac",
@@ -621,64 +621,7 @@
     },
     "title": "Vendor Approved: Empire",
     "type": "vendor_status",
-    "updatedAt": "2026-10-02T12:53:42.722Z"
-  },
-  {
-    "_id": "NOTIF-1790659045582-GA75",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-09-29T05:17:25.582Z",
-    "entityId": "6ab6591ec3c80ae7e778f48b",
-    "entityType": "vendor",
-    "id": "NOTIF-1790659045582-GA75",
-    "isRead": true,
-    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "6ab6591ec3c80ae7e778f48b",
-      "vendorName": "y",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Maran",
-      "pincode": "636112"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Salem Urban Division",
-      "pincode": "636112",
-      "targetUserId": null,
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: y",
-    "type": "vendor_status",
-    "updatedAt": "2026-10-02T12:53:42.787Z"
-  },
-  {
-    "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
-    "createdAt": "2026-09-29T06:03:52.439Z",
-    "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
-    "isRead": true,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as In Progress.",
-    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
-    "title": "Task TSK-100012 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-10-01T12:27:25.013Z",
-    "userId": "user_state_1",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
+    "updatedAt": "2026-10-08T10:45:51.527Z"
   },
   {
     "_id": "NOTIF-1790589311649-NBEH",
@@ -717,7 +660,7 @@
     },
     "title": "New Vendor Onboarded: Balu",
     "type": "vendor_onboarding",
-    "updatedAt": "2026-10-02T12:53:42.837Z"
+    "updatedAt": "2026-10-08T10:45:51.990Z"
   },
   {
     "_id": "NOTIF-1790603729917-YBVD",
@@ -758,7 +701,64 @@
     },
     "title": "Vendor Approved: y",
     "type": "vendor_status",
-    "updatedAt": "2026-10-02T12:53:42.885Z"
+    "updatedAt": "2026-10-08T10:45:52.033Z"
+  },
+  {
+    "_id": "NOTIF-1790659045582-GA75",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-09-29T05:17:25.582Z",
+    "entityId": "6ab6591ec3c80ae7e778f48b",
+    "entityType": "vendor",
+    "id": "NOTIF-1790659045582-GA75",
+    "isRead": true,
+    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
+    "metadata": {
+      "vendorId": "6ab6591ec3c80ae7e778f48b",
+      "vendorName": "y",
+      "action": "Accept",
+      "reason": null,
+      "verifiedBy": "Maran",
+      "pincode": "636112"
+    },
+    "priority": "normal",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem Urban Division",
+      "pincode": "636112",
+      "targetUserId": null,
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Approved: y",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-08T10:45:52.068Z"
+  },
+  {
+    "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "createdAt": "2026-09-29T06:03:52.439Z",
+    "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
+    "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100012 as In Progress.",
+    "recordId": "1c1477d9-e7de-4478-8be4-667e5fd79dcf",
+    "title": "Task TSK-100012 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-01T12:27:25.013Z",
+    "userId": "user_state_1",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ]
   },
   {
     "_id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
@@ -816,7 +816,7 @@
     },
     "title": "New Task Assigned: onboaring",
     "type": "task_created",
-    "updatedAt": "2026-10-02T12:53:42.936Z"
+    "updatedAt": "2026-10-09T10:22:13.122Z"
   },
   {
     "_id": "NOTIF-1790853216580-10XG",
@@ -857,7 +857,7 @@
     },
     "title": "Task Update: QCT-52939634 is Accepted",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:42.977Z"
+    "updatedAt": "2026-10-08T10:45:52.146Z"
   },
   {
     "_id": "NOTIF-1790853222634-SCDI",
@@ -898,7 +898,7 @@
     },
     "title": "Task Update: QCT-52939634 is In Progress",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:43.022Z"
+    "updatedAt": "2026-10-08T10:45:52.181Z"
   },
   {
     "_id": "NOTIF-1790853341477-UKRK",
@@ -939,7 +939,7 @@
     },
     "title": "Task Update: QCT-52939634 is Completed",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:43.066Z"
+    "updatedAt": "2026-10-08T10:45:52.217Z"
   },
   {
     "_id": "NOTIF-1790853363572-9PFP",
@@ -979,7 +979,7 @@
     },
     "title": "Rework Requested: QCT-52939634",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:43.116Z"
+    "updatedAt": "2026-10-08T10:45:52.260Z"
   },
   {
     "_id": "NOTIF-1790854027222-V2K4",
@@ -1021,7 +1021,7 @@
     },
     "title": "New Task Assigned: Onboarding",
     "type": "task_created",
-    "updatedAt": "2026-10-02T12:53:43.154Z"
+    "updatedAt": "2026-10-08T10:45:52.298Z"
   },
   {
     "_id": "NOTIF-1790854148750-8T4W",
@@ -1062,7 +1062,7 @@
     },
     "title": "Task Update: QCT-54027219 is In Progress",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:43.197Z"
+    "updatedAt": "2026-10-09T10:21:48.001Z"
   },
   {
     "_id": "NOTIF-1790854207767-LDOA",
@@ -1104,7 +1104,7 @@
     },
     "title": "New Task Assigned: e3",
     "type": "task_created",
-    "updatedAt": "2026-10-02T12:53:43.239Z"
+    "updatedAt": "2026-10-08T10:45:52.382Z"
   },
   {
     "_id": "NOTIF-1790854347671-KX2E",
@@ -1145,7 +1145,7 @@
     },
     "title": "Task Update: QCT-54027219 is Completed",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:43.281Z"
+    "updatedAt": "2026-10-08T10:45:52.422Z"
   },
   {
     "_id": "NOTIF-1790856481981-AXGL",
@@ -1185,7 +1185,7 @@
     },
     "title": "New Vendor Onboarded: reo",
     "type": "vendor_onboarding",
-    "updatedAt": "2026-10-02T12:53:43.325Z"
+    "updatedAt": "2026-10-08T10:45:52.974Z"
   },
   {
     "_id": "NOTIF-1790856601070-N1CB",
@@ -1226,7 +1226,7 @@
     },
     "title": "Vendor Approved: reo",
     "type": "vendor_status",
-    "updatedAt": "2026-10-02T12:53:43.364Z"
+    "updatedAt": "2026-10-08T10:45:53.010Z"
   },
   {
     "_id": "NOTIF-1790856611362-FLD8",
@@ -1267,7 +1267,7 @@
     },
     "title": "Vendor Approved: harshini",
     "type": "vendor_status",
-    "updatedAt": "2026-10-02T12:53:43.421Z"
+    "updatedAt": "2026-10-08T10:45:53.044Z"
   },
   {
     "_id": "NOTIF-1790923636071-4V58",
@@ -1307,7 +1307,7 @@
     },
     "title": "Task Update: QCT-54207754 is Accepted",
     "type": "task_update",
-    "updatedAt": "2026-10-02T12:53:43.477Z"
+    "updatedAt": "2026-10-09T11:40:12.139Z"
   },
   {
     "_id": "NOTIF-1790933737588-6DS9",
@@ -1355,18 +1355,18 @@
     },
     "title": "New Task Assigned: Onboarding issue",
     "type": "task_created",
-    "updatedAt": "2026-10-02T12:53:43.520Z"
+    "updatedAt": "2026-10-08T10:45:53.114Z"
   },
   {
     "_id": "5c73c356-ae9d-4f64-b5f6-e2f22bdba17e",
     "createdAt": "2026-10-05T07:43:53.028Z",
     "id": "5c73c356-ae9d-4f64-b5f6-e2f22bdba17e",
-    "isRead": false,
+    "isRead": true,
     "message": "Surya logged field visit for dfghjk (Interested).",
     "recordId": "75c8df08-04df-452d-b928-838ea70e4067",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-05T07:43:53.028Z",
+    "updatedAt": "2026-10-05T12:08:53.461Z",
     "userId": "usr_mgr_1790580930154_8uge"
   },
   {
@@ -1377,7 +1377,7 @@
     "entityId": "TSK-1791186390629-H97WF",
     "entityType": "task",
     "id": "NOTIF-1791186390694-FF2C",
-    "isRead": false,
+    "isRead": true,
     "message": "Task QCT-86390629 (High Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-06.",
     "metadata": {
       "taskId": "TSK-1791186390629-H97WF",
@@ -1396,7 +1396,9 @@
       "priority": "High"
     },
     "priority": "high",
-    "readBy": [],
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
     "scope": {
       "state": "Tamil Nadu",
       "district": "Salem",
@@ -1413,18 +1415,18 @@
     },
     "title": "New Task Assigned: 10 Shops",
     "type": "task_created",
-    "updatedAt": "2026-10-05T07:46:30.695Z"
+    "updatedAt": "2026-10-08T10:45:53.152Z"
   },
   {
     "_id": "dd7c9041-6a09-4be7-8d21-f0c5e653c9f7",
     "createdAt": "2026-10-05T09:24:31.764Z",
     "id": "dd7c9041-6a09-4be7-8d21-f0c5e653c9f7",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga marked task QCT-54207754 as Accepted.",
     "recordId": "TSK-1790854207754-C4IGB",
     "title": "Task QCT-54207754 Accepted",
     "type": "task_updated",
-    "updatedAt": "2026-10-05T09:24:31.764Z",
+    "updatedAt": "2026-10-05T12:06:48.572Z",
     "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
@@ -1635,48 +1637,165 @@
     "_id": "6e6750a1-1a1e-4fd8-9e5a-fdf043a168f6",
     "createdAt": "2026-10-05T09:56:32.840Z",
     "id": "6e6750a1-1a1e-4fd8-9e5a-fdf043a168f6",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga marked task QCT-54207754 as Accepted.",
     "recordId": "TSK-1790854207754-0RYO8",
     "title": "Task QCT-54207754 Accepted",
     "type": "task_updated",
-    "updatedAt": "2026-10-05T09:56:32.840Z",
+    "updatedAt": "2026-10-05T12:06:48.577Z",
     "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
     "_id": "6a81247d-4d2b-4bb1-beb7-ad5704879bff",
     "createdAt": "2026-10-05T09:56:34.885Z",
     "id": "6a81247d-4d2b-4bb1-beb7-ad5704879bff",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga marked task QCT-54207754 as In Progress.",
     "recordId": "TSK-1790854207754-0RYO8",
     "title": "Task QCT-54207754 In Progress",
     "type": "task_updated",
-    "updatedAt": "2026-10-05T09:56:34.885Z",
+    "updatedAt": "2026-10-05T12:06:48.583Z",
     "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
     "_id": "5c220834-4571-400f-a368-001f0aeb688f",
     "createdAt": "2026-10-05T10:06:27.626Z",
     "id": "5c220834-4571-400f-a368-001f0aeb688f",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga marked task QCT-54207754 as Completed.",
     "recordId": "TSK-1790854207754-0RYO8",
     "title": "Task QCT-54207754 Completed",
     "type": "task_updated",
-    "updatedAt": "2026-10-05T10:06:27.626Z",
+    "updatedAt": "2026-10-05T12:06:48.590Z",
     "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
     "_id": "8575f5c9-e521-47b2-84f6-d2ac1270ff27",
     "createdAt": "2026-10-05T10:42:01.485Z",
     "id": "8575f5c9-e521-47b2-84f6-d2ac1270ff27",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga marked task QCT-54027219 as In Progress.",
     "recordId": "TSK-1790854027219-VOSMW",
     "title": "Task QCT-54027219 In Progress",
     "type": "task_updated",
-    "updatedAt": "2026-10-05T10:42:01.485Z",
+    "updatedAt": "2026-10-05T12:06:48.596Z",
     "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "NOTIF-1791202135354-LPJU",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-05T12:08:55.354Z",
+    "entityId": "TSK-1791202135312-CHD1B",
+    "entityType": "task",
+    "id": "NOTIF-1791202135354-LPJU",
+    "isRead": true,
+    "message": "Task QCT-02135312 (High Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-06.",
+    "metadata": {
+      "taskId": "TSK-1791202135312-CHD1B",
+      "taskNumber": "QCT-02135312",
+      "title": "5 tie up",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "assignedManagerRole": "Pincode Manager",
+      "assignedManagerLevel": 4,
+      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "createdByName": "Maran",
+      "priority": "High"
+    },
+    "priority": "high",
+    "readBy": [
+      "6ab4c2ec5df0d82cb7a09cac"
+    ],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: 5 tie up",
+    "type": "task_created",
+    "updatedAt": "2026-10-08T10:45:53.191Z"
+  },
+  {
+    "_id": "0171213b-e52b-4026-a4f2-7ec28170d96e",
+    "createdAt": "2026-10-06T04:18:05.250Z",
+    "id": "0171213b-e52b-4026-a4f2-7ec28170d96e",
+    "isRead": true,
+    "message": "Muruga logged field visit for Nisha (Interested).",
+    "recordId": "d142b353-1456-46f1-a719-a3162203b51e",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-06T04:19:59.566Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "34ca9f4d-ea98-4c28-99cf-47fd1581a785",
+    "createdAt": "2026-10-06T04:22:21.581Z",
+    "id": "34ca9f4d-ea98-4c28-99cf-47fd1581a785",
+    "isRead": true,
+    "message": "Muruga logged field visit for antigraviity (Interested).",
+    "recordId": "6fba636d-03dc-44e3-95dd-7e84e362f113",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-08T05:49:20.291Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "fb2d3b10-8eae-4157-92e7-4cb9d9732e61",
+    "createdAt": "2026-10-06T04:23:24.572Z",
+    "id": "fb2d3b10-8eae-4157-92e7-4cb9d9732e61",
+    "isRead": true,
+    "message": "Muruga logged field visit for Nisha (Interested).",
+    "recordId": "6e4c4105-9d66-4779-8f55-d91d5891d850",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-08T05:49:20.293Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "fec40285-17db-442c-8339-37ba3cfd7956",
+    "createdAt": "2026-10-06T04:27:56.200Z",
+    "id": "fec40285-17db-442c-8339-37ba3cfd7956",
+    "isRead": true,
+    "message": "iniya logged field visit for Hari supermarket (Interested).",
+    "recordId": "30b4878e-98db-4b30-bedb-c94eb9026163",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-08T10:23:57.917Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "1b8d12b6-bc25-4685-9144-c53a9fe0cb2b",
+    "createdAt": "2026-10-06T05:15:22.885Z",
+    "id": "1b8d12b6-bc25-4685-9144-c53a9fe0cb2b",
+    "isRead": true,
+    "message": "iniya logged field visit for Ram shop (Interested).",
+    "recordId": "db03263e-0f52-4f1d-9790-74defb70ed1c",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-09T10:21:43.277Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "9cb2946e-f0e7-4554-972e-aecb8934d895",
+    "id": "9cb2946e-f0e7-4554-972e-aecb8934d895",
+    "title": "Confidential User B Alert",
+    "userId": "user_target_victim_99",
+    "isRead": false,
+    "createdAt": "2026-10-09T13:39:21.153Z",
+    "updatedAt": "2026-10-09T13:39:21.153Z"
   }
 ]

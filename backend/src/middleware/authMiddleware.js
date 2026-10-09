@@ -21,7 +21,10 @@ const authMiddleware = async (req, res, next) => {
 
     const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
 
-    const user = await db.users.findById(decoded.id);
+    let user = await db.users.findById(decoded.id);
+    if (!user) {
+      user = await db.managers.findById(decoded.id);
+    }
     if (!user) {
       return res.status(401).json({ success: false, message: 'User account not found.' });
     }
@@ -31,61 +34,133 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'User account is inactive or suspended.' });
     }
 
-    // Resolve state name if not directly on user
-    let stateName = user.state || user.stateName || user.assignedState || (user.territory && user.territory.state) || '';
-    if (!stateName && user.stateId) {
-      const stateObj = await db.states.findById(user.stateId);
+    // Extract base territory identifiers from user, scope, territory, and decoded token
+    let stateId = user.stateId || user.assignedStateId || user.regionId || user.scope?.stateId || user.scope?.regionId || decoded.stateId || null;
+    let stateName = user.state || user.stateName || user.assignedState || user.scope?.stateName || user.scope?.regionName || (user.territory && user.territory.state) || '';
+
+    let districtId = user.districtId || user.assignedDistrictId || user.scope?.districtId || decoded.districtId || null;
+    let districtName = user.district || user.districtName || user.assignedDistrict || user.scope?.districtName || (user.territory && user.territory.district) || '';
+
+    let divisionId = user.divisionId || user.assignedDivisionId || user.scope?.divisionId || decoded.divisionId || null;
+    let divisionName = user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName || (user.territory && user.territory.division) || '';
+
+    let pincodeId = user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId || decoded.pincodeId || null;
+    let pincodeCode = user.pincode || user.pincodeCode || user.assignedPincode || user.scope?.pincodeCode || (user.territory && user.territory.pincode) || '';
+    let pincodeArea = user.area || user.pincodeArea || user.scope?.pincodeArea || '';
+
+    // Authoritative resolution for Pincode
+    if (pincodeCode) {
+      pincodeCode = String(pincodeCode).trim();
+      const pinObj = (await db.pincodes.findOne({ code: pincodeCode })) || (await db.pincodes.findById(pincodeCode));
+      if (pinObj) {
+        if (!pincodeId) pincodeId = pinObj._id || pinObj.id || pinObj.pincodeId;
+        if (!pincodeArea) pincodeArea = pinObj.area || pinObj.name || pinObj.areaName || '';
+        if (!divisionName && pinObj.division) divisionName = pinObj.division;
+        if (!districtName && pinObj.district) districtName = pinObj.district;
+        if (!stateName && pinObj.state) stateName = pinObj.state;
+      }
+    } else if (pincodeId) {
+      const pinObj = (await db.pincodes.findById(pincodeId)) || (await db.pincodes.findOne({ _id: pincodeId })) || (await db.pincodes.findOne({ code: pincodeId }));
+      if (pinObj) {
+        pincodeCode = String(pinObj.code || pinObj.pincode || '').trim();
+        if (!pincodeArea) pincodeArea = pinObj.area || pinObj.name || pinObj.areaName || '';
+        if (!divisionName && pinObj.division) divisionName = pinObj.division;
+        if (!districtName && pinObj.district) districtName = pinObj.district;
+        if (!stateName && pinObj.state) stateName = pinObj.state;
+      }
+    }
+
+    // Authoritative resolution for Division
+    if (!divisionName && divisionId) {
+      const divObj = await db.divisions.findById(divisionId);
+      if (divObj) {
+        divisionName = divObj.name;
+        if (!districtId && divObj.districtId) districtId = divObj.districtId;
+        if (!stateId && divObj.stateId) stateId = divObj.stateId;
+      }
+    } else if (divisionName && !divisionId) {
+      const divObj = await db.divisions.findOne({ name: divisionName });
+      if (divObj) divisionId = divObj._id || divObj.id;
+    }
+
+    // Authoritative resolution for District
+    if (!districtName && districtId) {
+      const distObj = await db.districts.findById(districtId);
+      if (distObj) {
+        districtName = distObj.name;
+        if (!stateId && distObj.stateId) stateId = distObj.stateId;
+      }
+    } else if (districtName && !districtId) {
+      const distObj = await db.districts.findOne({ name: districtName });
+      if (distObj) districtId = distObj._id || distObj.id;
+    }
+
+    // Authoritative resolution for State
+    if (!stateName && stateId) {
+      const stateObj = await db.states.findById(stateId);
       if (stateObj) stateName = stateObj.name;
+    } else if (stateName && !stateId) {
+      const stateObj = await db.states.findOne({ name: stateName });
+      if (stateObj) stateId = stateObj._id || stateObj.id;
     }
 
-    // Resolve district name if not directly on user
-    let districtName = user.district || user.districtName || user.assignedDistrict || (user.territory && user.territory.district) || '';
-    if (!districtName && user.districtId) {
-      const distObj = await db.districts.findById(user.districtId);
-      if (distObj) districtName = distObj.name;
-    }
-
-    // Resolve division name if not directly on user
-    let divisionName = user.division || user.divisionName || user.assignedDivision || (user.territory && user.territory.division) || '';
-    if (!divisionName && user.divisionId) {
-      const divObj = await db.divisions.findById(user.divisionId);
-      if (divObj) divisionName = divObj.name;
-    }
-
-    // Resolve pincode code if not directly on user
-    let pincodeCode = user.pincode || user.pincodeCode || (user.territory && user.territory.pincode) || '';
-    if (!pincodeCode && user.pincodeId) {
-      const pinObj = await db.pincodes.findById(user.pincodeId);
-      if (pinObj) pincodeCode = pinObj.code;
-    }
-
+    const userId = String(user._id || user.id);
     req.user = {
-      _id: user._id,
-      id: user._id,
+      _id: userId,
+      id: userId,
       managerId: user.managerId || user.id || user._id,
       name: user.name,
       email: user.email,
-      mobile: user.mobile,
+      mobile: user.mobile || user.phone || '',
+      phone: user.phone || user.mobile || '',
       role: user.role,
       level: user.level,
       status: user.status,
-      stateId: user.stateId,
-      districtId: user.districtId,
-      divisionId: user.divisionId,
-      pincodeId: user.pincodeId,
+      stateId,
+      assignedStateId: stateId,
+      districtId,
+      assignedDistrictId: districtId,
+      divisionId,
+      assignedDivisionId: divisionId,
+      pincodeId,
+      assignedPincodeId: pincodeId,
       state: stateName,
-      stateName: stateName,
+      stateName,
+      assignedState: stateName,
       district: districtName,
-      districtName: districtName,
+      districtName,
+      assignedDistrict: districtName,
       division: divisionName,
-      divisionName: divisionName,
+      divisionName,
+      assignedDivision: divisionName,
       pincode: pincodeCode,
-      pincodeCode: pincodeCode,
-      territory: user.territory || {
+      pincodeCode,
+      assignedPincode: pincodeCode,
+      pincodeArea,
+      territory: {
         state: stateName,
+        stateId,
         district: districtName,
+        districtId,
         division: divisionName,
-        pincode: pincodeCode
+        divisionId,
+        pincode: pincodeCode,
+        pincodeId,
+        pincodeCode,
+        area: pincodeArea
+      },
+      scope: {
+        regionId: stateId,
+        regionName: stateName,
+        stateId,
+        stateName,
+        districtId,
+        districtName,
+        divisionId,
+        divisionName,
+        pincodeId,
+        pincodeCode,
+        pincodeArea
       }
     };
 
