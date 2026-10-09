@@ -13,6 +13,7 @@ import {
   CheckCircle2, 
   Equal, 
   ArrowDownRight, 
+  ArrowUpRight,
   Grid, 
   List, 
   Copy, 
@@ -27,10 +28,11 @@ const FieldManagers = () => {
   const [allManagers, setAllManagers] = useState([]);
   const [peersList, setPeersList] = useState([]);
   const [subordinatesList, setSubordinatesList] = useState([]);
+  const [supervisorsList, setSupervisorsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'equal' | 'under'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'supervisors' | 'equal' | 'under'
   const [roleFilter, setRoleFilter] = useState('All');
   const [viewMode, setViewMode] = useState('table'); // Default to clean table view
   const [selectedManager, setSelectedManager] = useState(null);
@@ -43,11 +45,16 @@ const FieldManagers = () => {
       const res = await managerService.getManagerDirectory({}, user);
       if (res && res.success) {
         const currentId = String(user?.id || user?._id || '');
-        const rawAll = res.all || [...(res.peers || []), ...(res.subordinates || res.data || [])];
+        const rawAll = res.all || [...(res.supervisors || []), ...(res.peers || []), ...(res.subordinates || res.data || [])];
         const all = rawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+        const supervisors = (res.supervisors || res.reporting || all.filter(m => m.relation === 'supervisor')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+        const peers = (res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+        const subordinates = (res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+
         setAllManagers(all);
-        setPeersList((res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId));
-        setSubordinatesList((res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId));
+        setSupervisorsList(supervisors);
+        setPeersList(peers);
+        setSubordinatesList(subordinates);
       } else {
         setError(res?.message || 'Failed to load directory data');
       }
@@ -176,6 +183,24 @@ const FieldManagers = () => {
         </span>
       );
     }
+    if (m.relation === 'supervisor') {
+      return (
+        <span style={{
+          background: '#fef3c7',
+          color: '#92400e',
+          padding: '4px 9px',
+          borderRadius: '6px',
+          fontSize: '0.72rem',
+          fontWeight: 700,
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '4px',
+          whiteSpace: 'nowrap'
+        }}>
+          <ArrowUpRight size={12} /> Reporting Authority
+        </span>
+      );
+    }
     if (m.relation === 'peer') {
       return (
         <span style={{
@@ -260,7 +285,9 @@ const FieldManagers = () => {
   // Filter managers based on tab, search, and role filter
   const filteredManagers = useMemo(() => {
     let sourceList = allManagers;
-    if (activeTab === 'equal') {
+    if (activeTab === 'supervisors') {
+      sourceList = supervisorsList;
+    } else if (activeTab === 'equal') {
       sourceList = peersList;
     } else if (activeTab === 'under') {
       sourceList = subordinatesList;
@@ -283,8 +310,9 @@ const FieldManagers = () => {
       if (roleFilter !== 'All' && m.role !== roleFilter) return false;
       return true;
     });
-  }, [allManagers, peersList, subordinatesList, activeTab, search, roleFilter]);
+  }, [allManagers, supervisorsList, peersList, subordinatesList, activeTab, search, roleFilter]);
 
+  const supervisorsCount = supervisorsList.length;
   const peersCount = peersList.length;
   const subordinatesCount = subordinatesList.length;
   const totalCount = allManagers.length;
@@ -298,7 +326,7 @@ const FieldManagers = () => {
             Managers Directory & Team Hierarchy
           </h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
-            Directory of equal-level peers and subordinate managers operating under your assigned hierarchy branch ({totalCount} total)
+            Directory of reporting authorities, equal-level peers, and subordinate managers operating under your assigned hierarchy branch ({totalCount} total)
           </p>
         </div>
 
@@ -347,7 +375,7 @@ const FieldManagers = () => {
       <div className="card" style={{ marginBottom: '20px', padding: '14px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           {/* Relation Tabs */}
-          <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px' }}>
+          <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px', flexWrap: 'wrap' }}>
             <button
               onClick={() => setActiveTab('all')}
               style={{
@@ -364,6 +392,23 @@ const FieldManagers = () => {
               }}
             >
               All Managers ({totalCount})
+            </button>
+            <button
+              onClick={() => setActiveTab('supervisors')}
+              style={{
+                background: activeTab === 'supervisors' ? 'white' : 'transparent',
+                color: activeTab === 'supervisors' ? '#b45309' : '#64748b',
+                border: 'none',
+                borderRadius: '6px',
+                padding: '6px 12px',
+                fontSize: '0.8rem',
+                fontWeight: activeTab === 'supervisors' ? 700 : 500,
+                cursor: 'pointer',
+                boxShadow: activeTab === 'supervisors' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Reporting Authority ({supervisorsCount})
             </button>
             <button
               onClick={() => setActiveTab('equal')}
@@ -452,21 +497,57 @@ const FieldManagers = () => {
           </button>
         </div>
       ) : filteredManagers.length === 0 ? (
-        <div className="card" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <div className="card" style={{ padding: '36px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
           <Users size={34} style={{ margin: '0 auto 10px', opacity: 0.4 }} />
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '4px' }}>
             {activeTab === 'under' && (user?.role || '').toLowerCase().includes('pincode')
-              ? 'No Subordinate Managers (Level 4 Base)'
+              ? 'Ground Level Manager (No Subordinate Managers)'
+              : activeTab === 'supervisors' && (user?.role || '').toLowerCase().includes('state')
+              ? 'State Regional Authority (Top Level)'
               : 'No managers found'}
           </div>
-          <div style={{ fontSize: '0.82rem', maxWidth: '500px', margin: '0 auto' }}>
+          <div style={{ fontSize: '0.82rem', maxWidth: '520px', margin: '0 auto 16px', lineHeight: 1.5 }}>
             {search
-              ? `No managers matching "${search}"`
+              ? `No managers matching "${search}" in this category.`
               : activeTab === 'under' && (user?.role || '').toLowerCase().includes('pincode')
-              ? 'As a Pincode Manager (Level 4), you operate at the direct ground level with no subordinate manager tiers beneath you. Please check the "Equal Level" tab to view peer managers within your pincode.'
+              ? 'As a Pincode Manager (Level 4), you directly supervise Field Agents in your PIN code (accessible in the Agents Directory). You report to Division, District, and State Managers.'
+              : activeTab === 'supervisors' && (user?.role || '').toLowerCase().includes('state')
+              ? 'As a State Agent Manager (Level 1), you hold the top regional tier. District, division, and pincode managers operate under your scope.'
+              : activeTab === 'supervisors'
+              ? 'No supervising managers assigned for this branch.'
               : activeTab === 'equal'
-              ? 'No other managers at your hierarchy rank are assigned within your jurisdiction.'
-              : 'No managers available in this category for your assigned jurisdiction.'}
+              ? 'No other managers at your hierarchy rank are assigned within this territory.'
+              : 'No managers currently found in this category for your assigned jurisdiction.'}
+          </div>
+          {/* Quick Tab Switch Buttons if items exist in other tabs */}
+          <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            {activeTab !== 'all' && totalCount > 0 && (
+              <button
+                onClick={() => setActiveTab('all')}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px' }}
+              >
+                View All Managers ({totalCount})
+              </button>
+            )}
+            {activeTab !== 'supervisors' && supervisorsCount > 0 && (
+              <button
+                onClick={() => setActiveTab('supervisors')}
+                className="btn btn-primary btn-sm"
+                style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px' }}
+              >
+                View Reporting Authority ({supervisorsCount})
+              </button>
+            )}
+            {activeTab !== 'equal' && peersCount > 0 && (
+              <button
+                onClick={() => setActiveTab('equal')}
+                className="btn btn-secondary btn-sm"
+                style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px' }}
+              >
+                View Equal Level ({peersCount})
+              </button>
+            )}
           </div>
         </div>
       ) : viewMode === 'table' ? (

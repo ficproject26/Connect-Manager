@@ -126,16 +126,39 @@ const getLowerLevelManagers = async (req, res) => {
       return (currentUserId && mId === currentUserId) || (currentUserEmail && mEmail === currentUserEmail);
     };
 
-    // Filter peers (equal level in the same assigned jurisdiction)
+    // Filter supervisors (higher-level managers in user's direct territorial hierarchy line)
+    const rawSupervisors = uniqueManagers.filter(m => {
+      if (isSelfUser(m)) return false;
+      const mLevel = getManagerLevel(m.role);
+      if (mLevel >= userLevel) return false; // Strictly higher level (1 < 2 < 3 < 4)
+      if (isGlobalAdmin) return false;
+
+      if (userLevel === 4) {
+        // Pincode Manager reports to Division, District, and State managers
+        if (mLevel === 3) return matchDivision(m) || matchDistrict(m);
+        if (mLevel === 2) return matchDistrict(m);
+        if (mLevel === 1) return matchState(m);
+      } else if (userLevel === 3) {
+        // Division Manager reports to District and State managers
+        if (mLevel === 2) return matchDistrict(m);
+        if (mLevel === 1) return matchState(m);
+      } else if (userLevel === 2) {
+        // District Manager reports to State manager
+        if (mLevel === 1) return matchState(m);
+      }
+      return false;
+    });
+
+    // Filter peers (equal level in the relevant territorial jurisdiction)
     const rawPeers = uniqueManagers.filter(m => {
       if (isSelfUser(m)) return false;
       const mLevel = getManagerLevel(m.role);
       if (mLevel !== userLevel && !isGlobalAdmin) return false;
 
-      if (userLevel === 1) return matchState(m);
-      if (userLevel === 2) return matchDistrict(m);
-      if (userLevel === 3) return matchDivision(m);
-      if (userLevel === 4) return matchPincode(m);
+      if (userLevel === 1) return true; // State managers nationwide are peers
+      if (userLevel === 2) return matchState(m); // District managers in same state
+      if (userLevel === 3) return matchDistrict(m) || matchState(m); // Division managers in district/state
+      if (userLevel === 4) return matchDivision(m) || matchDistrict(m) || matchState(m); // Pincode managers in division/district/state
       return isGlobalAdmin;
     });
 
@@ -187,6 +210,11 @@ const getLowerLevelManagers = async (req, res) => {
       const pCode = pincode?.code || m.pincodeCode || m.pincode || m.assignedPincode || null;
       const pArea = pincode?.areaName || pincode?.name || m.area || null;
 
+      let relationLabel = 'Under Your Scope (Subordinate)';
+      if (isSelf) relationLabel = 'You (Current User)';
+      else if (relation === 'supervisor') relationLabel = 'Reporting Authority (Supervisor)';
+      else if (relation === 'peer') relationLabel = 'Equal Level (Peer)';
+
       return {
         id: mId,
         _id: mId,
@@ -197,8 +225,8 @@ const getLowerLevelManagers = async (req, res) => {
         roleTitle: formatRoleTitle(m.role),
         level: normLevel,
         status: String(m.status || 'active').toLowerCase(),
-        relation, // 'peer' or 'subordinate'
-        relationLabel: isSelf ? 'You (Current User)' : (relation === 'peer' ? 'Equal Level (Peer)' : 'Under Your Scope (Subordinate)'),
+        relation, // 'supervisor', 'peer', or 'subordinate'
+        relationLabel,
         isSelf,
         stateId: m.stateId || state?._id || null,
         stateName: sName,
@@ -212,9 +240,12 @@ const getLowerLevelManagers = async (req, res) => {
       };
     };
 
+    const supervisors = await Promise.all(rawSupervisors.map(m => populateManager(m, 'supervisor')));
     const peers = await Promise.all(rawPeers.map(m => populateManager(m, 'peer')));
     const subordinates = await Promise.all(rawSubordinates.map(m => populateManager(m, 'subordinate')));
-    const all = [...peers, ...subordinates];
+    
+    // Sort all: supervisors first, then peers, then subordinates
+    const all = [...supervisors, ...peers, ...subordinates];
 
     res.json({
       success: true,
@@ -222,9 +253,12 @@ const getLowerLevelManagers = async (req, res) => {
       data: subordinates, // backwards compatibility with subordinate-only checks
       subordinates,
       peers,
+      supervisors,
+      reporting: supervisors,
       all,
       stats: {
         total: all.length,
+        supervisorsCount: supervisors.length,
         peersCount: peers.length,
         subordinatesCount: subordinates.length,
         currentUserRole: user.role

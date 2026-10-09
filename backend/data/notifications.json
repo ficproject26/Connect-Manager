@@ -1790,12 +1790,30 @@
     "userId": "usr_mgr_1790592319962_fx3y"
   },
   {
-    "_id": "9cb2946e-f0e7-4554-972e-aecb8934d895",
-    "id": "9cb2946e-f0e7-4554-972e-aecb8934d895",
+    "_id": "27db0c96-3d47-4401-a55b-2cdf14512d46",
+    "id": "27db0c96-3d47-4401-a55b-2cdf14512d46",
     "title": "Confidential User B Alert",
     "userId": "user_target_victim_99",
     "isRead": false,
-    "createdAt": "2026-10-09T13:39:21.153Z",
-    "updatedAt": "2026-10-09T13:39:21.153Z"
+    "createdAt": "2026-10-09T14:18:37.498Z",
+    "updatedAt": "2026-10-09T14:18:37.498Z"
+  },
+  {
+    "_id": "a12d049c-d962-4fe7-b5c0-afc4ecde074b",
+    "id": "a12d049c-d962-4fe7-b5c0-afc4ecde074b",
+    "title": "Confidential User B Alert",
+    "userId": "user_target_victim_99",
+    "isRead": false,
+    "createdAt": "2026-10-09T14:35:06.384Z",
+    "updatedAt": "2026-10-09T14:35:06.384Z"
+  },
+  {
+    "_id": "4abc8936-ce62-403e-9d96-42b6f2cedfd3",
+    "id": "4abc8936-ce62-403e-9d96-42b6f2cedfd3",
+    "title": "Confidential User B Alert",
+    "userId": "user_target_victim_99",
+    "isRead": false,
+    "createdAt": "2026-10-09T14:39:31.175Z",
+    "updatedAt": "2026-10-09T14:39:31.175Z"
   }
 ]

@@ -2,38 +2,10 @@
   {
     "_id": "state_ka",
     "code": "KAR",
-    "createdAt": "2026-10-09T12:59:55.549Z",
+    "createdAt": "2026-10-09T14:04:33.756Z",
     "id": "state_ka",
     "name": "Karnataka",
     "status": "Active",
-    "updatedAt": "2026-10-09T13:04:27.603Z",
-    "description": "State of Karnataka",
-    "stateId": "ST-KAR-0001"
-  },
-  {
-    "_id": "6aa10f70ca0932e6eaec1f5c",
-    "__v": 0,
-    "code": "TN",
-    "createdAt": "2026-10-09T13:04:16.163Z",
-    "description": "State of Tamil Nadu",
-    "logo": "",
-    "name": "Tamil Nadu",
-    "notes": "",
-    "stateId": "ST-TAM-4607",
-    "status": "Active",
-    "updatedAt": "2026-10-09T13:04:27.661Z"
-  },
-  {
-    "_id": "6abb46c1305af8d5cc1abed8",
-    "__v": 0,
-    "code": "PY",
-    "createdAt": "2026-10-09T13:04:16.216Z",
-    "description": "Union Territory of Pondicherry",
-    "logo": "",
-    "name": "Pondicherry",
-    "notes": "",
-    "stateId": "ST-PY",
-    "status": "Active",
-    "updatedAt": "2026-10-09T13:04:27.705Z"
+    "updatedAt": "2026-10-09T14:04:33.756Z"
   }
 ]

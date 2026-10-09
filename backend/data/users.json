@@ -4191,7 +4191,7 @@
     "targetAdminName": "Dhanu",
     "targetAdminRole": "State Admin",
     "targetJurisdiction": "PIN: 635126",
-    "updatedAt": "2026-10-09T13:39:21.185Z",
+    "updatedAt": "2026-10-09T14:39:31.205Z",
     "managerId": "MGR-STM-4_8uge",
     "assignedDistrict": null,
     "assignedDistrictId": null,
@@ -4201,8 +4201,8 @@
     "assignedPincodeId": null,
     "assignedState": "Tamil Nadu",
     "assignedStateId": "6aa10f70ca0932e6eaec1f5c",
-    "resetPasswordToken": "0bda15f1644919be984b4dc87be464f818e052ba44ef896baf67b00abf237311",
-    "resetPasswordExpires": "2026-10-09T14:39:21.185Z"
+    "resetPasswordToken": "ba3405dbe525512e03a929be99e2859d7e3cbcaa4d7dec16f03c7d4075aa669b",
+    "resetPasswordExpires": "2026-10-09T15:39:31.205Z"
   },
   {
     "_id": "usr_mgr_1790588690346_2iph",
@@ -4552,7 +4552,7 @@
     "mobile": "9876543679",
     "name": "Muruga",
     "panNumber": "ABCDE1234R",
-    "passwordHash": "$2a$10$52UQnoAW8wZaGPo2bIn7zeO8RgO.jByRwK5hNVNPQ7pyaNWKa.OyC",
+    "passwordHash": "$2a$10$h1gFil71k17LtsMlH44lo.sdmaLdOCDiP6YHwsFhxTr8okFq3BPa2",
     "phone": "9876543679",
     "pincode": "636112",
     "pincodeId": "6aba6ffb16711d5e7d54bb5d",
@@ -5742,5 +5742,23 @@
       }
     ],
     "createdAt": "2026-10-09T09:36:13.435Z"
+  },
+  {
+    "_id": "user_state_4",
+    "id": "user_state_4",
+    "name": "State Manager 4",
+    "email": "state.mgr4@example.com",
+    "mobile": "9888800044",
+    "passwordHash": "$2a$10$/Da0ITMm75CQ7/79DZNXR.z5ftHord04SOP15cuUrjxPQImi.CS32",
+    "role": "state_manager",
+    "level": 1,
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "state": "Tamil Nadu",
+    "districtId": null,
+    "divisionId": null,
+    "pincodeId": null,
+    "status": "active",
+    "createdAt": "2026-10-09T14:18:23.477Z",
+    "updatedAt": "2026-10-09T14:18:23.478Z"
   }
 ]

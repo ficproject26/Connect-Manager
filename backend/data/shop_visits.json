@@ -153,13 +153,33 @@
     "voiceNote": null
   },
   {
-    "_id": "806a4459-4afa-4708-a1be-6dd92d5b8a33",
-    "id": "806a4459-4afa-4708-a1be-6dd92d5b8a33",
+    "_id": "0c35717b-7169-4762-88bd-0eb2f273e4d1",
+    "id": "0c35717b-7169-4762-88bd-0eb2f273e4d1",
     "shopName": "Bengaluru Electronics Hub",
     "stateId": "state_ka",
     "districtId": "dist_blr_urban",
     "recordedById": "some_other_manager",
-    "createdAt": "2026-10-09T13:39:21.158Z",
-    "updatedAt": "2026-10-09T13:39:21.158Z"
+    "createdAt": "2026-10-09T14:18:37.503Z",
+    "updatedAt": "2026-10-09T14:18:37.503Z"
+  },
+  {
+    "_id": "0c47dc70-ed12-4eaa-a279-6044b9977c2c",
+    "id": "0c47dc70-ed12-4eaa-a279-6044b9977c2c",
+    "shopName": "Bengaluru Electronics Hub",
+    "stateId": "state_ka",
+    "districtId": "dist_blr_urban",
+    "recordedById": "some_other_manager",
+    "createdAt": "2026-10-09T14:35:06.391Z",
+    "updatedAt": "2026-10-09T14:35:06.391Z"
+  },
+  {
+    "_id": "765351e8-acdb-414a-a1a9-aec13f5710e6",
+    "id": "765351e8-acdb-414a-a1a9-aec13f5710e6",
+    "shopName": "Bengaluru Electronics Hub",
+    "stateId": "state_ka",
+    "districtId": "dist_blr_urban",
+    "recordedById": "some_other_manager",
+    "createdAt": "2026-10-09T14:39:31.179Z",
+    "updatedAt": "2026-10-09T14:39:31.179Z"
   }
 ]
