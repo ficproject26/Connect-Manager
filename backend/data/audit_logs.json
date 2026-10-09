@@ -13098,5 +13098,70 @@
     "userId": "8c388b32-5e53-43ed-8c69-f265cbae2cbc",
     "userName": "Dinesh K",
     "userRole": "state_manager"
+  },
+  {
+    "_id": "90c8b314-ccce-41ca-bf9d-30aedcd3ad49",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-09T15:41:44.281Z",
+    "details": "Logged visit for antigraviity - Interested: YES",
+    "id": "90c8b314-ccce-41ca-bf9d-30aedcd3ad49",
+    "recordId": "395d6e1f-8e90-4529-b2f6-60bf39b787a8",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-09T15:41:44.281Z",
+    "updatedAt": "2026-10-09T15:41:44.281Z",
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "userName": "Muruga",
+    "userRole": "pincode_manager"
+  },
+  {
+    "_id": "8f6291db-c531-4639-bbd6-65ee740ca358",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-09T15:44:36.244Z",
+    "id": "8f6291db-c531-4639-bbd6-65ee740ca358",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "antigraviity",
+      "status": "Pending",
+      "pincodeId": "6aba6ffb16711d5e7d54bb5d"
+    },
+    "previousValue": null,
+    "recordId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+    "timestamp": "2026-10-09T15:44:36.243Z",
+    "updatedAt": "2026-10-09T15:44:36.244Z",
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "userName": "Muruga",
+    "userRole": "pincode_manager"
+  },
+  {
+    "_id": "6ac90cb2f69f08bb68e0c010",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.233.130.178",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"Dhanush\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "cust_1787921535022",
+      "vendorName": "Dhanush",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-09T15:48:02.636Z"
+    },
+    "timestamp": "2026-10-09T15:48:02.638Z",
+    "__v": 0
   }
 ]

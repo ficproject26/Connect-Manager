@@ -343,10 +343,10 @@ export function scopeManagersForUser(allRawManagers, currentUser) {
       }
     } else if (mLevel === userLevel) {
       let isPeerInScope = false;
-      if (userLevel === 1) isPeerInScope = true; // State managers nationwide are peers
-      else if (userLevel === 2) isPeerInScope = matchState(raw);
-      else if (userLevel === 3) isPeerInScope = matchDistrict(raw) || matchState(raw);
-      else if (userLevel === 4) isPeerInScope = matchDivision(raw) || matchDistrict(raw) || matchState(raw);
+      if (userLevel === 1) isPeerInScope = matchState(raw); // State managers in same state ONLY (no cross-state exposure)
+      else if (userLevel === 2) isPeerInScope = matchDistrict(raw); // District managers in same district ONLY
+      else if (userLevel === 3) isPeerInScope = matchDivision(raw); // Division managers in same division ONLY
+      else if (userLevel === 4) isPeerInScope = matchPincode(raw); // Pincode managers in same pincode ONLY
       else if (isGlobalAdmin) isPeerInScope = true;
 
       if (isPeerInScope) {
@@ -523,20 +523,6 @@ export const managerService = {
       const subordinates = Array.isArray(data.subordinates) ? data.subordinates : (Array.isArray(data.data) ? data.data : []);
       let all = Array.isArray(data.all) && data.all.length > 0 ? data.all : [...supervisors, ...peers, ...subordinates];
 
-      // If remote backend returned 0 managers (e.g. older remote API on 3.110.88.42), fallback scope using full list
-      if (all.length === 0) {
-        try {
-          const fallbackRes = await fetch(`${API_BASE}/managers`, {
-            headers: getAuthHeaders()
-          });
-          const fallbackData = await handleResponse(fallbackRes);
-          if (fallbackData && fallbackData.success && Array.isArray(fallbackData.all) && fallbackData.all.length > 0) {
-            return scopeManagersForUser(fallbackData.all, currentUser);
-          }
-        } catch (err) {
-          console.warn('Directory scoping fallback error:', err);
-        }
-      }
 
       return {
         ...data,

@@ -60,7 +60,7 @@ const getLowerLevelManagers = async (req, res) => {
 
     const userRole = norm(user.role);
     const userLevel = getManagerLevel(userRole);
-    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].some(r => userRole.includes(r)) || 
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin', 'superadmin', 'central_admin'].some(r => userRole === r) || 
       user.email === 'admin@example.com' || 
       String(user.id || user._id) === 'user_admin';
 
@@ -149,16 +149,16 @@ const getLowerLevelManagers = async (req, res) => {
       return false;
     });
 
-    // Filter peers (equal level in the relevant territorial jurisdiction)
+    // Filter peers (equal level in the exact assigned territorial jurisdiction)
     const rawPeers = uniqueManagers.filter(m => {
       if (isSelfUser(m)) return false;
       const mLevel = getManagerLevel(m.role);
       if (mLevel !== userLevel && !isGlobalAdmin) return false;
 
-      if (userLevel === 1) return true; // State managers nationwide are peers
-      if (userLevel === 2) return matchState(m); // District managers in same state
-      if (userLevel === 3) return matchDistrict(m) || matchState(m); // Division managers in district/state
-      if (userLevel === 4) return matchDivision(m) || matchDistrict(m) || matchState(m); // Pincode managers in division/district/state
+      if (userLevel === 1) return matchState(m); // State managers in same state ONLY (no cross-state exposure)
+      if (userLevel === 2) return matchDistrict(m); // District managers in same district ONLY
+      if (userLevel === 3) return matchDivision(m); // Division managers in same division ONLY
+      if (userLevel === 4) return matchPincode(m); // Pincode managers in same pincode ONLY
       return isGlobalAdmin;
     });
 

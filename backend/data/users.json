@@ -1768,7 +1768,7 @@
     "aadhaar": "663798526436",
     "pan": "ASDFG0987J",
     "role": "customer",
-    "status": "Active",
+    "status": "Approved",
     "isActive": true,
     "addresses": [
       {
@@ -1843,7 +1843,8 @@
     "walletUpdatedAt": "2026-09-25T11:36:41.273Z",
     "paymentPinConfigured": false,
     "paymentPinFailedAttempts": 0,
-    "paymentPinHash": ""
+    "paymentPinHash": "",
+    "isApproved": true
   },
   {
     "_id": "FIC-CUST-462259",
@@ -4191,7 +4192,7 @@
     "targetAdminName": "Dhanu",
     "targetAdminRole": "State Admin",
     "targetJurisdiction": "PIN: 635126",
-    "updatedAt": "2026-10-09T14:39:31.205Z",
+    "updatedAt": "2026-09-29T14:17:04.053Z",
     "managerId": "MGR-STM-4_8uge",
     "assignedDistrict": null,
     "assignedDistrictId": null,
@@ -4200,9 +4201,7 @@
     "assignedPincode": null,
     "assignedPincodeId": null,
     "assignedState": "Tamil Nadu",
-    "assignedStateId": "6aa10f70ca0932e6eaec1f5c",
-    "resetPasswordToken": "ba3405dbe525512e03a929be99e2859d7e3cbcaa4d7dec16f03c7d4075aa669b",
-    "resetPasswordExpires": "2026-10-09T15:39:31.205Z"
+    "assignedStateId": "6aa10f70ca0932e6eaec1f5c"
   },
   {
     "_id": "usr_mgr_1790588690346_2iph",
@@ -5742,23 +5741,5 @@
       }
     ],
     "createdAt": "2026-10-09T09:36:13.435Z"
-  },
-  {
-    "_id": "user_state_4",
-    "id": "user_state_4",
-    "name": "State Manager 4",
-    "email": "state.mgr4@example.com",
-    "mobile": "9888800044",
-    "passwordHash": "$2a$10$/Da0ITMm75CQ7/79DZNXR.z5ftHord04SOP15cuUrjxPQImi.CS32",
-    "role": "state_manager",
-    "level": 1,
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "state": "Tamil Nadu",
-    "districtId": null,
-    "divisionId": null,
-    "pincodeId": null,
-    "status": "active",
-    "createdAt": "2026-10-09T14:18:23.477Z",
-    "updatedAt": "2026-10-09T14:18:23.478Z"
   }
 ]

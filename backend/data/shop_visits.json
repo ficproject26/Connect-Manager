@@ -153,33 +153,24 @@
     "voiceNote": null
   },
   {
-    "_id": "0c35717b-7169-4762-88bd-0eb2f273e4d1",
-    "id": "0c35717b-7169-4762-88bd-0eb2f273e4d1",
-    "shopName": "Bengaluru Electronics Hub",
-    "stateId": "state_ka",
-    "districtId": "dist_blr_urban",
-    "recordedById": "some_other_manager",
-    "createdAt": "2026-10-09T14:18:37.503Z",
-    "updatedAt": "2026-10-09T14:18:37.503Z"
-  },
-  {
-    "_id": "0c47dc70-ed12-4eaa-a279-6044b9977c2c",
-    "id": "0c47dc70-ed12-4eaa-a279-6044b9977c2c",
-    "shopName": "Bengaluru Electronics Hub",
-    "stateId": "state_ka",
-    "districtId": "dist_blr_urban",
-    "recordedById": "some_other_manager",
-    "createdAt": "2026-10-09T14:35:06.391Z",
-    "updatedAt": "2026-10-09T14:35:06.391Z"
-  },
-  {
-    "_id": "765351e8-acdb-414a-a1a9-aec13f5710e6",
-    "id": "765351e8-acdb-414a-a1a9-aec13f5710e6",
-    "shopName": "Bengaluru Electronics Hub",
-    "stateId": "state_ka",
-    "districtId": "dist_blr_urban",
-    "recordedById": "some_other_manager",
-    "createdAt": "2026-10-09T14:39:31.179Z",
-    "updatedAt": "2026-10-09T14:39:31.179Z"
+    "_id": "395d6e1f-8e90-4529-b2f6-60bf39b787a8",
+    "category": "Services",
+    "createdAt": "2026-10-09T15:41:44.279Z",
+    "districtId": "6ab9f3e9bec0ef28c6e81405",
+    "divisionId": "6aba302aaf9e0372e50b72b8",
+    "id": "395d6e1f-8e90-4529-b2f6-60bf39b787a8",
+    "interestedStatus": "YES",
+    "notInterestedReason": "Interested in Onboarding",
+    "pincodeCode": "636112",
+    "pincodeId": "6aba6ffb16711d5e7d54bb5d",
+    "recordedById": "usr_mgr_1790666281762_1jqk",
+    "recordedByName": "Muruga",
+    "recordedByRole": "pincode_manager",
+    "shopName": "antigraviity",
+    "shopPhoto": "/uploads/1791560500929_ChatGPT_Image_Jul_24__2026__03_53_58_PM.png",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "updatedAt": "2026-10-09T15:41:44.279Z",
+    "vendorId": null,
+    "voiceNote": null
   }
 ]

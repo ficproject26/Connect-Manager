@@ -9,7 +9,7 @@ const isAgentInScope = (agent, user) => {
   const userRole = norm(user.role);
 
   // Central administrators & system administrators have full pan-India scope
-  if (['admin', 'super-admin', 'super_admin', 'central_admin'].some(r => userRole.includes(r)) || 
+  if (['admin', 'super-admin', 'super_admin', 'central_admin', 'superadmin'].some(r => userRole === r) || 
       user.email === 'admin@example.com' || 
       user._id === 'user_admin' || 
       user.id === 'user_admin') {

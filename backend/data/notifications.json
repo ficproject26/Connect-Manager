@@ -1790,30 +1790,15 @@
     "userId": "usr_mgr_1790592319962_fx3y"
   },
   {
-    "_id": "27db0c96-3d47-4401-a55b-2cdf14512d46",
-    "id": "27db0c96-3d47-4401-a55b-2cdf14512d46",
-    "title": "Confidential User B Alert",
-    "userId": "user_target_victim_99",
+    "_id": "0a82122c-fae2-4353-831c-1f52bbebf9cd",
+    "createdAt": "2026-10-09T15:41:44.286Z",
+    "id": "0a82122c-fae2-4353-831c-1f52bbebf9cd",
     "isRead": false,
-    "createdAt": "2026-10-09T14:18:37.498Z",
-    "updatedAt": "2026-10-09T14:18:37.498Z"
-  },
-  {
-    "_id": "a12d049c-d962-4fe7-b5c0-afc4ecde074b",
-    "id": "a12d049c-d962-4fe7-b5c0-afc4ecde074b",
-    "title": "Confidential User B Alert",
-    "userId": "user_target_victim_99",
-    "isRead": false,
-    "createdAt": "2026-10-09T14:35:06.384Z",
-    "updatedAt": "2026-10-09T14:35:06.384Z"
-  },
-  {
-    "_id": "4abc8936-ce62-403e-9d96-42b6f2cedfd3",
-    "id": "4abc8936-ce62-403e-9d96-42b6f2cedfd3",
-    "title": "Confidential User B Alert",
-    "userId": "user_target_victim_99",
-    "isRead": false,
-    "createdAt": "2026-10-09T14:39:31.175Z",
-    "updatedAt": "2026-10-09T14:39:31.175Z"
+    "message": "Muruga logged field visit for antigraviity (Interested).",
+    "recordId": "395d6e1f-8e90-4529-b2f6-60bf39b787a8",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-09T15:41:44.286Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
   }
 ]
