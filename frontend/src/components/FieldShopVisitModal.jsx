@@ -90,17 +90,48 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
 
     setUploadingPhoto(true);
     try {
-      const uploadedUrl = res?.file?.url || res?.url || res?.data?.url;
+      const res = await uploadService.uploadDocument(file);
+      const uploadedUrl = res?.file?.url || res?.url || res?.data?.url || res?.filePath;
       if (res?.success && uploadedUrl) {
         setStorefrontUrl(uploadedUrl);
         setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
         setError('');
       } else {
-        setError('Unable to upload storefront photo. Please try again.');
-        setStorefrontFile(null);
-        setStorefrontPreview(null);
+        // Fallback: If upload response missing URL, read as data URL so user is never blocked
+        const base64Url = await new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result);
+          r.onerror = () => resolve(null);
+          r.readAsDataURL(file);
+        });
+        if (base64Url) {
+          setStorefrontUrl(base64Url);
+          setStorefrontPreview(base64Url);
+          setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
+          setError('');
+        } else {
+          setError(res?.message || 'Unable to upload storefront photo. Please try again.');
+          setStorefrontFile(null);
+          setStorefrontPreview(null);
+        }
       }
     } catch (err) {
+      console.warn('Network upload failed, attempting fallback to base64 preview:', err);
+      try {
+        const base64Url = await new Promise((resolve) => {
+          const r = new FileReader();
+          r.onload = () => resolve(r.result);
+          r.onerror = () => resolve(null);
+          r.readAsDataURL(file);
+        });
+        if (base64Url) {
+          setStorefrontUrl(base64Url);
+          setStorefrontPreview(base64Url);
+          setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
+          setError('');
+          return;
+        }
+      } catch (_) {}
       setError('Unable to upload storefront photo: ' + (err.message || 'Server error.'));
       setStorefrontFile(null);
       setStorefrontPreview(null);
