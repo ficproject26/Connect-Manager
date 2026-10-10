@@ -120,13 +120,10 @@ const getVendors = async (req, res) => {
   try {
     const user = req.user;
     const cacheKey = `vendors:list:${user?.id || user?._id || 'mgr'}:${JSON.stringify(req.query)}`;
-    const cached = await cacheManager.get(cacheKey);
-    if (cached) {
-      return res.json(cached);
-    }
 
-    // Extract query parameters
-    const {
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      // Extract query parameters
+      const {
       search,
       category,
       subCategory,
@@ -227,17 +224,18 @@ const getVendors = async (req, res) => {
       };
     }));
 
-    const payload = {
-      success: true,
-      data: populated,
-      pagination: {
-        total: totalVendors,
-        page: currentPage,
-        limit: pageSize,
-        totalPages
-      }
-    };
-    await cacheManager.set(cacheKey, payload, 30);
+      return {
+        success: true,
+        data: populated,
+        pagination: {
+          total: totalVendors,
+          page: currentPage,
+          limit: pageSize,
+          totalPages
+        }
+      };
+    }, 300);
+
     res.json(payload);
   } catch (err) {
     console.error('Get vendors error:', err);

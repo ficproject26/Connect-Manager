@@ -20,14 +20,11 @@ const getDashboardStats = async (req, res) => {
   try {
     const user = req.user;
     const cacheKey = `dashboard:stats:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}`;
-    const cached = await cacheManager.get(cacheKey);
-    if (cached) {
-      return res.json(cached);
-    }
 
-    // Load all vendors and deduplicate
-    const rawVendors = await db.vendors.find({});
-    const seen = new Set();
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      // Load all vendors and deduplicate
+      const rawVendors = await db.vendors.find({});
+      const seen = new Set();
     const uniqueVendors = [];
     for (const v of rawVendors) {
       const key = String(v.registrationId || v._id || v.id || `${v.phone || v.mobile}_${v.businessName}`);
@@ -449,14 +446,16 @@ const getDashboardStats = async (req, res) => {
     const issueCounts = issueStatsByPeriod.month;
 
     // Recent activities from auditLogs
-    const allLogs = await db.auditLogs.find();
+    const allLogs = (db.auditLogs.cache && db.auditLogs.cache.length > 0)
+      ? db.auditLogs.cache
+      : await db.auditLogs.find();
     const scopedVendorIds = new Set(vendors.map(v => v._id));
     const recentActivities = allLogs
       .filter(log => scopedVendorIds.has(log.recordId) || log.userId === user.id)
       .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))
       .slice(0, 10);
 
-    const payload = {
+    return {
       success: true,
       role: user.role,
       statusCounts,
@@ -472,7 +471,8 @@ const getDashboardStats = async (req, res) => {
       recentVendors,
       recentActivities
     };
-    await cacheManager.set(cacheKey, payload, 30);
+    }, 300);
+
     res.json(payload);
   } catch (err) {
     console.error('Dashboard stats error:', err);
@@ -484,41 +484,56 @@ const getDashboardStats = async (req, res) => {
 const getVendorReportData = async (req, res) => {
   try {
     const user = req.user;
-    const scopeFilter = getScopeFilter(user);
+    const cacheKey = `reports:vendors:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}`;
 
-    const vendors = await db.vendors.find(scopeFilter);
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      const scopeFilter = getScopeFilter(user);
 
-    const detailedList = await Promise.all(vendors.map(async (v) => {
-      const [state, dist, div, pin] = await Promise.all([
-        v.stateId ? db.states.findById(v.stateId) : null,
-        v.districtId ? db.districts.findById(v.districtId) : null,
-        v.divisionId ? db.divisions.findById(v.divisionId) : null,
-        v.pincodeId ? db.pincodes.findById(v.pincodeId) : null
+      const [vendors, states, districts, divisions, pincodes] = await Promise.all([
+        db.vendors.find(scopeFilter),
+        db.states.find(),
+        db.districts.find(),
+        db.divisions.find(),
+        db.pincodes.find()
       ]);
 
-      return {
-        id: v._id,
-        name: v.name,
-        mobile: v.mobile,
-        email: v.email,
-        businessName: v.businessName,
-        category: v.category,
-        subCategory: v.subCategory,
-        status: v.status,
-        state: state?.name || '',
-        district: dist?.name || '',
-        division: div?.name || '',
-        pincode: pin?.code || '',
-        area: pin?.areaName || '',
-        createdAt: v.createdAt
-      };
-    }));
+      const stateMap = new Map((states || []).map(s => [String(s._id || s.id), s]));
+      const districtMap = new Map((districts || []).map(d => [String(d._id || d.id), d]));
+      const divisionMap = new Map((divisions || []).map(d => [String(d._id || d.id), d]));
+      const pincodeMap = new Map((pincodes || []).map(p => [String(p._id || p.id), p]));
 
-    res.json({
-      success: true,
-      total: detailedList.length,
-      data: detailedList
-    });
+      const detailedList = (vendors || []).map((v) => {
+        const state = v.stateId ? stateMap.get(String(v.stateId)) : null;
+        const dist = v.districtId ? districtMap.get(String(v.districtId)) : null;
+        const div = v.divisionId ? divisionMap.get(String(v.divisionId)) : null;
+        const pin = v.pincodeId ? pincodeMap.get(String(v.pincodeId)) : null;
+
+        return {
+          id: v._id,
+          name: v.name,
+          mobile: v.mobile,
+          email: v.email,
+          businessName: v.businessName,
+          category: v.category,
+          subCategory: v.subCategory,
+          status: v.status,
+          state: state?.name || '',
+          district: dist?.name || '',
+          division: div?.name || '',
+          pincode: pin?.code || '',
+          area: pin?.areaName || '',
+          createdAt: v.createdAt
+        };
+      });
+
+      return {
+        success: true,
+        total: detailedList.length,
+        data: detailedList
+      };
+    }, 300);
+
+    res.json(payload);
   } catch (err) {
     console.error('Vendor report error:', err);
     res.status(500).json({ success: false, message: 'Failed to generate report' });
@@ -526,172 +541,176 @@ const getVendorReportData = async (req, res) => {
 };
 
 // GET /api/reports/leaderboard - Real Performance rankings calculated dynamically from database
-// GET /api/reports/leaderboard - Real Performance rankings calculated dynamically from database
 const getLeaderboardData = async (req, res) => {
   try {
     const user = req.user;
     const cacheKey = `reports:leaderboard:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}`;
-    const cached = await cacheManager.get(cacheKey);
-    if (cached) {
-      return res.json(cached);
-    }
 
-    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
 
-    const [allUsers, allManagers, allVendors] = await Promise.all([
-      db.users.find(),
-      db.managers.find(),
-      db.vendors.find()
-    ]);
-
-    const combined = [...(allUsers || []), ...(allManagers || [])];
-    const seen = new Set();
-    const candidateManagers = [];
-
-    for (const m of combined) {
-      if (!m) continue;
-      const mEmail = String(m.email || '').toLowerCase();
-      const mIdStr = String(m._id || m.id || '');
-      const mMobile = String(m.mobile || m.phone || '').trim();
-      const mName = String(m.name || '');
-      if (mEmail.endsWith('@example.com') || mEmail.includes('example.com') || mEmail.includes('@sample.com')) continue;
-      if (mIdStr === 'user_state_ka' || mIdStr === 'user_state_1' || mIdStr === 'user_dist_1' || mIdStr === 'user_div_1' || mIdStr === 'user_pin_1' || mIdStr === 'user_admin') continue;
-      if (mMobile.startsWith('988880000') || mMobile === '9999999999') continue;
-      if (mName.includes('(Karnataka State Manager)') || mName.includes('(TN State Manager)')) continue;
-
-      const key = String(m._id || m.id || m.email || m.mobile || '');
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-
-      const r = String(m.role || '').toLowerCase();
-      if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(r)) {
-        continue;
-      }
-
-      // Territory scope enforcement based on authenticated manager's level
-      if (!isGlobalAdmin) {
-        if (user.role === 'state_manager') {
-          const uState = String(user.stateId || user.state || '').trim().toLowerCase();
-          const mState = String(m.stateId || m.state || '').trim().toLowerCase();
-          if (uState && mState && uState !== mState) continue;
-        } else if (user.role === 'district_manager') {
-          const uDist = String(user.districtId || user.district || '').trim().toLowerCase();
-          const mDist = String(m.districtId || m.district || '').trim().toLowerCase();
-          if (uDist && mDist && uDist !== mDist) continue;
-        } else if (user.role === 'division_manager') {
-          const uDiv = String(user.divisionId || user.division || '').trim().toLowerCase();
-          const mDiv = String(m.divisionId || m.division || '').trim().toLowerCase();
-          if (uDiv && mDiv && uDiv !== mDiv) continue;
-        } else if (user.role === 'pincode_manager') {
-          const uPin = String(user.pincodeId || user.pincode || user.pincodeCode || '').trim().toLowerCase();
-          const mPin = String(m.pincodeId || m.pincode || m.pincodeCode || '').trim().toLowerCase();
-          if (uPin && mPin && uPin !== mPin) continue;
-        }
-      }
-
-      candidateManagers.push(m);
-    }
-
-    const formatRoleLabel = (role) => {
-      const r = String(role || '').toLowerCase();
-      if (r.includes('state')) return 'State Manager';
-      if (r.includes('district')) return 'District Manager';
-      if (r.includes('division') || r.includes('divisional')) return 'Division Manager';
-      if (r.includes('pincode')) return 'Pincode Manager';
-      return 'Manager';
-    };
-
-    const formatLevel = (level, role) => {
-      const r = String(role || '').toLowerCase();
-      if (level === 1 || level === '1' || r.includes('state')) return 'Level 1 • State';
-      if (level === 2 || level === '2' || r.includes('district')) return 'Level 2 • District';
-      if (level === 3 || level === '3' || r.includes('division')) return 'Level 3 • Division';
-      if (level === 4 || level === '4' || r.includes('pincode')) return 'Level 4 • Pincode';
-      return `Level ${level || 1}`;
-    };
-
-    const colorPalette = ['#0284c7', '#8b5cf6', '#f59e0b', '#0d9488', '#ea580c', '#d97706', '#6366f1', '#ec4899'];
-
-    const rankedList = await Promise.all(candidateManagers.map(async (m, idx) => {
-      const [state, district, division, pincode] = await Promise.all([
-        m.stateId ? db.states.findById(m.stateId) : null,
-        m.districtId ? db.districts.findById(m.districtId) : null,
-        m.divisionId ? db.divisions.findById(m.divisionId) : null,
-        m.pincodeId ? db.pincodes.findById(m.pincodeId) : null
+      const [allUsers, allManagers, allVendors, states, districts, divisions, pincodes] = await Promise.all([
+        db.users.find(),
+        db.managers.find(),
+        db.vendors.find(),
+        db.states.find(),
+        db.districts.find(),
+        db.divisions.find(),
+        db.pincodes.find()
       ]);
 
-      // Calculate real vendors added by this respective manager
-      const mId = String(m._id || m.id || '');
-      const managerVendors = (allVendors || []).filter(v => 
-        String(v.createdBy || '') === mId
-      );
+      const stateMap = new Map((states || []).map(s => [String(s._id || s.id), s]));
+      const districtMap = new Map((districts || []).map(d => [String(d._id || d.id), d]));
+      const divisionMap = new Map((divisions || []).map(d => [String(d._id || d.id), d]));
+      const pincodeMap = new Map((pincodes || []).map(p => [String(p._id || p.id), p]));
 
-      const totalVendors = managerVendors.length;
-      const activeVendors = managerVendors.filter(v => String(v.status || '').toLowerCase() === 'active').length;
-      const pendingVendors = managerVendors.filter(v => {
-        const st = String(v.status || '').toLowerCase();
-        return st === 'pending' || st.includes('review');
-      }).length;
+      const combined = [...(allUsers || []), ...(allManagers || [])];
+      const seen = new Set();
+      const candidateManagers = [];
 
-      const basePoints = (activeVendors * 250) + (totalVendors * 80);
-      const target = Math.max(totalVendors + 2, 5);
-      const slaRate = totalVendors > 0 
-        ? `${Math.min(99, Math.round((activeVendors / totalVendors) * 100))}%`
-        : '0.0%';
+      for (const m of combined) {
+        if (!m) continue;
+        const mEmail = String(m.email || '').toLowerCase();
+        const mIdStr = String(m._id || m.id || '');
+        const mMobile = String(m.mobile || m.phone || '').trim();
+        const mName = String(m.name || '');
+        if (mEmail.endsWith('@example.com') || mEmail.includes('example.com') || mEmail.includes('@sample.com')) continue;
+        if (mIdStr === 'user_state_ka' || mIdStr === 'user_state_1' || mIdStr === 'user_dist_1' || mIdStr === 'user_div_1' || mIdStr === 'user_pin_1' || mIdStr === 'user_admin') continue;
+        if (mMobile.startsWith('988880000') || mMobile === '9999999999') continue;
+        if (mName.includes('(Karnataka State Manager)') || mName.includes('(TN State Manager)')) continue;
 
-      let territoryText = state?.name || m.state || 'Assigned Territory';
-      if (pincode?.code || m.pincodeCode || m.pincode) {
-        const pin = pincode?.code || m.pincodeCode || m.pincode;
-        territoryText = `PIN ${pin}`;
-      } else if (division?.name || m.division) {
-        const divName = division?.name || m.division;
-        const distName = district?.name || m.district || '';
-        territoryText = distName ? `${divName}, ${distName}` : divName;
-      } else if (district?.name || m.district) {
-        const distName = district?.name || m.district;
-        const stName = state?.name || m.state || '';
-        territoryText = stName ? `${distName}, ${stName}` : distName;
+        const key = String(m._id || m.id || m.email || m.mobile || '');
+        if (!key || seen.has(key)) continue;
+        seen.add(key);
+
+        const r = String(m.role || '').toLowerCase();
+        if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(r)) {
+          continue;
+        }
+
+        // Territory scope enforcement based on authenticated manager's level
+        if (!isGlobalAdmin) {
+          if (user.role === 'state_manager') {
+            const uState = String(user.stateId || user.state || '').trim().toLowerCase();
+            const mState = String(m.stateId || m.state || '').trim().toLowerCase();
+            if (uState && mState && uState !== mState) continue;
+          } else if (user.role === 'district_manager') {
+            const uDist = String(user.districtId || user.district || '').trim().toLowerCase();
+            const mDist = String(m.districtId || m.district || '').trim().toLowerCase();
+            if (uDist && mDist && uDist !== mDist) continue;
+          } else if (user.role === 'division_manager') {
+            const uDiv = String(user.divisionId || user.division || '').trim().toLowerCase();
+            const mDiv = String(m.divisionId || m.division || '').trim().toLowerCase();
+            if (uDiv && mDiv && uDiv !== mDiv) continue;
+          } else if (user.role === 'pincode_manager') {
+            const uPin = String(user.pincodeId || user.pincode || user.pincodeCode || '').trim().toLowerCase();
+            const mPin = String(m.pincodeId || m.pincode || m.pincodeCode || '').trim().toLowerCase();
+            if (uPin && mPin && uPin !== mPin) continue;
+          }
+        }
+
+        candidateManagers.push(m);
       }
 
-      const isSelf = mId === String(user.id || user._id || '');
+      const formatRoleLabel = (role) => {
+        const r = String(role || '').toLowerCase();
+        if (r.includes('state')) return 'State Manager';
+        if (r.includes('district')) return 'District Manager';
+        if (r.includes('division') || r.includes('divisional')) return 'Division Manager';
+        if (r.includes('pincode')) return 'Pincode Manager';
+        return 'Manager';
+      };
+
+      const formatLevel = (level, role) => {
+        const r = String(role || '').toLowerCase();
+        if (level === 1 || level === '1' || r.includes('state')) return 'Level 1 • State';
+        if (level === 2 || level === '2' || r.includes('district')) return 'Level 2 • District';
+        if (level === 3 || level === '3' || r.includes('division')) return 'Level 3 • Division';
+        if (level === 4 || level === '4' || r.includes('pincode')) return 'Level 4 • Pincode';
+        return `Level ${level || 1}`;
+      };
+
+      const colorPalette = ['#0284c7', '#8b5cf6', '#f59e0b', '#0d9488', '#ea580c', '#d97706', '#6366f1', '#ec4899'];
+
+      const rankedList = candidateManagers.map((m, idx) => {
+        const state = m.stateId ? stateMap.get(String(m.stateId)) : null;
+        const district = m.districtId ? districtMap.get(String(m.districtId)) : null;
+        const division = m.divisionId ? divisionMap.get(String(m.divisionId)) : null;
+        const pincode = m.pincodeId ? pincodeMap.get(String(m.pincodeId)) : null;
+
+        // Calculate real vendors added by this respective manager
+        const mId = String(m._id || m.id || '');
+        const managerVendors = (allVendors || []).filter(v => 
+          String(v.createdBy || '') === mId
+        );
+
+        const totalVendors = managerVendors.length;
+        const activeVendors = managerVendors.filter(v => String(v.status || '').toLowerCase() === 'active').length;
+        const pendingVendors = managerVendors.filter(v => {
+          const st = String(v.status || '').toLowerCase();
+          return st === 'pending' || st.includes('review');
+        }).length;
+
+        const basePoints = (activeVendors * 250) + (totalVendors * 80);
+        const target = Math.max(totalVendors + 2, 5);
+        const slaRate = totalVendors > 0 
+          ? `${Math.min(99, Math.round((activeVendors / totalVendors) * 100))}%`
+          : '0.0%';
+
+        let territoryText = state?.name || m.state || 'Assigned Territory';
+        if (pincode?.code || m.pincodeCode || m.pincode) {
+          const pin = pincode?.code || m.pincodeCode || m.pincode;
+          territoryText = `PIN ${pin}`;
+        } else if (division?.name || m.division) {
+          const divName = division?.name || m.division;
+          const distName = district?.name || m.district || '';
+          territoryText = distName ? `${divName}, ${distName}` : divName;
+        } else if (district?.name || m.district) {
+          const distName = district?.name || m.district;
+          const stName = state?.name || m.state || '';
+          territoryText = stName ? `${distName}, ${stName}` : distName;
+        }
+
+        const isSelf = mId === String(user.id || user._id || '');
+
+        return {
+          id: mId,
+          name: String(m.name || 'Manager'),
+          role: String(m.role || 'manager'),
+          roleLabel: formatRoleLabel(m.role),
+          level: formatLevel(m.level, m.role),
+          territory: String(territoryText),
+          stateId: m.stateId || null,
+          stateName: state?.name || m.state || null,
+          vendorsOnboarded: totalVendors,
+          activeVendors,
+          pendingVendors,
+          target,
+          slaRate,
+          points: basePoints,
+          isSelf,
+          rating: activeVendors > 0 ? 'Excellent' : totalVendors > 0 ? 'Good' : 'Steady',
+          avatarBg: colorPalette[idx % colorPalette.length]
+        };
+      });
+
+      // Sort by points descending, then by active vendors
+      rankedList.sort((a, b) => b.points - a.points || b.activeVendors - a.activeVendors || b.vendorsOnboarded - a.vendorsOnboarded);
+
+      // Assign dynamic rank
+      const rankedWithPosition = rankedList.map((item, index) => ({
+        ...item,
+        rank: index + 1
+      }));
 
       return {
-        id: mId,
-        name: String(m.name || 'Manager'),
-        role: String(m.role || 'manager'),
-        roleLabel: formatRoleLabel(m.role),
-        level: formatLevel(m.level, m.role),
-        territory: String(territoryText),
-        stateId: m.stateId || null,
-        stateName: state?.name || m.state || null,
-        vendorsOnboarded: totalVendors,
-        activeVendors,
-        pendingVendors,
-        target,
-        slaRate,
-        points: basePoints,
-        isSelf,
-        rating: activeVendors > 0 ? 'Excellent' : totalVendors > 0 ? 'Good' : 'Steady',
-        avatarBg: colorPalette[idx % colorPalette.length]
+        success: true,
+        count: rankedWithPosition.length,
+        data: rankedWithPosition,
+        top3: rankedWithPosition.slice(0, 3)
       };
-    }));
+    }, 300);
 
-    // Sort by points descending, then by active vendors
-    rankedList.sort((a, b) => b.points - a.points || b.activeVendors - a.activeVendors || b.vendorsOnboarded - a.vendorsOnboarded);
-
-    // Assign dynamic rank
-    const rankedWithPosition = rankedList.map((item, index) => ({
-      ...item,
-      rank: index + 1
-    }));
-
-    const payload = {
-      success: true,
-      count: rankedWithPosition.length,
-      data: rankedWithPosition,
-      top3: rankedWithPosition.slice(0, 3)
-    };
-    await cacheManager.set(cacheKey, payload, 60);
     res.json(payload);
   } catch (err) {
     console.error('Leaderboard error:', err);

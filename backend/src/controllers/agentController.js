@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { publishEntityEvent } = require('../realtime');
+const { publishEntityEvent, cacheManager } = require('../realtime');
 
 const norm = (s) => (s !== undefined && s !== null ? String(s).trim().toLowerCase() : '');
 
@@ -161,82 +161,88 @@ const normalizeAgent = (a) => {
 const getAgents = async (req, res) => {
   try {
     const user = req.user;
-    const { status, level, search } = req.query;
+    const cacheKey = `agents:list:${user?.id || user?._id || 'mgr'}:${JSON.stringify(req.query)}`;
 
-    const allAgents = await db.agents.find();
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      const { status, level, search } = req.query;
 
-    // Deduplicate agents by unique identifiers
-    const seen = new Set();
-    const unique = [];
-    for (const a of allAgents) {
-      const key = String(a.registrationId || a._id || a.id || a.email || a.phone || a.mobile);
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(normalizeAgent(a));
-      }
-    }
+      const allAgents = await db.agents.find();
 
-    let filtered = unique.filter(a => {
-      // Scope filtering
-      if (!isAgentInScope(a, user)) return false;
-
-      // Status filter
-      if (status && status !== 'All') {
-        const s = status.toLowerCase();
-        const aStatus = String(a.status || 'Active').toLowerCase();
-        if (s === 'active' && aStatus !== 'active' && aStatus !== 'approved') return false;
-        if (s !== 'active' && aStatus !== s) return false;
-      }
-
-      // Level filter
-      if (level && level !== 'All') {
-        const lvlStr = String(level).toLowerCase();
-        const aLvlStr = String(a.level || '').toLowerCase();
-        if (lvlStr === 'state' || lvlStr === '1') {
-          if (!aLvlStr.includes('state') && aLvlStr !== '1') return false;
-        } else if (lvlStr === 'district' || lvlStr === '2') {
-          if (!aLvlStr.includes('district') && aLvlStr !== '2') return false;
-        } else if (lvlStr === 'division' || lvlStr === '3') {
-          if (!aLvlStr.includes('division') && aLvlStr !== '3') return false;
-        } else if (lvlStr === 'pincode' || lvlStr === '4') {
-          if (!aLvlStr.includes('pincode') && aLvlStr !== '4') return false;
-        } else if (aLvlStr !== lvlStr) {
-          return false;
+      // Deduplicate agents by unique identifiers
+      const seen = new Set();
+      const unique = [];
+      for (const a of allAgents) {
+        const key = String(a.registrationId || a._id || a.id || a.email || a.phone || a.mobile);
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(normalizeAgent(a));
         }
       }
 
-      // Search filter
-      if (search && search.trim()) {
-        const q = search.toLowerCase();
-        const matchName = (a.name || '').toLowerCase().includes(q);
-        const matchEmail = (a.email || '').toLowerCase().includes(q);
-        const matchMobile = (a.mobile || a.phone || '').toLowerCase().includes(q);
-        const matchReg = (a.registrationId || '').toLowerCase().includes(q);
-        const matchPincode = (a.pincodeCode || '').toLowerCase().includes(q);
-        const matchDistrict = (a.district || '').toLowerCase().includes(q);
-        if (!matchName && !matchEmail && !matchMobile && !matchReg && !matchPincode && !matchDistrict) return false;
-      }
+      let filtered = unique.filter(a => {
+        // Scope filtering
+        if (!isAgentInScope(a, user)) return false;
 
-      return true;
-    });
+        // Status filter
+        if (status && status !== 'All') {
+          const s = status.toLowerCase();
+          const aStatus = String(a.status || 'Active').toLowerCase();
+          if (s === 'active' && aStatus !== 'active' && aStatus !== 'approved') return false;
+          if (s !== 'active' && aStatus !== s) return false;
+        }
 
-    const activeCount = filtered.filter(a => {
-      const s = String(a.status || '').toLowerCase();
-      return s === 'active' || s === 'approved';
-    }).length;
+        // Level filter
+        if (level && level !== 'All') {
+          const lvlStr = String(level).toLowerCase();
+          const aLvlStr = String(a.level || '').toLowerCase();
+          if (lvlStr === 'state' || lvlStr === '1') {
+            if (!aLvlStr.includes('state') && aLvlStr !== '1') return false;
+          } else if (lvlStr === 'district' || lvlStr === '2') {
+            if (!aLvlStr.includes('district') && aLvlStr !== '2') return false;
+          } else if (lvlStr === 'division' || lvlStr === '3') {
+            if (!aLvlStr.includes('division') && aLvlStr !== '3') return false;
+          } else if (lvlStr === 'pincode' || lvlStr === '4') {
+            if (!aLvlStr.includes('pincode') && aLvlStr !== '4') return false;
+          } else if (aLvlStr !== lvlStr) {
+            return false;
+          }
+        }
 
-    res.json({
-      success: true,
-      count: filtered.length,
-      agents: filtered,
-      data: filtered,
-      stats: {
-        totalAgents: filtered.length,
-        activeOnGround: activeCount,
-        totalReferrals: filtered.reduce((acc, a) => acc + (Number(a.totalReferrals) || 0), 0),
-        vendorsOnboarded: filtered.reduce((acc, a) => acc + (Number(a.vendorOnboardings) || 0), 0)
-      }
-    });
+        // Search filter
+        if (search && search.trim()) {
+          const q = search.toLowerCase();
+          const matchName = (a.name || '').toLowerCase().includes(q);
+          const matchEmail = (a.email || '').toLowerCase().includes(q);
+          const matchMobile = (a.mobile || a.phone || '').toLowerCase().includes(q);
+          const matchReg = (a.registrationId || '').toLowerCase().includes(q);
+          const matchPincode = (a.pincodeCode || '').toLowerCase().includes(q);
+          const matchDistrict = (a.district || '').toLowerCase().includes(q);
+          if (!matchName && !matchEmail && !matchMobile && !matchReg && !matchPincode && !matchDistrict) return false;
+        }
+
+        return true;
+      });
+
+      const activeCount = filtered.filter(a => {
+        const s = String(a.status || '').toLowerCase();
+        return s === 'active' || s === 'approved';
+      }).length;
+
+      return {
+        success: true,
+        count: filtered.length,
+        agents: filtered,
+        data: filtered,
+        stats: {
+          totalAgents: filtered.length,
+          activeOnGround: activeCount,
+          totalReferrals: filtered.reduce((acc, a) => acc + (Number(a.totalReferrals) || 0), 0),
+          vendorsOnboarded: filtered.reduce((acc, a) => acc + (Number(a.vendorOnboardings) || 0), 0)
+        }
+      };
+    }, 300);
+
+    res.json(payload);
   } catch (err) {
     console.error('Error fetching agents:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve agents from database' });
@@ -247,24 +253,30 @@ const getAgents = async (req, res) => {
 const getAgentHierarchy = async (req, res) => {
   try {
     const user = req.user;
-    const allAgents = await db.agents.find();
+    const cacheKey = `agents:hierarchy:${user?.id || user?._id || 'mgr'}`;
 
-    const seen = new Set();
-    const unique = [];
-    for (const a of allAgents) {
-      const key = String(a.registrationId || a._id || a.id || a.email || a.phone || a.mobile);
-      if (!seen.has(key)) {
-        seen.add(key);
-        unique.push(normalizeAgent(a));
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      const allAgents = await db.agents.find();
+
+      const seen = new Set();
+      const unique = [];
+      for (const a of allAgents) {
+        const key = String(a.registrationId || a._id || a.id || a.email || a.phone || a.mobile);
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(normalizeAgent(a));
+        }
       }
-    }
 
-    const scopedAgents = unique.filter(a => isAgentInScope(a, user));
+      const scopedAgents = unique.filter(a => isAgentInScope(a, user));
 
-    res.json({
-      success: true,
-      hierarchy: scopedAgents
-    });
+      return {
+        success: true,
+        hierarchy: scopedAgents
+      };
+    }, 300);
+
+    res.json(payload);
   } catch (err) {
     console.error('Error fetching agent hierarchy:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve agent hierarchy' });

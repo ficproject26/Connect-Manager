@@ -173,12 +173,9 @@ const getTasks = async (req, res) => {
   try {
     const user = req.user;
     const cacheKey = `tasks:list:${user?.id || user?._id || 'mgr'}:${JSON.stringify(req.query)}`;
-    const cached = await cacheManager.get(cacheKey);
-    if (cached) {
-      return res.json(cached);
-    }
 
-    const { status, category, priority, search, state, district, division, pincode, agentId, agentRole } = req.query;
+    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+      const { status, category, priority, search, state, district, division, pincode, agentId, agentRole } = req.query;
 
     // Resolve authenticated manager's territory profile (source of truth)
     const territoryProfile = await getManagerTerritoryProfile(user);
@@ -245,13 +242,14 @@ const getTasks = async (req, res) => {
       };
     });
 
-    const payload = {
-      success: true,
-      count: enriched.length,
-      data: enriched,
-      tasks: enriched
-    };
-    await cacheManager.set(cacheKey, payload, 30);
+      return {
+        success: true,
+        count: enriched.length,
+        data: enriched,
+        tasks: enriched
+      };
+    }, 300);
+
     res.json(payload);
   } catch (err) {
     console.error('Error fetching tasks:', err);

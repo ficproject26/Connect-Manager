@@ -22,6 +22,17 @@ export default defineConfig(({ mode }) => {
           secure: false
         }
       }
+    },
+    build: {
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            'vendor-react': ['react', 'react-dom'],
+            'vendor-icons': ['lucide-react']
+          }
+        }
+      },
+      chunkSizeWarningLimit: 600
     }
   };
 });

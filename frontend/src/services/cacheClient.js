@@ -26,18 +26,70 @@ export const CACHE_POLICIES = {
   'default': { stale: 30 * 1000, gc: 5 * 60 * 1000 }
 };
 
+function getActiveUserIdSync() {
+  if (typeof window === 'undefined') return null;
+  try {
+    const saved = localStorage.getItem('agent_mgr_token');
+    if (!saved) return null;
+    const parts = saved.split('.');
+    if (parts.length !== 3) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+        .join('')
+    );
+    const parsed = JSON.parse(jsonPayload);
+    return parsed.id || parsed._id || null;
+  } catch {
+    return null;
+  }
+}
+
 export class CacheClient {
   constructor() {
     this.store = new Map(); // key -> { data, fetchedAt, staleAt, gcAt }
     this.inFlight = new Map(); // key -> Promise
     this.listeners = new Map(); // key -> Set<callback>
     this.patternListeners = new Set(); // Set<{ pattern, callback }>
-    this.currentUserId = null;
+    this.currentUserId = getActiveUserIdSync();
+
+    // Instant frame-0 hydration from sessionStorage
+    if (this.currentUserId) {
+      this.hydrateFromStorage(this.currentUserId);
+    }
 
     // Start background garbage collection timer every 30s
     if (typeof window !== 'undefined') {
       this.gcTimer = setInterval(() => this.runGarbageCollection(), 30000);
       this.initRealtimeSync();
+    }
+  }
+
+  hydrateFromStorage(userId) {
+    if (!userId || typeof window === 'undefined' || !window.sessionStorage) return;
+    try {
+      const prefix = `mgr_c1_${userId}_`;
+      const now = Date.now();
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const sKey = sessionStorage.key(i);
+        if (sKey && sKey.startsWith(prefix)) {
+          const rawKey = sKey.slice(prefix.length);
+          const itemStr = sessionStorage.getItem(sKey);
+          if (itemStr) {
+            const entry = JSON.parse(itemStr);
+            if (entry && entry.gcAt && now < entry.gcAt) {
+              this.store.set(rawKey, entry);
+            } else {
+              sessionStorage.removeItem(sKey);
+            }
+          }
+        }
+      }
+    } catch (err) {
+      console.warn('[CacheClient] Storage hydration notice:', err);
     }
   }
 
@@ -48,6 +100,9 @@ export class CacheClient {
       this.clear();
     }
     this.currentUserId = nextId;
+    if (nextId) {
+      this.hydrateFromStorage(nextId);
+    }
   }
 
   getPolicy(key) {
@@ -75,6 +130,11 @@ export class CacheClient {
     for (const [key, entry] of this.store.entries()) {
       if (now > entry.gcAt) {
         this.store.delete(key);
+        if (this.currentUserId && typeof window !== 'undefined' && window.sessionStorage) {
+          try {
+            sessionStorage.removeItem(`mgr_c1_${this.currentUserId}_${key}`);
+          } catch (e) {}
+        }
       }
     }
   }
@@ -103,6 +163,14 @@ export class CacheClient {
     };
 
     this.store.set(key, entry);
+
+    // Frame-0 recovery backing in sessionStorage
+    if (this.currentUserId && typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        sessionStorage.setItem(`mgr_c1_${this.currentUserId}_${key}`, JSON.stringify(entry));
+      } catch (e) {}
+    }
+
     this.notifyListeners(key, data);
     return data;
   }
@@ -238,6 +306,18 @@ export class CacheClient {
   clear() {
     this.store.clear();
     this.inFlight.clear();
+    if (typeof window !== 'undefined' && window.sessionStorage) {
+      try {
+        const toRemove = [];
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const k = sessionStorage.key(i);
+          if (k && k.startsWith('mgr_c1_')) {
+            toRemove.push(k);
+          }
+        }
+        toRemove.forEach(k => sessionStorage.removeItem(k));
+      } catch (e) {}
+    }
     this.currentUserId = null;
     console.log('🧹 [CacheClient] Client-side data cache wiped cleanly.');
   }
