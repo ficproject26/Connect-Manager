@@ -137,6 +137,7 @@ function AppInner() {
 
   // Navigation State
   const [currentPage, setCurrentPage] = useState('dashboard');
+  const [visitedPages, setVisitedPages] = useState(() => new Set(['dashboard']));
   const [authPage, setAuthPage] = useState('login'); // 'login' | 'forgot-password' | 'reset-password'
   const [navParams, setNavParams] = useState({});
   const [onboardModalOpen, setOnboardModalOpen] = useState(false);
@@ -162,6 +163,12 @@ function AppInner() {
   const navigate = (page, params = {}) => {
     setNavParams(params);
     setCurrentPage(page);
+    setVisitedPages(prev => {
+      if (prev.has(page)) return prev;
+      const next = new Set(prev);
+      next.add(page);
+      return next;
+    });
     setMobileSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -228,16 +235,48 @@ function AppInner() {
         />
 
         <main className="content-body">
-          {currentPage === 'dashboard' && <Dashboard onNavigate={navigate} />}
+          {visitedPages.has('dashboard') && (
+            <div style={{ display: currentPage === 'dashboard' ? 'block' : 'none', width: '100%' }}>
+              <Dashboard onNavigate={navigate} />
+            </div>
+          )}
           {/* VendorRequests page removed */}
-          {currentPage === 'vendors' && <Vendors onNavigate={navigate} onOpenOnboard={openOnboard} />}
+          {visitedPages.has('vendors') && (
+            <div style={{ display: currentPage === 'vendors' ? 'block' : 'none', width: '100%' }}>
+              <Vendors onNavigate={navigate} onOpenOnboard={openOnboard} />
+            </div>
+          )}
           {currentPage === 'vendor-requests' && <VendorRequests onNavigate={navigate} />}
-          {(currentPage === 'tasks' || currentPage === 'issues') && <Tasks onNavigate={navigate} />}
-          {currentPage === 'leaderboard' && <Leaderboard onNavigate={navigate} />}
-          {currentPage === 'notifications' && <Notifications onNavigate={navigate} />}
-          {currentPage === 'field-managers' && <FieldManagers onNavigate={navigate} />}
-          {(currentPage === 'agents-directory' || currentPage === 'agent-directory') && <AgentDirectory onNavigate={navigate} />}
-          {currentPage === 'shop-visits' && <Reports onNavigate={navigate} initialTab="shop-visits" />}
+          {(visitedPages.has('tasks') || visitedPages.has('issues')) && (
+            <div style={{ display: (currentPage === 'tasks' || currentPage === 'issues') ? 'block' : 'none', width: '100%' }}>
+              <Tasks onNavigate={navigate} />
+            </div>
+          )}
+          {visitedPages.has('leaderboard') && (
+            <div style={{ display: currentPage === 'leaderboard' ? 'block' : 'none', width: '100%' }}>
+              <Leaderboard onNavigate={navigate} />
+            </div>
+          )}
+          {visitedPages.has('notifications') && (
+            <div style={{ display: currentPage === 'notifications' ? 'block' : 'none', width: '100%' }}>
+              <Notifications onNavigate={navigate} />
+            </div>
+          )}
+          {visitedPages.has('field-managers') && (
+            <div style={{ display: currentPage === 'field-managers' ? 'block' : 'none', width: '100%' }}>
+              <FieldManagers onNavigate={navigate} />
+            </div>
+          )}
+          {(visitedPages.has('agents-directory') || visitedPages.has('agent-directory')) && (
+            <div style={{ display: (currentPage === 'agents-directory' || currentPage === 'agent-directory') ? 'block' : 'none', width: '100%' }}>
+              <AgentDirectory onNavigate={navigate} />
+            </div>
+          )}
+          {visitedPages.has('shop-visits') && (
+            <div style={{ display: currentPage === 'shop-visits' ? 'block' : 'none', width: '100%' }}>
+              <Reports onNavigate={navigate} initialTab="shop-visits" />
+            </div>
+          )}
           {/* add-vendor page kept as fallback */}
           {currentPage === 'add-vendor' && <AddVendor onNavigate={navigate} />}
 
@@ -342,10 +381,26 @@ function AppInner() {
             </div>
           )}
                     {currentPage === 'vendor-details' && <VendorDetails vendorId={navParams.vendorId} onNavigate={navigate} />}
-          {currentPage === 'reports' && <Reports onNavigate={navigate} initialTab={navParams.tab || 'vendors'} />}
-          {currentPage === 'audit-logs' && <AuditLogs onNavigate={navigate} />}
-          {currentPage === 'profile' && <Profile onNavigate={navigate} />}
-          {currentPage === 'settings' && <Settings onNavigate={navigate} />}
+          {visitedPages.has('reports') && (
+            <div style={{ display: currentPage === 'reports' ? 'block' : 'none', width: '100%' }}>
+              <Reports onNavigate={navigate} initialTab={navParams.tab || 'vendors'} />
+            </div>
+          )}
+          {visitedPages.has('audit-logs') && (
+            <div style={{ display: currentPage === 'audit-logs' ? 'block' : 'none', width: '100%' }}>
+              <AuditLogs onNavigate={navigate} />
+            </div>
+          )}
+          {visitedPages.has('profile') && (
+            <div style={{ display: currentPage === 'profile' ? 'block' : 'none', width: '100%' }}>
+              <Profile onNavigate={navigate} />
+            </div>
+          )}
+          {visitedPages.has('settings') && (
+            <div style={{ display: currentPage === 'settings' ? 'block' : 'none', width: '100%' }}>
+              <Settings onNavigate={navigate} />
+            </div>
+          )}
         </main>
       </div>
     </div>

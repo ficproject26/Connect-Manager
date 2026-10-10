@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings, Menu } from 'lucide-react';
+import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
 
@@ -8,9 +8,12 @@ import { useRealtime } from '../realtime';
 const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
   const { user, logout } = useAuth();
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const profileDropdownRef = useRef(null);
+  const searchContainerRef = useRef(null);
+  const searchInputRef = useRef(null);
 
   // Close dropdown on outside touch or click anywhere on screen
   useEffect(() => {
@@ -28,6 +31,36 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
       document.removeEventListener('touchstart', handleOutsideClick);
     };
   }, [dropdownOpen]);
+
+  // Search popover focus and outside-click / ESC close listener
+  useEffect(() => {
+    if (searchOpen && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [searchOpen]);
+
+  useEffect(() => {
+    const handleSearchOutsideClick = (e) => {
+      if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
+        setSearchOpen(false);
+      }
+    };
+    const handleSearchKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        setSearchOpen(false);
+      }
+    };
+    if (searchOpen) {
+      document.addEventListener('mousedown', handleSearchOutsideClick);
+      document.addEventListener('touchstart', handleSearchOutsideClick);
+      document.addEventListener('keydown', handleSearchKeyDown);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleSearchOutsideClick);
+      document.removeEventListener('touchstart', handleSearchOutsideClick);
+      document.removeEventListener('keydown', handleSearchKeyDown);
+    };
+  }, [searchOpen]);
 
   // Sync unread notification count
   const fetchCount = async () => {
@@ -76,7 +109,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
 
   return (
     <header className="top-navbar">
-      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
         {/* Mobile Sidebar Hamburger Toggle */}
         <button
           type="button"
@@ -87,27 +120,101 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
         >
           <Menu size={18} />
         </button>
-
-        {/* 1. Global Search Pill */}
-        <div className="nav-search-box">
-          <Search size={16} className="nav-search-icon" />
-          <input
-            type="text"
-            placeholder="Search managers, vendors, shops, pincodes, tasks..."
-            className="nav-search-input"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && searchQuery.trim() && onNavigate) {
-                onNavigate('vendors', { search: searchQuery.trim() });
-              }
-            }}
-          />
-        </div>
       </div>
 
-      {/* 2. Top Nav Actions */}
-      <div className="top-nav-actions">
+      {/* Top Nav Actions */}
+      <div className="top-nav-actions" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '8px' }}>
+        {/* Search Icon & Popover */}
+        <div ref={searchContainerRef} style={{ position: 'relative' }}>
+          <button
+            type="button"
+            className="nav-icon-btn"
+            title="Search"
+            aria-label="Search"
+            onClick={() => setSearchOpen(prev => !prev)}
+            style={{
+              background: searchOpen ? 'rgba(2, 132, 199, 0.1)' : undefined,
+              color: searchOpen ? '#0284c7' : undefined
+            }}
+          >
+            <Search size={17} />
+          </button>
+
+          {searchOpen && (
+            <div
+              className="search-popover-panel"
+              style={{
+                position: 'absolute',
+                right: 0,
+                top: 'calc(100% + 10px)',
+                width: 'min(420px, calc(100vw - 32px))',
+                background: '#ffffff',
+                borderRadius: '12px',
+                border: '1.5px solid #cbd5e1',
+                boxShadow: '0 12px 32px rgba(15, 23, 42, 0.16)',
+                padding: '8px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                zIndex: 1000
+              }}
+            >
+              <Search size={16} style={{ color: '#0284c7', flexShrink: 0 }} />
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search managers, vendors, shops, pincodes, tasks..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && searchQuery.trim() && onNavigate) {
+                    onNavigate('vendors', { search: searchQuery.trim() });
+                    setSearchOpen(false);
+                  }
+                }}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  outline: 'none',
+                  fontSize: '0.84rem',
+                  color: '#1e293b',
+                  background: 'transparent'
+                }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  title="Clear search query"
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px', display: 'flex' }}
+                >
+                  <X size={14} />
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => setSearchOpen(false)}
+                title="Close (Esc)"
+                style={{
+                  background: '#f1f5f9',
+                  border: '1px solid #e2e8f0',
+                  borderRadius: '6px',
+                  cursor: 'pointer',
+                  color: '#64748b',
+                  padding: '3px 8px',
+                  fontSize: '0.72rem',
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '2px'
+                }}
+              >
+                <span>Esc</span>
+              </button>
+            </div>
+          )}
+        </div>
+
         {/* Notification Bell with Dynamic Badge */}
         <button
           className="nav-icon-btn"

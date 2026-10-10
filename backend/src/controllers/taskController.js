@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const { broadcastNotification } = require('../routes/notificationRoutes');
-const { publishEntityEvent } = require('../realtime');
+const { publishEntityEvent, cacheManager } = require('../realtime');
 
 const normalize = (s) => (s || '').toString().trim().toLowerCase();
 
@@ -9,6 +9,12 @@ const normalize = (s) => (s || '').toString().trim().toLowerCase();
  * Source of truth: Authenticated manager JWT identity + database record.
  */
 const getManagerTerritoryProfile = async (user) => {
+  const profileKey = `territory:profile:${user?.id || user?._id || 'mgr'}`;
+  const cachedProfile = await cacheManager.get(profileKey);
+  if (cachedProfile) {
+    return cachedProfile;
+  }
+
   const role = normalize(user.role);
   const levelNum = Number(user.level);
   const levelStr = normalize(user.level);
@@ -58,7 +64,7 @@ const getManagerTerritoryProfile = async (user) => {
     }
   }
 
-  return {
+  const profile = {
     managerId: user.managerId || user.id || user._id,
     level,
     stateId: normalize(stateId),
@@ -70,6 +76,8 @@ const getManagerTerritoryProfile = async (user) => {
     pincodeId: normalize(pincodeId),
     pincode: normalize(pincode)
   };
+  await cacheManager.set(profileKey, profile, 600);
+  return profile;
 };
 
 /**
@@ -164,6 +172,12 @@ const isTaskInManagerTerritory = (task, profile) => {
 const getTasks = async (req, res) => {
   try {
     const user = req.user;
+    const cacheKey = `tasks:list:${user?.id || user?._id || 'mgr'}:${JSON.stringify(req.query)}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const { status, category, priority, search, state, district, division, pincode, agentId, agentRole } = req.query;
 
     // Resolve authenticated manager's territory profile (source of truth)
@@ -231,12 +245,14 @@ const getTasks = async (req, res) => {
       };
     });
 
-    res.json({
+    const payload = {
       success: true,
       count: enriched.length,
       data: enriched,
       tasks: enriched
-    });
+    };
+    await cacheManager.set(cacheKey, payload, 30);
+    res.json(payload);
   } catch (err) {
     console.error('Error fetching tasks:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve tasks from database' });

@@ -1421,5 +1421,38 @@
     "subCategory": "",
     "updatedAt": "2026-10-09T15:44:36.242Z",
     "isActive": true
+  },
+  {
+    "_id": "8963f392-5f8e-4320-b275-d35df54c0725",
+    "accountHolderName": "",
+    "accountNumber": "",
+    "bankName": "",
+    "businessName": "Mani Canteen",
+    "category": "Food",
+    "createdAt": "2026-10-10T05:38:39.725Z",
+    "createdBy": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9",
+    "description": "",
+    "districtId": "dist_ballari",
+    "divisionId": "div_dist_ballari_urban",
+    "documents": [
+      {
+        "url": "/uploads/1791610477677_f1ebdc292f9849d19b80ce9578b10be4.jpeg",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "mani@gmail.com",
+    "gstNumber": "",
+    "id": "8963f392-5f8e-4320-b275-d35df54c0725",
+    "ifsc": "",
+    "mobile": "9876543211",
+    "name": "Mani",
+    "panNumber": "",
+    "pincodeId": "pin_581015",
+    "stateId": "state_ka",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-10T05:38:39.725Z"
   }
 ]

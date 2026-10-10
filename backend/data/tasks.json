@@ -1450,5 +1450,136 @@
     "status": "Assigned",
     "title": "Benchmark Task 4",
     "updatedAt": "2026-10-07T04:56:13.570Z"
+  },
+  {
+    "_id": "TSK-1791611184289-1RR8L",
+    "activityLog": [
+      {
+        "action": "Task Created",
+        "by": "Dhanu",
+        "byRole": "State Admin",
+        "at": "2026-10-10T05:46:24.289Z",
+        "notes": "Assigned to Surya (State Manager). Priority: Medium. Territory: Tamil Nadu → Krishnagiri → 635126."
+      },
+      {
+        "action": "Task Accepted",
+        "by": "Surya",
+        "byRole": "state_manager",
+        "at": "2026-10-10T05:51:34.370Z",
+        "notes": "Status changed to Accepted"
+      },
+      {
+        "action": "Task In Progress",
+        "by": "Surya",
+        "byRole": "state_manager",
+        "at": "2026-10-10T05:51:46.366Z",
+        "notes": "Status changed to In Progress"
+      },
+      {
+        "action": "Task Completed",
+        "by": "Surya",
+        "byRole": "state_manager",
+        "at": "2026-10-10T05:53:48.002Z",
+        "notes": "buhfporeng9uthg-94tg9-utbg-54uhtpuq5hg09uernf20"
+      }
+    ],
+    "assignedManagerId": "usr_mgr_1790580930154_8uge",
+    "assignedManagerLevel": 1,
+    "assignedManagerName": "Surya",
+    "assignedManagerRole": "State Manager",
+    "category": "Vendor Onboarding",
+    "completionDetails": {
+      "completionPhoto": "/uploads/1791611581347_2042e55111b71e350a9eebda5f7457db.png",
+      "completionPhotos": [
+        "/uploads/1791611581347_2042e55111b71e350a9eebda5f7457db.png"
+      ],
+      "workCompleted": "buhfporeng9uthg-94tg9-utbg-54uhtpuq5hg09uernf20",
+      "resolutionDetails": "buhfporeng9uthg-94tg9-utbg-54uhtpuq5hg09uernf20",
+      "completionAudio": "/uploads/1791611625643_09cb82a89b46e2455a8840f255ecb31f.mp3",
+      "voiceNote": "/uploads/1791611625643_09cb82a89b46e2455a8840f255ecb31f.mp3",
+      "completedBy": "Surya",
+      "completedById": "usr_mgr_1790580930154_8uge",
+      "completedAt": "2026-10-10T05:53:48.002Z"
+    },
+    "createdAt": "2026-10-10T05:46:24.289Z",
+    "createdByAdminId": "6ab4c2ec5df0d82cb7a09cac",
+    "createdByAdminName": "Dhanu",
+    "createdByAdminRole": "State Admin",
+    "description": "",
+    "district": "Krishnagiri",
+    "districtId": "6aa10f71ca0932e6eaec1f5d",
+    "districtName": "Krishnagiri",
+    "division": "",
+    "divisionId": null,
+    "divisionName": "",
+    "dueDate": "2026-10-12",
+    "id": "TSK-1791611184289-ZVWG2",
+    "location": "",
+    "needsAcceptance": false,
+    "pincode": "635126",
+    "pincodeId": "6aba0f82af9e0372e50b70d5",
+    "priority": "Medium",
+    "qcIssueId": null,
+    "remarks": "buhfporeng9uthg-94tg9-utbg-54uhtpuq5hg09uernf20",
+    "state": "Tamil Nadu",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "stateName": "Tamil Nadu",
+    "status": "Completed",
+    "suspendRequest": null,
+    "taskNumber": "QCT-11184289",
+    "title": "kjhgfcvh",
+    "updatedAt": "2026-10-10T05:53:48.002Z",
+    "acceptedAt": "2026-10-10T05:51:34.370Z",
+    "acceptedBy": "Surya",
+    "acceptedById": "usr_mgr_1790580930154_8uge",
+    "assignmentStatus": "ACCEPTED",
+    "executionStatus": "COMPLETED",
+    "history": [
+      {
+        "action": "Task Accepted",
+        "status": "Accepted",
+        "actor": "Surya",
+        "actorId": "usr_mgr_1790580930154_8uge",
+        "actorRole": "state_manager",
+        "timestamp": "2026-10-10T05:51:34.370Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      },
+      {
+        "action": "Task In Progress",
+        "status": "In Progress",
+        "actor": "Surya",
+        "actorId": "usr_mgr_1790580930154_8uge",
+        "actorRole": "state_manager",
+        "timestamp": "2026-10-10T05:51:46.366Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      },
+      {
+        "action": "Task Completed",
+        "status": "Completed",
+        "actor": "Surya",
+        "actorId": "usr_mgr_1790580930154_8uge",
+        "actorRole": "state_manager",
+        "timestamp": "2026-10-10T05:53:48.002Z",
+        "remarks": "buhfporeng9uthg-94tg9-utbg-54uhtpuq5hg09uernf20",
+        "photo": "/uploads/1791611581347_2042e55111b71e350a9eebda5f7457db.png",
+        "audio": "/uploads/1791611625643_09cb82a89b46e2455a8840f255ecb31f.mp3"
+      }
+    ],
+    "lastUpdate": "2026-10-10T05:53:48.002Z",
+    "progress": 100,
+    "startedAt": "2026-10-10T05:51:46.366Z",
+    "startedBy": "Surya",
+    "startedById": "usr_mgr_1790580930154_8uge",
+    "completedDate": "2026-10-10T05:53:48.002Z",
+    "isResolved": true,
+    "photos": [
+      "/uploads/1791611581347_2042e55111b71e350a9eebda5f7457db.png"
+    ],
+    "shopPhoto": "/uploads/1791611581347_2042e55111b71e350a9eebda5f7457db.png",
+    "voiceNote": "/uploads/1791611625643_09cb82a89b46e2455a8840f255ecb31f.mp3"
   }
 ]

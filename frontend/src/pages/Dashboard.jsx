@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 
 import { reportService } from '../services/api';
+import { cacheClient } from '../services/cacheClient';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
 
@@ -27,24 +28,25 @@ const Dashboard = ({ onNavigate }) => {
   const { user } = useAuth();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredIssue, setHoveredIssue] = useState(null);
-  const [dashboardData, setDashboardData] = useState(null);
-  const [leaderboardList, setLeaderboardList] = useState([]);
-  const [loadingStats, setLoadingStats] = useState(true);
-  const [trendPeriod, setTrendPeriod] = useState('3m'); // '3m' | '6m' | '1y'
+  const [dashboardData, setDashboardData] = useState(() => cacheClient.get('dashboard:stats')?.data || null);
+  const [leaderboardList, setLeaderboardList] = useState(() => cacheClient.get('leaderboard')?.data || []);
+  const [loadingStats, setLoadingStats] = useState(() => !cacheClient.get('dashboard:stats')?.data);
+  const [trendPeriod, setTrendPeriod] = useState('6m'); // '3m' | '6m' | '1y'
+  const [issuePeriod, setIssuePeriod] = useState('month'); // 'month' | 'week' | 'year' | 'all'
   const [territoryFilter, setTerritoryFilter] = useState('pin'); // 'dist' | 'div' | 'pin'
   const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
   const [activityFilter, setActivityFilter] = useState('all');
 
-  const fetchDashboardMetrics = async () => {
+  const fetchDashboardMetrics = async (force = false) => {
     try {
       const [res, leadRes] = await Promise.all([
-        reportService.getDashboardStats(),
-        reportService.getLeaderboardData().catch(() => ({ success: false }))
+        cacheClient.fetchWithCache('dashboard:stats', () => reportService.getDashboardStats(), { force }),
+        cacheClient.fetchWithCache('leaderboard', () => reportService.getLeaderboardData(), { force }).catch(() => ({ success: false }))
       ]);
-      if (res.success) {
+      if (res && res.success) {
         setDashboardData(res);
       }
-      if (leadRes.success && Array.isArray(leadRes.data)) {
+      if (leadRes && leadRes.success && Array.isArray(leadRes.data)) {
         setLeaderboardList(leadRes.data);
       }
     } catch (err) {
@@ -62,7 +64,8 @@ const Dashboard = ({ onNavigate }) => {
   // Real-time synchronization: refresh dashboard metrics when tasks, vendors, or agents change
   useRealtime('*', (event) => {
     if (['task', 'vendor', 'agent', 'shop_visit', 'manager', 'user'].includes(event.entity)) {
-      fetchDashboardMetrics();
+      cacheClient.invalidateQueries('dashboard:stats');
+      fetchDashboardMetrics(true);
     }
   });
 
@@ -95,18 +98,20 @@ const Dashboard = ({ onNavigate }) => {
     rejected: 0,
     inactive: 0
   };
-  const issueCounts = dashboardData?.issueCounts || {
+  const currentIssueStats = dashboardData?.issueStatsByPeriod?.[issuePeriod] || dashboardData?.issueCounts || {
     total: 0,
     open: 0,
     inProgress: 0,
     escalated: 0,
-    resolved: 0
+    resolved: 0,
+    slaRate: null,
+    avgTurnaroundHrs: null
   };
-  const openCount = issueCounts.open || 0;
-  const inProgressCount = issueCounts.inProgress || 0;
-  const escalatedCount = issueCounts.escalated || 0;
-  const resolvedCount = issueCounts.resolved || 0;
-  const totalIssuesCount = issueCounts.total || (openCount + inProgressCount + escalatedCount + resolvedCount) || 0;
+  const openCount = currentIssueStats.open || 0;
+  const inProgressCount = currentIssueStats.inProgress || 0;
+  const escalatedCount = currentIssueStats.escalated || 0;
+  const resolvedCount = currentIssueStats.resolved || 0;
+  const totalIssuesCount = currentIssueStats.total ?? (openCount + inProgressCount + escalatedCount + resolvedCount);
 
   const openPct = totalIssuesCount > 0 ? Math.round((openCount / totalIssuesCount) * 100) : 0;
   const inProgressPct = totalIssuesCount > 0 ? Math.round((inProgressCount / totalIssuesCount) * 100) : 0;
@@ -161,6 +166,30 @@ const Dashboard = ({ onNavigate }) => {
 
   // Dynamic Trend Data
   const trendData = React.useMemo(() => {
+    const rawList = dashboardData?.trendData?.[trendPeriod];
+    if (Array.isArray(rawList) && rawList.length > 0) {
+      const maxM = Math.max(...rawList.map(d => d.merchants || 0), 0);
+      const maxT = Math.max(...rawList.map(d => d.tieUps || 0), 0);
+      const merchScaleMax = maxM > 100 ? Math.ceil(maxM / 50) * 50 : (maxM > 20 ? 100 : 20);
+      const tieupsScaleMax = maxT > 500 ? Math.max(1000, Math.ceil(maxT / 200) * 200) : maxT > 100 ? 500 : maxT > 20 ? 100 : 50;
+
+      return rawList.map(d => {
+        const merchants = d.merchants || 0;
+        const tieUps = d.tieUps || 0;
+        const barH = merchants > 0 ? Math.max(6, Math.round((merchants / merchScaleMax) * 112)) : 0;
+        const dotY = 130 - (tieUps > 0 ? Math.max(6, Math.round((tieUps / tieupsScaleMax) * 112)) : 0);
+        return {
+          month: d.month,
+          merchants,
+          tieUps,
+          barH,
+          dotY,
+          merchScaleMax,
+          tieupsScaleMax
+        };
+      });
+    }
+
     const count = trendPeriod === '1y' ? 12 : trendPeriod === '6m' ? 6 : 3;
     const months = [];
     const now = new Date();
@@ -172,11 +201,13 @@ const Dashboard = ({ onNavigate }) => {
         merchants: 0,
         tieUps: 0,
         barH: 0,
-        dotY: 130
+        dotY: 130,
+        merchScaleMax: 100,
+        tieupsScaleMax: 1000
       });
     }
     return months;
-  }, [trendPeriod]);
+  }, [dashboardData, trendPeriod]);
 
   const getTrendCoords = (i, total) => {
     const startX = 46;
@@ -192,50 +223,34 @@ const Dashboard = ({ onNavigate }) => {
   // Dynamic Territories based on manager's assigned scope
   const territoryList = React.useMemo(() => {
     const roleData = dashboardData?.roleSpecificData;
-    if (territoryFilter === 'dist' && roleData?.districtBreakdown?.length > 0) {
-      return roleData.districtBreakdown.slice(0, 5).map(d => ({
+    let list = [];
+    if (territoryFilter === 'dist') {
+      list = (roleData?.districtBreakdown || []).map(d => ({
         name: d.districtName,
-        value: d.totalVendors || 0,
-        percent: d.totalVendors > 0 ? Math.min(100, Math.round((d.totalVendors / (kpis.totalVendors || 1)) * 100)) : 0
+        value: d.totalVendors || d.tieups || 0
       }));
-    }
-    if (territoryFilter === 'div' && roleData?.divisionBreakdown?.length > 0) {
-      return roleData.divisionBreakdown.slice(0, 5).map(div => ({
+    } else if (territoryFilter === 'div') {
+      list = (roleData?.divisionBreakdown || []).map(div => ({
         name: div.divisionName,
-        value: div.totalVendors || 0,
-        percent: div.totalVendors > 0 ? Math.min(100, Math.round((div.totalVendors / (kpis.totalVendors || 1)) * 100)) : 0
+        value: div.totalVendors || div.tieups || 0
       }));
-    }
-    if (territoryFilter === 'pin' && roleData?.pincodeBreakdown?.length > 0) {
-      return roleData.pincodeBreakdown.slice(0, 5).map(p => ({
+    } else if (territoryFilter === 'pin') {
+      list = (roleData?.pincodeBreakdown || []).map(p => ({
         name: `PIN ${p.pincodeCode || p.pincodeId}`,
-        value: p.totalVendors || 0,
-        percent: p.totalVendors > 0 ? Math.min(100, Math.round((p.totalVendors / (kpis.totalVendors || 1)) * 100)) : 0
+        value: p.totalVendors || p.tieups || 0
       }));
     }
-    if (roleData?.districtBreakdown?.length > 0) {
-      return roleData.districtBreakdown.slice(0, 5).map(d => ({
-        name: d.districtName,
-        value: d.totalVendors || 0,
-        percent: 0
-      }));
-    }
-    if (roleData?.divisionBreakdown?.length > 0) {
-      return roleData.divisionBreakdown.slice(0, 5).map(div => ({
-        name: div.divisionName,
-        value: div.totalVendors || 0,
-        percent: 0
-      }));
-    }
-    if (roleData?.pincodeBreakdown?.length > 0) {
-      return roleData.pincodeBreakdown.slice(0, 5).map(p => ({
-        name: `PIN ${p.pincodeCode || p.pincodeId}`,
-        value: p.totalVendors || 0,
-        percent: 0
-      }));
-    }
-    return [];
-  }, [dashboardData, territoryFilter, kpis.totalVendors]);
+
+    if (!list || list.length === 0) return [];
+
+    const sorted = [...list].sort((a, b) => b.value - a.value).slice(0, 5);
+    const maxVal = Math.max(...sorted.map(x => x.value), 1);
+
+    return sorted.map(item => ({
+      ...item,
+      percent: item.value > 0 ? Math.max(12, Math.round((item.value / maxVal) * 100)) : 0
+    }));
+  }, [dashboardData, territoryFilter]);
 
   // Dynamic Activities from audit logs
   const allActivitiesList = React.useMemo(() => {
@@ -299,7 +314,7 @@ const Dashboard = ({ onNavigate }) => {
         <div className="hero-top-row">
           <div>
             <h1 className="hero-greeting-title">
-              Good Morning, <span className="hero-greeting-name">{userName}!</span>
+              Welcome{user?.name ? <>, <span className="hero-greeting-name">{user.name}!</span></> : '!'}
             </h1>
             <p className="hero-greeting-sub">
               Let's build a stronger {stateName} together.
@@ -553,7 +568,12 @@ const Dashboard = ({ onNavigate }) => {
               <TrendingUp size={16} style={{ color: 'var(--forge-gold)' }} />
               Merchant & Tie-ups Trend
             </div>
-            <select aria-label="Filter trend by time period" className="analytics-select" defaultValue="6m">
+            <select
+              aria-label="Filter trend by time period"
+              className="analytics-select"
+              value={trendPeriod}
+              onChange={(e) => setTrendPeriod(e.target.value)}
+            >
               <option value="6m">Last 6 Months</option>
               <option value="3m">Last 3 Months</option>
               <option value="1y">Last Year</option>
@@ -582,17 +602,17 @@ const Dashboard = ({ onNavigate }) => {
               <line x1="36" y1="130" x2="344" y2="130" stroke="#e2e8f0" strokeWidth="1" />
 
               {/* Y Axis Left labels: Merchants */}
-              <text x="30" y="22" fontSize="8" fill="#94a3b8" textAnchor="end">100</text>
-              <text x="30" y="50" fontSize="8" fill="#94a3b8" textAnchor="end">80</text>
-              <text x="30" y="78" fontSize="8" fill="#94a3b8" textAnchor="end">60</text>
-              <text x="30" y="106" fontSize="8" fill="#94a3b8" textAnchor="end">40</text>
+              <text x="30" y="22" fontSize="8" fill="#94a3b8" textAnchor="end">{trendData[0]?.merchScaleMax || 100}</text>
+              <text x="30" y="50" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.8)}</text>
+              <text x="30" y="78" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.6)}</text>
+              <text x="30" y="106" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.4)}</text>
               <text x="30" y="133" fontSize="8" fill="#94a3b8" textAnchor="end">0</text>
 
               {/* Y Axis Right labels: Tie-ups */}
-              <text x="350" y="22" fontSize="8" fill="#94a3b8" textAnchor="start">1,000</text>
-              <text x="350" y="50" fontSize="8" fill="#94a3b8" textAnchor="start">800</text>
-              <text x="350" y="78" fontSize="8" fill="#94a3b8" textAnchor="start">600</text>
-              <text x="350" y="106" fontSize="8" fill="#94a3b8" textAnchor="start">400</text>
+              <text x="350" y="22" fontSize="8" fill="#94a3b8" textAnchor="start">{(trendData[0]?.tieupsScaleMax || 1000).toLocaleString()}</text>
+              <text x="350" y="50" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.8).toLocaleString()}</text>
+              <text x="350" y="78" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.6).toLocaleString()}</text>
+              <text x="350" y="106" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.4).toLocaleString()}</text>
               <text x="350" y="133" fontSize="8" fill="#94a3b8" textAnchor="start">0</text>
 
               {/* Bars: Merchants (Golden Yellow) */}
@@ -824,17 +844,25 @@ const Dashboard = ({ onNavigate }) => {
               <AlertTriangle size={16} style={{ color: 'var(--forge-gold)' }} />
               Issue Status
             </div>
-            <select aria-label="Filter issue status by time period" className="analytics-select" defaultValue="month">
+            <select 
+              aria-label="Filter issue status by time period" 
+              className="analytics-select" 
+              value={issuePeriod}
+              onChange={(e) => setIssuePeriod(e.target.value)}
+            >
               <option value="month">This Month</option>
               <option value="week">This Week</option>
               <option value="year">This Year</option>
+              <option value="all">All Time</option>
             </select>
           </div>
 
           <div className="donut-chart-container">
             <div className="donut-svg-wrap">
               <svg className="donut-svg" width="150" height="150" viewBox="0 0 100 100">
-                {issueSegments.map((seg) => {
+                {/* Empty base ring */}
+                <circle cx="50" cy="50" r="38" fill="none" stroke="#f1f5f9" strokeWidth="12" />
+                {totalIssuesCount > 0 && issueSegments.map((seg) => {
                   const isHovered = hoveredIssue === seg.id;
                   return (
                     <circle
@@ -848,13 +876,19 @@ const Dashboard = ({ onNavigate }) => {
                       strokeWidth={isHovered ? 15 : 12}
                       strokeDasharray={seg.dashArray}
                       strokeDashoffset={seg.dashOffset}
+                      style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
+                      onClick={() => onNavigate && onNavigate('tasks')}
                       onMouseEnter={() => setHoveredIssue(seg.id)}
                       onMouseLeave={() => setHoveredIssue(null)}
                     />
                   );
                 })}
               </svg>
-              <div className="donut-center-text">
+              <div 
+                className="donut-center-text"
+                style={{ cursor: 'pointer' }}
+                onClick={() => onNavigate && onNavigate('tasks')}
+              >
                 <div 
                   className="donut-center-num" 
                   style={{ color: hoveredIssue ? issueSegments.find(s => s.id === hoveredIssue)?.color : 'var(--text-main)' }}
@@ -881,6 +915,8 @@ const Dashboard = ({ onNavigate }) => {
                   <div 
                     key={seg.id} 
                     className={`donut-legend-row ${isHovered ? 'active' : ''}`}
+                    style={{ cursor: 'pointer' }}
+                    onClick={() => onNavigate && onNavigate('tasks')}
                     onMouseEnter={() => setHoveredIssue(seg.id)}
                     onMouseLeave={() => setHoveredIssue(null)}
                   >
@@ -895,29 +931,55 @@ const Dashboard = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* Issue Health & Quick Action Bottom Section to fill gap cleanly */}
+          {/* Issue Health & Quick Action Bottom Section */}
           <div className="donut-card-bottom">
             <div className="issue-health-row">
               <div className="issue-health-label">
                 <span>Resolution SLA Rate</span>
-                <strong style={{ color: '#10b981' }}>{resolvedPct}% SLA Met</strong>
+                {currentIssueStats.slaRate !== null && currentIssueStats.slaRate !== undefined ? (
+                  <strong style={{ color: currentIssueStats.slaRate >= 70 ? '#10b981' : '#f59e0b' }}>
+                    {currentIssueStats.slaRate}% SLA Met
+                  </strong>
+                ) : (
+                  <strong style={{ color: '#94a3b8' }}>Unavailable (No resolved tasks)</strong>
+                )}
               </div>
               <div className="issue-health-bar">
-                <div className="issue-health-fill" style={{ width: `${Math.max(15, resolvedPct)}%` }} />
+                <div 
+                  className="issue-health-fill" 
+                  style={{ 
+                    width: currentIssueStats.slaRate !== null && currentIssueStats.slaRate !== undefined 
+                      ? `${Math.max(10, currentIssueStats.slaRate)}%` 
+                      : '0%',
+                    background: (currentIssueStats.slaRate || 0) >= 70 ? '#10b981' : '#f59e0b'
+                  }} 
+                />
               </div>
             </div>
 
             <div className="issue-quick-stats">
-              <div className="issue-stat-box">
+              <div 
+                className="issue-stat-box"
+                style={{ cursor: 'pointer' }}
+                onClick={() => onNavigate && onNavigate('tasks')}
+              >
                 <div className="stat-icon-wrap" style={{ background: '#f0fdf4', color: '#16a34a' }}>
                   <Clock size={13} />
                 </div>
                 <div>
                   <span className="stat-label">Avg Turnaround</span>
-                  <span className="stat-value">3.5 hrs</span>
+                  <span className="stat-value">
+                    {currentIssueStats.avgTurnaroundHrs !== null && currentIssueStats.avgTurnaroundHrs !== undefined 
+                      ? `${currentIssueStats.avgTurnaroundHrs} hrs` 
+                      : 'Unavailable'}
+                  </span>
                 </div>
               </div>
-              <div className="issue-stat-box">
+              <div 
+                className="issue-stat-box"
+                style={{ cursor: 'pointer' }}
+                onClick={() => onNavigate && onNavigate('tasks')}
+              >
                 <div className="stat-icon-wrap" style={{ background: '#fef2f2', color: '#ef4444' }}>
                   <AlertTriangle size={13} />
                 </div>

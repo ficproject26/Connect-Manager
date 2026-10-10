@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { reportService } from '../services/api';
+import { cacheClient } from '../services/cacheClient';
 import { 
   Trophy, 
   Award, 
@@ -23,17 +24,19 @@ const Leaderboard = ({ onNavigate }) => {
   const [period, setPeriod] = useState('month'); // 'month' | 'quarter' | 'year'
   const [tierFilter, setTierFilter] = useState('All');
   const [search, setSearch] = useState('');
-  const [allRankings, setAllRankings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [allRankings, setAllRankings] = useState(() => cacheClient.get('leaderboard')?.data?.data || []);
+  const [loading, setLoading] = useState(() => !cacheClient.get('leaderboard')?.data);
 
   const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.state || '-';
 
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        setLoading(true);
-        const res = await reportService.getLeaderboardData();
-        if (res.success && res.data) {
+        if (!cacheClient.get('leaderboard')?.data) {
+          setLoading(true);
+        }
+        const res = await cacheClient.fetchWithCache('leaderboard', () => reportService.getLeaderboardData());
+        if (res && res.success && res.data) {
           setAllRankings(res.data);
         }
       } catch (err) {

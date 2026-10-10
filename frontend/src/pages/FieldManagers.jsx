@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { managerService } from '../services/api';
+import { cacheClient } from '../services/cacheClient';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
@@ -38,23 +39,39 @@ const FieldManagers = () => {
   const [selectedManager, setSelectedManager] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
 
-  const fetchManagers = async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const res = await managerService.getManagerDirectory({}, user);
-      if (res && res.success) {
-        const currentId = String(user?.id || user?._id || '');
-        const rawAll = res.all || [...(res.supervisors || []), ...(res.peers || []), ...(res.subordinates || res.data || [])];
-        const all = rawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-        const supervisors = (res.supervisors || res.reporting || all.filter(m => m.relation === 'supervisor')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-        const peers = (res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-        const subordinates = (res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+  const applyManagerData = (res) => {
+    const currentId = String(user?.id || user?._id || '');
+    const rawAll = res.all || [...(res.supervisors || []), ...(res.peers || []), ...(res.subordinates || res.data || [])];
+    const all = rawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const supervisors = (res.supervisors || res.reporting || all.filter(m => m.relation === 'supervisor')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const peers = (res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const subordinates = (res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
 
-        setAllManagers(all);
-        setSupervisorsList(supervisors);
-        setPeersList(peers);
-        setSubordinatesList(subordinates);
+    setAllManagers(all);
+    setSupervisorsList(supervisors);
+    setPeersList(peers);
+    setSubordinatesList(subordinates);
+  };
+
+  const fetchManagers = async (force = false) => {
+    const cacheKey = `managers:directory:${user?.id || user?._id || 'mgr'}`;
+    const cached = cacheClient.get(cacheKey);
+    if (cached?.data && !force) {
+      applyManagerData(cached.data);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      setError(null);
+      const res = await cacheClient.fetchWithCache(
+        cacheKey,
+        () => managerService.getManagerDirectory({}, user),
+        { force }
+      );
+      if (res && res.success) {
+        applyManagerData(res);
       } else {
         setError(res?.message || 'Failed to load directory data');
       }
@@ -73,10 +90,12 @@ const FieldManagers = () => {
   }, [user, authLoading]);
 
   useRealtime('manager', () => {
-    fetchManagers();
+    cacheClient.invalidateQueries('managers');
+    fetchManagers(true);
   });
   useRealtime('user', () => {
-    fetchManagers();
+    cacheClient.invalidateQueries('managers');
+    fetchManagers(true);
   });
 
 
@@ -556,7 +575,8 @@ const FieldManagers = () => {
           <table className="data-table" style={{ width: '100%', minWidth: '980px', borderCollapse: 'collapse' }}>
             <thead>
               <tr>
-                <th style={{ minWidth: '180px', textAlign: 'left', paddingLeft: '20px' }}>Manager Profile</th>
+                <th style={{ width: '60px', textAlign: 'center', paddingLeft: '16px' }}>S.No.</th>
+                <th style={{ minWidth: '180px', textAlign: 'left', paddingLeft: '10px' }}>Manager Profile</th>
                 <th style={{ minWidth: '150px', textAlign: 'left' }}>Relation & Rank</th>
                 <th style={{ minWidth: '160px', textAlign: 'left' }}>Hierarchy Level</th>
                 <th style={{ minWidth: '175px', textAlign: 'left' }}>Contact Details</th>
@@ -566,9 +586,12 @@ const FieldManagers = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredManagers.map((m) => (
+              {filteredManagers.map((m, idx) => (
                 <tr key={m.id} style={{ background: m.isSelf ? '#fefce8' : 'transparent' }}>
-                  <td style={{ paddingLeft: '20px' }}>
+                  <td style={{ textAlign: 'center', paddingLeft: '16px', fontWeight: 600, color: 'var(--text-muted)' }}>
+                    {idx + 1}
+                  </td>
+                  <td style={{ paddingLeft: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                       <div style={{
                         width: '34px',

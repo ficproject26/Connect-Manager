@@ -101,10 +101,10 @@ class Collection {
     const cleanQuery = sanitizeQuery(query);
     if (this._mongoCol) {
       try {
-        const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
-          ? { projection: { kycDocs: 0, kyc: 0 } } 
-          : {};
-        const docs = await this._mongoCol.find(cleanQuery, projection).toArray();
+        const findOptions = (this.mongoName === 'users' || this.mongoName === 'agents') 
+          ? { projection: { kycDocs: 0, kyc: 0 }, maxTimeMS: 4000 } 
+          : { maxTimeMS: 4000 };
+        const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
         if (docs && docs.length > 0) {
           return docs;
         }

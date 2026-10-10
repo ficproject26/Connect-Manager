@@ -816,7 +816,7 @@
     },
     "title": "New Task Assigned: onboaring",
     "type": "task_created",
-    "updatedAt": "2026-10-09T10:22:13.122Z"
+    "updatedAt": "2026-10-10T04:30:55.756Z"
   },
   {
     "_id": "NOTIF-1790853216580-10XG",
@@ -1355,7 +1355,7 @@
     },
     "title": "New Task Assigned: Onboarding issue",
     "type": "task_created",
-    "updatedAt": "2026-10-08T10:45:53.114Z"
+    "updatedAt": "2026-10-10T05:02:03.490Z"
   },
   {
     "_id": "5c73c356-ae9d-4f64-b5f6-e2f22bdba17e",
@@ -1415,7 +1415,7 @@
     },
     "title": "New Task Assigned: 10 Shops",
     "type": "task_created",
-    "updatedAt": "2026-10-08T10:45:53.152Z"
+    "updatedAt": "2026-10-10T05:48:39.093Z"
   },
   {
     "_id": "dd7c9041-6a09-4be7-8d21-f0c5e653c9f7",
@@ -1727,7 +1727,7 @@
     },
     "title": "New Task Assigned: 5 tie up",
     "type": "task_created",
-    "updatedAt": "2026-10-08T10:45:53.191Z"
+    "updatedAt": "2026-10-10T05:01:42.644Z"
   },
   {
     "_id": "0171213b-e52b-4026-a4f2-7ec28170d96e",
@@ -1786,7 +1786,7 @@
     "recordId": "db03263e-0f52-4f1d-9790-74defb70ed1c",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-09T10:21:43.277Z",
+    "updatedAt": "2026-10-10T04:30:10.013Z",
     "userId": "usr_mgr_1790592319962_fx3y"
   },
   {
@@ -1800,5 +1800,135 @@
     "type": "shop_visit",
     "updatedAt": "2026-10-09T15:41:44.286Z",
     "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "0e5c9e55-f786-451f-bfcf-2074a5862b59",
+    "createdAt": "2026-10-10T04:28:33.409Z",
+    "id": "0e5c9e55-f786-451f-bfcf-2074a5862b59",
+    "isRead": true,
+    "message": "iniya logged field visit for Dinesh shop (Interested).",
+    "recordId": "6102ca4f-360c-468c-a8af-f8d006aa980f",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-10T04:30:08.892Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "71c2cc26-a663-4c57-a742-47ff92f4b2ab",
+    "createdAt": "2026-10-10T05:34:41.126Z",
+    "id": "71c2cc26-a663-4c57-a742-47ff92f4b2ab",
+    "isRead": true,
+    "message": "Javeed logged field visit for Mani Canteen (Interested).",
+    "recordId": "6fd1178a-fbdd-4755-bbdd-e6cd165374c2",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-10T05:48:36.868Z",
+    "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9"
+  },
+  {
+    "_id": "ae3ba4f2-b87c-411d-b641-7790481391b8",
+    "createdAt": "2026-10-10T05:42:04.561Z",
+    "id": "ae3ba4f2-b87c-411d-b641-7790481391b8",
+    "isRead": true,
+    "message": "Surya logged field visit for Karthick (Not Interested).",
+    "recordId": "be5b35f8-eaff-44d2-aee1-9cdef68dcead",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-10T05:48:54.590Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "NOTIF-1791611184516-589H",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-10T05:46:24.516Z",
+    "entityId": "TSK-1791611184289-1RR8L",
+    "entityType": "task",
+    "id": "NOTIF-1791611184516-589H",
+    "isRead": true,
+    "message": "Task QCT-11184289 (Medium Priority) was assigned to Surya (State Manager). Territory: Tamil Nadu → Krishnagiri → 635126. Due: 2026-10-12.",
+    "metadata": {
+      "taskId": "TSK-1791611184289-1RR8L",
+      "taskNumber": "QCT-11184289",
+      "title": "kjhgfcvh",
+      "assignedManagerId": "usr_mgr_1790580930154_8uge",
+      "assignedManagerName": "Surya",
+      "assignedManagerRole": "State Manager",
+      "assignedManagerLevel": 1,
+      "territory": "Tamil Nadu → Krishnagiri → 635126",
+      "state": "Tamil Nadu",
+      "district": "Krishnagiri",
+      "division": "",
+      "pincode": "635126",
+      "createdByName": "Dhanu",
+      "priority": "Medium"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Krishnagiri",
+      "division": "",
+      "pincode": "635126",
+      "targetUserId": "usr_mgr_1790580930154_8uge",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: kjhgfcvh",
+    "type": "task_created",
+    "updatedAt": "2026-10-10T05:59:40.636Z"
+  },
+  {
+    "_id": "6700123e-6c8e-49f8-a0d7-5c31142a10bb",
+    "createdAt": "2026-10-10T05:51:34.481Z",
+    "id": "6700123e-6c8e-49f8-a0d7-5c31142a10bb",
+    "isRead": true,
+    "message": "Surya marked task QCT-11184289 as Accepted.",
+    "recordId": "TSK-1791611184289-1RR8L",
+    "title": "Task QCT-11184289 Accepted",
+    "type": "task_updated",
+    "updatedAt": "2026-10-10T06:00:21.525Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "7b6b0200-411c-42c5-ad25-95f68dcf9cdc",
+    "createdAt": "2026-10-10T05:51:46.467Z",
+    "id": "7b6b0200-411c-42c5-ad25-95f68dcf9cdc",
+    "isRead": true,
+    "message": "Surya marked task QCT-11184289 as In Progress.",
+    "recordId": "TSK-1791611184289-1RR8L",
+    "title": "Task QCT-11184289 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-10T06:00:21.556Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "21de2ba6-20fa-4b82-9b01-2fb159edc156",
+    "createdAt": "2026-10-10T05:53:10.838Z",
+    "id": "21de2ba6-20fa-4b82-9b01-2fb159edc156",
+    "isRead": false,
+    "message": "Muruga logged field visit for Forge India Connect Pvt.Ltd (Interested).",
+    "recordId": "485e5228-3459-4a72-a1bf-338fc7000fee",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-10T05:53:10.838Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "e9742f43-5e7b-4e29-8076-9d421430f881",
+    "createdAt": "2026-10-10T05:53:48.128Z",
+    "id": "e9742f43-5e7b-4e29-8076-9d421430f881",
+    "isRead": true,
+    "message": "Surya marked task QCT-11184289 as Completed.",
+    "recordId": "TSK-1791611184289-1RR8L",
+    "title": "Task QCT-11184289 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-10T06:00:21.588Z",
+    "userId": "usr_mgr_1790580930154_8uge"
   }
 ]

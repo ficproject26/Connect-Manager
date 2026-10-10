@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { authService } from '../services/api';
 import { realtimeClient } from '../realtime';
+import { cacheClient } from '../services/cacheClient';
+import { dataPrefetcher } from '../services/dataPrefetcher';
 
 const AuthContext = createContext(null);
 
@@ -100,6 +102,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('agent_mgr_token');
+    cacheClient.clear();
+    dataPrefetcher.reset();
     setToken(null);
     setUser(null);
     realtimeClient.disconnect();
@@ -139,7 +143,9 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     if (token && user) {
+      cacheClient.setCurrentUser(user);
       realtimeClient.connect(token);
+      dataPrefetcher.prefetchForUser(user);
     } else if (!token) {
       realtimeClient.disconnect();
     }

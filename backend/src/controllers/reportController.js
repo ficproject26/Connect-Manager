@@ -1,5 +1,7 @@
 const db = require('../config/db');
 const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
+const { getManagerTerritoryProfile, isTaskInManagerTerritory } = require('./taskController');
+const { cacheManager } = require('../realtime');
 
 // Helper to determine status category accurately
 const isVendorActive = (s) => {
@@ -17,6 +19,11 @@ const isVendorInactive = (s) => String(s || '').toLowerCase() === 'inactive';
 const getDashboardStats = async (req, res) => {
   try {
     const user = req.user;
+    const cacheKey = `dashboard:stats:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
     // Load all vendors and deduplicate
     const rawVendors = await db.vendors.find({});
@@ -50,7 +57,82 @@ const getDashboardStats = async (req, res) => {
       categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
     });
 
-    let roleSpecificData = {};
+    // Compute comprehensive territory breakdowns strictly from scoped vendors
+    const districtMap = new Map();
+    const divisionMap = new Map();
+    const pincodeMap = new Map();
+
+    vendors.forEach(v => {
+      // District grouping
+      const dName = (v.district || v.districtName || '').trim();
+      if (dName) {
+        const key = dName.toLowerCase();
+        if (!districtMap.has(key)) {
+          districtMap.set(key, {
+            districtId: v.districtId || dName,
+            districtName: dName,
+            totalVendors: 0,
+            activeVendors: 0,
+            tieUps: 0,
+            pendingVendors: 0
+          });
+        }
+        const dRec = districtMap.get(key);
+        dRec.totalVendors++;
+        if (isVendorActive(v.status)) { dRec.activeVendors++; dRec.tieUps++; }
+        if (isVendorPending(v.status)) { dRec.pendingVendors++; }
+      }
+
+      // Division grouping
+      const divName = (v.division || v.divisionName || '').trim();
+      if (divName) {
+        const key = divName.toLowerCase();
+        if (!divisionMap.has(key)) {
+          divisionMap.set(key, {
+            divisionId: v.divisionId || divName,
+            divisionName: divName,
+            totalVendors: 0,
+            activeVendors: 0,
+            tieUps: 0,
+            pendingVendors: 0
+          });
+        }
+        const divRec = divisionMap.get(key);
+        divRec.totalVendors++;
+        if (isVendorActive(v.status)) { divRec.activeVendors++; divRec.tieUps++; }
+        if (isVendorPending(v.status)) { divRec.pendingVendors++; }
+      }
+
+      // Pincode grouping
+      const pCode = String(v.pincode || v.pincodeCode || '').trim();
+      if (pCode) {
+        if (!pincodeMap.has(pCode)) {
+          pincodeMap.set(pCode, {
+            pincodeId: v.pincodeId || pCode,
+            pincodeCode: pCode,
+            areaName: v.area || v.division || '',
+            totalVendors: 0,
+            activeVendors: 0,
+            tieUps: 0,
+            pendingVendors: 0
+          });
+        }
+        const pinRec = pincodeMap.get(pCode);
+        pinRec.totalVendors++;
+        if (isVendorActive(v.status)) { pinRec.activeVendors++; pinRec.tieUps++; }
+        if (isVendorPending(v.status)) { pinRec.pendingVendors++; }
+      }
+    });
+
+    const districtBreakdown = Array.from(districtMap.values()).sort((a, b) => b.totalVendors - a.totalVendors || b.tieUps - a.tieUps);
+    const divisionBreakdown = Array.from(divisionMap.values()).sort((a, b) => b.totalVendors - a.totalVendors || b.tieUps - a.tieUps);
+    const pincodeBreakdown = Array.from(pincodeMap.values()).sort((a, b) => b.totalVendors - a.totalVendors || b.tieUps - a.tieUps);
+
+    let roleSpecificData = {
+      districtBreakdown,
+      divisionBreakdown,
+      pincodeBreakdown
+    };
 
     if (user.role === 'state_manager') {
       const state = await db.states.findById(user.stateId);
@@ -58,132 +140,84 @@ const getDashboardStats = async (req, res) => {
       const divisions = await db.divisions.find({ stateId: user.stateId });
       const pincodes = await db.pincodes.find({ stateId: user.stateId });
 
-      // Find state managers
       const stateManagers = await db.users.find({
         role: 'state_manager',
         stateId: user.stateId
       });
 
-      // Count lower-level managers (District, Division, Pincode) under this State
       const allUsers = await db.users.find();
       const lowerManagers = allUsers.filter(u => 
         u.stateId === user.stateId && 
         ['district_manager', 'division_manager', 'pincode_manager'].includes(u.role)
       );
 
-      // District breakdown
-      const districtBreakdown = districts.map(d => {
-        const districtVendors = vendors.filter(v => 
-          (v.districtId && v.districtId === d._id) ||
-          (v.district && v.district.toLowerCase() === (d.name || '').toLowerCase())
-        );
-        return {
-          districtId: d._id,
-          districtName: d.name,
-          totalVendors: districtVendors.length,
-          activeVendors: districtVendors.filter(v => isVendorActive(v.status)).length,
-          pendingVendors: districtVendors.filter(v => isVendorPending(v.status)).length,
-          rejectedVendors: districtVendors.filter(v => isVendorRejected(v.status)).length
-        };
-      });
-
       roleSpecificData = {
-        stateName: state?.name || 'Assigned State',
+        stateName: state?.name || user.state || 'Tamil Nadu',
         totalStateManagers: stateManagers.length,
         stateManagersList: stateManagers.map(m => ({ id: m._id, name: m.name, email: m.email, mobile: m.mobile })),
         totalLowerManagers: lowerManagers.length,
         totalDistricts: districts.length,
         totalDivisions: divisions.length,
         totalPincodes: pincodes.length,
-        districtBreakdown
+        districtBreakdown,
+        divisionBreakdown,
+        pincodeBreakdown
       };
     } else if (user.role === 'district_manager') {
       const district = await db.districts.findById(user.districtId);
       const divisions = await db.divisions.find({ districtId: user.districtId });
       const pincodes = await db.pincodes.find({ districtId: user.districtId });
 
-      // Find peer District Manager (2 per district)
       const districtManagers = await db.users.find({
         role: 'district_manager',
         districtId: user.districtId
       });
       const coManager = districtManagers.find(m => m._id !== user.id) || null;
 
-      // Count lower managers (Division & Pincode managers in this district)
       const allUsers = await db.users.find();
       const lowerManagers = allUsers.filter(u => 
         u.districtId === user.districtId && 
         ['division_manager', 'pincode_manager'].includes(u.role)
       );
 
-      const divisionBreakdown = divisions.map(div => {
-        const divVendors = vendors.filter(v => 
-          (v.divisionId && v.divisionId === div._id) ||
-          (v.division && v.division.toLowerCase() === (div.name || '').toLowerCase())
-        );
-        return {
-          divisionId: div._id,
-          divisionName: div.name,
-          totalVendors: divVendors.length,
-          activeVendors: divVendors.filter(v => isVendorActive(v.status)).length,
-          pendingVendors: divVendors.filter(v => isVendorPending(v.status)).length,
-          rejectedVendors: divVendors.filter(v => isVendorRejected(v.status)).length
-        };
-      });
-
       roleSpecificData = {
-        districtName: district?.name || 'Assigned District',
+        districtName: district?.name || user.district || 'Assigned District',
         coManager: coManager ? { name: coManager.name, email: coManager.email, mobile: coManager.mobile } : null,
         totalLowerManagers: lowerManagers.length,
         totalDivisions: divisions.length,
         totalPincodes: pincodes.length,
-        divisionBreakdown
+        districtBreakdown,
+        divisionBreakdown,
+        pincodeBreakdown
       };
     } else if (user.role === 'division_manager') {
       const division = await db.divisions.findById(user.divisionId);
       const pincodes = await db.pincodes.find({ divisionId: user.divisionId });
 
-      // Find peer Division Manager (2 per division)
       const divisionManagers = await db.users.find({
         role: 'division_manager',
         divisionId: user.divisionId
       });
       const coManager = divisionManagers.find(m => m._id !== user.id) || null;
 
-      // Count lower managers (Pincode managers in this division)
       const allUsers = await db.users.find();
       const lowerManagers = allUsers.filter(u => 
         u.divisionId === user.divisionId && 
         u.role === 'pincode_manager'
       );
 
-      const pincodeBreakdown = pincodes.map(p => {
-        const pinVendors = vendors.filter(v => 
-          (v.pincodeId && v.pincodeId === p._id) ||
-          (v.pincode && String(v.pincode) === String(p.code))
-        );
-        return {
-          pincodeId: p._id,
-          pincodeCode: p.code,
-          areaName: p.areaName,
-          totalVendors: pinVendors.length,
-          activeVendors: pinVendors.filter(v => isVendorActive(v.status)).length,
-          pendingVendors: pinVendors.filter(v => isVendorPending(v.status)).length,
-          rejectedVendors: pinVendors.filter(v => isVendorRejected(v.status)).length
-        };
-      });
-
       roleSpecificData = {
-        divisionName: division?.name || 'Assigned Division',
+        divisionName: division?.name || user.division || 'Assigned Division',
         coManager: coManager ? { name: coManager.name, email: coManager.email, mobile: coManager.mobile } : null,
         totalLowerManagers: lowerManagers.length,
         totalPincodes: pincodes.length,
+        districtBreakdown,
+        divisionBreakdown,
         pincodeBreakdown
       };
     } else if (user.role === 'pincode_manager') {
       const pincode = await db.pincodes.findById(user.pincodeId);
 
-      // Find peer Pincode Manager (2 per pincode)
       const pincodeManagers = await db.users.find({
         role: 'pincode_manager',
         pincodeId: user.pincodeId
@@ -197,11 +231,33 @@ const getDashboardStats = async (req, res) => {
         }
       });
 
+      const assignedPin = user.pincode || user.pincodeCode || pincode?.code;
+      if (assignedPin && !pincodeBreakdown.some(p => p.pincodeCode === assignedPin)) {
+        pincodeBreakdown.unshift({
+          pincodeId: user.pincodeId || assignedPin,
+          pincodeCode: assignedPin,
+          areaName: pincode?.areaName || user.assignedArea || 'Assigned Area',
+          totalVendors: vendors.length,
+          activeVendors: statusCounts.active,
+          tieUps: statusCounts.active,
+          pendingVendors: statusCounts.pending
+        });
+      }
+
       roleSpecificData = {
-        pincodeCode: pincode?.code,
-        pincodeArea: pincode?.areaName,
+        pincodeCode: pincode?.code || user.pincode || 'Assigned PIN',
+        pincodeArea: pincode?.areaName || user.assignedArea || 'Assigned Area',
         coManager: coManager ? { name: coManager.name, email: coManager.email, mobile: coManager.mobile } : null,
-        subCategoryCounts
+        subCategoryCounts,
+        districtBreakdown,
+        divisionBreakdown,
+        pincodeBreakdown
+      };
+    } else {
+      roleSpecificData = {
+        districtBreakdown,
+        divisionBreakdown,
+        pincodeBreakdown
       };
     }
 
@@ -286,13 +342,111 @@ const getDashboardStats = async (req, res) => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
 
-    const issueCounts = {
-      total: 0,
-      open: 0,
-      inProgress: 0,
-      escalated: 0,
-      resolved: 0
+    // Dynamic Monthly Trends (Merchants vs Tie-ups)
+    const monthlyTrends = [];
+    for (let i = 11; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const mLabel = d.toLocaleString('en-US', { month: 'short' });
+      const mYear = d.getFullYear();
+      const mMonth = d.getMonth();
+
+      const vInMonth = vendors.filter(v => {
+        if (!v.createdAt) return false;
+        const vd = new Date(v.createdAt);
+        return vd.getFullYear() === mYear && vd.getMonth() === mMonth;
+      });
+
+      const merchantsCount = vInMonth.length;
+      const tieUpsCount = vInMonth.filter(v => isVendorActive(v.status)).length;
+
+      monthlyTrends.push({
+        month: mLabel,
+        year: mYear,
+        merchants: merchantsCount,
+        tieUps: tieUpsCount
+      });
+    }
+
+    const trendData = {
+      '3m': monthlyTrends.slice(-3),
+      '6m': monthlyTrends.slice(-6),
+      '1y': monthlyTrends.slice(-12)
     };
+
+    // Real Tasks & Issues Aggregation strictly scoped to caller's territory
+    const allTasks = await db.tasks.find({});
+    const taskProfile = await getManagerTerritoryProfile(user);
+    const scopedTasks = allTasks.filter(t => isTaskInManagerTerritory(t, taskProfile));
+
+    const getTaskCategory = (t) => {
+      const status = (t.status || '').trim();
+      const priority = (t.priority || '').trim();
+      const isResolved = ['Completed', 'Resolved', 'Closed'].includes(status);
+      if (isResolved) return 'resolved';
+      if (status === 'Escalated' || priority === 'Urgent') return 'escalated';
+      if (['In Progress', 'Rework Required'].includes(status)) return 'inProgress';
+      return 'open';
+    };
+
+    const calcIssueStats = (taskList) => {
+      let open = 0, inProgress = 0, escalated = 0, resolved = 0;
+      taskList.forEach(t => {
+        const cat = getTaskCategory(t);
+        if (cat === 'resolved') resolved++;
+        else if (cat === 'escalated') escalated++;
+        else if (cat === 'inProgress') inProgress++;
+        else open++;
+      });
+      const total = open + inProgress + escalated + resolved;
+
+      // SLA Rate calculation: tasks with dueDate
+      const completedWithDue = taskList.filter(t => 
+        ['Completed', 'Resolved', 'Closed'].includes(t.status) && t.dueDate
+      );
+      let slaRate = null;
+      if (completedWithDue.length > 0) {
+        const metSla = completedWithDue.filter(t => {
+          const dueTime = new Date(t.dueDate).getTime();
+          const compTime = new Date(t.completedDate || t.completionDetails?.completedAt || t.updatedAt || t.createdAt).getTime();
+          return compTime <= dueTime;
+        }).length;
+        slaRate = Math.round((metSla / completedWithDue.length) * 100);
+      }
+
+      // Turnaround time calculation: average hours for completed tasks
+      const completedTasks = taskList.filter(t => ['Completed', 'Resolved', 'Closed'].includes(t.status));
+      let avgTurnaroundHrs = null;
+      if (completedTasks.length > 0) {
+        const totalHrs = completedTasks.reduce((acc, t) => {
+          const compTime = new Date(t.completedDate || t.completionDetails?.completedAt || t.updatedAt || t.createdAt).getTime();
+          const creatTime = new Date(t.createdAt || t.assignedDate || compTime).getTime();
+          const diffHrs = Math.max(0.1, (compTime - creatTime) / (1000 * 60 * 60));
+          return acc + diffHrs;
+        }, 0);
+        avgTurnaroundHrs = Number((totalHrs / completedTasks.length).toFixed(1));
+      }
+
+      return { total, open, inProgress, escalated, resolved, slaRate, avgTurnaroundHrs };
+    };
+
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+    const startOfWeekTime = new Date(now);
+    startOfWeekTime.setDate(now.getDate() - now.getDay());
+    startOfWeekTime.setHours(0, 0, 0, 0);
+    const startOfYear = new Date(now.getFullYear(), 0, 1);
+
+    const monthTasks = scopedTasks.filter(t => new Date(t.createdAt || t.assignedDate || now) >= startOfMonth);
+    const weekTasks = scopedTasks.filter(t => new Date(t.createdAt || t.assignedDate || now) >= startOfWeekTime);
+    const yearTasks = scopedTasks.filter(t => new Date(t.createdAt || t.assignedDate || now) >= startOfYear);
+
+    const issueStatsByPeriod = {
+      month: calcIssueStats(monthTasks),
+      week: calcIssueStats(weekTasks),
+      year: calcIssueStats(yearTasks),
+      all: calcIssueStats(scopedTasks)
+    };
+
+    const issueCounts = issueStatsByPeriod.month;
 
     // Recent activities from auditLogs
     const allLogs = await db.auditLogs.find();
@@ -302,11 +456,14 @@ const getDashboardStats = async (req, res) => {
       .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))
       .slice(0, 10);
 
-    res.json({
+    const payload = {
       success: true,
       role: user.role,
       statusCounts,
       issueCounts,
+      issueStatsByPeriod,
+      monthlyTrends,
+      trendData,
       categoryCounts,
       kpiMetrics,
       stats: kpiMetrics,
@@ -314,7 +471,9 @@ const getDashboardStats = async (req, res) => {
       roleSpecificData,
       recentVendors,
       recentActivities
-    });
+    };
+    await cacheManager.set(cacheKey, payload, 30);
+    res.json(payload);
   } catch (err) {
     console.error('Dashboard stats error:', err);
     res.status(500).json({ success: false, message: 'Failed to compile dashboard metrics' });
@@ -371,6 +530,12 @@ const getVendorReportData = async (req, res) => {
 const getLeaderboardData = async (req, res) => {
   try {
     const user = req.user;
+    const cacheKey = `reports:leaderboard:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
 
     const [allUsers, allManagers, allVendors] = await Promise.all([
@@ -511,12 +676,14 @@ const getLeaderboardData = async (req, res) => {
       rank: index + 1
     }));
 
-    res.json({
+    const payload = {
       success: true,
       count: rankedWithPosition.length,
       data: rankedWithPosition,
       top3: rankedWithPosition.slice(0, 3)
-    });
+    };
+    await cacheManager.set(cacheKey, payload, 60);
+    res.json(payload);
   } catch (err) {
     console.error('Leaderboard error:', err);
     res.status(500).json({ success: false, message: 'Failed to generate leaderboard' });

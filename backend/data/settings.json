@@ -67,5 +67,19 @@
     "theme": "light",
     "updatedAt": "2026-10-09T11:43:06.833Z",
     "userId": "8c388b32-5e53-43ed-8c69-f265cbae2cbc"
+  },
+  {
+    "_id": "c52b212c-b2da-4fd9-9d59-baa99634c8e4",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-10T05:01:57.074Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "c52b212c-b2da-4fd9-9d59-baa99634c8e4",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-10T05:01:57.074Z",
+    "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9"
   }
 ]

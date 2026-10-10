@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
-const { publishEntityEvent } = require('../realtime');
+const { publishEntityEvent, cacheManager } = require('../realtime');
 
 // Mask sensitive identifiers for security
 const maskPan = (pan) => {
@@ -21,13 +21,35 @@ const maskGst = (gst) => {
   return `${stateCode}•••••••••${endCode}`;
 };
 
-// Populate location names for response objects
+// High-speed in-memory location lookup map to eliminate N+1 database queries
+const locationMemoryLookup = {
+  states: new Map(),
+  districts: new Map(),
+  divisions: new Map(),
+  pincodes: new Map()
+};
+
+const resolveLocationDoc = async (collection, id) => {
+  if (!id) return null;
+  const strId = String(id);
+  const cache = locationMemoryLookup[collection];
+  if (cache && cache.has(strId)) {
+    return cache.get(strId);
+  }
+  const doc = await db[collection].findById(id).catch(() => null);
+  if (doc && cache) {
+    cache.set(strId, doc);
+  }
+  return doc;
+};
+
+// Populate location names for response objects (batch/memoized)
 const populateVendorLocations = async (vendor) => {
   const [state, district, division, pincode] = await Promise.all([
-    vendor.stateId ? db.states.findById(vendor.stateId) : null,
-    vendor.districtId ? db.districts.findById(vendor.districtId) : null,
-    vendor.divisionId ? db.divisions.findById(vendor.divisionId) : null,
-    vendor.pincodeId ? db.pincodes.findById(vendor.pincodeId) : null
+    vendor.stateId ? resolveLocationDoc('states', vendor.stateId) : null,
+    vendor.districtId ? resolveLocationDoc('districts', vendor.districtId) : null,
+    vendor.divisionId ? resolveLocationDoc('divisions', vendor.divisionId) : null,
+    vendor.pincodeId ? resolveLocationDoc('pincodes', vendor.pincodeId) : null
   ]);
 
   return {
@@ -44,6 +66,11 @@ const populateVendorLocations = async (vendor) => {
 const getVendors = async (req, res) => {
   try {
     const user = req.user;
+    const cacheKey = `vendors:list:${user?.id || user?._id || 'mgr'}:${JSON.stringify(req.query)}`;
+    const cached = await cacheManager.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
 
     // Extract query parameters
     const {
@@ -146,7 +173,7 @@ const getVendors = async (req, res) => {
       };
     }));
 
-    res.json({
+    const payload = {
       success: true,
       data: populated,
       pagination: {
@@ -155,7 +182,9 @@ const getVendors = async (req, res) => {
         limit: pageSize,
         totalPages
       }
-    });
+    };
+    await cacheManager.set(cacheKey, payload, 30);
+    res.json(payload);
   } catch (err) {
     console.error('Get vendors error:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve vendors' });

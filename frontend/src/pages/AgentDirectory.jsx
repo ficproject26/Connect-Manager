@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { agentService } from '../services/api';
+import { cacheClient } from '../services/cacheClient';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
@@ -30,8 +31,14 @@ import {
 
 const AgentDirectory = ({ onNavigate }) => {
   const { user, loading: authLoading } = useAuth();
-  const [agents, setAgents] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [agents, setAgents] = useState(() => {
+    const cached = cacheClient.get(`agents:directory:${user?.id || user?._id || 'mgr'}`);
+    return cached?.data || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = cacheClient.get(`agents:directory:${user?.id || user?._id || 'mgr'}`);
+    return !cached?.data;
+  });
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
   const [search, setSearch] = useState('');
@@ -43,13 +50,26 @@ const AgentDirectory = ({ onNavigate }) => {
 
   const fetchAgents = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
-    try {
+    const cacheKey = `agents:directory:${user?.id || user?._id || 'mgr'}`;
+    const cached = cacheClient.get(cacheKey);
+    if (cached?.data && !showSpinner) {
+      setAgents(cached.data);
+      setLoading(false);
+    } else {
       setLoading(true);
+    }
+
+    try {
       setError(null);
-      const res = await agentService.getAgents({}, user);
+      const res = await cacheClient.fetchWithCache(
+        cacheKey,
+        () => agentService.getAgents({}, user),
+        { force: showSpinner }
+      );
       if (res && res.success) {
         const list = (Array.isArray(res.agents) ? res.agents : (Array.isArray(res.data) ? res.data : [])) || [];
         setAgents(list);
+        cacheClient.set(cacheKey, list);
       } else {
         setError(res?.message || 'Failed to load agent directory');
         setAgents([]);
@@ -72,6 +92,7 @@ const AgentDirectory = ({ onNavigate }) => {
 
   // Real-time synchronization for agent directory
   useRealtime('agent', () => {
+    cacheClient.invalidateQueries('agents');
     fetchAgents(false);
   });
 
@@ -562,6 +583,7 @@ const AgentDirectory = ({ onNavigate }) => {
             <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
                 <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                  <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', width: '60px', textAlign: 'center' }}>S.No.</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Agent Profile</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Jurisdiction & Coverage</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Role Level</th>
@@ -575,7 +597,7 @@ const AgentDirectory = ({ onNavigate }) => {
               <tbody>
                 {filteredAgents.length === 0 ? (
                   <tr>
-                    <td colSpan={8} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={9} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <UserCheck size={36} style={{ color: '#cbd5e1' }} />
                         <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>No agents found</div>
@@ -590,7 +612,7 @@ const AgentDirectory = ({ onNavigate }) => {
                     </td>
                   </tr>
                 ) : (
-                  filteredAgents.map(agent => (
+                  filteredAgents.map((agent, index) => (
                     <tr 
                       key={agent._id || agent.id}
                       style={{ 
@@ -598,6 +620,11 @@ const AgentDirectory = ({ onNavigate }) => {
                         transition: 'background 0.15s ease'
                       }}
                     >
+                      {/* S.No. */}
+                      <td style={{ padding: '14px 16px', textAlign: 'center', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        {index + 1}
+                      </td>
+
                       {/* Profile */}
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>

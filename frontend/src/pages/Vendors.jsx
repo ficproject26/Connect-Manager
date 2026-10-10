@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { vendorService, locationService } from '../services/api';
+import { cacheClient } from '../services/cacheClient';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime, applyRealtimeUpdate } from '../realtime';
 import { 
@@ -69,8 +70,32 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
     loadScopeOptions();
   }, [user]);
 
-  const loadVendors = async (page = 1) => {
-    setLoading(true);
+  const getCacheKey = (page = 1) => {
+    const p = {
+      page,
+      limit: 10,
+      search: search.trim() || undefined,
+      category: category !== 'All' ? category : undefined,
+      status: status !== 'All' ? status : undefined,
+      districtId: districtId || undefined,
+      divisionId: divisionId || undefined,
+      pincodeId: pincodeId || undefined
+    };
+    return `vendors:list:${user?.id || 'mgr'}:${JSON.stringify(p)}`;
+  };
+
+  const loadVendors = async (page = 1, force = false) => {
+    const key = getCacheKey(page);
+    const cached = cacheClient.get(key);
+
+    if (cached?.data) {
+      setVendors(cached.data.data);
+      setPagination(cached.data.pagination);
+      setLoading(false);
+    } else {
+      setLoading(true);
+    }
+
     try {
       const params = {
         page,
@@ -82,8 +107,8 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
         divisionId: divisionId || undefined,
         pincodeId: pincodeId || undefined
       };
-      const res = await vendorService.getVendors(params);
-      if (res.success) {
+      const res = await cacheClient.fetchWithCache(key, () => vendorService.getVendors(params), { force });
+      if (res && res.success) {
         setVendors(res.data);
         setPagination(res.pagination);
       }
@@ -103,7 +128,8 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
     if (event.action === 'updated' && event.data) {
       setVendors(prev => applyRealtimeUpdate(prev, event));
     } else {
-      loadVendors(pagination.page || 1);
+      cacheClient.invalidateQueries('vendors');
+      loadVendors(pagination.page || 1, true);
     }
   });
 

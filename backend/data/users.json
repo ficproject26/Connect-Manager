@@ -1911,7 +1911,23 @@
     "rejectionReason": "",
     "requireCaptcha": false,
     "twoFactorEnabled": false,
-    "twoFactorSecret": ""
+    "twoFactorSecret": "",
+    "addresses": [
+      {
+        "id": "addr_reg_6a95700e2b7b15bdd1b6a15c",
+        "name": "Forge",
+        "phone": "6364914187",
+        "pincode": "",
+        "locality": "",
+        "address": "wdfghjkl",
+        "city": "",
+        "state": "Punjab",
+        "landmark": "",
+        "altPhone": "6379865465",
+        "type": "Home",
+        "isRegistrationAddress": true
+      }
+    ]
   },
   {
     "_id": "6a958d185494d8573b14667a",
@@ -5658,7 +5674,27 @@
         "isRegistrationAddress": true
       }
     ],
-    "createdAt": "2026-10-09T05:16:42.469Z"
+    "createdAt": "2026-10-09T05:16:42.469Z",
+    "membershipExpiryDate": "2026-11-09T04:11:07.370Z",
+    "membershipHistory": [
+      {
+        "plan": "Diamond Prestige",
+        "previousPlan": "None",
+        "paymentId": "pay_mem_1791605467369_1853",
+        "orderId": "order_test_1791605399388_2485",
+        "membershipId": "FIC-DIMD-5467370-341",
+        "amount": 35000,
+        "status": "SUCCESS",
+        "startDate": "2026-10-10T04:11:07.370Z",
+        "expiryDate": "2026-11-09T04:11:07.370Z",
+        "date": "2026-10-10T04:11:07.370Z"
+      }
+    ],
+    "membershipId": "FIC-DIMD-5467370-341",
+    "membershipStartDate": "2026-10-10T04:11:07.370Z",
+    "membershipStatus": "ACTIVE",
+    "membershipTier": "Diamond Prestige",
+    "membershipUpdatedAt": "2026-10-10T04:11:07.370Z"
   },
   {
     "_id": "6ac87ff7e5911dd6ea10bbd6",
@@ -5741,5 +5777,91 @@
       }
     ],
     "createdAt": "2026-10-09T09:36:13.435Z"
+  },
+  {
+    "_id": "95989e76-8290-4101-81f8-2487e257f464",
+    "address": "vyjy;pgihgvhvhgcffcjycjcky",
+    "avatarUrl": "/uploads/1791607590075_c1566a28ee39fb22d001888fb233fceb.jpg",
+    "createdAt": "2026-10-10T04:46:37.066Z",
+    "declarationAccepted": true,
+    "district": null,
+    "districtId": null,
+    "districtName": null,
+    "division": null,
+    "divisionId": null,
+    "divisionName": null,
+    "dob": "2008-12-01",
+    "documents": {
+      "aadharUrl": "/uploads/1791607590526_efe12e9d545dad662f52a0d4c27dfc47.jpg",
+      "panUrl": "/uploads/1791607590976_05be657d71e93aa2e11533ceaa7e0f0d.jpg",
+      "bankUrl": "/uploads/1791607591401_e0fbf80b529d3d856c2496b326503d79.jpg",
+      "signatureUrl": "/uploads/1791607591831_d465dd8a75298811dbe743fb912b1a41.jpg",
+      "aadharFileName": "IMG_1822.JPG",
+      "panFileName": "IMG_1822.JPG",
+      "bankFileName": "IMG_1822.JPG",
+      "signatureFileName": "IMG_1822.JPG"
+    },
+    "email": "bala@gmail.com",
+    "gender": "male",
+    "id": "95989e76-8290-4101-81f8-2487e257f464",
+    "kycStatus": "pending_verification",
+    "level": 1,
+    "mobile": "9786626191",
+    "name": "Bala",
+    "passwordHash": "$2a$12$n08N4BX6VX30nEGbrQXJYulTDmlBjpVeTa0Z2S6UYCT87iMfoLzS.",
+    "pincode": null,
+    "pincodeCode": null,
+    "pincodeId": null,
+    "regionId": "state_ka",
+    "role": "state_manager",
+    "state": "Karnataka",
+    "stateId": "state_ka",
+    "stateName": "Karnataka",
+    "status": "under_review",
+    "updatedAt": "2026-10-10T04:46:37.066Z",
+    "zone": null
+  },
+  {
+    "_id": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9",
+    "address": "43,ghjgyuk",
+    "avatarUrl": null,
+    "createdAt": "2026-10-10T04:52:59.258Z",
+    "declarationAccepted": true,
+    "district": "Ballari",
+    "districtId": "dist_ballari",
+    "districtName": "Ballari",
+    "division": null,
+    "divisionId": null,
+    "divisionName": null,
+    "dob": "2003-08-09",
+    "documents": {
+      "aadharUrl": "/uploads/1791607972641_5143151a41236419ea4ff692e3b968be.jpg",
+      "panUrl": "/uploads/1791607973206_bd0ab706ef3dfa647404724a71e91f4c.jpg",
+      "bankUrl": "/uploads/1791607973611_ec7dba9d66e09190d1034faaf2052e76.jpg",
+      "signatureUrl": "/uploads/1791607973760_137000e1385b7c52a3968c0127b01e94.png",
+      "aadharFileName": "demo aadhar.jpg",
+      "panFileName": "demo pan.jpg",
+      "bankFileName": "demo passport photo.jpg",
+      "signatureFileName": "demo sign.png"
+    },
+    "email": "javeed@gmail.com",
+    "gender": "male",
+    "id": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9",
+    "kycStatus": "pending_verification",
+    "level": 2,
+    "mobile": "9876567890",
+    "name": "Javeed",
+    "passwordHash": "$2a$12$6dOb.HI03f0PkzPGOv5BMu8On7CWK9FadCcITZ5K/O0J9pA6Lq3V.",
+    "pincode": null,
+    "pincodeCode": null,
+    "pincodeId": null,
+    "regionId": "state_ka",
+    "role": "district_manager",
+    "state": "Karnataka",
+    "stateId": "state_ka",
+    "stateName": "Karnataka",
+    "status": "under_review",
+    "updatedAt": "2026-10-10T04:52:59.258Z",
+    "zone": null
   }
 ]

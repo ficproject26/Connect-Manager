@@ -62,9 +62,10 @@ const isVendorInScope = (vendor, user) => {
   const vendorPincode = norm(vendor.pincode || vendor.location?.pincode);
 
   const matchPincode = () => {
-    if (!matchDivision()) return false;
     if (userPincodeId && vendorPincodeId && userPincodeId === vendorPincodeId) return true;
     if (userPincode && vendorPincode && userPincode === vendorPincode) return true;
+    if (!matchDistrict()) return false;
+    if (userDivision && vendorDivision && !matchDivision()) return false;
     if (!userPincodeId && !userPincode) return true;
     return false;
   };

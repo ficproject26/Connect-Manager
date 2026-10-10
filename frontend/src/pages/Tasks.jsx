@@ -32,9 +32,12 @@ import {
   Pause,
   AlertTriangle,
   RotateCcw,
-  Ban
+  Ban,
+  ZoomIn,
+  ZoomOut
 } from 'lucide-react';
 import { taskService, agentService, uploadService } from '../services/api';
+import { cacheClient } from '../services/cacheClient';
 import { useAuth } from '../context/AuthContext';
 import { useRealtime } from '../realtime';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
@@ -67,8 +70,14 @@ const Tasks = ({ onNavigate }) => {
     const rawNameMatch = Boolean(userName && ((rawMgrName && rawMgrName === userName) || (rawAgentName && rawAgentName === userName)));
     return Boolean(idMatch || nameMatch || rawNameMatch);
   };
-  const [tasks, setTasks] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [tasks, setTasks] = useState(() => {
+    const cached = cacheClient.get(`tasks:all:${user?.id || user?._id || 'mgr'}`);
+    return cached?.data || [];
+  });
+  const [loading, setLoading] = useState(() => {
+    const cached = cacheClient.get(`tasks:all:${user?.id || user?._id || 'mgr'}`);
+    return !cached?.data;
+  });
   const [refreshing, setRefreshing] = useState(false);
 
   const [search, setSearch] = useState('');
@@ -77,6 +86,34 @@ const Tasks = ({ onNavigate }) => {
   const [priorityFilter, setPriorityFilter] = useState('All');
   const [selectedTask, setSelectedTask] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(null);
+  const [previewZoom, setPreviewZoom] = useState(1);
+  const [previewLoadError, setPreviewLoadError] = useState(false);
+
+  const openPhotoPreview = (url) => {
+    if (!url) return;
+    setPreviewPhoto(url);
+    setPreviewZoom(1);
+    setPreviewLoadError(false);
+  };
+
+  const closePhotoPreview = () => {
+    setPreviewPhoto(null);
+    setPreviewZoom(1);
+    setPreviewLoadError(false);
+  };
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape' && previewPhoto) {
+        closePhotoPreview();
+      }
+    };
+    if (previewPhoto) {
+      window.addEventListener('keydown', handleKeyDown);
+    }
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [previewPhoto]);
+
   const [actionReason, setActionReason] = useState('');
   const [actionPhoto, setActionPhoto] = useState('');
   const [actionLoading, setActionLoading] = useState(false);
@@ -104,9 +141,19 @@ const Tasks = ({ onNavigate }) => {
   // Fetch real tasks from backend API strictly scoped to authenticated manager territory
   const fetchTasks = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
+    const cacheKey = `tasks:all:${user?.id || user?._id || 'mgr'}`;
+    const cached = cacheClient.get(cacheKey);
+    if (cached?.data && !showSpinner) {
+      setTasks(cached.data);
+      setLoading(false);
+    }
     try {
       const queryParams = buildTerritoryQueryParams(territoryProfile);
-      const res = await taskService.getTasks(queryParams, user);
+      const res = await cacheClient.fetchWithCache(
+        cacheKey,
+        () => taskService.getTasks(queryParams, user),
+        { force: showSpinner }
+      );
       const rawList = (res && res.success && (Array.isArray(res.tasks) ? res.tasks : (Array.isArray(res.data) ? res.data : []))) || [];
       if (rawList.length > 0) {
         // Enforce strict territory boundaries & exclude mock/test tasks
@@ -186,6 +233,7 @@ const Tasks = ({ onNavigate }) => {
           };
         });
         setTasks(mapped);
+        cacheClient.set(cacheKey, mapped);
       } else {
         setTasks([]);
       }
@@ -870,6 +918,7 @@ const Tasks = ({ onNavigate }) => {
           <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
             <thead>
               <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', width: '60px', textAlign: 'center' }}>S.No.</th>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Task ID & Summary</th>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Shop Name and Location</th>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Priority</th>
@@ -881,7 +930,7 @@ const Tasks = ({ onNavigate }) => {
             <tbody>
               {filteredTasks.length === 0 ? (
                 <tr>
-                  <td colSpan={6} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <td colSpan={7} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                       <ClipboardList size={36} style={{ color: '#cbd5e1' }} />
                       <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>
@@ -894,7 +943,7 @@ const Tasks = ({ onNavigate }) => {
                   </td>
                 </tr>
               ) : (
-                filteredTasks.map((item) => {
+                filteredTasks.map((item, index) => {
                   const pStyle = getPriorityStyle(item.priority);
                   const sStyle = getStatusBadge(item.status);
                   const isDone = item.status === 'Completed' || item.status === 'Closed';
@@ -908,6 +957,11 @@ const Tasks = ({ onNavigate }) => {
                         transition: 'background 0.15s ease'
                       }}
                     >
+                      {/* S.No. */}
+                      <td style={{ padding: '14px 16px', textAlign: 'center', fontWeight: 600, color: 'var(--text-muted)' }}>
+                        {index + 1}
+                      </td>
+
                       {/* Task ID & Summary */}
                       <td style={{ padding: '14px 16px', maxWidth: '320px' }}>
                         <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -1187,55 +1241,6 @@ const Tasks = ({ onNavigate }) => {
           </table>
         </div>
       </div>
-
-      {/* Full Photo Preview Lightbox */}
-      {previewPhoto && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 1100,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(5px)',
-          padding: '20px'
-        }}>
-          <div style={{ position: 'relative', maxWidth: '85vw', maxHeight: '85vh' }}>
-            <button
-              onClick={() => setPreviewPhoto(null)}
-              style={{
-                position: 'absolute',
-                top: '-40px',
-                right: '0',
-                background: 'rgba(255,255,255,0.2)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '50%',
-                width: '32px',
-                height: '32px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={20} />
-            </button>
-            <img 
-              src={previewPhoto} 
-              alt="Full Preview" 
-              style={{
-                maxWidth: '85vw',
-                maxHeight: '85vh',
-                borderRadius: '12px',
-                boxShadow: '0 25px 50px rgba(0,0,0,0.5)',
-                display: 'block'
-              }} 
-            />
-          </div>
-        </div>
-      )}
 
       {/* 5. Task Action & Details Modal */}
       {selectedTask && (
@@ -1633,36 +1638,43 @@ const Tasks = ({ onNavigate }) => {
                       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#166534', marginBottom: '4px', textTransform: 'uppercase' }}>
                         Field Photo Proof
                       </div>
-                      <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #86efac' }}>
+                      <div style={{ position: 'relative', borderRadius: '8px', overflow: 'hidden', border: '1px solid #86efac', background: '#0f172a' }}>
                         <img
                           src={selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto}
                           alt="Verification Proof"
-                          style={{ width: '100%', height: '160px', objectFit: 'cover', display: 'block' }}
-                          onError={(e) => { 
-                            if (!e.target.dataset.triedFallback) {
-                              e.target.dataset.triedFallback = 'true';
-                              e.target.src = '/uploads/1791261240106_storefront_proof.jpg'; 
-                            }
+                          style={{ width: '100%', height: '180px', objectFit: 'contain', display: 'block', background: '#0f172a' }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            const fallback = e.target.parentElement.querySelector('.photo-error-fallback');
+                            if (fallback) fallback.style.display = 'flex';
                           }}
                         />
+                        <div className="photo-error-fallback" style={{ display: 'none', height: '140px', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.8rem', flexDirection: 'column', gap: '6px' }}>
+                          <AlertTriangle size={20} style={{ color: '#f59e0b' }} />
+                          <span>Photo failed to load from server</span>
+                        </div>
                         <button
                           type="button"
-                          onClick={() => setPreviewPhoto(selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPhotoPreview(selectedTask.completionDetails?.completionPhoto || selectedTask.shopPhoto);
+                          }}
                           style={{
                             position: 'absolute',
                             bottom: '8px',
                             right: '8px',
-                            background: 'rgba(0,0,0,0.65)',
+                            background: 'rgba(0,0,0,0.75)',
                             color: '#ffffff',
-                            border: 'none',
-                            borderRadius: '4px',
-                            padding: '3px 8px',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '6px',
+                            padding: '4px 10px',
                             fontSize: '11px',
-                            fontWeight: 600,
+                            fontWeight: 700,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '3px'
+                            gap: '4px',
+                            backdropFilter: 'blur(4px)'
                           }}
                         >
                           <Maximize2 size={12} /> View Full
@@ -1729,17 +1741,47 @@ const Tasks = ({ onNavigate }) => {
                   {selectedTask.previousWork.shopPhoto && (
                     <div style={{ marginBottom: '10px' }}>
                       <div style={{ fontSize: '0.7rem', fontWeight: 700, color: '#9f1239', marginBottom: '3px' }}>PREVIOUS PHOTO</div>
-                      <img
-                        src={selectedTask.previousWork.shopPhoto}
-                        alt="Previous Work"
-                        style={{ width: '100%', height: '120px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #fecdd3' }}
-                        onError={(e) => { 
-                          if (!e.target.dataset.triedFallback) {
-                            e.target.dataset.triedFallback = 'true';
-                            e.target.src = '/uploads/1791261240106_storefront_proof.jpg'; 
-                          }
-                        }}
-                      />
+                      <div style={{ position: 'relative', borderRadius: '6px', overflow: 'hidden', border: '1px solid #fecdd3', background: '#0f172a' }}>
+                        <img
+                          src={selectedTask.previousWork.shopPhoto}
+                          alt="Previous Work"
+                          style={{ width: '100%', height: '140px', objectFit: 'contain', display: 'block' }}
+                          onError={(e) => { 
+                            e.target.style.display = 'none';
+                            const fallback = e.target.parentElement.querySelector('.prev-photo-error');
+                            if (fallback) fallback.style.display = 'flex';
+                          }}
+                        />
+                        <div className="prev-photo-error" style={{ display: 'none', height: '100px', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: '0.8rem', flexDirection: 'column', gap: '4px' }}>
+                          <AlertTriangle size={18} style={{ color: '#f59e0b' }} />
+                          <span>Previous photo failed to load</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openPhotoPreview(selectedTask.previousWork.shopPhoto);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            bottom: '6px',
+                            right: '6px',
+                            background: 'rgba(0,0,0,0.75)',
+                            color: '#ffffff',
+                            border: '1px solid rgba(255,255,255,0.2)',
+                            borderRadius: '4px',
+                            padding: '3px 8px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '3px'
+                          }}
+                        >
+                          <Maximize2 size={11} /> View Full
+                        </button>
+                      </div>
                     </div>
                   )}
 
@@ -2433,6 +2475,234 @@ const Tasks = ({ onNavigate }) => {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* 6. Dedicated Full-Screen Image Viewer Overlay */}
+      {previewPhoto && (
+        <div
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 100000,
+            background: 'rgba(15, 23, 42, 0.95)',
+            backdropFilter: 'blur(8px)',
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              closePhotoPreview();
+            }
+          }}
+        >
+          {/* Top Control Bar */}
+          <div
+            style={{
+              padding: '12px 20px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              background: 'rgba(15, 23, 42, 0.9)',
+              borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+              color: '#ffffff',
+              zIndex: 100001
+            }}
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <Camera size={18} style={{ color: '#38bdf8' }} />
+              <div>
+                <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>Field Deliverable Photo Proof</div>
+                <div style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                  {selectedTask?.taskNumber || selectedTask?.id || 'Inspection Photo'} • Natural Aspect Ratio
+                </div>
+              </div>
+            </div>
+
+            {/* Zoom & View Controls */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(z => Math.max(0.5, Math.round((z - 0.25) * 100) / 100))}
+                title="Zoom Out (-)"
+                disabled={previewZoom <= 0.5}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 10px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: previewZoom <= 0.5 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <ZoomOut size={15} />
+              </button>
+
+              <span
+                style={{
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  padding: '4px 8px',
+                  background: 'rgba(255, 255, 255, 0.08)',
+                  borderRadius: '4px',
+                  minWidth: '46px',
+                  textAlign: 'center',
+                  color: '#e2e8f0'
+                }}
+              >
+                {Math.round(previewZoom * 100)}%
+              </span>
+
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(z => Math.min(3.0, Math.round((z + 0.25) * 100) / 100))}
+                title="Zoom In (+)"
+                disabled={previewZoom >= 3.0}
+                style={{
+                  background: 'rgba(255, 255, 255, 0.12)',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 10px',
+                  fontSize: '0.8rem',
+                  fontWeight: 600,
+                  cursor: previewZoom >= 3.0 ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <ZoomIn size={15} />
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreviewZoom(1)}
+                title="Reset Zoom (1:1)"
+                style={{
+                  background: previewZoom === 1 ? 'rgba(56, 189, 248, 0.25)' : 'rgba(255, 255, 255, 0.12)',
+                  color: previewZoom === 1 ? '#38bdf8' : '#ffffff',
+                  border: previewZoom === 1 ? '1px solid rgba(56, 189, 248, 0.5)' : 'none',
+                  borderRadius: '6px',
+                  padding: '6px 10px',
+                  fontSize: '0.76rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Fit Screen
+              </button>
+
+              <div style={{ width: '1px', height: '20px', background: 'rgba(255, 255, 255, 0.2)', margin: '0 4px' }} />
+
+              <button
+                type="button"
+                onClick={closePhotoPreview}
+                title="Close Viewer (Esc)"
+                style={{
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 14px',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '5px'
+                }}
+              >
+                <X size={16} />
+                <span>Close</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Interactive Panning Viewport */}
+          <div
+            style={{
+              flex: 1,
+              overflow: 'auto',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              padding: '24px',
+              position: 'relative'
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                closePhotoPreview();
+              }
+            }}
+          >
+            {previewLoadError ? (
+              <div
+                style={{
+                  padding: '32px 28px',
+                  background: '#1e293b',
+                  border: '1px solid #ef4444',
+                  borderRadius: '14px',
+                  textAlign: 'center',
+                  color: '#f8fafc',
+                  maxWidth: '480px'
+                }}
+              >
+                <AlertTriangle size={36} style={{ color: '#ef4444', margin: '0 auto 12px' }} />
+                <div style={{ fontWeight: 800, fontSize: '1rem', marginBottom: '6px' }}>
+                  Unable to Load Uploaded Image
+                </div>
+                <div style={{ fontSize: '0.8rem', color: '#94a3b8', marginBottom: '14px', wordBreak: 'break-all' }}>
+                  The image file could not be retrieved from: {previewPhoto}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setPreviewLoadError(false)}
+                  style={{
+                    padding: '8px 18px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#0284c7',
+                    color: '#fff',
+                    fontWeight: 700,
+                    fontSize: '0.82rem',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Retry Loading
+                </button>
+              </div>
+            ) : (
+              <img
+                src={previewPhoto}
+                alt="Field Inspection Deliverable Proof"
+                onError={() => setPreviewLoadError(true)}
+                style={{
+                  maxWidth: previewZoom === 1 ? '92vw' : 'none',
+                  maxHeight: previewZoom === 1 ? '84vh' : 'none',
+                  transform: previewZoom !== 1 ? `scale(${previewZoom})` : 'none',
+                  transformOrigin: 'center center',
+                  objectFit: 'contain',
+                  borderRadius: '8px',
+                  boxShadow: '0 25px 60px rgba(0, 0, 0, 0.7)',
+                  transition: 'transform 0.15s ease',
+                  cursor: previewZoom > 1 ? 'grab' : 'zoom-in',
+                  display: 'block'
+                }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setPreviewZoom(z => (z === 1 ? 1.75 : 1));
+                }}
+                title={previewZoom > 1 ? "Click to reset view" : "Click to zoom in"}
+              />
+            )}
           </div>
         </div>
       )}
