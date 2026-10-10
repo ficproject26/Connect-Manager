@@ -1494,10 +1494,10 @@
     "panNumber": "ABCDE1234F",
     "pincodeId": "6aba6ffb16711d5e7d54bb5d",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Pending",
+    "status": "Rejected",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-10T12:26:58.551Z",
+    "updatedAt": "2026-10-10T13:25:26.465Z",
     "isActive": false,
     "isApproved": false,
     "kycStatus": "pending",
@@ -1508,6 +1508,6 @@
     "totalBookings": 0,
     "totalOrders": 0,
     "totalRevenue": 0,
-    "rejectionReason": "Test rejection criteria"
+    "rejectionReason": "Document validation failed"
   }
 ]
