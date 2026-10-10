@@ -47,6 +47,8 @@ const AgentDirectory = ({ onNavigate }) => {
   const [selectedAgent, setSelectedAgent] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
 
+  const cacheKey = `agents:directory:${user?.id || user?._id || 'mgr'}`;
+
   const fetchAgents = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
     const cached = cacheClient.get(cacheKey);
