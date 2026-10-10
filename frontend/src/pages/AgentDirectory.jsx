@@ -50,11 +50,15 @@ const AgentDirectory = ({ onNavigate }) => {
 
   const fetchAgents = async (showSpinner = false) => {
     if (showSpinner) setRefreshing(true);
-    const cacheKey = `agents:directory:${user?.id || user?._id || 'mgr'}`;
     const cached = cacheClient.get(cacheKey);
     if (cached?.data && !showSpinner) {
-      setAgents(cached.data);
-      setLoading(false);
+      const cachedList = Array.isArray(cached.data)
+        ? cached.data
+        : (Array.isArray(cached.data?.agents) ? cached.data.agents : (Array.isArray(cached.data?.data) ? cached.data.data : null));
+      if (cachedList) {
+        setAgents(cachedList);
+        setLoading(false);
+      }
     } else {
       setLoading(true);
     }
@@ -197,11 +201,12 @@ const AgentDirectory = ({ onNavigate }) => {
   // Hierarchical Scoping Rules:
   // agents returned by agentService.getAgents are already strictly scoped to the manager's authorized territory
   const hierarchicalAgents = useMemo(() => {
-    return agents;
+    return Array.isArray(agents) ? agents : [];
   }, [agents]);
 
   const filteredAgents = useMemo(() => {
-    return hierarchicalAgents.filter(agent => {
+    const safeList = Array.isArray(hierarchicalAgents) ? hierarchicalAgents : [];
+    return safeList.filter(agent => {
       if (levelFilter !== 'All') {
         const l = resolveLevelStr(agent.level, agent.role);
         if (levelFilter === 'state' && !l.includes('state')) return false;
@@ -231,11 +236,13 @@ const AgentDirectory = ({ onNavigate }) => {
   }, [hierarchicalAgents, search, levelFilter, statusFilter]);
 
   const totalReferrals = useMemo(() => {
-    return hierarchicalAgents.reduce((sum, a) => sum + (a.totalReferrals || 0), 0);
+    const safeList = Array.isArray(hierarchicalAgents) ? hierarchicalAgents : [];
+    return safeList.reduce((sum, a) => sum + (a.totalReferrals || 0), 0);
   }, [hierarchicalAgents]);
 
   const totalVendors = useMemo(() => {
-    return hierarchicalAgents.reduce((sum, a) => sum + (a.vendorOnboardings || 0), 0);
+    const safeList = Array.isArray(hierarchicalAgents) ? hierarchicalAgents : [];
+    return safeList.reduce((sum, a) => sum + (a.vendorOnboardings || 0), 0);
   }, [hierarchicalAgents]);
 
   const resolvedPincode = user?.pincode || user?.pincodeCode || user?.scope?.pincodeCode || '';
@@ -396,7 +403,7 @@ const AgentDirectory = ({ onNavigate }) => {
               Active on Ground
             </div>
             <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
-              {hierarchicalAgents.filter(a => a.status === 'Active').length}
+              {(Array.isArray(hierarchicalAgents) ? hierarchicalAgents : []).filter(a => a.status === 'Active').length}
             </div>
           </div>
           <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

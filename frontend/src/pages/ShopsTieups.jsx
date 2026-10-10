@@ -27,7 +27,7 @@ const ShopsTieups = ({ onNavigate }) => {
     fetchTieups();
   }, []);
 
-  const filtered = tieups.filter(t => 
+  const filtered = (Array.isArray(tieups) ? tieups : []).filter(t => 
     (t.businessName || t.name || '').toLowerCase().includes(search.toLowerCase()) || 
     (t.category || '').toLowerCase().includes(search.toLowerCase())
   );

@@ -66,7 +66,7 @@ class DataPrefetcher {
       async () => {
         try {
           const params = { page: 1, limit: 10 };
-          const key = `vendors:list:p1:${JSON.stringify(params)}`;
+          const key = `vendors:list:${userId}:${JSON.stringify(params)}`;
           await cacheClient.fetchWithCache(key, () => vendorService.getVendors(params));
         } catch (e) {}
       },

@@ -40,12 +40,18 @@ const FieldManagers = () => {
   const [copiedField, setCopiedField] = useState(null);
 
   const applyManagerData = (res) => {
+    if (!res) return;
     const currentId = String(user?.id || user?._id || '');
-    const rawAll = res.all || [...(res.supervisors || []), ...(res.peers || []), ...(res.subordinates || res.data || [])];
-    const all = rawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-    const supervisors = (res.supervisors || res.reporting || all.filter(m => m.relation === 'supervisor')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-    const peers = (res.peers || all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-    const subordinates = (res.subordinates || all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const resAll = Array.isArray(res.all) ? res.all : null;
+    const resSup = Array.isArray(res.supervisors) ? res.supervisors : (Array.isArray(res.reporting) ? res.reporting : []);
+    const resPeers = Array.isArray(res.peers) ? res.peers : [];
+    const resSubs = Array.isArray(res.subordinates) ? res.subordinates : (Array.isArray(res.data) ? res.data : []);
+    const rawAll = resAll || [...resSup, ...resPeers, ...resSubs];
+    const safeRawAll = Array.isArray(rawAll) ? rawAll : [];
+    const all = safeRawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const supervisors = (resSup.length > 0 ? resSup : all.filter(m => m.relation === 'supervisor')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const peers = (resPeers.length > 0 ? resPeers : all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const subordinates = (resSubs.length > 0 ? resSubs : all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
 
     setAllManagers(all);
     setSupervisorsList(supervisors);
@@ -311,8 +317,9 @@ const FieldManagers = () => {
     } else if (activeTab === 'under') {
       sourceList = subordinatesList;
     }
+    const safeList = Array.isArray(sourceList) ? sourceList : [];
 
-    return sourceList.filter((m) => {
+    return safeList.filter((m) => {
       if (search.trim()) {
         const q = search.toLowerCase();
         const matchesName = m.name?.toLowerCase().includes(q);
@@ -331,10 +338,10 @@ const FieldManagers = () => {
     });
   }, [allManagers, supervisorsList, peersList, subordinatesList, activeTab, search, roleFilter]);
 
-  const supervisorsCount = supervisorsList.length;
-  const peersCount = peersList.length;
-  const subordinatesCount = subordinatesList.length;
-  const totalCount = allManagers.length;
+  const supervisorsCount = (Array.isArray(supervisorsList) ? supervisorsList : []).length;
+  const peersCount = (Array.isArray(peersList) ? peersList : []).length;
+  const subordinatesCount = (Array.isArray(subordinatesList) ? subordinatesList : []).length;
+  const totalCount = (Array.isArray(allManagers) ? allManagers : []).length;
 
   return (
     <div>

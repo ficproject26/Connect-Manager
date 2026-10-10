@@ -89,8 +89,11 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
     const cached = cacheClient.get(key);
 
     if (cached?.data) {
-      setVendors(cached.data.data);
-      setPagination(cached.data.pagination);
+      const list = Array.isArray(cached.data.data) 
+        ? cached.data.data 
+        : (Array.isArray(cached.data) ? cached.data : []);
+      setVendors(list);
+      setPagination(cached.data.pagination || { page: 1, limit: 10, total: list.length, totalPages: 1 });
       setLoading(false);
     } else {
       setLoading(true);
@@ -109,8 +112,9 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
       };
       const res = await cacheClient.fetchWithCache(key, () => vendorService.getVendors(params), { force });
       if (res && res.success) {
-        setVendors(res.data);
-        setPagination(res.pagination);
+        const list = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+        setVendors(list);
+        setPagination(res.pagination || { page: 1, limit: 10, total: list.length, totalPages: 1 });
       }
     } catch (err) {
       console.error('Failed to fetch vendors:', err);
@@ -262,7 +266,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                   Loading vendors within your scope...
                 </td>
               </tr>
-            ) : vendors.length === 0 ? (
+            ) : (Array.isArray(vendors) ? vendors : []).length === 0 ? (
               <tr>
                 <td colSpan="7" style={{ textAlign: 'center', padding: '48px', color: 'var(--text-muted)' }}>
                   <Store size={36} style={{ margin: '0 auto 8px', color: '#cbd5e1', display: 'block' }} />
@@ -270,7 +274,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                 </td>
               </tr>
             ) : (
-              vendors.map((v, index) => (
+              (Array.isArray(vendors) ? vendors : []).map((v, index) => (
                 <tr key={v._id}>
                   <td style={{ textAlign: 'center', paddingLeft: '16px', fontWeight: 600, color: '#64748b', fontSize: '0.82rem' }}>
                     {(pagination?.page ? (pagination.page - 1) * (pagination.limit || 10) : 0) + index + 1}

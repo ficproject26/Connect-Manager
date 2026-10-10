@@ -27,7 +27,12 @@ const Dashboard = ({ onNavigate }) => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredIssue, setHoveredIssue] = useState(null);
   const [dashboardData, setDashboardData] = useState(() => cacheClient.get('dashboard:stats')?.data || null);
-  const [leaderboardList, setLeaderboardList] = useState(() => cacheClient.get('leaderboard')?.data || []);
+  const [leaderboardList, setLeaderboardList] = useState(() => {
+    const raw = cacheClient.get('leaderboard')?.data;
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.data)) return raw.data;
+    return [];
+  });
   const [loadingStats, setLoadingStats] = useState(() => !cacheClient.get('dashboard:stats')?.data);
   const [trendPeriod, setTrendPeriod] = useState('6m'); // '3m' | '6m' | '1y'
   const [issuePeriod, setIssuePeriod] = useState('month'); // 'month' | 'week' | 'year' | 'all'
@@ -44,8 +49,9 @@ const Dashboard = ({ onNavigate }) => {
       if (res && res.success) {
         setDashboardData(res);
       }
-      if (leadRes && leadRes.success && Array.isArray(leadRes.data)) {
-        setLeaderboardList(leadRes.data);
+      if (leadRes && leadRes.success) {
+        const list = Array.isArray(leadRes.data) ? leadRes.data : (Array.isArray(leadRes) ? leadRes : []);
+        setLeaderboardList(list);
       }
     } catch (err) {
       console.error('Failed to load real dashboard stats:', err);
@@ -252,7 +258,7 @@ const Dashboard = ({ onNavigate }) => {
 
   // Dynamic Activities from audit logs
   const allActivitiesList = React.useMemo(() => {
-    const raw = dashboardData?.recentActivities || [];
+    const raw = Array.isArray(dashboardData?.recentActivities) ? dashboardData.recentActivities : [];
     return raw.map((act, idx) => {
       const action = act.action || act.title || 'Activity';
       const isKyc = action.toLowerCase().includes('kyc');
@@ -279,14 +285,15 @@ const Dashboard = ({ onNavigate }) => {
     });
   }, [dashboardData]);
 
-  const filteredActivities = allActivitiesList.filter(act => {
+  const filteredActivities = (Array.isArray(allActivitiesList) ? allActivitiesList : []).filter(act => {
     if (activityFilter !== 'all' && act.category !== activityFilter) return false;
     return true;
   });
 
   // Dynamic Top Performing Managers from live database leaderboard
   const topManagers = React.useMemo(() => {
-    return (leaderboardList || []).slice(0, 5).map((m, idx) => ({
+    const safeList = Array.isArray(leaderboardList) ? leaderboardList : [];
+    return safeList.slice(0, 5).map((m, idx) => ({
       id: m.rank || idx + 1,
       name: getDisplayValue(m.name, 'Manager'),
       level: getDisplayValue(m.roleLabel || m.level, 'Level 1'),

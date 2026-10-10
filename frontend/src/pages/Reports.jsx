@@ -208,9 +208,10 @@ const Reports = ({ onNavigate }) => {
     window.print();
   };
 
-  const totalVisitCount = pagination && pagination.total !== undefined ? pagination.total : visits.length;
-  const interestedCount = visits.filter(v => v && v.interestedStatus === 'YES').length;
-  const notInterestedCount = visits.filter(v => v && v.interestedStatus === 'NO').length;
+  const safeVisits = Array.isArray(visits) ? visits : [];
+  const totalVisitCount = pagination && pagination.total !== undefined ? pagination.total : safeVisits.length;
+  const interestedCount = safeVisits.filter(v => v && v.interestedStatus === 'YES').length;
+  const notInterestedCount = safeVisits.filter(v => v && v.interestedStatus === 'NO').length;
 
   return (
     <div style={{ width: '100%' }}>

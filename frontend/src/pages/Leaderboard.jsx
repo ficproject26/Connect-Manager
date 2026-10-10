@@ -24,7 +24,12 @@ const Leaderboard = ({ onNavigate }) => {
   const [period, setPeriod] = useState('month'); // 'month' | 'quarter' | 'year'
   const [tierFilter, setTierFilter] = useState('All');
   const [search, setSearch] = useState('');
-  const [allRankings, setAllRankings] = useState(() => cacheClient.get('leaderboard')?.data?.data || []);
+  const [allRankings, setAllRankings] = useState(() => {
+    const raw = cacheClient.get('leaderboard')?.data;
+    if (Array.isArray(raw)) return raw;
+    if (Array.isArray(raw?.data)) return raw.data;
+    return [];
+  });
   const [loading, setLoading] = useState(() => !cacheClient.get('leaderboard')?.data);
 
   const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.state || '-';
@@ -36,8 +41,9 @@ const Leaderboard = ({ onNavigate }) => {
           setLoading(true);
         }
         const res = await cacheClient.fetchWithCache('leaderboard', () => reportService.getLeaderboardData());
-        if (res && res.success && res.data) {
-          setAllRankings(res.data);
+        if (res && res.success) {
+          const list = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+          setAllRankings(list);
         }
       } catch (err) {
         console.error('Failed to fetch live leaderboard data:', err);
@@ -50,7 +56,8 @@ const Leaderboard = ({ onNavigate }) => {
   }, [user]);
 
   const tierRankings = useMemo(() => {
-    const list = allRankings.filter((m) => tierFilter === 'All' || m.role === tierFilter);
+    const safeRankings = Array.isArray(allRankings) ? allRankings : [];
+    const list = safeRankings.filter((m) => tierFilter === 'All' || m.role === tierFilter);
     return list.map((m, idx) => ({
       ...m,
       displayRank: tierFilter === 'All' ? m.rank : idx + 1
@@ -58,7 +65,8 @@ const Leaderboard = ({ onNavigate }) => {
   }, [allRankings, tierFilter]);
 
   const filteredRankings = useMemo(() => {
-    return tierRankings.filter((m) => {
+    const safeTier = Array.isArray(tierRankings) ? tierRankings : [];
+    return safeTier.filter((m) => {
       if (search.trim()) {
         const q = search.toLowerCase();
         const matchesName = m.name?.toLowerCase().includes(q);
@@ -71,7 +79,8 @@ const Leaderboard = ({ onNavigate }) => {
   }, [tierRankings, search]);
 
   const top3 = useMemo(() => {
-    return tierRankings.slice(0, 3);
+    const safeTier = Array.isArray(tierRankings) ? tierRankings : [];
+    return safeTier.slice(0, 3);
   }, [tierRankings]);
 
   const getTopLeaderBadgeText = () => {

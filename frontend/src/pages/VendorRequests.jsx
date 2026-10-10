@@ -13,10 +13,11 @@ const VendorRequests = ({ onNavigate }) => {
     try {
       const res = await vendorService.getVendors({ status: 'Pending' });
       if (res.success) {
-        setVendors(res.data);
+        setVendors(Array.isArray(res.data) ? res.data : []);
       }
     } catch (err) {
       console.error('Failed to load vendor requests:', err);
+      setVendors([]);
     } finally {
       setLoading(false);
     }
@@ -31,7 +32,7 @@ const VendorRequests = ({ onNavigate }) => {
   });
 
 
-  const pendingList = vendors.filter(v => 
+  const pendingList = (Array.isArray(vendors) ? vendors : []).filter(v => 
     v.businessName?.toLowerCase().includes(search.toLowerCase()) || 
     v.name?.toLowerCase().includes(search.toLowerCase())
   );

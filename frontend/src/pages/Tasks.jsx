@@ -144,8 +144,13 @@ const Tasks = ({ onNavigate }) => {
     const cacheKey = `tasks:all:${user?.id || user?._id || 'mgr'}`;
     const cached = cacheClient.get(cacheKey);
     if (cached?.data && !showSpinner) {
-      setTasks(cached.data);
-      setLoading(false);
+      const cachedList = Array.isArray(cached.data)
+        ? cached.data
+        : (Array.isArray(cached.data?.tasks) ? cached.data.tasks : (Array.isArray(cached.data?.data) ? cached.data.data : null));
+      if (cachedList) {
+        setTasks(cachedList);
+        setLoading(false);
+      }
     }
     try {
       const queryParams = buildTerritoryQueryParams(territoryProfile);
@@ -544,7 +549,8 @@ const Tasks = ({ onNavigate }) => {
   const categories = ['All', 'Compliance', 'Sanitation Issue', 'Infrastructure Repair', 'Vendor Verification', 'KYC Verification', 'Kit Delivery', 'Merchant Support', 'Onboarding', 'Territory Survey', 'General'];
 
   const filteredTasks = useMemo(() => {
-    return tasks.filter(t => {
+    const safeTasks = Array.isArray(tasks) ? tasks : [];
+    return safeTasks.filter(t => {
       // Secondary safety guard: double-check task is strictly within manager territory
       if (!isTaskInManagerTerritory(t.raw || t, territoryProfile)) return false;
 
@@ -570,10 +576,11 @@ const Tasks = ({ onNavigate }) => {
     });
   }, [tasks, territoryProfile, statusFilter, categoryFilter, priorityFilter, search]);
 
-  const totalCount = tasks.length;
-  const inProgressCount = tasks.filter(t => t.status === 'In Progress').length;
-  const pendingCount = tasks.filter(t => ['Pending', 'Pending Acceptance', 'Assigned', 'Accepted'].includes(t.status)).length;
-  const completedCount = tasks.filter(t => t.status === 'Completed' || t.status === 'Closed').length;
+  const safeTaskList = Array.isArray(tasks) ? tasks : [];
+  const totalCount = safeTaskList.length;
+  const inProgressCount = safeTaskList.filter(t => t.status === 'In Progress').length;
+  const pendingCount = safeTaskList.filter(t => ['Pending', 'Pending Acceptance', 'Assigned', 'Accepted'].includes(t.status)).length;
+  const completedCount = safeTaskList.filter(t => t.status === 'Completed' || t.status === 'Closed').length;
 
   const getPriorityStyle = (priority) => {
     switch (priority) {
