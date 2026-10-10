@@ -638,6 +638,13 @@
         "byRole": "Pincode Admin",
         "at": "2026-10-02T09:35:37.526Z",
         "notes": "Assigned to Muruga (Pincode Manager). Priority: Medium. Territory: Tamil Nadu → Salem → Thalaivasal → 636112."
+      },
+      {
+        "action": "Task Accepted",
+        "by": "Muruga",
+        "byRole": "pincode_manager",
+        "at": "2026-10-10T09:39:56.028Z",
+        "notes": "Status changed to Accepted"
       }
     ],
     "assignedManagerId": "usr_mgr_1790666281762_1jqk",
@@ -660,7 +667,7 @@
     "dueDate": "2026-10-04",
     "id": "TSK-1790933737526-FSDIL",
     "location": "",
-    "needsAcceptance": true,
+    "needsAcceptance": false,
     "pincode": "636112",
     "pincodeId": "6aba6ffb16711d5e7d54bb5d",
     "priority": "Medium",
@@ -669,11 +676,30 @@
     "state": "Tamil Nadu",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "stateName": "Tamil Nadu",
-    "status": "Pending Acceptance",
+    "status": "Accepted",
     "suspendRequest": null,
     "taskNumber": "QCT-33737526",
     "title": "Onboarding issue",
-    "updatedAt": "2026-10-02T09:35:37.526Z"
+    "updatedAt": "2026-10-10T09:39:56.028Z",
+    "acceptedAt": "2026-10-10T09:39:56.028Z",
+    "acceptedBy": "Muruga",
+    "acceptedById": "usr_mgr_1790666281762_1jqk",
+    "assignmentStatus": "ACCEPTED",
+    "executionStatus": "NOT_STARTED",
+    "history": [
+      {
+        "action": "Task Accepted",
+        "status": "Accepted",
+        "actor": "Muruga",
+        "actorId": "usr_mgr_1790666281762_1jqk",
+        "actorRole": "pincode_manager",
+        "timestamp": "2026-10-10T09:39:56.028Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      }
+    ],
+    "lastUpdate": "2026-10-10T09:39:56.028Z"
   },
   {
     "_id": "TSK-1791186390629-H97WF",
@@ -1366,6 +1392,13 @@
         "byRole": "Pincode Admin",
         "at": "2026-10-05T12:08:55.313Z",
         "notes": "Assigned to Muruga (Pincode Manager). Priority: High. Territory: Tamil Nadu → Salem → Thalaivasal → 636112."
+      },
+      {
+        "action": "Task In Progress",
+        "by": "Muruga",
+        "byRole": "pincode_manager",
+        "at": "2026-10-10T09:40:09.170Z",
+        "notes": "Status changed to In Progress"
       }
     ],
     "assignedManagerId": "usr_mgr_1790666281762_1jqk",
@@ -1397,11 +1430,31 @@
     "state": "Tamil Nadu",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "stateName": "Tamil Nadu",
-    "status": "Assigned",
+    "status": "In Progress",
     "suspendRequest": null,
     "taskNumber": "QCT-02135312",
     "title": "5 tie up",
-    "updatedAt": "2026-10-05T12:08:55.313Z"
+    "updatedAt": "2026-10-10T09:40:09.170Z",
+    "assignmentStatus": "ACCEPTED",
+    "executionStatus": "IN_PROGRESS",
+    "history": [
+      {
+        "action": "Task In Progress",
+        "status": "In Progress",
+        "actor": "Muruga",
+        "actorId": "usr_mgr_1790666281762_1jqk",
+        "actorRole": "pincode_manager",
+        "timestamp": "2026-10-10T09:40:09.170Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      }
+    ],
+    "lastUpdate": "2026-10-10T09:40:09.170Z",
+    "progress": 50,
+    "startedAt": "2026-10-10T09:40:09.170Z",
+    "startedBy": "Muruga",
+    "startedById": "usr_mgr_1790666281762_1jqk"
   },
   {
     "_id": "bench_task_1791348972292_1",

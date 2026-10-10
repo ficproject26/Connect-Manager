@@ -282,7 +282,12 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontWeight: 600, color: '#334155' }}>{v.name}</span>
                       <span>•</span>
-                      <span>+91 {v.mobile}</span>
+                      <span>
+                        {(v.mobile || v.phone)
+                          ? `+91 ${String(v.mobile || v.phone).replace(/^\+91\s*/, '')}`
+                          : '—'
+                        }
+                      </span>
                     </div>
                   </td>
                   <td>

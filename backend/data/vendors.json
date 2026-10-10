@@ -948,9 +948,9 @@
     "createdAt": "2026-09-28T09:55:11.508Z",
     "createdBy": "usr_mgr_1790588690346_2iph",
     "description": "sdfdf",
-    "district": "Salem",
+    "district": "Krishnagiri",
     "districtId": "6aa10f71ca0932e6eaec1f5d",
-    "division": "Salem North",
+    "division": "Hosur",
     "divisionId": "6aa10f71ca0932e6eaec1f5e",
     "documents": [
       {
@@ -986,17 +986,17 @@
     "status": "Active",
     "subCategory": "General",
     "totalOrdersDelivered": 0,
-    "updatedAt": "2026-10-01T06:56:02.163Z",
+    "updatedAt": "2026-10-10T10:23:25.101Z",
     "website": "",
     "isActive": true,
     "businessImagePreviews": [],
     "confirmPassword": "",
     "declaration": true,
-    "districtName": "Salem",
-    "divisionName": "Salem North",
+    "districtName": "Krishnagiri",
+    "divisionName": "Hosur",
     "logoPreview": null,
     "password": "",
-    "pincodeArea": "5/37,2nd cross,Anna Nagar,hosur ",
+    "pincodeArea": "Hosur Indl. Complex",
     "pincodeCode": "635126",
     "stateName": "Tamil Nadu",
     "statusNotes": "Status changed from Approved to Active",
@@ -1454,5 +1454,38 @@
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
     "updatedAt": "2026-10-10T05:38:39.725Z"
+  },
+  {
+    "_id": "d5b6e8c2-e173-45ee-9d09-c420d48136f8",
+    "accountHolderName": "dfg",
+    "accountNumber": "986527865465346533",
+    "bankName": "rty",
+    "businessName": "antigraviity",
+    "category": "Products",
+    "createdAt": "2026-10-10T10:09:27.831Z",
+    "createdBy": "usr_mgr_1790666281762_1jqk",
+    "description": "",
+    "districtId": "6ab9f3e9bec0ef28c6e81405",
+    "divisionId": "6aba302aaf9e0372e50b72b8",
+    "documents": [
+      {
+        "url": "/uploads/1791626873386_0e43e7aa6886900cbca2e38321b0ea1e.png",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "thanush12dhanush@gmail.com",
+    "gstNumber": "WERTYUIOESDXCVG",
+    "id": "d5b6e8c2-e173-45ee-9d09-c420d48136f8",
+    "ifsc": "HDFC0001234",
+    "mobile": "7465327846",
+    "name": "abiskek",
+    "panNumber": "ABCDE1234F",
+    "pincodeId": "6aba6ffb16711d5e7d54bb5d",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-10T10:09:27.831Z"
   }
 ]

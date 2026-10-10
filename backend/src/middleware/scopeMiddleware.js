@@ -18,55 +18,63 @@ const isVendorInScope = (vendor, user) => {
 
   const norm = (s) => (s || '').toString().trim().toLowerCase();
 
-  const userStateId = norm(user.stateId || user.regionId);
-  const userState = norm(user.state || user.stateName || user.assignedState);
+  const userStateId = norm(user.stateId || user.regionId || user.scope?.stateId);
+  const userState = norm(user.state || user.stateName || user.assignedState || user.scope?.stateName);
   const vendorStateId = norm(vendor.stateId || vendor.regionId);
-  const vendorState = norm(vendor.state || vendor.assignedState || vendor.location?.state);
+  const vendorState = norm(vendor.state || vendor.stateName || vendor.assignedState || vendor.location?.state);
 
   const matchState = () => {
-    if (userStateId && vendorStateId && userStateId === vendorStateId) return true;
-    if (userState && vendorState && userState === vendorState) return true;
+    if (userStateId && vendorStateId) return userStateId === vendorStateId;
+    if (userState && vendorState) return userState === vendorState;
     if (!userStateId && !userState) return true;
     return false;
   };
 
-  const userDistrictId = norm(user.districtId);
-  const userDistrict = norm(user.district || user.districtName || user.assignedDistrict);
-  const vendorDistrictId = norm(vendor.districtId);
-  const vendorDistrict = norm(vendor.district || vendor.assignedDistrict || vendor.location?.district);
+  const userDistrictId = norm(user.districtId || user.assignedDistrictId || user.scope?.districtId);
+  const userDistrict = norm(user.district || user.districtName || user.assignedDistrict || user.scope?.districtName);
+  const vendorDistrictId = norm(vendor.districtId || vendor.assignedDistrictId);
+  const vendorDistrict = norm(vendor.district || vendor.districtName || vendor.assignedDistrict || vendor.location?.district);
 
   const matchDistrict = () => {
     if (!matchState()) return false;
-    if (userDistrictId && vendorDistrictId && userDistrictId === vendorDistrictId) return true;
-    if (userDistrict && vendorDistrict && userDistrict === vendorDistrict) return true;
+    // Strict ID-based scoping takes precedence
+    if (userDistrictId && vendorDistrictId) {
+      return userDistrictId === vendorDistrictId;
+    }
+    if (userDistrict && vendorDistrict) {
+      return userDistrict === vendorDistrict;
+    }
     if (!userDistrictId && !userDistrict) return true;
     return false;
   };
 
-  const userDivisionId = norm(user.divisionId);
-  const userDivision = norm(user.division || user.divisionName || user.assignedDivision);
-  const vendorDivisionId = norm(vendor.divisionId);
-  const vendorDivision = norm(vendor.division || vendor.assignedDivision || vendor.location?.division);
+  const userDivisionId = norm(user.divisionId || user.assignedDivisionId || user.scope?.divisionId);
+  const userDivision = norm(user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName);
+  const vendorDivisionId = norm(vendor.divisionId || vendor.assignedDivisionId);
+  const vendorDivision = norm(vendor.division || vendor.divisionName || vendor.assignedDivision || vendor.location?.division);
 
   const matchDivision = () => {
     if (!matchDistrict()) return false;
-    if (userDivisionId && vendorDivisionId && userDivisionId === vendorDivisionId) return true;
-    if (userDivision && vendorDivision && userDivision === vendorDivision) return true;
+    if (userDivisionId && vendorDivisionId) {
+      return userDivisionId === vendorDivisionId;
+    }
+    if (userDivision && vendorDivision) {
+      return userDivision === vendorDivision;
+    }
     if (!userDivisionId && !userDivision) return true;
     return false;
   };
 
-  const userPincodeId = norm(user.pincodeId);
-  const userPincode = norm(user.pincode || user.pincodeCode || user.pincodeId);
-  const vendorPincodeId = norm(vendor.pincodeId);
-  const vendorPincode = norm(vendor.pincode || vendor.location?.pincode);
+  const userPincodeId = norm(user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId);
+  const userPincode = norm(user.pincode || user.pincodeCode || user.assignedPincode || user.scope?.pincodeCode);
+  const vendorPincodeId = norm(vendor.pincodeId || vendor.assignedPincodeId);
+  const vendorPincode = norm(vendor.pincode || vendor.pincodeCode || vendor.location?.pincode);
 
   const matchPincode = () => {
+    if (!matchState()) return false;
+    // Pincode Manager is strictly restricted to their assigned pincode
     if (userPincodeId && vendorPincodeId && userPincodeId === vendorPincodeId) return true;
     if (userPincode && vendorPincode && userPincode === vendorPincode) return true;
-    if (!matchDistrict()) return false;
-    if (userDivision && vendorDivision && !matchDivision()) return false;
-    if (!userPincodeId && !userPincode) return true;
     return false;
   };
 

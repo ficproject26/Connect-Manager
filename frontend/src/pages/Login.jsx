@@ -32,6 +32,7 @@ const Login = ({ onNavigate }) => {
   const [otp, setOtp] = useState('');
   const [otpSent, setOtpSent] = useState(false);
   const [otpMessage, setOtpMessage] = useState('');
+  const [otpCooldown, setOtpCooldown] = useState(0);
 
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,6 +42,17 @@ const Login = ({ onNavigate }) => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  // OTP Resend cooldown timer
+  useEffect(() => {
+    let timer;
+    if (otpSent && otpCooldown > 0) {
+      timer = setInterval(() => {
+        setOtpCooldown((prev) => Math.max(0, prev - 1));
+      }, 1000);
+    }
+    return () => clearInterval(timer);
+  }, [otpSent, otpCooldown]);
 
   const formatDate = (d) => {
     const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -85,7 +97,7 @@ const Login = ({ onNavigate }) => {
   };
 
   const handleSendOtp = async (e) => {
-    e.preventDefault();
+    if (e) e.preventDefault();
     setError('');
     setOtpMessage('');
     const cleanPhone = mobile.trim();
@@ -97,12 +109,37 @@ const Login = ({ onNavigate }) => {
     try {
       const res = await authService.sendOtp(cleanPhone);
       setOtpSent(true);
+      setOtpCooldown(res.cooldownSeconds || 30);
       setOtpMessage(res.message || 'OTP sent successfully.');
       if (res.otp) {
         setOtp(res.otp);
       }
     } catch (err) {
       setError(err.message || 'Failed to send OTP.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOtp = async () => {
+    if (otpCooldown > 0 || loading) return;
+    setError('');
+    setOtpMessage('');
+    const cleanPhone = mobile.trim();
+    if (!cleanPhone) {
+      setError('Mobile number is missing.');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await authService.sendOtp(cleanPhone);
+      setOtpCooldown(res.cooldownSeconds || 30);
+      setOtpMessage(res.message || 'A new verification OTP has been sent successfully.');
+      if (res.otp) {
+        setOtp(res.otp);
+      }
+    } catch (err) {
+      setError(err.message || 'Failed to resend OTP.');
     } finally {
       setLoading(false);
     }
@@ -753,6 +790,33 @@ const Login = ({ onNavigate }) => {
                           required
                         />
                       </div>
+                    </div>
+
+                    {/* Resend OTP Row with Cooldown Countdown */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 2px' }}>
+                      <span style={{ fontSize: '0.76rem', color: '#64748b' }}>
+                        Didn't receive code?
+                      </span>
+                      <button
+                        type="button"
+                        onClick={handleResendOtp}
+                        disabled={loading || otpCooldown > 0}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: otpCooldown > 0 ? '#94a3b8' : '#d97706',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          cursor: (loading || otpCooldown > 0) ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          padding: '2px 0'
+                        }}
+                      >
+                        <RotateCcw size={13} />
+                        {otpCooldown > 0 ? `Resend OTP in ${otpCooldown}s` : 'Resend OTP'}
+                      </button>
                     </div>
 
                     <button

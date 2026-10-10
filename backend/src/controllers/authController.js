@@ -1137,6 +1137,7 @@ const uploadDocument = (req, res) => {
 
 const managerOtpStore = new Map();
 const OTP_EXPIRY_MS = 5 * 60 * 1000;
+const OTP_RESEND_COOLDOWN_MS = 30 * 1000; // 30 seconds cooldown between resends
 
 const sendOtp = async (req, res) => {
   try {
@@ -1162,16 +1163,34 @@ const sendOtp = async (req, res) => {
       });
     }
 
+    // Check resend cooldown
+    const existing = managerOtpStore.get(rawMobile);
+    if (existing && existing.createdAt) {
+      const elapsed = Date.now() - existing.createdAt;
+      if (elapsed < OTP_RESEND_COOLDOWN_MS) {
+        const remainingSeconds = Math.ceil((OTP_RESEND_COOLDOWN_MS - elapsed) / 1000);
+        return res.status(429).json({
+          success: false,
+          cooldown: true,
+          remainingSeconds,
+          message: `Please wait ${remainingSeconds} second(s) before requesting a new OTP.`
+        });
+      }
+    }
+
+    // Invalidate prior OTP and generate new 6-digit code
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     managerOtpStore.set(rawMobile, {
       otp,
       attempts: 0,
+      createdAt: Date.now(),
       expiresAt: Date.now() + OTP_EXPIRY_MS,
       userId: user._id
     });
 
     const responsePayload = {
       success: true,
+      cooldownSeconds: 30,
       message: `OTP sent successfully to +91 ${rawMobile}. Valid for 5 minutes.`
     };
     // In production, OTP must strictly NEVER be returned in API responses

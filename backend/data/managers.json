@@ -437,10 +437,12 @@
     "pincodeId": null,
     "status": "Active",
     "createdAt": "2026-09-25T13:45:23.297Z",
-    "updatedAt": "2026-09-25T13:45:23.297Z",
+    "updatedAt": "2026-10-10T07:26:31.751Z",
     "assignedState": "Karnataka",
     "phone": "9888800005",
-    "id": "user_state_ka"
+    "id": "user_state_ka",
+    "resetPasswordExpires": "2026-10-10T08:26:31.713Z",
+    "resetPasswordToken": "641c66892901a5ea54f5baac700f241fb0346ee84563bc5ba343de5384596a23"
   },
   {
     "_id": "user_pin_1",

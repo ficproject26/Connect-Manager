@@ -13,8 +13,6 @@ import {
   CheckCircle, 
   Calendar, 
   MapPin, 
-  ArrowUpRight, 
-  ArrowDownRight,
   ArrowRight,
   Clock
 } from 'lucide-react';
@@ -423,12 +421,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-value">{kpis.totalVendors.toLocaleString()}</div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span className="kpi-trend-pill kpi-trend-up">
-                <ArrowUpRight size={12} /> 12.4%
-              </span>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-light)', marginTop: '2px' }}>vs last month</div>
-            </div>
           </div>
           <div className="kpi-card-footer">
             <span>{kpis.activeVendors.toLocaleString()} Active | {kpis.pendingVendors.toLocaleString()} Pending</span>
@@ -446,12 +438,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-title">Active Outlets</div>
                 <div className="kpi-main-value">{kpis.totalShops.toLocaleString()}</div>
               </div>
-            </div>
-            <div style={{ textAlign: 'right' }}>
-              <span className="kpi-trend-pill kpi-trend-up">
-                <ArrowUpRight size={12} /> 9.1%
-              </span>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-light)', marginTop: '2px' }}>vs last month</div>
             </div>
           </div>
           <div className="kpi-card-footer">
@@ -471,12 +457,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-value">{kpis.totalTieups.toLocaleString()}</div>
               </div>
             </div>
-            <div style={{ textAlign: 'right' }}>
-              <span className="kpi-trend-pill kpi-trend-up">
-                <ArrowUpRight size={12} /> 15.3%
-              </span>
-              <div style={{ fontSize: '0.65rem', color: 'var(--text-light)', marginTop: '2px' }}>vs last month</div>
-            </div>
           </div>
           <div className="kpi-card-footer">
             <span>{kpis.todayTieups} Today | {kpis.weekTieups} This Week</span>
@@ -495,9 +475,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-value">{kpis.verifiedVendors || kpis.activeVendors}</div>
               </div>
             </div>
-            <span className="kpi-trend-pill kpi-trend-up">
-              <ArrowUpRight size={12} /> 18.6%
-            </span>
           </div>
           <div className="kpi-card-footer">
             <span>100% KYC & Inspection Passed</span>
@@ -516,9 +493,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-value">{kpis.openIssues}</div>
               </div>
             </div>
-            <span className="kpi-trend-pill kpi-trend-down">
-              <ArrowDownRight size={12} /> 6.7%
-            </span>
           </div>
         </div>
 
@@ -534,9 +508,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-value">{kpis.kycPending}</div>
               </div>
             </div>
-            <span className="kpi-trend-pill kpi-trend-down">
-              <ArrowDownRight size={12} /> 10.4%
-            </span>
           </div>
         </div>
 
@@ -552,9 +523,6 @@ const Dashboard = ({ onNavigate }) => {
                 <div className="kpi-main-value">{kpis.vendorRequests}</div>
               </div>
             </div>
-            <span className="kpi-trend-pill kpi-trend-up">
-              <ArrowUpRight size={12} /> 21.3%
-            </span>
           </div>
         </div>
       </section>

@@ -5776,7 +5776,9 @@
         "isRegistrationAddress": true
       }
     ],
-    "createdAt": "2026-10-09T09:36:13.435Z"
+    "createdAt": "2026-10-09T09:36:13.435Z",
+    "walletBalance": 2110,
+    "walletUpdatedAt": "2026-10-10T07:31:18.556Z"
   },
   {
     "_id": "95989e76-8290-4101-81f8-2487e257f464",
@@ -5819,7 +5821,10 @@
     "stateName": "Karnataka",
     "status": "under_review",
     "updatedAt": "2026-10-10T04:46:37.066Z",
-    "zone": null
+    "zone": null,
+    "approvalStage": "subadmin_review",
+    "assignedDistrict": "",
+    "assignedState": "Karnataka"
   },
   {
     "_id": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9",
@@ -5862,6 +5867,44 @@
     "stateName": "Karnataka",
     "status": "under_review",
     "updatedAt": "2026-10-10T04:52:59.258Z",
-    "zone": null
+    "zone": null,
+    "approvalStage": "subadmin_review",
+    "assignedDistrict": "Ballari",
+    "assignedState": "Karnataka"
+  },
+  {
+    "_id": "cust_1791614272734",
+    "id": "cust_1791614272734",
+    "registrationId": "FIC-CUST-289895",
+    "customerId": "FIC-CUST-289895",
+    "name": "ranjith",
+    "email": "ranjithr@gmail.com",
+    "phone": "8220266311",
+    "password": "$2b$10$1s7HvkW0egxGjRhpDE3aH.Jtlk2f262FxRs2CroMAA4jTV7G8fSQa",
+    "address": "papareddypalya",
+    "city": "bangalore",
+    "pincode": "560072",
+    "aadhaar": "897456321456",
+    "pan": "GHJKU8965L",
+    "role": "customer",
+    "status": "Active",
+    "isActive": true,
+    "addresses": [
+      {
+        "id": "addr_1_1791614272734",
+        "name": "ranjith",
+        "phone": "8220266311",
+        "pincode": "560072",
+        "locality": "bangalore",
+        "address": "papareddypalya",
+        "city": "bangalore",
+        "state": "Karnataka",
+        "landmark": "",
+        "altPhone": "",
+        "type": "Home",
+        "isRegistrationAddress": true
+      }
+    ],
+    "createdAt": "2026-10-10T06:37:52.744Z"
   }
 ]

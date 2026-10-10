@@ -43,7 +43,45 @@ const resolveLocationDoc = async (collection, id) => {
   return doc;
 };
 
-// Populate location names for response objects (batch/memoized)
+// Fetch and normalize bank account details from vendor or linked user/onboarding records
+const resolveVendorBankDetails = async (vendor) => {
+  let accountNumber = vendor.accountNumber || vendor.accountNo || vendor.bankAccount || vendor.bankDetails?.accountNumber || vendor.bankDetails?.accountNo || '';
+  let ifsc = vendor.ifsc || vendor.ifscCode || vendor.bankDetails?.ifscCode || vendor.bankDetails?.ifsc || '';
+  let bankName = vendor.bankName || vendor.bank || vendor.bankDetails?.bankName || '';
+  let accountHolderName = vendor.accountHolderName || vendor.accountHolder || vendor.bankDetails?.accountHolderName || vendor.bankDetails?.accountHolder || '';
+  let bankBranch = vendor.bankBranch || vendor.branchName || vendor.bankDetails?.branchName || '';
+
+  if (!accountNumber) {
+    const userDoc = await db.users.findOne({
+      $or: [
+        ...(vendor.email ? [{ email: vendor.email }] : []),
+        ...(vendor.phone ? [{ phone: vendor.phone }, { mobile: vendor.phone }] : []),
+        ...(vendor.mobile ? [{ mobile: vendor.mobile }, { phone: vendor.mobile }] : []),
+        ...(vendor.registrationId ? [{ registrationId: vendor.registrationId }] : []),
+        ...((vendor._id || vendor.id) ? [{ vendorId: String(vendor._id || vendor.id) }] : [])
+      ]
+    }).catch(() => null);
+
+    if (userDoc) {
+      accountNumber = accountNumber || userDoc.accountNumber || userDoc.accountNo || userDoc.bankAccount || userDoc.bankDetails?.accountNumber || userDoc.bankDetails?.accountNo || '';
+      ifsc = ifsc || userDoc.ifsc || userDoc.ifscCode || userDoc.bankDetails?.ifscCode || userDoc.bankDetails?.ifsc || '';
+      bankName = bankName || userDoc.bankName || userDoc.bank || userDoc.bankDetails?.bankName || '';
+      accountHolderName = accountHolderName || userDoc.accountHolderName || userDoc.accountHolder || userDoc.bankDetails?.accountHolderName || userDoc.name || '';
+      bankBranch = bankBranch || userDoc.bankBranch || userDoc.branchName || userDoc.bankDetails?.branchName || '';
+    }
+  }
+
+  return {
+    ...vendor,
+    accountNumber: accountNumber || null,
+    ifsc: ifsc || null,
+    bankName: bankName || null,
+    accountHolderName: accountHolderName || null,
+    bankBranch: bankBranch || null
+  };
+};
+
+// Populate location names and normalize contact fields for response objects
 const populateVendorLocations = async (vendor) => {
   const [state, district, division, pincode] = await Promise.all([
     vendor.stateId ? resolveLocationDoc('states', vendor.stateId) : null,
@@ -52,13 +90,28 @@ const populateVendorLocations = async (vendor) => {
     vendor.pincodeId ? resolveLocationDoc('pincodes', vendor.pincodeId) : null
   ]);
 
+  const rawMobile = vendor.mobile || vendor.phone || vendor.mobileNumber || vendor.contactNumber || vendor.primaryPhone || '';
+  const cleanMobile = rawMobile ? String(rawMobile).trim().replace(/^\+91\s*/, '') : '';
+
+  const canonicalState = state?.name || vendor.state || vendor.assignedState || '';
+  const canonicalDistrict = district?.name || vendor.district || vendor.assignedDistrict || '';
+  const canonicalDivision = division?.name || vendor.division || vendor.assignedDivision || '';
+  const canonicalPincode = pincode?.code || vendor.pincode || '';
+  const canonicalArea = pincode?.areaName || vendor.area || vendor.pincodeArea || '';
+
   return {
     ...vendor,
-    stateName: state?.name || vendor.state || vendor.assignedState || '',
-    districtName: district?.name || vendor.district || vendor.assignedDistrict || '',
-    divisionName: division?.name || vendor.division || vendor.assignedDivision || '',
-    pincodeCode: pincode?.code || vendor.pincode || '',
-    pincodeArea: pincode?.areaName || vendor.area || ''
+    mobile: cleanMobile || vendor.mobile || '',
+    phone: cleanMobile || vendor.phone || '',
+    state: canonicalState,
+    stateName: canonicalState,
+    district: canonicalDistrict,
+    districtName: canonicalDistrict,
+    division: canonicalDivision,
+    divisionName: canonicalDivision,
+    pincode: canonicalPincode,
+    pincodeCode: canonicalPincode,
+    pincodeArea: canonicalArea
   };
 };
 
@@ -164,7 +217,8 @@ const getVendors = async (req, res) => {
 
     // Populate and apply field-level masking
     const populated = await Promise.all(pagedVendors.map(async (v) => {
-      const populatedVendor = await populateVendorLocations(v);
+      const enriched = await resolveVendorBankDetails(v);
+      const populatedVendor = await populateVendorLocations(enriched);
       return {
         ...populatedVendor,
         panNumber: maskPan(populatedVendor.panNumber),
@@ -196,7 +250,8 @@ const getVendorById = async (req, res) => {
   try {
     // req.targetVendor is already verified to be in scope by verifyVendorScope middleware
     const vendor = req.targetVendor;
-    const populated = await populateVendorLocations(vendor);
+    const enriched = await resolveVendorBankDetails(vendor);
+    const populated = await populateVendorLocations(enriched);
 
     // Check if client requested unmasked view (detail view permission)
     const showFull = req.query.unmask === 'true';
@@ -491,5 +546,7 @@ module.exports = {
   getVendorById,
   createVendor,
   updateVendor,
-  updateVendorStatus
+  updateVendorStatus,
+  resolveVendorBankDetails,
+  populateVendorLocations
 };

@@ -374,9 +374,13 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Mobile Number</span>
-                  <a href={`tel:${vendor.mobile || vendor.phone}`} style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>
-                    {vendor.mobile || vendor.phone}
-                  </a>
+                  {(vendor.mobile || vendor.phone) ? (
+                    <a href={`tel:${String(vendor.mobile || vendor.phone).replace(/^\+91\s*/, '')}`} style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>
+                      +91 {String(vendor.mobile || vendor.phone).replace(/^\+91\s*/, '')}
+                    </a>
+                  ) : (
+                    <span style={{ color: 'var(--text-muted)' }}>—</span>
+                  )}
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Official Email</span>
@@ -418,21 +422,21 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.86rem' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Account Holder:</span>
-                  <strong style={{ color: 'var(--text-main)' }}>{vendor.accountHolderName || 'DHANU'}</strong>
+                  <strong style={{ color: 'var(--text-main)' }}>{vendor.accountHolderName || '—'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Account Number:</span>
                   <code style={{ fontSize: '0.9rem', fontWeight: 800, background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
-                    {maskText(vendor.accountNumber, 4, 4)}
+                    {vendor.accountNumber ? (unmasked ? vendor.accountNumber : (vendor.accountNumber.includes('•') ? vendor.accountNumber : maskText(vendor.accountNumber, 4, 4))) : '—'}
                   </code>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>IFSC Code:</span>
-                  <strong style={{ fontFamily: 'monospace', color: '#0284c7' }}>{vendor.ifsc || 'HDFC0001234'}</strong>
+                  <strong style={{ fontFamily: 'monospace', color: '#0284c7' }}>{vendor.ifsc || '—'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Bank & Branch:</span>
-                  <span>{vendor.bankName || 'SBI'} {vendor.bankBranch ? `(${vendor.bankBranch})` : ''}</span>
+                  <span>{vendor.bankName || '—'}{vendor.bankBranch ? ` (${vendor.bankBranch})` : ''}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Settlement Cycle:</span>

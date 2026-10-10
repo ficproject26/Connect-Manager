@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Bell, HelpCircle, ChevronDown, LogOut, User, Settings, Menu, X } from 'lucide-react';
+import { Search, Bell, ChevronDown, LogOut, User, Settings, Menu, X } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
 
@@ -240,15 +240,6 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
-        </button>
-
-        {/* Help Circle */}
-        <button
-          className="nav-icon-btn"
-          title="Help and Support"
-          onClick={() => alert('Forge India Connect Support Desk: support@forgeindiaconnect.in')}
-        >
-          <HelpCircle size={17} />
         </button>
 
         {/* Manager User Profile Capsule */}
