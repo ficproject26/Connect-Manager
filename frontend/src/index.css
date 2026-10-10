@@ -988,16 +988,25 @@ button, input, select, textarea {
 .perf-badge.excellent {
   background-color: #ecfdf5;
   color: #047857;
+  border: 1px solid #a7f3d0;
 }
 
 .perf-badge.good {
   background-color: #e0f2fe;
   color: #0369a1;
+  border: 1px solid #bae6fd;
 }
 
 .perf-badge.average {
   background-color: #fef3c7;
   color: #b45309;
+  border: 1px solid #fde68a;
+}
+
+.perf-badge.steady {
+  background-color: #f8fafc;
+  color: #475569;
+  border: 1px solid #e2e8f0;
 }
 
 /* Donut Chart & Animated Pie */

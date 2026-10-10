@@ -13631,5 +13631,353 @@
     "userId": "usr_mgr_1790592319962_fx3y",
     "userName": "iniya",
     "userRole": "district_manager"
+  },
+  {
+    "_id": "6aca2579f8140ff5c9c770ed",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.126.156.84",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:01.663Z"
+    },
+    "timestamp": "2026-10-10T11:46:01.668Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2584f8140ff5c9c770ee",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.235.238.91",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:12.666Z"
+    },
+    "timestamp": "2026-10-10T11:46:12.668Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2585f8140ff5c9c770ef",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.235.238.91",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:13.667Z"
+    },
+    "timestamp": "2026-10-10T11:46:13.667Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2586f8140ff5c9c770f0",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.126.156.84",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:14.666Z"
+    },
+    "timestamp": "2026-10-10T11:46:14.666Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2587f8140ff5c9c770f1",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.235.238.91",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:15.126Z"
+    },
+    "timestamp": "2026-10-10T11:46:15.127Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2587f8140ff5c9c770f2",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.235.238.91",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:15.139Z"
+    },
+    "timestamp": "2026-10-10T11:46:15.140Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2589f8140ff5c9c770f3",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.235.238.91",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"antigraviity\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "49d399fa-4a2c-4e5d-8d0a-79c7341b9f95",
+      "vendorName": "antigraviity",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:17.101Z"
+    },
+    "timestamp": "2026-10-10T11:46:17.102Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2589f8140ff5c9c770f4",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "52.66.154.250",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"Mani Canteen\" (mani@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "8963f392-5f8e-4320-b275-d35df54c0725",
+      "vendorName": "Mani Canteen",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:17.899Z"
+    },
+    "timestamp": "2026-10-10T11:46:17.900Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca258df8140ff5c9c770f5",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "52.66.154.250",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"Dhanush\" (dhanush.antigraviity@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "cust_1787921535022",
+      "vendorName": "Dhanush",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:21.946Z"
+    },
+    "timestamp": "2026-10-10T11:46:21.947Z",
+    "__v": 0
+  },
+  {
+    "_id": "6aca2592f8140ff5c9c770f6",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "13.126.156.84",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"reo\" (reo@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "ven_481360",
+      "vendorName": "reo",
+      "oldStatus": "Pending",
+      "newStatus": "Approved",
+      "reason": "Direct registration approved",
+      "timestamp": "2026-10-10T11:46:26.040Z"
+    },
+    "timestamp": "2026-10-10T11:46:26.040Z",
+    "__v": 0
+  },
+  {
+    "_id": "9e09142f-3ab1-45ae-919a-8a19dd878392",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-10T11:49:37.061Z",
+    "details": "Logged visit for ganesh market - Interested: YES",
+    "id": "9e09142f-3ab1-45ae-919a-8a19dd878392",
+    "recordId": "64e6d803-e306-472e-87be-7d9370660a86",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-10T11:49:37.061Z",
+    "updatedAt": "2026-10-10T11:49:37.061Z",
+    "userId": "usr_mgr_1790592319962_fx3y",
+    "userName": "iniya",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "a77644e5-19f8-4579-9a7d-616c4f745cd7",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-10T12:13:10.475Z",
+    "details": "Logged visit for ram - Interested: YES",
+    "id": "a77644e5-19f8-4579-9a7d-616c4f745cd7",
+    "recordId": "90427e6d-328e-4114-b7f2-18cf7cec8479",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-10T12:13:10.475Z",
+    "updatedAt": "2026-10-10T12:13:10.475Z",
+    "userId": "usr_mgr_1790592319962_fx3y",
+    "userName": "iniya",
+    "userRole": "district_manager"
   }
 ]

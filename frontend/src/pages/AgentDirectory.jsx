@@ -19,7 +19,6 @@ import {
   ExternalLink,
   Shield,
   Award,
-  Wallet,
   Store,
   Users,
   RefreshCw,
@@ -400,29 +399,6 @@ const AgentDirectory = ({ onNavigate }) => {
         }}>
           <div>
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
-              Active on Ground
-            </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
-              {(Array.isArray(hierarchicalAgents) ? hierarchicalAgents : []).filter(a => a.status === 'Active').length}
-            </div>
-          </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <CheckCircle2 size={20} />
-          </div>
-        </div>
-
-        <div style={{
-          background: '#ffffff',
-          borderRadius: '14px',
-          padding: '18px 20px',
-          border: '1px solid var(--border)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.03)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between'
-        }}>
-          <div>
-            <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
               Total Referrals
             </div>
             <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#d97706', marginTop: '4px' }}>
@@ -596,7 +572,6 @@ const AgentDirectory = ({ onNavigate }) => {
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Role Level</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Contact</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Activations</th>
-                  <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Wallet</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Status</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
                 </tr>
@@ -604,7 +579,7 @@ const AgentDirectory = ({ onNavigate }) => {
               <tbody>
                 {filteredAgents.length === 0 ? (
                   <tr>
-                    <td colSpan={9} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={8} style={{ padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
                         <UserCheck size={36} style={{ color: '#cbd5e1' }} />
                         <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)' }}>No agents found</div>
@@ -703,11 +678,6 @@ const AgentDirectory = ({ onNavigate }) => {
                         <div style={{ fontSize: '11px', color: '#2563eb', fontWeight: 600 }}>
                           {agent.vendorOnboardings || 0} Vendors
                         </div>
-                      </td>
-
-                      {/* Wallet */}
-                      <td style={{ padding: '14px 16px', fontFamily: 'monospace', fontWeight: 700, color: '#059669', fontSize: '0.84rem' }}>
-                        ₹{(agent.walletBalance || 0).toLocaleString()}
                       </td>
 
                       {/* Status */}
@@ -853,12 +823,15 @@ const AgentDirectory = ({ onNavigate }) => {
                 borderTop: '1px solid var(--border)'
               }}>
                 <span style={{
-                  fontSize: '0.82rem',
-                  fontFamily: 'monospace',
+                  display: 'inline-block',
+                  fontSize: '0.74rem',
                   fontWeight: 700,
-                  color: '#059669'
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: agent.status === 'Active' ? '#d1fae5' : '#fef3c7',
+                  color: agent.status === 'Active' ? '#065f46' : '#92400e'
                 }}>
-                  Wallet: ₹{(agent.walletBalance || 0).toLocaleString()}
+                  {agent.status}
                 </span>
                 <button
                   onClick={() => setSelectedAgent(agent)}

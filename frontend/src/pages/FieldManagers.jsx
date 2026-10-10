@@ -12,7 +12,6 @@ import {
   Mail, 
   Phone, 
   CheckCircle2, 
-  Equal, 
   ArrowDownRight, 
   ArrowUpRight,
   Grid, 
@@ -240,7 +239,7 @@ const FieldManagers = () => {
           gap: '4px',
           whiteSpace: 'nowrap'
         }}>
-          <Equal size={12} /> Equal Level (Peer)
+          Equal Level (Peer)
         </span>
       );
     }
@@ -620,7 +619,7 @@ const FieldManagers = () => {
                           {getDisplayValue(m.name, 'Manager')}
                         </div>
                         <div 
-                          title={`Full ID: ${m.id}`} 
+                          title={`Full ID: ${m.managerId || m.id}`} 
                           style={{ 
                             fontSize: '0.72rem', 
                             color: 'var(--text-muted)', 
@@ -629,7 +628,7 @@ const FieldManagers = () => {
                             letterSpacing: '0.2px'
                           }}
                         >
-                          ID: {m.id ? (m.id.length > 12 ? `${m.id.slice(0, 8)}…` : m.id) : '—'}
+                          ID: {m.managerId || (m.id ? (m.id.length > 12 ? `${m.id.slice(0, 8)}…` : m.id) : '—')}
                         </div>
                       </div>
                     </div>
@@ -683,7 +682,7 @@ const FieldManagers = () => {
         </div>
       ) : (
         /* GRID CARDS VIEW */
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 280px), 1fr))', gap: '16px' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 300px), 1fr))', gap: '16px' }}>
           {filteredManagers.map((m) => {
             const avatarBg = getAvatarColor(m.name);
             return (
@@ -701,11 +700,13 @@ const FieldManagers = () => {
                 }}
               >
                 <div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', marginBottom: '12px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
                       <div style={{
-                        width: '38px',
-                        height: '38px',
+                        width: '40px',
+                        height: '40px',
+                        minWidth: '40px',
+                        minHeight: '40px',
                         borderRadius: '50%',
                         background: avatarBg,
                         color: 'white',
@@ -713,20 +714,24 @@ const FieldManagers = () => {
                         fontSize: '0.95rem',
                         display: 'flex',
                         alignItems: 'center',
-                        justifyContent: 'center'
+                        justifyContent: 'center',
+                        flexShrink: 0
                       }}>
                         {m.name ? m.name.slice(0, 1).toUpperCase() : 'M'}
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-main)' }}>
-                          {m.name}
+                      <div style={{ minWidth: 0, flex: 1 }}>
+                        <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-main)', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>
+                          {getDisplayValue(m.name, 'Manager')}
                         </div>
-                        <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                          ID: {m.id}
+                        <div 
+                          title={`Manager ID: ${m.managerId || m.id}`}
+                          style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '2px' }}
+                        >
+                          ID: {m.managerId || (m.id ? (m.id.length > 14 ? `${m.id.slice(0, 10)}…` : m.id) : '—')}
                         </div>
                       </div>
                     </div>
-                    <div>
+                    <div style={{ flexShrink: 0 }}>
                       {getRelationBadge(m)}
                     </div>
                   </div>
@@ -874,7 +879,7 @@ const FieldManagers = () => {
                     {selectedManager.name}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Manager ID: {selectedManager.id}
+                    Manager ID: {selectedManager.managerId || selectedManager.id}
                   </div>
                 </div>
               </div>

@@ -35,6 +35,22 @@ const formatRoleTitle = (role) => {
   return String(role || 'Manager');
 };
 
+// Filter out mock/dummy/placeholder records from live views
+const isMockRecord = (m) => {
+  if (!m) return false;
+  const email = norm(m.email);
+  const id = String(m._id || m.id || '');
+  const name = String(m.name || '');
+  const mobile = String(m.mobile || m.phone || '').trim();
+
+  if (email.endsWith('@example.com') || email.includes('example.com') || email.includes('@sample.com')) return true;
+  if (id === 'user_state_ka' || id === 'user_state_1' || id === 'user_dist_1' || id === 'user_div_1' || id === 'user_pin_1' || id === 'user_admin') return true;
+  if (mobile.startsWith('988880000') || mobile === '9999999999') return true;
+  if (name.includes('(Karnataka State Manager)') || name.includes('(TN State Manager)') || name.includes('(Krishnagiri District Manager)') || name.includes('(Central Division Manager)') || name.includes('(Pincode Manager 635109)')) return true;
+
+  return false;
+};
+
 const getLowerLevelManagers = async (req, res) => {
   try {
     const user = req.user;
@@ -51,7 +67,7 @@ const getLowerLevelManagers = async (req, res) => {
     const seen = new Set();
     const uniqueManagers = [];
     for (const u of combined) {
-      if (!u || !isManagerAccount(u)) continue;
+      if (!u || !isManagerAccount(u) || isMockRecord(u)) continue;
       const key = String(u._id || u.id || u.email || u.mobile || '');
       if (!key || seen.has(key)) continue;
       seen.add(key);
@@ -215,9 +231,13 @@ const getLowerLevelManagers = async (req, res) => {
       else if (relation === 'supervisor') relationLabel = 'Reporting Authority (Supervisor)';
       else if (relation === 'peer') relationLabel = 'Equal Level (Peer)';
 
+      const rolePrefix = mLevel === 1 ? 'STM' : mLevel === 2 ? 'DTM' : mLevel === 3 ? 'DIV' : 'PIN';
+      const resolvedManagerId = m.managerId || `MGR-${rolePrefix}-${String(mId).replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`;
+
       return {
-        id: mId,
+        id: resolvedManagerId,
         _id: mId,
+        managerId: resolvedManagerId,
         name: String(m.name || 'Manager'),
         email: String(m.email || ''),
         mobile: String(m.mobile || m.phone || ''),

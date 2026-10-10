@@ -2067,12 +2067,12 @@
     "_id": "fb63d109-e881-4561-b131-9eccab699aee",
     "createdAt": "2026-10-10T10:07:21.599Z",
     "id": "fb63d109-e881-4561-b131-9eccab699aee",
-    "isRead": false,
+    "isRead": true,
     "message": "Surya logged field visit for Eagle (Interested).",
     "recordId": "fd716c48-be18-4a1a-8a7d-bbfe53094deb",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-10T10:07:21.599Z",
+    "updatedAt": "2026-10-10T11:20:45.517Z",
     "userId": "usr_mgr_1790580930154_8uge"
   },
   {
@@ -2091,12 +2091,36 @@
     "_id": "9203d7cb-5dec-4294-9135-980c77ba64de",
     "createdAt": "2026-10-10T10:15:39.921Z",
     "id": "9203d7cb-5dec-4294-9135-980c77ba64de",
-    "isRead": false,
+    "isRead": true,
     "message": "iniya logged field visit for Eagle (Interested).",
     "recordId": "1159b335-3312-4d71-8647-9344d75d01dd",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-10T10:15:39.921Z",
+    "updatedAt": "2026-10-10T10:46:48.393Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "80d56531-5ade-44f7-aa80-1fbe404843fc",
+    "createdAt": "2026-10-10T11:49:37.089Z",
+    "id": "80d56531-5ade-44f7-aa80-1fbe404843fc",
+    "isRead": true,
+    "message": "iniya logged field visit for ganesh market (Interested).",
+    "recordId": "64e6d803-e306-472e-87be-7d9370660a86",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-10T11:55:51.739Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "5212e0d0-b944-404a-bfbe-a3d7a83ee48d",
+    "createdAt": "2026-10-10T12:13:10.508Z",
+    "id": "5212e0d0-b944-404a-bfbe-a3d7a83ee48d",
+    "isRead": true,
+    "message": "iniya logged field visit for ram (Interested).",
+    "recordId": "90427e6d-328e-4114-b7f2-18cf7cec8479",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-10T12:13:27.916Z",
     "userId": "usr_mgr_1790592319962_fx3y"
   }
 ]

@@ -343,6 +343,9 @@ const createVendor = async (req, res) => {
       bankName: bankName || '',
       status: 'Pending',
       statusNotes: 'New vendor onboarding submitted. Awaiting document inspection.',
+      isActive: false,
+      isApproved: false,
+      kycStatus: 'pending',
       createdBy: user.id
     });
 
@@ -507,10 +510,11 @@ const updateVendorStatus = async (req, res) => {
     // Supported statuses: Pending, Under Review, Approved, Rejected, Active, Inactive
     // Managers are restricted from transitioning vendors to Inactive
     const ALLOWED_TRANSITIONS = {
-      'Pending': ['Under Review', 'Rejected'],
-      'Under Review': ['Approved', 'Rejected'],
-      'Approved': ['Active'],
-      'Active': [],
+      'Pending': ['Under Review', 'Approved', 'Active', 'Rejected'],
+      'Under Review': ['Approved', 'Active', 'Rejected'],
+      'Approved': ['Active', 'Suspended'],
+      'Active': ['Suspended', 'Rejected'],
+      'Suspended': ['Active'],
       'Inactive': ['Active'],
       'Rejected': [] // Rejected is a final state for managers
     };
@@ -527,10 +531,30 @@ const updateVendorStatus = async (req, res) => {
     if (newStatus === 'Approved') actionName = 'Vendor Approved';
     if (newStatus === 'Rejected') actionName = 'Vendor Rejected';
 
-    const updated = await db.vendors.findByIdAndUpdate(vendor._id, {
+    const updatePayload = {
       status: newStatus,
       statusNotes: notes || `Status changed from ${currentStatus} to ${newStatus}`
-    });
+    };
+    if (newStatus === 'Approved' || newStatus === 'Active') {
+      updatePayload.isActive = true;
+      updatePayload.isApproved = true;
+    } else if (newStatus === 'Rejected') {
+      updatePayload.isActive = false;
+      updatePayload.isApproved = false;
+    } else if (newStatus === 'Suspended') {
+      updatePayload.isActive = false;
+    }
+    const updated = await db.vendors.findByIdAndUpdate(vendor._id, updatePayload);
+
+    // Resolve any pending onboarding notifications for this vendor
+    if (['Approved', 'Active', 'Rejected'].includes(newStatus)) {
+      try {
+        const pendingNotifs = await db.notifications.find({ recordId: vendor._id, isRead: false });
+        for (const pn of (pendingNotifs || [])) {
+          await db.notifications.findByIdAndUpdate(pn._id, { $set: { isRead: true, isResolved: true } });
+        }
+      } catch (ne) {}
+    }
 
     // Record audit log
     await db.auditLogs.insertOne({

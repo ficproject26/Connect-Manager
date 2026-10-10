@@ -194,7 +194,15 @@ const login = async (req, res) => {
       : user.role === 'district_manager' ? 'DTM'
       : user.role === 'division_manager' ? 'DIV'
       : 'PIN';
-    const managerId = user.managerId || `MGR-${rolePrefix}-${String(user._id || user.id).slice(-6)}`;
+    let managerId = user.managerId;
+    if (!managerId) {
+      managerId = `MGR-${rolePrefix}-${String(user._id || user.id).replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`;
+      try {
+        await db.users.findByIdAndUpdate(user._id || user.id, { managerId });
+      } catch (e) {
+        console.warn('Could not persist managerId on login:', e.message);
+      }
+    }
 
     // Populate geographic and regional scope
     const stateObj = user.stateId ? await db.states.findById(user.stateId) : null;
@@ -435,7 +443,32 @@ const register = async (req, res) => {
     const passwordHash = await bcrypt.hash(password, 12);
     const level = ROLE_LEVELS[role] || 1;
 
+    const rolePrefix = role === 'state_manager' ? 'STM'
+      : role === 'district_manager' ? 'DTM'
+      : role === 'division_manager' ? 'DIV'
+      : 'PIN';
+
+    // Generate unique, collision-free persistent Manager ID
+    let managerId;
+    let isUnique = false;
+    let attempts = 0;
+    while (!isUnique && attempts < 15) {
+      attempts++;
+      const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+      const testId = `MGR-${rolePrefix}-${randomSuffix}`;
+      const existingInUsers = await db.users.findOne({ managerId: testId });
+      const existingInManagers = await db.managers.findOne({ managerId: testId });
+      if (!existingInUsers && !existingInManagers) {
+        managerId = testId;
+        isUnique = true;
+      }
+    }
+    if (!managerId) {
+      managerId = `MGR-${rolePrefix}-${Date.now().toString().slice(-6)}`;
+    }
+
     const newUser = await db.users.insertOne({
+      managerId,
       name: formattedName,
       email: email.trim().toLowerCase(),
       mobile: mobile.trim(),
@@ -493,6 +526,7 @@ const register = async (req, res) => {
       message: 'Manager registration submitted successfully. Your account is currently under review for administrator approval.',
       user: {
         id: newUser._id,
+        managerId: newUser.managerId || managerId,
         name: newUser.name,
         email: newUser.email,
         mobile: newUser.mobile,
@@ -985,7 +1019,15 @@ const getMe = async (req, res) => {
       : user.role === 'district_manager' ? 'DTM'
       : user.role === 'division_manager' ? 'DIV'
       : 'PIN';
-    const managerId = user.managerId || `MGR-${rolePrefix}-${String(user._id || user.id).slice(-6)}`;
+    let managerId = user.managerId;
+    if (!managerId) {
+      managerId = `MGR-${rolePrefix}-${String(user._id || user.id).replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`;
+      try {
+        await db.users.findByIdAndUpdate(user._id || user.id, { managerId });
+      } catch (e) {
+        console.warn('Could not persist managerId in getProfile:', e.message);
+      }
+    }
 
     res.json({
       success: true,

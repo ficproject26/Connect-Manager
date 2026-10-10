@@ -550,6 +550,15 @@ const getLeaderboardData = async (req, res) => {
 
     for (const m of combined) {
       if (!m) continue;
+      const mEmail = String(m.email || '').toLowerCase();
+      const mIdStr = String(m._id || m.id || '');
+      const mMobile = String(m.mobile || m.phone || '').trim();
+      const mName = String(m.name || '');
+      if (mEmail.endsWith('@example.com') || mEmail.includes('example.com') || mEmail.includes('@sample.com')) continue;
+      if (mIdStr === 'user_state_ka' || mIdStr === 'user_state_1' || mIdStr === 'user_dist_1' || mIdStr === 'user_div_1' || mIdStr === 'user_pin_1' || mIdStr === 'user_admin') continue;
+      if (mMobile.startsWith('988880000') || mMobile === '9999999999') continue;
+      if (mName.includes('(Karnataka State Manager)') || mName.includes('(TN State Manager)')) continue;
+
       const key = String(m._id || m.id || m.email || m.mobile || '');
       if (!key || seen.has(key)) continue;
       seen.add(key);

@@ -735,37 +735,51 @@ const Dashboard = ({ onNavigate }) => {
             </button>
           </div>
 
-          <div style={{ overflowX: 'auto' }}>
-            <table className="forge-table">
+          <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table className="forge-table" style={{ width: '100%', minWidth: '600px', borderCollapse: 'collapse' }}>
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Manager</th>
-                  <th>Level</th>
-                  <th>Territory</th>
-                  <th>Vendors</th>
-                  <th>Tie-ups</th>
-                  <th>Status</th>
+                  <th style={{ width: '45px', textAlign: 'center' }}>#</th>
+                  <th style={{ minWidth: '140px', textAlign: 'left' }}>Manager</th>
+                  <th style={{ minWidth: '110px', textAlign: 'left' }}>Level</th>
+                  <th style={{ minWidth: '110px', textAlign: 'left' }}>Territory</th>
+                  <th style={{ width: '75px', textAlign: 'center' }}>Vendors</th>
+                  <th style={{ width: '75px', textAlign: 'center' }}>Tie-ups</th>
+                  <th style={{ minWidth: '100px', textAlign: 'center' }}>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {topManagers.length > 0 ? (
-                  topManagers.map((m) => (
-                    <tr key={m.id}>
-                      <td style={{ color: '#94a3b8', fontWeight: 600 }}>{getDisplayValue(m.id)}</td>
-                      <td>
-                        <span className="manager-avatar-mini" style={{ background: m.avatarBg, color: 'white' }}>
-                          {getDisplayValue(m.name).slice(0, 1)}
-                        </span>
-                        <strong>{getDisplayValue(m.name)}</strong>
+                  topManagers.map((m, idx) => (
+                    <tr key={m.id || idx}>
+                      <td style={{ textAlign: 'center', color: '#94a3b8', fontWeight: 600 }}>{m.rank || idx + 1}</td>
+                      <td style={{ textAlign: 'left' }}>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', minWidth: '120px' }}>
+                          <span className="manager-avatar-mini" style={{ background: m.avatarBg, color: 'white', flexShrink: 0, margin: 0 }}>
+                            {getDisplayValue(m.name).slice(0, 1).toUpperCase()}
+                          </span>
+                          <strong style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '120px' }}>
+                            {getDisplayValue(m.name)}
+                          </strong>
+                        </div>
                       </td>
-                      <td>{getDisplayValue(m.level)}</td>
-                      <td>{getDisplayValue(m.territory)}</td>
-                      <td><strong>{m.vendors}</strong></td>
-                      <td>{m.tieups}</td>
-                      <td>
-                        <span className={`perf-badge ${m.statusClass}`}>
-                          ● {getDisplayValue(m.status)}
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{getDisplayValue(m.level)}</td>
+                      <td style={{ textAlign: 'left', whiteSpace: 'nowrap', color: 'var(--text-muted)' }}>{getDisplayValue(m.territory)}</td>
+                      <td style={{ textAlign: 'center' }}><strong>{m.vendors}</strong></td>
+                      <td style={{ textAlign: 'center', color: 'var(--text-muted)' }}>{m.tieups}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        <span className={`perf-badge ${m.statusClass}`} style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px',
+                          padding: '3px 10px',
+                          borderRadius: '12px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          whiteSpace: 'nowrap'
+                        }}>
+                          <span style={{ fontSize: '7px', lineHeight: 1 }}>●</span> {getDisplayValue(m.status)}
                         </span>
                       </td>
                     </tr>

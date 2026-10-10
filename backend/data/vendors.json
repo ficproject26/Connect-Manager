@@ -1450,10 +1450,21 @@
     "panNumber": "",
     "pincodeId": "pin_581015",
     "stateId": "state_ka",
-    "status": "Pending",
+    "status": "Approved",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-10T05:38:39.725Z"
+    "updatedAt": "2026-10-10T05:38:39.725Z",
+    "isActive": true,
+    "isApproved": true,
+    "kycStatus": "approved",
+    "contactName": "Mani",
+    "membership": {
+      "status": "none"
+    },
+    "phone": "9876543211",
+    "totalBookings": 0,
+    "totalOrders": 0,
+    "totalRevenue": 0
   },
   {
     "_id": "d5b6e8c2-e173-45ee-9d09-c420d48136f8",
@@ -1486,6 +1497,16 @@
     "status": "Pending",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-10T10:09:27.831Z"
+    "updatedAt": "2026-10-10T10:09:27.831Z",
+    "isActive": false,
+    "isApproved": false,
+    "kycStatus": "pending",
+    "membership": {
+      "status": "none"
+    },
+    "phone": "7465327846",
+    "totalBookings": 0,
+    "totalOrders": 0,
+    "totalRevenue": 0
   }
 ]
