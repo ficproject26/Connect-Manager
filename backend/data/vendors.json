@@ -1497,7 +1497,7 @@
     "status": "Pending",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-10T10:09:27.831Z",
+    "updatedAt": "2026-10-10T12:26:58.551Z",
     "isActive": false,
     "isApproved": false,
     "kycStatus": "pending",
@@ -1507,6 +1507,7 @@
     "phone": "7465327846",
     "totalBookings": 0,
     "totalOrders": 0,
-    "totalRevenue": 0
+    "totalRevenue": 0,
+    "rejectionReason": "Test rejection criteria"
   }
 ]
