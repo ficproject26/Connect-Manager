@@ -884,25 +884,6 @@ const Login = ({ onNavigate }) => {
           </div>
         </div>
 
-{/* Footer Security Badges */}
-        <div style={{
-          textAlign: 'center',
-          fontSize: '0.7rem',
-          color: '#94a3b8',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: '8px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <Shield size={12} style={{ color: '#10b981' }} />
-            <span>256-Bit SSL Encrypted</span>
-          </div>
-          <span>&bull;</span>
-          <span>ISO 27001 Certified</span>
-          <span>&bull;</span>
-          <span>Forge India Connect</span>
-        </div>
       </main>
     </div>
   );

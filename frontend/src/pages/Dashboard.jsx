@@ -377,8 +377,8 @@ const Dashboard = ({ onNavigate }) => {
         </div>
       </section>
 
-      {/* 2. 8-Card Metric KPI Grid (4x2) */}
-      <section aria-label="Key Performance Indicators" className="forge-kpi-grid">
+      {/* 2. 6-Card Metric KPI Grid */}
+      <section aria-label="Key Performance Indicators" className="forge-kpi-grid dashboard-kpi-grid">
         {/* KPI 1: Total Managers */}
         <div className="forge-kpi-card" onClick={() => onNavigate('field-managers')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top-row">
@@ -435,7 +435,7 @@ const Dashboard = ({ onNavigate }) => {
         </div>
 
         {/* KPI 3: Total Shops / Outlets */}
-        <div className="forge-kpi-card" onClick={() => onNavigate('vendors')} style={{ cursor: 'pointer' }}>
+        <div className="forge-kpi-card" onClick={() => onNavigate('vendors', { status: 'Active' })} style={{ cursor: 'pointer' }}>
           <div className="kpi-top-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div className="kpi-icon-box" style={{ background: '#fef3c7', color: '#d97706' }}>
@@ -498,36 +498,6 @@ const Dashboard = ({ onNavigate }) => {
               <div>
                 <div className="kpi-main-title">Active Tasks</div>
                 <div className="kpi-main-value">{kpis.openIssues}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 7: KYC Pending */}
-        <div className="forge-kpi-card" onClick={() => onNavigate('vendor-requests')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="kpi-icon-box" style={{ background: '#e0f2fe', color: '#0284c7' }}>
-                <FileText size={18} />
-              </div>
-              <div>
-                <div className="kpi-main-title">KYC Pending</div>
-                <div className="kpi-main-value">{kpis.kycPending}</div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* KPI 8: Vendor Requests */}
-        <div className="forge-kpi-card" onClick={() => onNavigate('vendor-requests')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="kpi-icon-box" style={{ background: '#e0f2fe', color: '#0284c7' }}>
-                <UserPlus size={18} />
-              </div>
-              <div>
-                <div className="kpi-main-title">Vendor Requests</div>
-                <div className="kpi-main-value">{kpis.vendorRequests}</div>
               </div>
             </div>
           </div>

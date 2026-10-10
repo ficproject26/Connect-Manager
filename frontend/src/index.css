@@ -644,6 +644,23 @@ button, input, select, textarea {
   }
 }
 
+/* ---------------- 6-Card Metric KPI Grid for Dashboard (3x2) ---------------- */
+.dashboard-kpi-grid {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+@media (max-width: 1024px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dashboard-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 .forge-kpi-card {
   background: white;
   border: 1px solid var(--border-normal);

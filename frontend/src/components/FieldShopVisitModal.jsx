@@ -11,7 +11,7 @@
  * The /api/manager-onboarding/field-visit route now proxies to the same handler.
  */
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   Camera, Upload, ThumbsUp, ThumbsDown, X, Store,
   CheckCircle2, AlertCircle, Loader, Mic
@@ -63,12 +63,33 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
   const [success, setSuccess]                 = useState('');
 
   const fileInputRef = useRef(null);
+  const cameraInputRef = useRef(null);
+  const videoRef = useRef(null);
+  const mediaStreamRef = useRef(null);
+
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
 
   const isOtherReason = notInterestedReason === 'Other (specify below)';
 
-  // ── Photo upload ────────────────────────────────────────
-  const handleFileSelect = async (e) => {
-    const file = e.target.files?.[0];
+  // Stop camera media tracks helper
+  const stopCameraStream = () => {
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current = null;
+    }
+    setIsCameraActive(false);
+    setCameraLoading(false);
+  };
+
+  useEffect(() => {
+    return () => {
+      stopCameraStream();
+    };
+  }, []);
+
+  // ── Unified Photo Processing (Upload + Live Snapshot) ──
+  const processFile = async (file) => {
     if (!file) return;
 
     const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
@@ -97,7 +118,6 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
         setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
         setError('');
       } else {
-        // Fallback: If upload response missing URL, read as data URL so user is never blocked
         const base64Url = await new Promise((resolve) => {
           const r = new FileReader();
           r.onload = () => resolve(r.result);
@@ -140,11 +160,98 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
     }
   };
 
+  const handleCapturePhotoClick = async () => {
+    setError('');
+    const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || ('ontouchstart' in window && navigator.maxTouchPoints > 0);
+
+    // On mobile devices, trigger native camera capture input
+    if (isMobile) {
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+        return;
+      }
+    }
+
+    // On desktop, open live camera viewfinder if supported
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      setCameraLoading(true);
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment', width: { ideal: 1280 }, height: { ideal: 720 } }
+        });
+        mediaStreamRef.current = stream;
+        setIsCameraActive(true);
+        setCameraLoading(false);
+        setTimeout(() => {
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+            videoRef.current.play().catch(e => console.warn('Camera video play failed:', e));
+          }
+        }, 50);
+      } catch (err) {
+        console.warn('Camera capture error on desktop:', err);
+        stopCameraStream();
+        if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+          setError('Camera permission was denied. Please allow camera access in your browser or use "Upload Photo".');
+        } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+          setError('No camera device detected on this system. Please use "Upload Photo" instead.');
+        } else {
+          setError('Camera could not be started: ' + (err.message || 'Device unsupported') + '. Please use "Upload Photo".');
+        }
+      }
+    } else {
+      // Fallback if mediaDevices is not supported
+      if (cameraInputRef.current) {
+        cameraInputRef.current.click();
+      } else if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
+    }
+  };
+
+  const takeSnapshot = () => {
+    if (!videoRef.current) return;
+    const video = videoRef.current;
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth || 640;
+    canvas.height = video.videoHeight || 480;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+    canvas.toBlob((blob) => {
+      if (blob) {
+        const file = new File([blob], `storefront_capture_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        stopCameraStream();
+        processFile(file);
+      } else {
+        setError('Could not capture frame from camera.');
+      }
+    }, 'image/jpeg', 0.92);
+  };
+
+  const handleUploadPhotoClick = () => {
+    setError('');
+    stopCameraStream();
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleFileInputChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      processFile(file);
+    }
+    e.target.value = '';
+  };
+
   const removePhoto = () => {
+    stopCameraStream();
     setStorefrontFile(null);
     setStorefrontPreview(null);
     setStorefrontUrl('');
     if (fileInputRef.current) fileInputRef.current.value = '';
+    if (cameraInputRef.current) cameraInputRef.current.value = '';
   };
 
   // ── Validation ──────────────────────────────────────────
@@ -416,95 +523,229 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
               </h3>
             </div>
 
-            {storefrontPreview ? (
-              <div style={{ display: 'flex', gap: 16, alignItems: 'flex-start' }}>
+            {/* Desktop Live Camera Viewfinder */}
+            {isCameraActive ? (
+              <div style={{
+                background: '#0f172a',
+                borderRadius: 12,
+                padding: 12,
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: 12,
+              }}>
+                <div style={{ position: 'relative', width: '100%', maxWidth: 440, borderRadius: 8, overflow: 'hidden' }}>
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    style={{
+                      width: '100%',
+                      maxHeight: '260px',
+                      objectFit: 'cover',
+                      display: 'block',
+                      background: '#000000',
+                      borderRadius: 8,
+                    }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    top: 8,
+                    left: 8,
+                    background: 'rgba(0, 0, 0, 0.65)',
+                    color: '#ffffff',
+                    padding: '3px 8px',
+                    borderRadius: 6,
+                    fontSize: '0.7rem',
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6
+                  }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1.5s infinite' }}></span>
+                    Live Camera
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button
+                    type="button"
+                    onClick={takeSnapshot}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 8,
+                      padding: '10px 20px', borderRadius: 10,
+                      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                      border: 'none', color: '#ffffff',
+                      fontSize: '0.85rem', fontWeight: 800,
+                      cursor: 'pointer', boxShadow: '0 2px 8px rgba(245, 158, 11, 0.4)'
+                    }}
+                  >
+                    <Camera size={16} /> Snap Photo
+                  </button>
+                  <button
+                    type="button"
+                    onClick={stopCameraStream}
+                    style={{
+                      display: 'inline-flex', alignItems: 'center', gap: 6,
+                      padding: '10px 16px', borderRadius: 10,
+                      background: '#334155', border: 'none', color: '#f8fafc',
+                      fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer'
+                    }}
+                  >
+                    <X size={16} /> Cancel
+                  </button>
+                </div>
+              </div>
+            ) : storefrontPreview ? (
+              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
                 <div style={{
-                  width: 100, height: 80, borderRadius: 10, overflow: 'hidden',
+                  width: 90, height: 76, borderRadius: 10, overflow: 'hidden',
                   border: '2px solid #e2e8f0', flexShrink: 0, position: 'relative',
+                  background: '#000',
                 }}>
-                  <img src={storefrontPreview} alt="Storefront Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  <img
+                    src={storefrontPreview}
+                    alt="Storefront Preview"
+                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                  />
                   {uploadingPhoto && (
                     <div style={{
-                      position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.75)',
+                      position: 'absolute', inset: 0,
+                      background: 'rgba(0,0,0,0.5)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>
-                      <Loader size={20} style={{ animation: 'spin 1s linear infinite', color: '#f59e0b' }} />
+                      <Loader size={20} style={{ animation: 'spin 1s linear infinite', color: '#ffffff' }} />
                     </div>
                   )}
                 </div>
                 <div style={{ flex: 1 }}>
-                  <p style={{ margin: '0 0 6px', fontSize: '0.8rem', fontWeight: 700, color: '#15803d' }}>
-                    {uploadingPhoto ? 'Uploading...' : '✓ Photo uploaded'}
+                  <p style={{ margin: '0 0 3px', fontSize: '0.82rem', fontWeight: 800, color: '#10b981', display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <CheckCircle2 size={14} /> Storefront Photo Selected
                   </p>
-                  <p style={{ margin: '0 0 10px', fontSize: '0.74rem', color: '#64748b' }}>
-                    {storefrontFile?.name}
+                  <p style={{ margin: '0 0 8px', fontSize: '0.72rem', color: '#64748b' }}>
+                    {storefrontFile?.name || 'Photo captured'}
                   </p>
-                  <div style={{ display: 'flex', gap: 8 }}>
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     <button
                       type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={uploadingPhoto}
+                      onClick={handleCapturePhotoClick}
+                      disabled={uploadingPhoto || cameraLoading}
                       style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
                         padding: '6px 12px', borderRadius: 8, border: '1px solid #d97706',
                         background: '#fffbeb', color: '#d97706',
                         fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
                       }}
-                    >Replace</button>
+                    >
+                      <Camera size={13} /> Retake
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleUploadPhotoClick}
+                      disabled={uploadingPhoto}
+                      style={{
+                        display: 'inline-flex', alignItems: 'center', gap: 5,
+                        padding: '6px 12px', borderRadius: 8, border: '1px solid #cbd5e1',
+                        background: '#ffffff', color: '#334155',
+                        fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer',
+                      }}
+                    >
+                      <Upload size={13} /> Upload New
+                    </button>
                     <button
                       type="button"
                       onClick={removePhoto}
                       disabled={uploadingPhoto}
                       style={{
                         padding: '6px 12px', borderRadius: 8, border: '1px solid #e2e8f0',
-                        background: '#ffffff', color: '#64748b',
+                        background: '#ffffff', color: '#ef4444',
                         fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer',
                       }}
-                    >Remove</button>
+                    >
+                      Remove
+                    </button>
                   </div>
                 </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
-                <div
-                  onClick={() => fileInputRef.current?.click()}
-                  style={{
-                    width: 90, height: 76, borderRadius: 10,
-                    border: '2px dashed #cbd5e1',
-                    display: 'flex', flexDirection: 'column', alignItems: 'center',
-                    justifyContent: 'center', gap: 4, cursor: 'pointer',
-                    background: '#f1f5f9', flexShrink: 0,
-                  }}
-                >
-                  <Camera size={22} style={{ color: '#f59e0b' }} />
-                  <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8' }}>Add Photo</span>
-                </div>
-                <div>
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
+              <div>
+                <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+                  <div
+                    onClick={handleCapturePhotoClick}
+                    title="Click to capture photo using camera"
                     style={{
-                      display: 'inline-flex', alignItems: 'center', gap: 8,
-                      padding: '9px 16px', borderRadius: 10,
-                      border: '1.5px solid #e2e8f0', background: '#ffffff',
-                      fontSize: '0.83rem', fontWeight: 700, color: '#334155',
-                      cursor: 'pointer', marginBottom: 6,
+                      width: 90, height: 76, borderRadius: 10,
+                      border: '2px dashed #cbd5e1',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center',
+                      justifyContent: 'center', gap: 4, cursor: 'pointer',
+                      background: '#f1f5f9', flexShrink: 0,
                     }}
                   >
-                    <Upload size={15} /> Capture or Upload Store Photo
-                  </button>
-                  <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>
-                    Clear storefront image showing the board or entrance. JPG, PNG, WEBP up to 5 MB.
-                  </p>
+                    <Camera size={22} style={{ color: '#f59e0b' }} />
+                    <span style={{ fontSize: '0.65rem', fontWeight: 700, color: '#94a3b8' }}>Add Photo</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                      {/* 1. Capture Photo Button */}
+                      <button
+                        type="button"
+                        onClick={handleCapturePhotoClick}
+                        disabled={cameraLoading}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '9px 15px', borderRadius: 10,
+                          border: '1.5px solid #d97706', background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                          fontSize: '0.82rem', fontWeight: 800, color: '#b45309',
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 3px rgba(217, 119, 6, 0.12)'
+                        }}
+                      >
+                        {cameraLoading ? <Loader size={14} style={{ animation: 'spin 1s linear infinite' }} /> : <Camera size={15} />}
+                        Capture Photo
+                      </button>
+
+                      {/* 2. Upload Photo Button */}
+                      <button
+                        type="button"
+                        onClick={handleUploadPhotoClick}
+                        style={{
+                          display: 'inline-flex', alignItems: 'center', gap: 7,
+                          padding: '9px 15px', borderRadius: 10,
+                          border: '1.5px solid #cbd5e1', background: '#ffffff',
+                          fontSize: '0.82rem', fontWeight: 700, color: '#334155',
+                          cursor: 'pointer',
+                          boxShadow: '0 1px 2px rgba(0, 0, 0, 0.04)'
+                        }}
+                      >
+                        <Upload size={15} /> Upload Photo
+                      </button>
+                    </div>
+
+                    <p style={{ margin: 0, fontSize: '0.72rem', color: '#94a3b8' }}>
+                      Clear storefront image showing the board or entrance. JPG, PNG, WEBP up to 5 MB.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
 
+            {/* Standard file picker input for Upload option */}
             <input
               ref={fileInputRef}
               type="file"
               accept="image/jpeg,image/jpg,image/png,image/webp"
+              onChange={handleFileInputChange}
+              style={{ display: 'none' }}
+            />
+
+            {/* Dedicated camera input for mobile direct capture */}
+            <input
+              ref={cameraInputRef}
+              type="file"
+              accept="image/jpeg,image/jpg,image/png,image/webp"
               capture="environment"
-              onChange={handleFileSelect}
+              onChange={handleFileInputChange}
               style={{ display: 'none' }}
             />
 

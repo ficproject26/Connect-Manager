@@ -160,6 +160,60 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
   const [approving, setApproving] = useState(false);
   const [verifyingKyc, setVerifyingKyc] = useState(false);
   const [error, setError] = useState('');
+  const [nameError, setNameError] = useState('');
+
+  // Full Name formatting and validation:
+  // - Only English alphabetic characters (A-Z, a-z) and spaces between name parts
+  // - No numbers, special characters, leading spaces
+  // - Auto-capitalize first letter of every name part
+  const formatAndValidateName = (rawVal) => {
+    // Strip leading spaces
+    const noLeading = rawVal.replace(/^\s+/, '');
+    // Collapse consecutive spaces into a single space
+    const singleSpaced = noLeading.replace(/\s{2,}/g, ' ');
+
+    const endsWithSpace = singleSpaced.endsWith(' ');
+    const parts = singleSpaced.split(' ');
+    const capitalized = parts.map(part => {
+      if (!part) return '';
+      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
+    }).join(' ');
+
+    return endsWithSpace && !capitalized.endsWith(' ') ? capitalized + ' ' : capitalized;
+  };
+
+  const handleNameChange = (e) => {
+    const rawVal = e.target.value;
+    const formatted = formatAndValidateName(rawVal);
+    setName(formatted);
+
+    // Validation while typing
+    const trimmed = formatted.trim();
+    if (!trimmed) {
+      setNameError('');
+      return;
+    }
+
+    if (/[^a-zA-Z\s]/.test(formatted)) {
+      setNameError('Only English alphabetic characters (A–Z, a–z) and spaces between name parts are allowed. Numbers and special characters are not permitted.');
+    } else {
+      setNameError('');
+    }
+  };
+
+  const handleNameBlur = () => {
+    const trimmed = name.trim();
+    setName(trimmed);
+    if (!trimmed) {
+      setNameError('Full Name is required.');
+    } else if (/[^a-zA-Z\s]/.test(trimmed) || !/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(trimmed)) {
+      setNameError('Invalid Full Name. Only English alphabetic characters (A–Z, a–z) and spaces between name parts are allowed.');
+    } else if (trimmed.length < 2) {
+      setNameError('Full Name must be at least 2 characters long.');
+    } else {
+      setNameError('');
+    }
+  };
 
   // Load locations on mount
   useEffect(() => {
@@ -394,8 +448,16 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
     setError('');
 
     // Validations
-    if (!name.trim() || !email.trim() || !mobile.trim() || !password) {
+    const trimmedName = name.trim();
+    const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+    if (!trimmedName || !email.trim() || !mobile.trim() || !password) {
       setError('Please fill in all mandatory fields.');
+      return;
+    }
+
+    if (!nameRegex.test(trimmedName) || trimmedName.length < 2) {
+      setNameError('Invalid Full Name. Only English alphabetic characters (A–Z, a–z) and single spaces between name parts are allowed.');
+      setError('Full Name is invalid. Numbers, special characters, and extra spaces are not permitted.');
       return;
     }
 
@@ -941,13 +1003,25 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                           type="text"
                           required
                           className="form-input"
-                          style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
+                          style={{
+                            paddingLeft: '34px',
+                            height: '38px',
+                            fontSize: '0.84rem',
+                            border: nameError ? '1.5px solid #ef4444' : undefined,
+                            background: nameError ? '#fff5f5' : undefined
+                          }}
                           placeholder="e.g. Ramesh Kumar"
                           value={name}
-                          onChange={(e) => setName(e.target.value)}
+                          onChange={handleNameChange}
+                          onBlur={handleNameBlur}
                         />
-                        <User size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
+                        <User size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: nameError ? '#ef4444' : '#94a3b8' }} />
                       </div>
+                      {nameError && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {nameError}
+                        </p>
+                      )}
                     </div>
                   </div>
 

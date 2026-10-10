@@ -38,10 +38,26 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   // Filters
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('All');
-  const [status, setStatus] = useState('All');
+  const [status, setStatus] = useState(filterParams.status || 'All');
   const [districtId, setDistrictId] = useState(filterParams.districtId || '');
   const [divisionId, setDivisionId] = useState(filterParams.divisionId || '');
   const [pincodeId, setPincodeId] = useState(filterParams.pincodeId || '');
+
+  // Synchronize filters when navigating with params (e.g. Active Outlets KPI)
+  useEffect(() => {
+    if (filterParams.status !== undefined) {
+      setStatus(filterParams.status || 'All');
+    }
+    if (filterParams.districtId !== undefined) {
+      setDistrictId(filterParams.districtId || '');
+    }
+    if (filterParams.divisionId !== undefined) {
+      setDivisionId(filterParams.divisionId || '');
+    }
+    if (filterParams.pincodeId !== undefined) {
+      setPincodeId(filterParams.pincodeId || '');
+    }
+  }, [filterParams]);
 
   // Dynamic dropdown options for scope filtering
   const [districts, setDistricts] = useState([]);

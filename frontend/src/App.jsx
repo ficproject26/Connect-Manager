@@ -243,7 +243,7 @@ function AppInner() {
           {/* VendorRequests page removed */}
           {visitedPages.has('vendors') && (
             <div style={{ display: currentPage === 'vendors' ? 'block' : 'none', width: '100%' }}>
-              <Vendors onNavigate={navigate} onOpenOnboard={openOnboard} />
+              <Vendors onNavigate={navigate} filterParams={navParams} onOpenOnboard={openOnboard} />
             </div>
           )}
           {currentPage === 'vendor-requests' && <VendorRequests onNavigate={navigate} />}

@@ -302,6 +302,20 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields: Full Name, Email, Mobile, Password, and Role.' });
     }
 
+    const trimmedName = String(name).trim();
+    const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
+    if (!nameRegex.test(trimmedName) || trimmedName.length < 2) {
+      return res.status(400).json({
+        success: false,
+        message: 'Full Name must contain only English alphabetic characters (A–Z, a–z) and spaces between name parts. Numbers and special characters are not permitted.'
+      });
+    }
+
+    const formattedName = trimmedName
+      .split(/\s+/)
+      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
+      .join(' ');
+
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(String(email).trim())) {
       return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
@@ -397,7 +411,7 @@ const register = async (req, res) => {
     const level = ROLE_LEVELS[role] || 1;
 
     const newUser = await db.users.insertOne({
-      name: name.trim(),
+      name: formattedName,
       email: email.trim().toLowerCase(),
       mobile: mobile.trim(),
       passwordHash,
