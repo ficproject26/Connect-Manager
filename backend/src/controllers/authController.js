@@ -254,6 +254,8 @@ const login = async (req, res) => {
         dob: user.dob || null,
         gender: user.gender || null,
         address: user.address || null,
+        aadharNumber: user.aadharNumber || user.documents?.aadharNumber || null,
+        panNumber: user.panNumber || user.documents?.panNumber || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
         scope: {
@@ -295,7 +297,9 @@ const register = async (req, res) => {
       districtId,
       divisionId,
       pincodeId,
-      avatarUrl
+      avatarUrl,
+      aadharNumber,
+      panNumber
     } = req.body;
 
     if (!name || !email || !mobile || !password || !role) {
@@ -303,6 +307,9 @@ const register = async (req, res) => {
     }
 
     const trimmedName = String(name).trim();
+    if (trimmedName.length > 50) {
+      return res.status(400).json({ success: false, message: 'Full Name must not exceed 50 characters.' });
+    }
     const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
     if (!nameRegex.test(trimmedName) || trimmedName.length < 2) {
       return res.status(400).json({
@@ -316,9 +323,27 @@ const register = async (req, res) => {
       .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
       .join(' ');
 
+    const emailStr = String(email).trim();
+    if (emailStr.length > 100) {
+      return res.status(400).json({ success: false, message: 'Email address must not exceed 100 characters.' });
+    }
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(String(email).trim())) {
+    if (!emailRegex.test(emailStr)) {
       return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
+    }
+
+    if (address && String(address).trim().length > 250) {
+      return res.status(400).json({ success: false, message: 'Address must not exceed 250 characters.' });
+    }
+
+    const cleanAadhar = (aadharNumber || documents?.aadharNumber || '').toString().replace(/\D/g, '');
+    if (cleanAadhar && cleanAadhar.length !== 12) {
+      return res.status(400).json({ success: false, message: 'Aadhaar Number must be exactly 12 digits.' });
+    }
+
+    const cleanPan = (panNumber || documents?.panNumber || '').toString().trim().toUpperCase();
+    if (cleanPan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
+      return res.status(400).json({ success: false, message: 'PAN Number must be in valid format (e.g., ABCDE1234F).' });
     }
 
     const cleanMobile = String(mobile).replace(/\D/g, '');
@@ -421,7 +446,13 @@ const register = async (req, res) => {
       dob: dob || null,
       gender: gender || null,
       address: address ? address.trim() : null,
-      documents: documents || {},
+      aadharNumber: cleanAadhar || null,
+      panNumber: cleanPan || null,
+      documents: {
+        ...(documents || {}),
+        aadharNumber: cleanAadhar || null,
+        panNumber: cleanPan || null
+      },
       declarationAccepted: !!declarationAccepted,
       kycStatus: 'pending_verification',
       stateId: stateId || null,
@@ -471,6 +502,8 @@ const register = async (req, res) => {
         dob: newUser.dob || null,
         gender: newUser.gender || null,
         address: newUser.address || null,
+        aadharNumber: newUser.aadharNumber || null,
+        panNumber: newUser.panNumber || null,
         documents: newUser.documents || {},
         kycStatus: newUser.kycStatus || 'pending_verification',
         avatarUrl: newUser.avatarUrl || null,
@@ -581,6 +614,8 @@ const simulateApproval = async (req, res) => {
         dob: updatedUser.dob || null,
         gender: updatedUser.gender || null,
         address: updatedUser.address || null,
+        aadharNumber: updatedUser.aadharNumber || updatedUser.documents?.aadharNumber || null,
+        panNumber: updatedUser.panNumber || updatedUser.documents?.panNumber || null,
         documents: updatedUser.documents || {},
         kycStatus: updatedUser.kycStatus || 'pending_verification',
         avatarUrl: updatedUser.avatarUrl || null,
@@ -687,6 +722,8 @@ const simulateKyc = async (req, res) => {
         dob: updatedUser.dob || null,
         gender: updatedUser.gender || null,
         address: updatedUser.address || null,
+        aadharNumber: updatedUser.aadharNumber || updatedUser.documents?.aadharNumber || null,
+        panNumber: updatedUser.panNumber || updatedUser.documents?.panNumber || null,
         documents: updatedUser.documents || {},
         kycStatus: 'verified',
         avatarUrl: updatedUser.avatarUrl || null,
@@ -982,6 +1019,8 @@ const getMe = async (req, res) => {
         dob: user.dob || null,
         gender: user.gender || null,
         address: user.address || null,
+        aadharNumber: user.aadharNumber || user.documents?.aadharNumber || null,
+        panNumber: user.panNumber || user.documents?.panNumber || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
         territory: {

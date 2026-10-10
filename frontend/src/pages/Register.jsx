@@ -98,6 +98,25 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   // KYC Document Uploads & Digital Signature
+  const [aadharNumber, setAadharNumber] = useState(initialUser?.aadharNumber || initialUser?.documents?.aadharNumber || '');
+  const [panNumber, setPanNumber] = useState(initialUser?.panNumber || initialUser?.documents?.panNumber || '');
+  const [aadharError, setAadharError] = useState('');
+  const [panError, setPanError] = useState('');
+
+  const maskAadhaar = (num) => {
+    if (!num) return null;
+    const clean = String(num).replace(/\D/g, '');
+    if (clean.length < 4) return '•••• •••• ••••';
+    return `•••• •••• ${clean.slice(-4)}`;
+  };
+
+  const maskPan = (pan) => {
+    if (!pan) return null;
+    const clean = String(pan).toUpperCase().trim();
+    if (clean.length < 4) return '••••••••••';
+    return `${clean.slice(0, 2)}••••••${clean.slice(-2)}`;
+  };
+
   const [aadharFile, setAadharFile] = useState(null);
   const [aadharPreview, setAadharPreview] = useState(null);
   const [panFile, setPanFile] = useState(null);
@@ -152,6 +171,12 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
       if (initialUser.name) setName(initialUser.name);
       if (initialUser.email) setEmail(initialUser.email);
       if (initialUser.mobile) setMobile(initialUser.mobile);
+      if (initialUser.aadharNumber || initialUser.documents?.aadharNumber) {
+        setAadharNumber(initialUser.aadharNumber || initialUser.documents?.aadharNumber);
+      }
+      if (initialUser.panNumber || initialUser.documents?.panNumber) {
+        setPanNumber(initialUser.panNumber || initialUser.documents?.panNumber);
+      }
     }
   }, [initialUser, initialFlowState, initialToken]);
 
@@ -449,6 +474,11 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
     // Validations
     const trimmedName = name.trim();
+    if (trimmedName.length > 50) {
+      setNameError('Full Name must not exceed 50 characters.');
+      setError('Full Name must not exceed 50 characters.');
+      return;
+    }
     const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
     if (!trimmedName || !email.trim() || !mobile.trim() || !password) {
       setError('Please fill in all mandatory fields.');
@@ -458,6 +488,11 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
     if (!nameRegex.test(trimmedName) || trimmedName.length < 2) {
       setNameError('Invalid Full Name. Only English alphabetic characters (A–Z, a–z) and single spaces between name parts are allowed.');
       setError('Full Name is invalid. Numbers, special characters, and extra spaces are not permitted.');
+      return;
+    }
+
+    if (email.trim().length > 100) {
+      setError('Email address must not exceed 100 characters.');
       return;
     }
 
@@ -473,6 +508,24 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
     if (!address.trim()) {
       setError('Please enter your residential / operational address.');
+      return;
+    }
+    if (address.trim().length > 250) {
+      setError('Residential address must not exceed 250 characters.');
+      return;
+    }
+
+    const cleanAadhar = aadharNumber.trim().replace(/\D/g, '');
+    if (!cleanAadhar || cleanAadhar.length !== 12) {
+      setAadharError('Aadhaar Number must be exactly 12 digits.');
+      setError('Please provide a valid 12-digit Aadhaar Number.');
+      return;
+    }
+
+    const cleanPan = panNumber.trim().toUpperCase();
+    if (!cleanPan || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
+      setPanError('Invalid PAN format (e.g. ABCDE1234F).');
+      setError('Please provide a valid 10-character PAN Number (e.g. ABCDE1234F).');
       return;
     }
 
@@ -583,7 +636,11 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
         address: address.trim(),
         password,
         role,
+        aadharNumber: cleanAadhar,
+        panNumber: cleanPan,
         documents: {
+          aadharNumber: cleanAadhar,
+          panNumber: cleanPan,
           aadharUrl: aadharUrl || (aadharFile ? `/uploads/${aadharFile.name}` : null),
           panUrl: panUrl || (panFile ? `/uploads/${panFile.name}` : null),
           bankUrl: bankUrl || (bankFile ? `/uploads/${bankFile.name}` : null),
@@ -1002,6 +1059,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         <input
                           type="text"
                           required
+                          maxLength={50}
                           className="form-input"
                           style={{
                             paddingLeft: '34px',
@@ -1033,6 +1091,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         <input
                           type="email"
                           required
+                          maxLength={100}
                           className="form-input"
                           style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
                           placeholder="manager@example.com"
@@ -1045,18 +1104,51 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
 
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Mobile Number *</label>
-                      <div style={{ position: 'relative' }}>
+                      <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        border: '1px solid var(--border-normal)',
+                        borderRadius: 'var(--radius-sm, 6px)',
+                        overflow: 'hidden',
+                        height: '38px',
+                        backgroundColor: '#ffffff'
+                      }}>
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '0 10px',
+                          height: '100%',
+                          backgroundColor: '#f8fafc',
+                          borderRight: '1px solid #e2e8f0',
+                          color: '#475569',
+                          fontSize: '0.82rem',
+                          fontWeight: 700,
+                          userSelect: 'none',
+                          flexShrink: 0
+                        }}>
+                          <Phone size={13} style={{ color: '#d97706' }} />
+                          <span>+91</span>
+                        </div>
                         <input
                           type="tel"
                           required
                           maxLength={10}
-                          className="form-input"
-                          style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
                           placeholder="10-digit mobile"
                           value={mobile}
-                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))}
+                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          style={{
+                            flex: 1,
+                            border: 'none',
+                            outline: 'none',
+                            padding: '0 10px',
+                            height: '100%',
+                            fontSize: '0.84rem',
+                            fontWeight: 600,
+                            color: '#1e293b',
+                            background: 'transparent'
+                          }}
                         />
-                        <Phone size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
                       </div>
                     </div>
                   </div>
@@ -1102,6 +1194,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                       <input
                         type="text"
                         required
+                        maxLength={250}
                         className="form-input"
                         style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
                         placeholder="House/Flat No., Street, Area, City, State, PIN"
@@ -1524,6 +1617,47 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                       </div>
                     )}
 
+                    {/* Dedicated Aadhaar Number Input */}
+                    <div style={{ margin: '4px 0' }}>
+                      <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
+                        Aadhaar Number (12 Digits) *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={12}
+                        placeholder="12-digit Aadhaar"
+                        value={aadharNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                          setAadharNumber(val);
+                          if (aadharError && val.length === 12) setAadharError('');
+                        }}
+                        onBlur={() => {
+                          if (aadharNumber && aadharNumber.length !== 12) {
+                            setAadharError('Must be exactly 12 digits');
+                          } else {
+                            setAadharError('');
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '32px',
+                          padding: '0 8px',
+                          fontSize: '0.78rem',
+                          borderRadius: '6px',
+                          border: aadharError ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                          background: '#ffffff',
+                          fontWeight: 600,
+                          letterSpacing: '0.5px'
+                        }}
+                      />
+                      {aadharError && (
+                        <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                          {aadharError}
+                        </span>
+                      )}
+                    </div>
+
                     <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
                       <label style={{
                         flex: 1,
@@ -1600,6 +1734,48 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         📄 {panFile.name}
                       </div>
                     )}
+
+                    {/* Dedicated PAN Number Input */}
+                    <div style={{ margin: '4px 0' }}>
+                      <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
+                        PAN Number (e.g. ABCDE1234F) *
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={10}
+                        placeholder="10-character PAN"
+                        value={panNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                          setPanNumber(val);
+                          if (panError && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) setPanError('');
+                        }}
+                        onBlur={() => {
+                          if (panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
+                            setPanError('Format: ABCDE1234F');
+                          } else {
+                            setPanError('');
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '32px',
+                          padding: '0 8px',
+                          fontSize: '0.78rem',
+                          borderRadius: '6px',
+                          border: panError ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                          background: '#ffffff',
+                          fontWeight: 600,
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase'
+                        }}
+                      />
+                      {panError && (
+                        <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                          {panError}
+                        </span>
+                      )}
+                    </div>
 
                     <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
                       <label style={{
@@ -1914,14 +2090,16 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   border: '1px solid #e2e8f0'
                 }}>
                   <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase', marginBottom: '6px' }}>
-                    Uploaded KYC Verification Files
+                    Uploaded KYC Verification Files & Govt IDs
                   </div>
                   <div className="responsive-grid-2" style={{ gap: '8px', fontSize: '0.76rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155' }}>
-                      <FileCheck size={13} style={{ color: '#6366f1' }} /> Aadhaar Card
+                      <FileCheck size={13} style={{ color: '#6366f1' }} />
+                      <span>Aadhaar: <strong>{maskAadhaar(registeredUser.aadharNumber || registeredUser.documents?.aadharNumber) || 'Attached'}</strong></span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155' }}>
-                      <FileCheck size={13} style={{ color: '#6366f1' }} /> PAN Card
+                      <FileCheck size={13} style={{ color: '#6366f1' }} />
+                      <span>PAN: <strong>{maskPan(registeredUser.panNumber || registeredUser.documents?.panNumber) || 'Attached'}</strong></span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#334155' }}>
                       <FileCheck size={13} style={{ color: '#6366f1' }} /> Bank Passbook
@@ -2082,10 +2260,12 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   </div>
                   <div className="responsive-grid-2" style={{ gap: '8px', fontSize: '0.76rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0284c7', fontWeight: 600 }}>
-                      <FileText size={13} /> Aadhaar Card (Pending)
+                      <FileText size={13} />
+                      <span>Aadhaar: {maskAadhaar(registeredUser.aadharNumber || registeredUser.documents?.aadharNumber) || 'Pending'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0284c7', fontWeight: 600 }}>
-                      <FileText size={13} /> PAN Card (Pending)
+                      <FileText size={13} />
+                      <span>PAN: {maskPan(registeredUser.panNumber || registeredUser.documents?.panNumber) || 'Pending'}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#0284c7', fontWeight: 600 }}>
                       <FileText size={13} /> Bank Passbook (Pending)

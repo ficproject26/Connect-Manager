@@ -306,10 +306,11 @@ const createTask = async (req, res) => {
 
     const newTask = await db.tasks.insertOne({
       taskNumber,
-      vendor: vendor || 'Field Operational Task',
+      title: String(req.body.title || vendor || 'Field Operational Task').slice(0, 150),
+      vendor: String(vendor || 'Field Operational Task').slice(0, 100),
       vendorId: vendorId || null,
       category: category || 'Physical QC Audit',
-      priority: priority || 'Medium',
+      priority: ['High', 'Medium', 'Low'].includes(priority) ? priority : 'Medium',
       dueDate: dueDate || new Date(Date.now() + 86400000 * 3).toISOString(),
       status: 'Assigned',
       assignmentStatus: 'ACCEPTED',
@@ -325,7 +326,7 @@ const createTask = async (req, res) => {
       assignedAgentRole: req.body.assignedAgentRole || null,
       createdByAdminName: user.name,
       createdByAdminRole: user.role,
-      description: description || 'Field operational deliverable and compliance task.',
+      description: String(description || 'Field operational deliverable and compliance task.').slice(0, 1000),
       remarks: remarks || '',
       location: location || (user.district ? `${user.district}, ${user.state || 'Tamil Nadu'}` : 'Tamil Nadu'),
       state: req.body.state || user.state || user.assignedState || 'Tamil Nadu',

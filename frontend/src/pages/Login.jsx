@@ -667,37 +667,49 @@ const Login = ({ onNavigate }) => {
                   }}>
                     Registered Mobile Number <span style={{ color: '#ef4444' }}>*</span>
                   </label>
-                  <div style={{ position: 'relative' }}>
+                  <div style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    border: '1.5px solid #cbd5e1',
+                    borderRadius: '10px',
+                    backgroundColor: otpSent ? '#f1f5f9' : '#ffffff',
+                    overflow: 'hidden',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.04)'
+                  }}>
                     <div style={{
-                      position: 'absolute',
-                      left: '12px',
-                      top: '50%',
-                      transform: 'translateY(-50%)',
                       display: 'flex',
                       alignItems: 'center',
-                      gap: '4px',
-                      color: '#64748b',
-                      fontSize: '0.84rem',
-                      fontWeight: 700
+                      gap: '6px',
+                      padding: '0 12px',
+                      height: '42px',
+                      backgroundColor: '#f8fafc',
+                      borderRight: '1.5px solid #e2e8f0',
+                      color: '#475569',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      userSelect: 'none',
+                      flexShrink: 0
                     }}>
-                      <Smartphone size={16} style={{ color: '#94a3b8' }} /> +91
+                      <Smartphone size={16} style={{ color: '#d97706' }} />
+                      <span>+91</span>
                     </div>
                     <input
                       type="tel"
                       maxLength={10}
-                      className="form-input"
                       placeholder="10-digit mobile number"
                       value={mobile}
                       disabled={otpSent}
                       onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
                       style={{
-                        paddingLeft: '56px',
-                        fontSize: '0.86rem',
+                        flex: 1,
+                        border: 'none',
+                        outline: 'none',
+                        padding: '0 12px',
+                        fontSize: '0.88rem',
                         height: '42px',
-                        borderRadius: '10px',
-                        borderColor: '#cbd5e1',
-                        background: otpSent ? '#f1f5f9' : '#f8fafc',
-                        letterSpacing: '0.5px',
+                        background: 'transparent',
+                        color: '#1e293b',
+                        letterSpacing: '0.75px',
                         fontWeight: 600
                       }}
                       required

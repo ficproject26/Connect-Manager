@@ -306,6 +306,22 @@ const createVendor = async (req, res) => {
       });
     }
 
+    if (String(name).trim().length > 50) {
+      return res.status(400).json({ success: false, message: 'Owner name must not exceed 50 characters.' });
+    }
+    if (String(businessName).trim().length > 100) {
+      return res.status(400).json({ success: false, message: 'Business name must not exceed 100 characters.' });
+    }
+    if (email && String(email).trim().length > 100) {
+      return res.status(400).json({ success: false, message: 'Email address must not exceed 100 characters.' });
+    }
+    if (description && String(description).trim().length > 1000) {
+      return res.status(400).json({ success: false, message: 'Business description must not exceed 1000 characters.' });
+    }
+    if (req.body.address && String(req.body.address).trim().length > 250) {
+      return res.status(400).json({ success: false, message: 'Business address must not exceed 250 characters.' });
+    }
+
     const newVendor = await db.vendors.insertOne({
       name,
       mobile,
@@ -379,7 +395,22 @@ const updateVendor = async (req, res) => {
   try {
     const user = req.user;
     const vendor = req.targetVendor;
-    const updates = req.body;
+    const updates = req.body || {};
+    if (updates.name && String(updates.name).trim().length > 50) {
+      return res.status(400).json({ success: false, message: 'Owner name must not exceed 50 characters.' });
+    }
+    if (updates.businessName && String(updates.businessName).trim().length > 100) {
+      return res.status(400).json({ success: false, message: 'Business name must not exceed 100 characters.' });
+    }
+    if (updates.email && String(updates.email).trim().length > 100) {
+      return res.status(400).json({ success: false, message: 'Email address must not exceed 100 characters.' });
+    }
+    if (updates.description && String(updates.description).trim().length > 1000) {
+      return res.status(400).json({ success: false, message: 'Business description must not exceed 1000 characters.' });
+    }
+    if (updates.address && String(updates.address).trim().length > 250) {
+      return res.status(400).json({ success: false, message: 'Business address must not exceed 250 characters.' });
+    }
 
     // Prevent changing core location IDs post-creation via standard edit
     const safeUpdates = {

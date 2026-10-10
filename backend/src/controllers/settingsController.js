@@ -4,11 +4,14 @@ const db = require('../config/db');
 const getSettings = async (req, res) => {
   try {
     const user = req.user;
-    let settings = await db.settings.findOne({ userId: user.id });
+    const uid = String(user?.id || user?._id || user?.managerId || 'mgr_default');
+    let settings = await db.settings.findOne({
+      $or: [{ userId: uid }, { userId: user?.id }, { userId: user?._id }]
+    });
 
     if (!settings) {
       settings = await db.settings.insertOne({
-        userId: user.id,
+        userId: uid,
         emailAlerts: true,
         kycAlerts: true,
         statusChangeAlerts: true,
@@ -34,9 +37,12 @@ const getSettings = async (req, res) => {
 const updateSettings = async (req, res) => {
   try {
     const user = req.user;
+    const uid = String(user?.id || user?._id || user?.managerId || 'mgr_default');
     const { emailAlerts, kycAlerts, statusChangeAlerts, dailyDigest, theme, autoAssignTasks, territoryAlertRadiusKm } = req.body;
 
-    let existing = await db.settings.findOne({ userId: user.id });
+    let existing = await db.settings.findOne({
+      $or: [{ userId: uid }, { userId: user?.id }, { userId: user?._id }]
+    });
 
     let updated;
     if (existing) {
@@ -54,7 +60,7 @@ const updateSettings = async (req, res) => {
       });
     } else {
       updated = await db.settings.insertOne({
-        userId: user.id,
+        userId: uid,
         emailAlerts: emailAlerts !== undefined ? emailAlerts : true,
         kycAlerts: kycAlerts !== undefined ? kycAlerts : true,
         statusChangeAlerts: statusChangeAlerts !== undefined ? statusChangeAlerts : true,

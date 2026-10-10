@@ -68,16 +68,20 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
     const loadScopeOptions = async () => {
       try {
         if (user?.role === 'state_manager') {
-          const res = await locationService.getDistricts();
-          if (res.success) setDistricts(res.data);
-        }
-        if (user?.districtId || user?.role === 'district_manager') {
-          const res = await locationService.getDivisions(user?.districtId);
-          if (res.success) setDivisions(res.data);
-        }
-        if (user?.divisionId || user?.role === 'division_manager') {
-          const res = await locationService.getPincodes(user?.divisionId);
-          if (res.success) setPincodes(res.data);
+          const res = await locationService.getDistricts(user?.stateId);
+          if (res?.success) setDistricts(res.data || []);
+        } else if (user?.role === 'district_manager' || user?.districtId) {
+          const dId = user?.districtId;
+          if (dId) {
+            const res = await locationService.getDivisions(dId);
+            if (res?.success) setDivisions(res.data || []);
+          }
+        } else if (user?.role === 'division_manager' || user?.divisionId) {
+          const divId = user?.divisionId;
+          if (divId) {
+            const res = await locationService.getPincodes(divId);
+            if (res?.success) setPincodes(res.data || []);
+          }
         }
       } catch (err) {
         console.error('Failed to load filter location options:', err);
@@ -85,6 +89,40 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
     };
     loadScopeOptions();
   }, [user]);
+
+  const handleDistrictChange = async (newDistrictId) => {
+    setDistrictId(newDistrictId);
+    setDivisionId('');
+    setPincodeId('');
+    setDivisions([]);
+    setPincodes([]);
+    if (newDistrictId) {
+      try {
+        const res = await locationService.getDivisions(newDistrictId);
+        if (res?.success) setDivisions(res.data || []);
+      } catch (err) {
+        console.error('Failed to load divisions for district:', err);
+      }
+    }
+  };
+
+  const handleDivisionChange = async (newDivisionId) => {
+    setDivisionId(newDivisionId);
+    setPincodeId('');
+    setPincodes([]);
+    if (newDivisionId) {
+      try {
+        const res = await locationService.getPincodes(newDivisionId);
+        if (res?.success) setPincodes(res.data || []);
+      } catch (err) {
+        console.error('Failed to load pincodes for division:', err);
+      }
+    }
+  };
+
+  const handlePincodeChange = (newPincodeId) => {
+    setPincodeId(newPincodeId);
+  };
 
   const getCacheKey = (page = 1) => {
     const p = {
@@ -154,13 +192,27 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   });
 
 
-  const resetFilters = () => {
+  const resetFilters = async () => {
     setSearch('');
     setCategory('All');
     setStatus('All');
-    setDistrictId('');
-    setDivisionId('');
-    setPincodeId('');
+    if (user?.role === 'state_manager') {
+      setDistrictId('');
+      setDivisionId('');
+      setPincodeId('');
+      setDivisions([]);
+      setPincodes([]);
+    } else if (user?.role === 'district_manager') {
+      setDivisionId('');
+      setPincodeId('');
+      setPincodes([]);
+    } else if (user?.role === 'division_manager') {
+      setPincodeId('');
+    } else {
+      setDistrictId('');
+      setDivisionId('');
+      setPincodeId('');
+    }
   };
 
   return (
@@ -201,6 +253,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
               className="form-input"
               style={{ paddingLeft: '36px' }}
               value={search}
+              maxLength={100}
               onChange={(e) => setSearch(e.target.value)}
             />
             <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'var(--text-muted)' }} />
@@ -232,17 +285,51 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
             </select>
           </div>
 
-          {/* Scope Filters (if State/District manager) */}
+          {/* District Filter (State Manager) */}
           {user?.role === 'state_manager' && districts.length > 0 && (
             <div>
               <select
                 className="form-select"
                 value={districtId}
-                onChange={(e) => setDistrictId(e.target.value)}
+                onChange={(e) => handleDistrictChange(e.target.value)}
               >
                 <option value="">All Districts</option>
                 {districts.map((d) => (
-                  <option key={d._id} value={d._id}>{d.name}</option>
+                  <option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Division Filter (State Manager with District selected, or District Manager) */}
+          {((user?.role === 'state_manager' && districtId) || user?.role === 'district_manager') && divisions.length > 0 && (
+            <div>
+              <select
+                className="form-select"
+                value={divisionId}
+                onChange={(e) => handleDivisionChange(e.target.value)}
+              >
+                <option value="">All Divisions</option>
+                {divisions.map((d) => (
+                  <option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* PIN Code Filter (Cascaded when Division is selected, or for Division Manager) */}
+          {((divisionId) || user?.role === 'division_manager') && pincodes.length > 0 && (
+            <div>
+              <select
+                className="form-select"
+                value={pincodeId}
+                onChange={(e) => handlePincodeChange(e.target.value)}
+              >
+                <option value="">All PIN Codes</option>
+                {pincodes.map((p) => (
+                  <option key={p._id || p.id} value={p._id || p.id}>
+                    {p.code || p.pincode ? `${p.code || p.pincode}${p.areaName ? ` (${p.areaName})` : ''}` : (p.name || p._id)}
+                  </option>
                 ))}
               </select>
             </div>

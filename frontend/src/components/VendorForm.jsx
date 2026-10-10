@@ -229,6 +229,13 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     const { name, value, type, checked } = e.target;
     upd(name, type === "checkbox" ? checked : value);
   };
+  const handleNameChange = e => {
+    const raw = e.target.value;
+    const clean = raw.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
+    const parts = clean.split(' ');
+    const formatted = parts.map(part => part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : '').join(' ');
+    upd('name', clean.endsWith(' ') && !formatted.endsWith(' ') ? formatted + ' ' : formatted);
+  };
 
   // Time Slot State & Handlers
   const [slotFrom, setSlotFrom] = useState('09:00 AM');
@@ -326,15 +333,20 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     const e={};
     if(s===1){
       if(!formData.businessName.trim())e.businessName='Business name is required';
+      else if(formData.businessName.trim().length > 100)e.businessName='Business name must not exceed 100 characters';
       if(!formData.mobile.trim())e.mobile='Phone number is required';
       else if(!phoneOk(formData.mobile))e.mobile='Must be 10 digits starting with 6-9';
       if(!formData.email.trim())e.email='Email is required';
+      else if(formData.email.trim().length > 100)e.email='Email must not exceed 100 characters';
       else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))e.email='Invalid email';
       if(!formData.address.trim())e.address='Business address is required';
+      else if(formData.address.trim().length > 250)e.address='Business address must not exceed 250 characters';
       if(!formData.pincodeId)e.pincodeId='Please select a pincode within your scope';
     }
     if(s===2){
       if(!formData.name.trim())e.name='Owner name is required';
+      else if(formData.name.trim().length > 50)e.name='Owner name must not exceed 50 characters';
+      else if(!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(formData.name.trim()))e.name='Owner name must contain only letters and spaces';
       if(formData.alternatePhone.trim()&&!phoneOk(formData.alternatePhone))e.alternatePhone='Must be 10 digits starting with 6-9';
       if(!isEditing){
         if(!formData.password)e.password='Password is required';
@@ -365,7 +377,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const hb={onMouseEnter:e=>e.currentTarget.style.borderColor='var(--primary)',onMouseLeave:e=>e.currentTarget.style.borderColor='var(--border)'};
   const step1=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Business / Shop Name" required error={errors.businessName}><input type="text" name="businessName" value={formData.businessName} onChange={onChange} placeholder="e.g. Spice Route Bistro" className="form-input" style={inp(!!errors.businessName)}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Business / Shop Name" required error={errors.businessName}><input type="text" name="businessName" maxLength={100} value={formData.businessName} onChange={onChange} placeholder="e.g. Spice Route Bistro" className="form-input" style={inp(!!errors.businessName)}/></Field></div>
       <div style={{gridColumn:'1/-1'}}>
         <label className="form-label">Shop / Brand Logo</label>
         <div onClick={()=>logoRef.current?.click()} style={dashedBox} {...hb}>
@@ -376,9 +388,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       </div>
       <Field label="Product / Service Category" required><select name="category" value={formData.category} onChange={onChange} className="form-select" style={inp()}>{(CATEGORIES || []).map(c=><option key={c}>{c}</option>)}</select></Field>
       <Field label="Business Phone" required error={errors.mobile}><input type="tel" name="mobile" value={formData.mobile} maxLength={10} onChange={e=>upd('mobile',e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="10-digit mobile number" className="form-input" style={inp(!!errors.mobile)}/></Field>
-      <Field label="Email Address" required error={errors.email}><input type="email" name="email" value={formData.email} onChange={onChange} placeholder="vendor@business.com" className="form-input" style={inp(!!errors.email)}/></Field>
+      <Field label="Email Address" required error={errors.email}><input type="email" name="email" maxLength={100} value={formData.email} onChange={onChange} placeholder="vendor@business.com" className="form-input" style={inp(!!errors.email)}/></Field>
       <Field label="Business Website (Optional)"><input type="url" name="website" value={formData.website} onChange={onChange} placeholder="https://yourwebsite.com" className="form-input" style={inp()}/></Field>
-      <div style={{gridColumn:'1/-1'}}><Field label="Business Address" required error={errors.address}><input type="text" name="address" value={formData.address} onChange={onChange} placeholder="Street, Area, City" className="form-input" style={inp(!!errors.address)}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Business Address" required error={errors.address}><input type="text" name="address" maxLength={250} value={formData.address} onChange={onChange} placeholder="Street, Area, City" className="form-input" style={inp(!!errors.address)}/></Field></div>
             {/* Business Operating Hours - Set Time Slot Method */}
       <div style={{ gridColumn: '1 / -1', marginTop: 6, marginBottom: 6 }}>
         <div style={{
@@ -587,7 +599,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           </div>
         </div>
       </div>
-      <div style={{gridColumn:'1/-1'}}><Field label="Business Description"><textarea name="description" value={formData.description} onChange={onChange} rows={2} placeholder="Brief description..." className="form-input" style={{...inp(),resize:'vertical'}}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Business Description"><textarea name="description" maxLength={1000} value={formData.description} onChange={onChange} rows={2} placeholder="Brief description..." className="form-input" style={{...inp(),resize:'vertical'}}/></Field></div>
       <div style={{gridColumn:'1/-1'}}>
         <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:10}}>
           <span style={{fontWeight:700,fontSize:13}}>Location & Field Jurisdiction</span>
@@ -626,7 +638,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   );
   const step2=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Owner / Contact Person Name" required error={errors.name}><input type="text" name="name" value={formData.name} onChange={onChange} placeholder="Full legal name" className="form-input" style={inp(!!errors.name)}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Owner / Contact Person Name" required error={errors.name}><input type="text" name="name" maxLength={50} value={formData.name} onChange={handleNameChange} placeholder="Full legal name" className="form-input" style={inp(!!errors.name)}/></Field></div>
       <Field label="Alternate Phone (Optional)" error={errors.alternatePhone}><input type="tel" name="alternatePhone" value={formData.alternatePhone||''} maxLength={10} onChange={e=>upd('alternatePhone',e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="Alternate number" className="form-input" style={inp(!!errors.alternatePhone)}/></Field>
       <Field label="Agent Name (Optional)"><input type="text" name="agentName" value={formData.agentName||''} onChange={onChange} placeholder="Agent name" className="form-input" style={inp()}/></Field>
       <div style={{gridColumn:'1/-1'}}><Field label="Co-partner Name (Optional)"><input type="text" name="coPartnerName" value={formData.coPartnerName||''} onChange={onChange} placeholder="Co-partner name" className="form-input" style={inp()}/></Field></div>
