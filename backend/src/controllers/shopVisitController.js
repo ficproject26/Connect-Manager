@@ -84,6 +84,64 @@ function resolveVisitOnboarding(visit, vendors = [], onboardings = []) {
   };
 }
 
+// Helper: Strict territory jurisdiction enforcement by role
+function isVisitInUserJurisdiction(v, user) {
+  if (!v || !user) return false;
+  const role = (user.role || '').toLowerCase();
+  const isAdmin = ['admin', 'super_admin', 'super-admin'].some(r => role.includes(r)) || user.email === 'admin@example.com';
+  if (isAdmin) return true;
+
+  const isOwner = String(v.recordedById || v.managerId) === String(user.id || user._id);
+
+  if (role.includes('pincode')) {
+    // Pincode Manager / Admin: strictly restricted to their assigned pincode territory or own visits
+    if (isOwner) return true;
+    const userPinId = user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId;
+    const userPinCode = user.pincode || user.pincodeCode || user.scope?.pincodeCode;
+    const visitPinId = v.pincodeId;
+    const visitPinCode = v.pincode || v.pincodeCode;
+
+    if (userPinId && visitPinId && String(userPinId) === String(visitPinId)) return true;
+    if (userPinCode && visitPinCode && String(userPinCode) === String(visitPinCode)) return true;
+    return false;
+  }
+
+  if (role.includes('division')) {
+    if (isOwner) return true;
+    const userDivId = user.divisionId || user.assignedDivisionId || user.scope?.divisionId;
+    const visitDivId = v.divisionId;
+    if (userDivId && visitDivId && String(userDivId) === String(visitDivId)) return true;
+    const userDiv = (user.division || user.divisionName || '').toLowerCase().trim();
+    const visitDiv = (v.division || '').toLowerCase().trim();
+    if (userDiv && visitDiv && userDiv === visitDiv) return true;
+    return false;
+  }
+
+  if (role.includes('district')) {
+    if (isOwner) return true;
+    const userDistId = user.districtId || user.assignedDistrictId || user.scope?.districtId;
+    const visitDistId = v.districtId;
+    if (userDistId && visitDistId && String(userDistId) === String(visitDistId)) return true;
+    const userDist = (user.district || user.districtName || '').toLowerCase().trim();
+    const visitDist = (v.district || '').toLowerCase().trim();
+    if (userDist && visitDist && userDist === visitDist) return true;
+    return false;
+  }
+
+  if (role.includes('state')) {
+    if (isOwner) return true;
+    const userStateId = user.stateId || user.assignedStateId || user.scope?.stateId;
+    const visitStateId = v.stateId;
+    if (userStateId && visitStateId && String(userStateId) === String(visitStateId)) return true;
+    const userState = (user.state || user.stateName || '').toLowerCase().trim();
+    const visitState = (v.state || '').toLowerCase().trim();
+    if (userState && visitState && userState === visitState) return true;
+    return false;
+  }
+
+  return isOwner;
+}
+
 // GET /api/shop-visits - Get scoped list of shop visits with pagination, onboarding status & eligibility filtering
 const getShopVisits = async (req, res) => {
   try {
@@ -102,12 +160,9 @@ const getShopVisits = async (req, res) => {
 
     const enrichedVisits = allVisits.map(v => resolveVisitOnboarding(v, allVendors, allOnboardings));
 
-    // Compute scoped KPI totals across all recorded visits for current manager
+    // Compute scoped KPI totals strictly within user's assigned jurisdiction
     const scopedForKpi = enrichedVisits.filter(v => {
-      if (user.role === 'state_manager' && user.stateId && v.stateId && v.stateId !== user.stateId) return false;
-      if (user.role === 'district_manager' && user.districtId && v.districtId && v.districtId !== user.districtId) return false;
-      if (user.role === 'division_manager' && user.divisionId && v.divisionId && v.divisionId !== user.divisionId) return false;
-      if (user.role === 'pincode_manager' && user.pincodeId && v.pincodeId && v.pincodeId !== user.pincodeId) return false;
+      if (!isVisitInUserJurisdiction(v, user)) return false;
       if (scope === 'self' && String(v.recordedById || v.managerId) !== String(user.id || user._id)) return false;
       return true;
     });
@@ -121,11 +176,8 @@ const getShopVisits = async (req, res) => {
     };
 
     let filtered = enrichedVisits.filter(v => {
-      // Jurisdiction scope
-      if (user.role === 'state_manager' && user.stateId && v.stateId && v.stateId !== user.stateId) return false;
-      if (user.role === 'district_manager' && user.districtId && v.districtId && v.districtId !== user.districtId) return false;
-      if (user.role === 'division_manager' && user.divisionId && v.divisionId && v.divisionId !== user.divisionId) return false;
-      if (user.role === 'pincode_manager' && user.pincodeId && v.pincodeId && v.pincodeId !== user.pincodeId) return false;
+      // Strict role-based jurisdiction scope enforcement
+      if (!isVisitInUserJurisdiction(v, user)) return false;
 
       // Scope filtering
       if (scope === 'self') {

@@ -144,12 +144,23 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     return () => clearTimeout(timer);
   }, [searchVisit]);
 
+  // Sync viewScope when isPincodeManager is resolved
+  useEffect(() => {
+    if (isPincodeManager && viewScope !== 'self') {
+      setViewScope('self');
+    }
+  }, [isPincodeManager, viewScope]);
+
   // Load Shop Visits (Pending Onboarding Eligibility Filtered)
   const loadVisits = useCallback(async (page = 1) => {
     setLoadingVisits(true);
     try {
       const params = { page, limit: 15, pendingOnboardingOnly: true };
-      if (viewScope !== 'all') params.scope = viewScope;
+      if (isPincodeManager) {
+        params.scope = 'self';
+      } else if (viewScope !== 'all') {
+        params.scope = viewScope;
+      }
       if (debouncedSearchVisit && debouncedSearchVisit.trim()) params.search = debouncedSearchVisit.trim();
       if (statusFilter && statusFilter !== 'All') params.status = statusFilter;
       if (categoryFilter && categoryFilter !== 'All') params.category = categoryFilter;
@@ -168,7 +179,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     } finally {
       setLoadingVisits(false);
     }
-  }, [viewScope, debouncedSearchVisit, statusFilter, categoryFilter]);
+  }, [isPincodeManager, viewScope, debouncedSearchVisit, statusFilter, categoryFilter]);
 
   // Load Submitted Reports - Lazy loaded on tab activation
   const loadSubmittedReports = useCallback(async () => {
@@ -218,6 +229,21 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   // 4. The shop has not completed onboarding successfully.
   const isEligibleRecord = useCallback((v) => {
     if (!v) return false;
+
+    // Strict Pincode Manager Scope Guard: Never show district or state manager works
+    if (isPincodeManager) {
+      const isOwner = String(v.recordedById || v.managerId) === String(user?.id || user?._id);
+      const userPinId = user?.pincodeId || user?.scope?.pincodeId;
+      const userPinCode = user?.pincode || user?.pincodeCode || user?.scope?.pincodeCode;
+      const visitPinId = v.pincodeId;
+      const visitPinCode = v.pincode || v.pincodeCode;
+
+      const matchesPin = (userPinId && visitPinId && String(userPinId) === String(visitPinId)) ||
+        (userPinCode && visitPinCode && String(userPinCode) === String(visitPinCode));
+
+      if (!isOwner && !matchesPin) return false;
+    }
+
     // Prefer authoritative backend eligibility calculation
     if (typeof v.isEligibleForResume === 'boolean') {
       return v.isEligibleForResume;
@@ -231,7 +257,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
       (v.vendorId && (v.status === 'Approved' || v.status === 'Active'));
 
     return !isCompleted;
-  }, []);
+  }, [isPincodeManager, user]);
 
   const safeVisits = Array.isArray(visits) ? visits : [];
   const eligibleVisits = useMemo(() => {

@@ -123,5 +123,19 @@
     "theme": "light",
     "updatedAt": "2026-10-12T09:24:53.342Z",
     "userId": "7483036c-eea5-40b6-b325-82c06c116ab9"
+  },
+  {
+    "_id": "2dc62c43-f6d1-4782-9643-e68ac6bb9a5f",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-12T09:51:38.141Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "2dc62c43-f6d1-4782-9643-e68ac6bb9a5f",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-12T09:51:38.141Z",
+    "userId": "7f5d1cae-67b6-44a0-bab2-d2870ed2bfa1"
   }
 ]

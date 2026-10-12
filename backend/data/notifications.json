@@ -2001,12 +2001,12 @@
     "_id": "372ef618-3c68-4ae1-8499-eadecacd483d",
     "createdAt": "2026-10-10T07:47:10.871Z",
     "id": "372ef618-3c68-4ae1-8499-eadecacd483d",
-    "isRead": false,
+    "isRead": true,
     "message": "Javeed logged field visit for jhgvbn (Interested).",
     "recordId": "2e2503c1-41b0-48ee-9a41-1ea53dd75b3d",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-10T07:47:10.871Z",
+    "updatedAt": "2026-10-12T09:43:58.288Z",
     "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9"
   },
   {
@@ -2183,12 +2183,12 @@
     "_id": "13d9b758-d3a0-4954-a996-0f9e66af15d9",
     "createdAt": "2026-10-12T05:24:59.134Z",
     "id": "13d9b758-d3a0-4954-a996-0f9e66af15d9",
-    "isRead": false,
+    "isRead": true,
     "message": "Javeed logged field visit for Abdul (Interested).",
     "recordId": "c94fefcc-b407-4f02-af05-dfb6b3569c97",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-12T05:24:59.134Z",
+    "updatedAt": "2026-10-12T09:43:59.450Z",
     "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9"
   },
   {
@@ -2381,6 +2381,18 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-12T09:32:51.904Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "e11ec33f-eb4d-45bd-bed0-55d2c51a33a6",
+    "createdAt": "2026-10-12T09:35:59.687Z",
+    "id": "e11ec33f-eb4d-45bd-bed0-55d2c51a33a6",
+    "isRead": false,
+    "message": "Muruga logged field visit for Store6 (Interested).",
+    "recordId": "f2b60427-3ffb-40ac-8b62-140fa49fed49",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T09:35:59.687Z",
     "userId": "usr_mgr_1790666281762_1jqk"
   }
 ]
