@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { shopVisitService, reportService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
