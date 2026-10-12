@@ -642,7 +642,9 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                           <div>Due: {t.dueDate || '22 Sep 2026'}</div>
                           {t.completionDetails && (
                             <div style={{ color: '#059669', fontWeight: 600, marginTop: 2 }}>
-                              {t.completionDetails}
+                              {typeof t.completionDetails === 'string'
+                                ? t.completionDetails
+                                : (t.completionDetails?.workCompleted || t.completionDetails?.resolutionDetails || t.completionDetails?.remarks || 'Completed')}
                             </div>
                           )}
                         </div>

@@ -103,7 +103,12 @@ const AuditLogs = ({ onNavigate }) => {
                 return (
                   <tr key={log._id}>
                     <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      {new Date(log.timestamp).toLocaleString()}
+                      {(() => {
+                        const raw = log.timestamp || log.createdAt || log.updatedAt;
+                        if (!raw) return '—';
+                        const d = new Date(raw);
+                        return isNaN(d.getTime()) ? '—' : d.toLocaleString();
+                      })()}
                     </td>
                     <td>
                       <span style={{
