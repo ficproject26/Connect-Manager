@@ -1511,5 +1511,45 @@
     "totalOrders": 0,
     "totalRevenue": 0,
     "approvalStatus": "Approved"
+  },
+  {
+    "_id": "8bc29c6c-66df-4e7e-b263-ffda4cf9e37e",
+    "accountHolderName": "Deepan",
+    "accountNumber": "987654345678987",
+    "bankName": "HDFC bank",
+    "businessName": "store5",
+    "category": "Products",
+    "createdAt": "2026-10-12T09:32:29.759Z",
+    "createdBy": "usr_mgr_1790666281762_1jqk",
+    "description": "",
+    "districtId": "6ab9f3e9bec0ef28c6e81405",
+    "divisionId": "6aba302aaf9e0372e50b72b8",
+    "documents": [
+      {
+        "url": "/uploads/1791797406176_f6f5f25b1c66c1407efac1e26eea185d.png",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      },
+      {
+        "name": "logo.png",
+        "filename": "1791797483520_cebcceceaa8d75b65239bde40de355e6.png",
+        "url": "/uploads/1791797483520_cebcceceaa8d75b65239bde40de355e6.png",
+        "size": 43463,
+        "type": "image/png"
+      }
+    ],
+    "email": "store5@gmail.com",
+    "gstNumber": "",
+    "id": "8bc29c6c-66df-4e7e-b263-ffda4cf9e37e",
+    "ifsc": "HDFC0055648",
+    "mobile": "9999999966",
+    "name": "Deepan",
+    "panNumber": "ABCDE1238M",
+    "pincodeId": "6aba6ffb16711d5e7d54bb5d",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-12T09:32:29.759Z"
   }
 ]

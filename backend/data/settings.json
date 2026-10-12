@@ -37,7 +37,7 @@
     "statusChangeAlerts": true,
     "territoryAlertRadiusKm": 15,
     "theme": "light",
-    "updatedAt": "2026-10-10T12:14:45.868Z",
+    "updatedAt": "2026-10-12T07:14:44.706Z",
     "userId": "usr_mgr_1790592319962_fx3y"
   },
   {
@@ -95,5 +95,33 @@
     "theme": "light",
     "updatedAt": "2026-10-10T07:32:56.574Z",
     "userId": "user_state_ka"
+  },
+  {
+    "_id": "468e3d17-3604-4abd-a684-b8ea50aff8b2",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-12T06:49:38.273Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "468e3d17-3604-4abd-a684-b8ea50aff8b2",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-12T06:49:38.273Z",
+    "userId": "5e06593f-839c-4955-9e97-f811719e901e"
+  },
+  {
+    "_id": "ea943eb8-17f9-4d5b-9e4c-5bce464edc8e",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-12T09:24:53.342Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "ea943eb8-17f9-4d5b-9e4c-5bce464edc8e",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-12T09:24:53.342Z",
+    "userId": "7483036c-eea5-40b6-b325-82c06c116ab9"
   }
 ]

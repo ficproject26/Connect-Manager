@@ -512,6 +512,13 @@
         "byRole": "Pincode Admin",
         "at": "2026-10-01T11:08:59.634Z",
         "notes": "Assigned to Muruga. Priority: Medium."
+      },
+      {
+        "action": "Task Accepted",
+        "by": "Muruga",
+        "byRole": "pincode_manager",
+        "at": "2026-10-12T09:22:57.570Z",
+        "notes": "Status changed to Accepted"
       }
     ],
     "assignedManagerId": "usr_mgr_1790666281762_1jqk",
@@ -529,17 +536,36 @@
     "dueDate": "2026-10-08",
     "id": "TSK-1790852939634-UGW1O",
     "location": "",
-    "needsAcceptance": true,
+    "needsAcceptance": false,
     "pincode": "636112",
     "priority": "Medium",
     "qcIssueId": null,
     "remarks": "bjnkml,",
     "state": "Tamil Nadu",
-    "status": "Pending Acceptance",
+    "status": "Accepted",
     "suspendRequest": null,
     "taskNumber": "QCT-52939634",
     "title": "onboaring",
-    "updatedAt": "2026-10-01T11:08:59.634Z"
+    "updatedAt": "2026-10-12T09:22:57.570Z",
+    "acceptedAt": "2026-10-12T09:22:57.570Z",
+    "acceptedBy": "Muruga",
+    "acceptedById": "usr_mgr_1790666281762_1jqk",
+    "assignmentStatus": "ACCEPTED",
+    "executionStatus": "NOT_STARTED",
+    "history": [
+      {
+        "action": "Task Accepted",
+        "status": "Accepted",
+        "actor": "Muruga",
+        "actorId": "usr_mgr_1790666281762_1jqk",
+        "actorRole": "pincode_manager",
+        "timestamp": "2026-10-12T09:22:57.570Z",
+        "remarks": "",
+        "photo": null,
+        "audio": null
+      }
+    ],
+    "lastUpdate": "2026-10-12T09:22:57.570Z"
   },
   {
     "_id": "TSK-1790854027219-VOSMW",

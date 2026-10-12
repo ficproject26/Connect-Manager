@@ -2,27 +2,158 @@ const db = require('../config/db');
 const { getScopeFilter } = require('../middleware/scopeMiddleware');
 const { broadcastNotification } = require('../routes/notificationRoutes');
 
-// GET /api/shop-visits - Get scoped list of shop visits with pagination & search
+// Helper: Resolve precise onboarding status and resume eligibility for a shop visit
+function resolveVisitOnboarding(visit, vendors = [], onboardings = []) {
+  const vId = String(visit._id || visit.id || '');
+  const rawInterest = String(visit.interestedStatus || visit.interestStatus || '').toUpperCase().trim();
+  const isInterested = rawInterest === 'YES' || rawInterest === 'INTERESTED' || rawInterest === 'MERCHANT_INTERESTED';
+  const isNotInterested = rawInterest === 'NO' || rawInterest === 'NOT_INTERESTED';
+
+  // 1. Direct status flags on visit record
+  const rawStatus = String(visit.onboardingStatus || visit.status || '').toLowerCase().trim();
+  const directCompleted = ['onboarded', 'completed', 'success', 'approved', 'active'].includes(rawStatus);
+
+  // 2. Associated Vendor Record
+  let linkedVendor = null;
+  if (visit.vendorId) {
+    const targetVendorId = String(visit.vendorId);
+    linkedVendor = vendors.find(vend => String(vend._id || vend.id) === targetVendorId);
+  }
+  if (!linkedVendor && vId) {
+    linkedVendor = vendors.find(vend => vend.fieldVisitId && String(vend.fieldVisitId) === vId);
+  }
+
+  let vendorCompleted = false;
+  let vendorIncomplete = false;
+  if (linkedVendor) {
+    const vStat = String(linkedVendor.status || '').toLowerCase().trim();
+    if (['approved', 'active', 'completed'].includes(vStat) || linkedVendor.isApproved === true || linkedVendor.isActive === true) {
+      vendorCompleted = true;
+    } else if (['pending', 'in_progress', 'draft', 'submitted', 'kyc_pending', 'pending_approval', 'rejected'].includes(vStat)) {
+      vendorIncomplete = true;
+    }
+  }
+
+  // 3. Manager Onboarding Records
+  let linkedOnboarding = null;
+  if (vId) {
+    linkedOnboarding = onboardings.find(o => o.fieldVisitId && String(o.fieldVisitId) === vId);
+  }
+
+  let onboardingRecordCompleted = false;
+  let onboardingRecordIncomplete = false;
+  if (linkedOnboarding) {
+    const oStat = String(linkedOnboarding.status || linkedOnboarding.overallStatus || '').toLowerCase().trim();
+    if (['approved', 'active', 'completed', 'onboarded'].includes(oStat)) {
+      onboardingRecordCompleted = true;
+    } else if (['pending_pincode_approval', 'kyc_pending', 'vendor_onboarding_in_progress', 'pincode_approved', 'pincode_rejected'].includes(oStat)) {
+      onboardingRecordIncomplete = true;
+    }
+  }
+
+  const isOnboardingCompleted = directCompleted || vendorCompleted || onboardingRecordCompleted;
+  const isOnboardingIncomplete = !isOnboardingCompleted && (vendorIncomplete || onboardingRecordIncomplete || ['incomplete', 'in_progress', 'pending_approval'].includes(rawStatus));
+
+  let onboardingStatus = 'UNKNOWN';
+  if (!isInterested && isNotInterested) {
+    onboardingStatus = 'NOT_INTERESTED';
+  } else if (!isInterested) {
+    onboardingStatus = 'UNKNOWN';
+  } else if (isOnboardingCompleted) {
+    onboardingStatus = 'COMPLETED';
+  } else if (isOnboardingIncomplete) {
+    onboardingStatus = 'INCOMPLETE';
+  } else {
+    onboardingStatus = 'PENDING';
+  }
+
+  // Eligible only when:
+  // - Manager has visited the shop and generated a report (visit exists)
+  // - The recorded interest status is Interested
+  // - The shop's onboarding process is still pending or incomplete
+  // - The shop has not completed onboarding successfully
+  const isEligibleForResume = isInterested && !isOnboardingCompleted && (onboardingStatus === 'PENDING' || onboardingStatus === 'INCOMPLETE');
+
+  return {
+    ...visit,
+    vendorId: linkedVendor ? String(linkedVendor._id || linkedVendor.id) : (visit.vendorId || null),
+    onboardingStatus,
+    isOnboardingCompleted,
+    isOnboardingIncomplete,
+    isEligibleForResume
+  };
+}
+
+// GET /api/shop-visits - Get scoped list of shop visits with pagination, onboarding status & eligibility filtering
 const getShopVisits = async (req, res) => {
   try {
     const user = req.user;
-    const { page = 1, limit = 15, search, status, category, scope } = req.query;
+    const { page = 1, limit = 15, search, status, category, scope, pendingOnboardingOnly, eligibleOnly } = req.query;
 
     const pageNum = parseInt(page, 10) || 1;
     const limitNum = parseInt(limit, 10) || 15;
 
-    const allVisits = await db.shopVisits.find();
+    // Parallel retrieval with optimized index lookups
+    const [allVisits, allVendors, allOnboardings] = await Promise.all([
+      db.shopVisits.find(),
+      db.vendors.find(),
+      db.managerOnboardings.find()
+    ]);
 
-    let filtered = allVisits.filter(v => {
+    const enrichedVisits = allVisits.map(v => resolveVisitOnboarding(v, allVendors, allOnboardings));
+
+    // Compute scoped KPI totals across all recorded visits for current manager
+    const scopedForKpi = enrichedVisits.filter(v => {
+      if (user.role === 'state_manager' && user.stateId && v.stateId && v.stateId !== user.stateId) return false;
+      if (user.role === 'district_manager' && user.districtId && v.districtId && v.districtId !== user.districtId) return false;
+      if (user.role === 'division_manager' && user.divisionId && v.divisionId && v.divisionId !== user.divisionId) return false;
+      if (user.role === 'pincode_manager' && user.pincodeId && v.pincodeId && v.pincodeId !== user.pincodeId) return false;
+      if (scope === 'self' && String(v.recordedById || v.managerId) !== String(user.id || user._id)) return false;
+      return true;
+    });
+
+    const kpi = {
+      total: scopedForKpi.length,
+      interested: scopedForKpi.filter(v => v.interestedStatus === 'YES' || v.interestStatus === 'YES').length,
+      notInterested: scopedForKpi.filter(v => v.interestedStatus === 'NO' || v.interestStatus === 'NO').length,
+      pendingOnboarding: scopedForKpi.filter(v => v.isEligibleForResume).length,
+      completedOnboarding: scopedForKpi.filter(v => v.isOnboardingCompleted).length
+    };
+
+    let filtered = enrichedVisits.filter(v => {
       // Jurisdiction scope
       if (user.role === 'state_manager' && user.stateId && v.stateId && v.stateId !== user.stateId) return false;
       if (user.role === 'district_manager' && user.districtId && v.districtId && v.districtId !== user.districtId) return false;
       if (user.role === 'division_manager' && user.divisionId && v.divisionId && v.divisionId !== user.divisionId) return false;
       if (user.role === 'pincode_manager' && user.pincodeId && v.pincodeId && v.pincodeId !== user.pincodeId) return false;
 
+      // Scope filtering
+      if (scope === 'self') {
+        if (String(v.recordedById || v.managerId) !== String(user.id || user._id)) return false;
+      } else if (scope === 'state_managers') {
+        if (v.managerRole !== 'state_manager') return false;
+      } else if (scope === 'district_managers') {
+        if (v.managerRole !== 'district_manager') return false;
+      } else if (scope === 'division_managers') {
+        if (v.managerRole !== 'division_manager') return false;
+      } else if (scope === 'pincode_managers') {
+        if (v.managerRole !== 'pincode_manager' && v.managerRole !== 'Pincode Admin') return false;
+      }
+
+      // Pending Onboarding Eligibility Filter:
+      // When pendingOnboardingOnly or eligibleOnly is true, return ONLY records satisfying ALL conditions:
+      // 1. Visit recorded
+      // 2. Interest status is Interested
+      // 3. Onboarding is pending or incomplete
+      // 4. Onboarding has not completed successfully
+      if (pendingOnboardingOnly === 'true' || eligibleOnly === 'true') {
+        if (!v.isEligibleForResume) return false;
+      }
+
       // Status filter ('YES', 'NO', 'Converted')
       if (status && status !== 'All') {
-        if (v.interestedStatus !== status && v.status !== status) return false;
+        if (status === 'YES' && (!v.interestedStatus || v.interestedStatus !== 'YES') && (!v.interestStatus || v.interestStatus !== 'YES')) return false;
+        if (status === 'NO' && v.interestedStatus !== 'NO' && v.interestStatus !== 'NO') return false;
       }
 
       // Category filter
@@ -34,7 +165,8 @@ const getShopVisits = async (req, res) => {
         const matchName = (v.shopName || '').toLowerCase().includes(q);
         const matchReason = (v.notInterestedReason || '').toLowerCase().includes(q);
         const matchCat = (v.category || '').toLowerCase().includes(q);
-        if (!matchName && !matchReason && !matchCat) return false;
+        const matchMgr = (v.managerName || '').toLowerCase().includes(q);
+        if (!matchName && !matchReason && !matchCat && !matchMgr) return false;
       }
 
       return true;
@@ -51,6 +183,7 @@ const getShopVisits = async (req, res) => {
       total,
       data: paginated,
       visits: paginated,
+      kpi,
       pagination: {
         page: pageNum,
         limit: limitNum,
@@ -61,6 +194,67 @@ const getShopVisits = async (req, res) => {
   } catch (err) {
     console.error('Error fetching shop visits:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve shop visits from database' });
+  }
+};
+
+// GET /api/shop-visits/:id/eligibility - Revalidate onboarding eligibility before allowing resume action
+const revalidateEligibility = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [visit, allVendors, allOnboardings] = await Promise.all([
+      db.shopVisits.findById(id),
+      db.vendors.find(),
+      db.managerOnboardings.find()
+    ]);
+
+    if (!visit) {
+      return res.status(404).json({
+        success: false,
+        eligible: false,
+        message: 'Shop visit record not found'
+      });
+    }
+
+    const resolved = resolveVisitOnboarding(visit, allVendors, allOnboardings);
+
+    return res.json({
+      success: true,
+      eligible: resolved.isEligibleForResume,
+      onboardingStatus: resolved.onboardingStatus,
+      isOnboardingCompleted: resolved.isOnboardingCompleted,
+      isInterested: resolved.interestedStatus === 'YES' || resolved.interestStatus === 'YES',
+      vendorId: resolved.vendorId,
+      message: resolved.isEligibleForResume
+        ? 'Shop visit is eligible for onboarding resumption.'
+        : (resolved.isOnboardingCompleted
+            ? 'Onboarding has already been completed successfully for this shop.'
+            : 'Shop visit is not eligible for onboarding resumption.')
+    });
+  } catch (err) {
+    console.error('Error revalidating eligibility:', err);
+    res.status(500).json({ success: false, message: 'Failed to revalidate eligibility' });
+  }
+};
+
+// GET /api/shop-visits/:id - Get single shop visit with enriched onboarding status
+const getShopVisitById = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const [visit, allVendors, allOnboardings] = await Promise.all([
+      db.shopVisits.findById(id),
+      db.vendors.find(),
+      db.managerOnboardings.find()
+    ]);
+
+    if (!visit) {
+      return res.status(404).json({ success: false, message: 'Shop visit record not found' });
+    }
+
+    const resolved = resolveVisitOnboarding(visit, allVendors, allOnboardings);
+    res.json({ success: true, data: resolved });
+  } catch (err) {
+    console.error('Error fetching shop visit:', err);
+    res.status(500).json({ success: false, message: 'Failed to retrieve shop visit' });
   }
 };
 
@@ -240,7 +434,8 @@ const updateShopVisit = async (req, res) => {
     const allowedFields = [
       'category', 'businessCategory', 'shopPhoto', 'storefrontPhoto',
       'voiceNote', 'audioVoiceNote', 'interestedStatus', 'interestStatus',
-      'notInterestedReason', 'otherReason', 'customReason'
+      'notInterestedReason', 'otherReason', 'customReason',
+      'vendorId', 'status', 'onboardingStatus', 'onboardingStage'
     ];
 
     const safeUpdate = {};
@@ -263,5 +458,7 @@ const updateShopVisit = async (req, res) => {
 module.exports = {
   getShopVisits,
   createShopVisit,
-  updateShopVisit
+  updateShopVisit,
+  revalidateEligibility,
+  getShopVisitById
 };

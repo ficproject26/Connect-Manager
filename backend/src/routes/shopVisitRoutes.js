@@ -13,6 +13,12 @@ router.get('/', shopVisitController.getShopVisits);
 // POST /api/shop-visits - Create visit
 router.post('/', shopVisitController.createShopVisit);
 
+// GET /api/shop-visits/:id/eligibility - Revalidate onboarding eligibility
+router.get('/:id/eligibility', shopVisitController.revalidateEligibility);
+
+// GET /api/shop-visits/:id - Get single visit details
+router.get('/:id', shopVisitController.getShopVisitById);
+
 // PUT /api/shop-visits/:id - Update visit
 router.put('/:id', shopVisitController.updateShopVisit);
 

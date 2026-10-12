@@ -53,7 +53,12 @@ class Collection {
     this._mongoDb = null;
     this._isReady = false;
     this.cache = [];
+    this._queryCache = {};
     this._load();
+  }
+
+  _invalidateQueryCache() {
+    this._queryCache = {};
   }
 
   _load() {
@@ -67,10 +72,12 @@ class Collection {
     } catch (err) {
       this.cache = [];
     }
+    this._invalidateQueryCache();
   }
 
   _write(data) {
     this.cache = data;
+    this._invalidateQueryCache();
     try {
       fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
     } catch (e) {}
@@ -92,6 +99,7 @@ class Collection {
         console.log(`[Manager MongoDB] Connected to '${this.mongoName}' (0 records) in MongoDB Atlas.`);
       }
       this._isReady = true;
+      this._invalidateQueryCache();
     } catch (err) {
       console.warn(`[Manager MongoDB] Sync warning for '${this.name}':`, err.message);
     }
@@ -99,6 +107,14 @@ class Collection {
 
   async find(query = {}) {
     const cleanQuery = sanitizeQuery(query);
+    const now = Date.now();
+    const cacheKey = JSON.stringify(cleanQuery);
+
+    // Serve from micro-cache (< 3.5 seconds) to avoid redundant public internet hops
+    if (this._queryCache && this._queryCache[cacheKey] && (now - this._queryCache[cacheKey].time < 3500)) {
+      return this._queryCache[cacheKey].data;
+    }
+
     if (this._mongoCol) {
       try {
         const findOptions = (this.mongoName === 'users' || this.mongoName === 'agents') 
@@ -106,18 +122,30 @@ class Collection {
           : { maxTimeMS: 4000 };
         const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
         if (docs && docs.length > 0) {
+          if (!this._queryCache) this._queryCache = {};
+          this._queryCache[cacheKey] = { time: now, data: docs };
           return docs;
         }
         // Fallback for users: if querying role manager and nothing found, check managers collection
         if (this.name === 'users' && this._mongoDb) {
           const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, projection).toArray();
-          if (mgrDocs && mgrDocs.length > 0) return mgrDocs;
+          if (mgrDocs && mgrDocs.length > 0) {
+            if (!this._queryCache) this._queryCache = {};
+            this._queryCache[cacheKey] = { time: now, data: mgrDocs };
+            return mgrDocs;
+          }
         }
         // If Mongo returned 0 records but local cache has records, check local cache fallback
         if (this.cache && this.cache.length > 0) {
           const cacheMatches = this._filterCache(cleanQuery);
-          if (cacheMatches.length > 0) return cacheMatches;
+          if (cacheMatches.length > 0) {
+            if (!this._queryCache) this._queryCache = {};
+            this._queryCache[cacheKey] = { time: now, data: cacheMatches };
+            return cacheMatches;
+          }
         }
+        if (!this._queryCache) this._queryCache = {};
+        this._queryCache[cacheKey] = { time: now, data: docs || [] };
         return docs || [];
       } catch (e) {
         console.warn(`[Manager MongoDB] find error in '${this.name}':`, e.message);
@@ -125,7 +153,10 @@ class Collection {
     }
 
     // Fallback to cache if MongoDB is unreachable
-    return this._filterCache(cleanQuery);
+    const fallbackDocs = this._filterCache(cleanQuery);
+    if (!this._queryCache) this._queryCache = {};
+    this._queryCache[cacheKey] = { time: now, data: fallbackDocs };
+    return fallbackDocs;
   }
 
   _matchField(item, key, val) {

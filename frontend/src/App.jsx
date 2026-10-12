@@ -365,7 +365,12 @@ function AppInner() {
                         const createdVendorId = res.data?._id || res.data?.id;
                         if (pendingFieldVisitId && createdVendorId) {
                           try {
-                            await shopVisitService.updateShopVisit(pendingFieldVisitId, { vendorId: createdVendorId });
+                            const isApproved = res.data?.status === 'Approved' || res.data?.status === 'Active';
+                            await shopVisitService.updateShopVisit(pendingFieldVisitId, {
+                              vendorId: createdVendorId,
+                              onboardingStatus: isApproved ? 'COMPLETED' : 'INCOMPLETE',
+                              status: isApproved ? 'Onboarded' : 'Onboarding In Progress'
+                            });
                           } catch (e) {
                             console.warn('Failed to link shop visit with vendor:', e);
                           }

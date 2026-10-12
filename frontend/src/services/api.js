@@ -826,6 +826,20 @@ export const shopVisitService = {
       body: JSON.stringify(updateData)
     });
     return handleResponse(res);
+  },
+
+  async getShopVisitById(id) {
+    const res = await fetch(`${API_BASE}/shop-visits/${id}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async checkEligibility(id) {
+    const res = await fetch(`${API_BASE}/shop-visits/${id}/eligibility`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
   }
 };
 

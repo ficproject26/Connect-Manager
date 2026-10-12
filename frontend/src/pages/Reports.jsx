@@ -133,31 +133,44 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   const [filterRole, setFilterRole] = useState('All');
   const [searchReport, setSearchReport] = useState('');
   const [hierarchyOptions, setHierarchyOptions] = useState({ districts: [], divisions: [], pincodes: [] });
+  const [kpiStats, setKpiStats] = useState({ total: 0, interested: 0, notInterested: 0 });
 
-  // Load Shop Visits
+  // Debounce visit search input to eliminate spammy keystroke requests
+  const [debouncedSearchVisit, setDebouncedSearchVisit] = useState(searchVisit);
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearchVisit(searchVisit);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchVisit]);
+
+  // Load Shop Visits (Pending Onboarding Eligibility Filtered)
   const loadVisits = useCallback(async (page = 1) => {
     setLoadingVisits(true);
     try {
-      const params = { page, limit: 15 };
+      const params = { page, limit: 15, pendingOnboardingOnly: true };
       if (viewScope !== 'all') params.scope = viewScope;
-      if (searchVisit && searchVisit.trim()) params.search = searchVisit.trim();
+      if (debouncedSearchVisit && debouncedSearchVisit.trim()) params.search = debouncedSearchVisit.trim();
       if (statusFilter && statusFilter !== 'All') params.status = statusFilter;
       if (categoryFilter && categoryFilter !== 'All') params.category = categoryFilter;
 
       const res = await shopVisitService.getShopVisits(params);
       if (res && res.success) {
-        const visitList = Array.isArray(res.data) ? res.data : [];
+        const visitList = Array.isArray(res.data) ? res.data : (Array.isArray(res.visits) ? res.visits : []);
         setVisits(visitList);
         setPagination(res.pagination || { page: 1, limit: 15, total: visitList.length, totalPages: 1 });
+        if (res.kpi) {
+          setKpiStats(res.kpi);
+        }
       }
     } catch (err) {
       console.error('Failed to load shop visits:', err);
     } finally {
       setLoadingVisits(false);
     }
-  }, [viewScope, searchVisit, statusFilter, categoryFilter]);
+  }, [viewScope, debouncedSearchVisit, statusFilter, categoryFilter]);
 
-  // Load Submitted Reports
+  // Load Submitted Reports - Lazy loaded on tab activation
   const loadSubmittedReports = useCallback(async () => {
     setLoadingSubmitted(true);
     try {
@@ -190,15 +203,90 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     loadVisits(1);
   }, [loadVisits]);
 
+  // Performance: Lazy load team reports only when team_reports tab is selected
   useEffect(() => {
-    loadSubmittedReports();
-  }, [loadSubmittedReports]);
+    if (activeTab === 'team_reports') {
+      loadSubmittedReports();
+    }
+  }, [activeTab, loadSubmittedReports]);
+
+  // Eligibility Evaluation Rule:
+  // Must satisfy ALL conditions:
+  // 1. Manager has visited the shop and generated a report.
+  // 2. The recorded interest status is Interested.
+  // 3. The shop's onboarding process is still pending or incomplete.
+  // 4. The shop has not completed onboarding successfully.
+  const isEligibleRecord = useCallback((v) => {
+    if (!v) return false;
+    // Prefer authoritative backend eligibility calculation
+    if (typeof v.isEligibleForResume === 'boolean') {
+      return v.isEligibleForResume;
+    }
+    const isInterested = (v.interestedStatus === 'YES' || v.interestStatus === 'YES');
+    if (!isInterested) return false;
+
+    const rawStatus = String(v.onboardingStatus || v.status || '').toLowerCase().trim();
+    const isCompleted = v.isOnboardingCompleted === true ||
+      ['onboarded', 'completed', 'success', 'approved', 'active'].includes(rawStatus) ||
+      (v.vendorId && (v.status === 'Approved' || v.status === 'Active'));
+
+    return !isCompleted;
+  }, []);
+
+  const safeVisits = Array.isArray(visits) ? visits : [];
+  const eligibleVisits = useMemo(() => {
+    return safeVisits.filter(isEligibleRecord);
+  }, [safeVisits, isEligibleRecord]);
+
+  // Resume Onboarding Action with Live Backend Revalidation
+  const handleResumeOnboarding = async (e, v) => {
+    e.stopPropagation();
+    const visitId = v._id || v.id;
+    if (!visitId) return;
+
+    try {
+      // Revalidate onboarding eligibility against backend before proceeding
+      const check = await shopVisitService.checkEligibility(visitId);
+      if (check && !check.eligible) {
+        alert(check.message || 'This shop has already completed onboarding or is no longer eligible.');
+        // Refresh visits list immediately so completed record cannot reappear due to stale client cache
+        loadVisits(pagination.page || 1);
+        return;
+      }
+    } catch (err) {
+      console.warn('Backend eligibility check fallback:', err);
+      if (!isEligibleRecord(v)) {
+        alert('This shop visit is not eligible for onboarding resumption.');
+        loadVisits(pagination.page || 1);
+        return;
+      }
+    }
+
+    if (onNavigate) {
+      onNavigate('resume-onboarding', {
+        fieldVisitId: visitId,
+        prefillData: {
+          shopName: v.shopName,
+          businessName: v.shopName,
+          category: v.category || 'Products',
+          storefrontPhoto: v.storefrontPhoto || v.shopPhoto || '',
+          mobile: v.mobile || v.phone || '',
+          pincodeCode: v.pincodeCode || v.pincode || '',
+          pincodeId: v.pincodeId || '',
+          districtId: v.districtId || '',
+          stateId: v.stateId || '',
+          address: v.address || v.location || '',
+          fieldVisitId: visitId
+        }
+      });
+    }
+  };
 
   // CSV Export for Visits
   const exportShopVisitsCSV = () => {
-    if (!visits.length) return;
-    const headers = ['Date & Time', 'Shop Name', 'Category', 'Manager Name', 'Manager Level', 'Scope Territory', 'Voice Note URL', 'Interest Status', 'Not Interested Reason'];
-    const rows = visits.map(v => [
+    if (!eligibleVisits.length) return;
+    const headers = ['Date & Time', 'Shop Name', 'Category', 'Manager Name', 'Manager Level', 'Scope Territory', 'Voice Note URL', 'Interest Status', 'Onboarding Status'];
+    const rows = eligibleVisits.map(v => [
       v && v.createdAt ? `"${new Date(v.createdAt).toLocaleString()}"` : '""',
       `"${(v && v.shopName) || ''}"`,
       `"${(v && v.category) || 'Products'}"`,
@@ -206,8 +294,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
       `"${formatRoleLabel(v && v.managerRole)}"`,
       `"${(v && (v.pincodeCode || v.division || v.district || v.state)) || 'Assigned Territory'}"`,
       `"${(v && v.voiceNote) || ''}"`,
-      (v && v.interestedStatus) || '',
-      `"${((v && v.notInterestedReason) || '').replace(/"/g, '""')}"`
+      (v && (v.interestedStatus || v.interestStatus)) || 'YES',
+      `"${(v && v.onboardingStatus) || 'Pending'}"`
     ]);
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const link = document.createElement('a');
@@ -223,10 +311,15 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     window.print();
   };
 
-  const safeVisits = Array.isArray(visits) ? visits : [];
-  const totalVisitCount = pagination && pagination.total !== undefined ? pagination.total : safeVisits.length;
-  const interestedCount = safeVisits.filter(v => v && v.interestedStatus === 'YES').length;
-  const notInterestedCount = safeVisits.filter(v => v && v.interestedStatus === 'NO').length;
+  const totalVisitCount = kpiStats.total !== undefined && kpiStats.total > 0
+    ? kpiStats.total
+    : (pagination && pagination.total !== undefined ? pagination.total : safeVisits.length);
+  const interestedCount = kpiStats.interested !== undefined && kpiStats.total > 0
+    ? kpiStats.interested
+    : safeVisits.filter(v => v && (v.interestedStatus === 'YES' || v.interestStatus === 'YES')).length;
+  const notInterestedCount = kpiStats.notInterested !== undefined && kpiStats.total > 0
+    ? kpiStats.notInterested
+    : safeVisits.filter(v => v && (v.interestedStatus === 'NO' || v.interestStatus === 'NO')).length;
 
   return (
     <div style={{ width: '100%' }}>
@@ -674,19 +767,18 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                         </div>
                       </td>
                     </tr>
-                  ) : visits.length === 0 ? (
+                  ) : eligibleVisits.length === 0 ? (
                     <tr>
                       <td colSpan="4" style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b' }}>
                         <Store size={36} style={{ margin: '0 auto 10px', color: '#cbd5e1' }} />
-                        <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>No Shop Visits Found</div>
+                        <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>No Pending Onboarding Visits Found</div>
                         <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: '4px 0 14px' }}>
-                          No visit records submitted under this view scope.
+                          No eligible interested visits pending onboarding under this view scope.
                         </p>
                       </td>
                     </tr>
                   ) : (
-                    visits.map((v, idx) => {
-                      const isYes = v.interestedStatus === 'YES';
+                    eligibleVisits.map((v, idx) => {
                       const roleLabel = formatRoleLabel(v.managerRole);
                       const badgeStyle = getLevelBadgeStyle(v.managerRole);
                       const catStyle = getCategoryBadgeStyle(v.category || 'Products');
@@ -732,13 +824,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                                 </span>
                               </div>
 
-                              {v.vendorId ? (
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, color: '#059669', fontWeight: 700, background: '#d1fae5', padding: '1px 6px', borderRadius: 4, width: 'fit-content' }}>
-                                  <CheckCircle2 size={11} /> Vendor Account Created
-                                </div>
-                              ) : (
-                                <div style={{ fontSize: 11, color: '#94a3b8' }}>Field Visit Record</div>
-                              )}
+                              <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                                {v.onboardingStatus === 'INCOMPLETE' ? 'Onboarding In Progress' : 'Field Visit Record'}
+                              </div>
                             </div>
                           </td>
 
@@ -773,73 +861,35 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                             </div>
                           </td>
 
-                          {/* Interest Status */}
+                          {/* Interest Status & Resume Onboarding */}
                           <td style={{ padding: '16px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
-                            {isYes ? (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#d1fae5', color: '#047857', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #a7f3d0' }}>
-                                  <CheckCircle2 size={13} /> Interested
-                                </span>
-                                {v.vendorId ? (
-                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: '0.68rem', color: '#059669', fontWeight: 700, background: '#ecfdf5', padding: '1px 6px', borderRadius: 4 }}>
-                                    <CheckCircle2 size={10} /> Onboarded
-                                  </span>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      if (onNavigate) {
-                                        onNavigate('resume-onboarding', {
-                                          fieldVisitId: v._id || v.id,
-                                          prefillData: {
-                                            shopName: v.shopName,
-                                            businessName: v.shopName,
-                                            category: v.category || 'Products',
-                                            storefrontPhoto: v.storefrontPhoto || v.shopPhoto || '',
-                                            mobile: v.mobile || v.phone || '',
-                                            pincodeCode: v.pincodeCode || v.pincode || '',
-                                            pincodeId: v.pincodeId || '',
-                                            districtId: v.districtId || '',
-                                            stateId: v.stateId || '',
-                                            address: v.address || v.location || '',
-                                            fieldVisitId: v._id || v.id
-                                          }
-                                        });
-                                      }
-                                    }}
-                                    style={{
-                                      padding: '3px 8px',
-                                      borderRadius: 6,
-                                      border: '1px solid #f59e0b',
-                                      background: '#fffbeb',
-                                      color: '#b45309',
-                                      fontSize: '0.72rem',
-                                      fontWeight: 700,
-                                      cursor: 'pointer',
-                                      display: 'inline-flex',
-                                      alignItems: 'center',
-                                      gap: 3,
-                                      boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)'
-                                    }}
-                                    title="Resume onboarding for this interested merchant"
-                                  >
-                                    <Sparkles size={11} /> Resume Onboarding
-                                  </button>
-                                )}
-                              </div>
-                            ) : (
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#fee2e2', color: '#b91c1c', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #fecaca' }}>
-                                  <XCircle size={13} /> Not Interested
-                                </span>
-                                {v.notInterestedReason && (
-                                  <span style={{ fontSize: '0.74rem', color: '#64748b', maxWidth: 170, textAlign: 'center' }}>
-                                    {v.notInterestedReason}
-                                  </span>
-                                )}
-                              </div>
-                            )}
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#d1fae5', color: '#047857', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #a7f3d0' }}>
+                                <CheckCircle2 size={13} /> Interested
+                              </span>
+                              <button
+                                type="button"
+                                onClick={(e) => handleResumeOnboarding(e, v)}
+                                style={{
+                                  padding: '4px 10px',
+                                  borderRadius: 6,
+                                  border: '1px solid #f59e0b',
+                                  background: '#fffbeb',
+                                  color: '#b45309',
+                                  fontSize: '0.74rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: 4,
+                                  boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)',
+                                  transition: 'all 0.15s'
+                                }}
+                                title="Resume onboarding for this interested merchant"
+                              >
+                                <Sparkles size={11} /> Resume Onboarding
+                              </button>
+                            </div>
                           </td>
                         </tr>
                       );

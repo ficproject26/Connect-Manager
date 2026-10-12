@@ -320,6 +320,8 @@ const createVendor = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Business address must not exceed 250 characters.' });
     }
 
+    const fieldVisitId = req.body.fieldVisitId || null;
+
     const newVendor = await db.vendors.insertOne({
       name,
       mobile,
@@ -332,6 +334,7 @@ const createVendor = async (req, res) => {
       districtId,
       divisionId,
       pincodeId,
+      fieldVisitId,
       panNumber: panNumber ? panNumber.toUpperCase() : '',
       gstNumber: gstNumber ? gstNumber.toUpperCase() : '',
       documents: Array.isArray(documents) ? documents : [],
@@ -346,6 +349,26 @@ const createVendor = async (req, res) => {
       kycStatus: 'pending',
       createdBy: user.id
     });
+
+    // If originated from a field shop visit, link it immediately
+    if (fieldVisitId) {
+      try {
+        const visit = await db.shopVisits.findById(fieldVisitId);
+        if (visit) {
+          const isCompleted = newVendor.status === 'Approved' || newVendor.status === 'Active';
+          await db.shopVisits.findByIdAndUpdate(fieldVisitId, {
+            $set: {
+              vendorId: String(newVendor._id || newVendor.id),
+              onboardingStatus: isCompleted ? 'COMPLETED' : 'INCOMPLETE',
+              status: isCompleted ? 'Onboarded' : 'Onboarding In Progress',
+              updatedAt: new Date().toISOString()
+            }
+          });
+        }
+      } catch (ve) {
+        console.warn('Failed to link shop visit with new vendor:', ve.message);
+      }
+    }
 
     // Record audit log
     await db.auditLogs.insertOne({
