@@ -588,19 +588,6 @@ export const managerService = {
       };
     }
 
-    // Fallback only if primary query completely failed
-    try {
-      const fallbackRes = await fetch(`${API_BASE}/managers`, {
-        headers: getAuthHeaders()
-      });
-      const fallbackData = await handleResponse(fallbackRes);
-      if (fallbackData && fallbackData.success && Array.isArray(fallbackData.all)) {
-        return scopeManagersForUser(fallbackData.all, currentUser);
-      }
-    } catch (err) {
-      console.warn('Directory scoping fetch error:', err);
-    }
-
     return { 
       success: true, 
       count: 0, 
@@ -612,6 +599,7 @@ export const managerService = {
       data: [], 
       stats: { total: 0, supervisorsCount: 0, peersCount: 0, subordinatesCount: 0 } 
     };
+
   }
 };
 

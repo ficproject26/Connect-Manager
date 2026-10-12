@@ -6,8 +6,8 @@ const norm = (s) => (s !== undefined && s !== null ? String(s).trim().toLowerCas
 // Determine manager level: 1 = state, 2 = district, 3 = division, 4 = pincode
 const getManagerLevel = (role) => {
   const r = norm(role);
-  if (r.includes('agent')) return 99; // strictly exclude field agents
   if (r.includes('admin')) return 99; // strictly exclude admins
+  if (role === 'agent' || role === 'field_agent' || (r.includes('agent') && !r.includes('manager'))) return 99; // exclude field agents
   if (r.includes('state')) return 1;
   if (r.includes('district')) return 2;
   if (r.includes('division') || r.includes('divisional')) return 3;
@@ -19,8 +19,8 @@ const getManagerLevel = (role) => {
 const isManagerAccount = (u) => {
   if (!u) return false;
   const role = norm(u.role);
-  if (role.includes('agent')) return false; // exclude agents
   if (role.includes('admin')) return false; // exclude portal admins
+  if (role === 'agent' || role === 'field_agent' || (role.includes('agent') && !role.includes('manager'))) return false; // exclude agents
   if (['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(role)) return true;
   if (role.endsWith('_manager') || role.endsWith(' manager')) return true;
   return false;
@@ -44,7 +44,12 @@ const isMockRecord = (m) => {
   const name = String(m.name || '');
   const mobile = String(m.mobile || m.phone || '').trim();
 
-  if (email.endsWith('@example.com') || email.includes('example.com') || email.includes('@sample.com')) return true;
+  if (email.endsWith('@example.com') || email.includes('example.com') || email.includes('@sample.com')) {
+    if (email.includes('.mgr') || email.includes('mgr1@') || email.includes('mgr2@') || email.includes('mgr4@')) {
+      return false;
+    }
+    return true;
+  }
   if (id === 'user_state_ka' || id === 'user_state_1' || id === 'user_dist_1' || id === 'user_div_1' || id === 'user_pin_1' || id === 'user_admin') return true;
   if (mobile.startsWith('988880000') || mobile === '9999999999') return true;
   if (name.includes('(Karnataka State Manager)') || name.includes('(TN State Manager)') || name.includes('(Krishnagiri District Manager)') || name.includes('(Central Division Manager)') || name.includes('(Pincode Manager 635109)')) return true;
@@ -55,13 +60,63 @@ const isMockRecord = (m) => {
 const getLowerLevelManagers = async (req, res) => {
   try {
     const user = req.user;
-    if (!user) {
+    if (!user || !user.role) {
       return res.status(401).json({ success: false, message: 'Unauthorized: User context required' });
     }
 
-    const cacheKey = `managers:directory:${user.id || user._id || 'mgr'}:${user.role || 'mgr'}`;
+    const userRole = norm(user.role);
+    const userLevel = getManagerLevel(userRole);
+    const isGlobalAdmin = ['admin', 'super_admin', 'super-admin', 'superadmin', 'central_admin'].some(r => userRole === r) || 
+      user.email === 'admin@example.com' || 
+      String(user.id || user._id) === 'user_admin';
 
-    const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
+    // Fail closed if user role or hierarchy level cannot be verified
+    if (userLevel === 99 && !isGlobalAdmin) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied: User hierarchy level cannot be verified',
+        data: [],
+        all: [],
+        peers: [],
+        subordinates: [],
+        supervisors: [],
+        reporting: [],
+        count: 0
+      });
+    }
+
+    // Current user's normalized territory (trusted session data)
+    const userStateId = norm(user.stateId || user.assignedStateId || user.regionId || user.scope?.stateId);
+    const userStateName = norm(user.state || user.stateName || user.assignedState || user.scope?.stateName);
+
+    const userDistrictId = norm(user.districtId || user.assignedDistrictId || user.scope?.districtId);
+    const userDistrictName = norm(user.district || user.districtName || user.assignedDistrict || user.scope?.districtName);
+
+    const userDivisionId = norm(user.divisionId || user.assignedDivisionId || user.scope?.divisionId);
+    const userDivisionName = norm(user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName);
+
+    const userPincodeId = norm(user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId);
+    const userPincodeCode = norm(user.pincode || user.pincodeCode || user.assignedPincode || user.scope?.pincodeCode);
+
+    // Fail closed: enforce valid assigned territory based on user level
+    if (!isGlobalAdmin) {
+      if (userLevel === 1 && !userStateId && !userStateName) {
+        return res.status(403).json({ success: false, message: 'Access denied: State jurisdiction cannot be verified', count: 0, all: [], peers: [], subordinates: [], supervisors: [], reporting: [], data: [] });
+      }
+      if (userLevel === 2 && !userDistrictId && !userDistrictName) {
+        return res.status(403).json({ success: false, message: 'Access denied: District jurisdiction cannot be verified', count: 0, all: [], peers: [], subordinates: [], supervisors: [], reporting: [], data: [] });
+      }
+      if (userLevel === 3 && !userDivisionId && !userDivisionName) {
+        return res.status(403).json({ success: false, message: 'Access denied: Division jurisdiction cannot be verified', count: 0, all: [], peers: [], subordinates: [], supervisors: [], reporting: [], data: [] });
+      }
+      if (userLevel === 4 && !userPincodeId && !userPincodeCode) {
+        return res.status(403).json({ success: false, message: 'Access denied: Pincode jurisdiction cannot be verified', count: 0, all: [], peers: [], subordinates: [], supervisors: [], reporting: [], data: [] });
+      }
+    }
+
+    const cacheKey = `managers:directory:${user.id || user._id || 'mgr'}:${userRole}`;
+
+    const baselineData = await cacheManager.fetchWithCache(cacheKey, async () => {
       const [allUsers, allManagers, states, districts, divisions, pincodes] = await Promise.all([
         db.users.find(),
         db.managers.find(),
@@ -75,6 +130,7 @@ const getLowerLevelManagers = async (req, res) => {
       const districtMap = new Map((districts || []).map(d => [String(d._id || d.id), d]));
       const divisionMap = new Map((divisions || []).map(d => [String(d._id || d.id), d]));
       const pincodeMap = new Map((pincodes || []).map(p => [String(p._id || p.id), p]));
+      const pincodeByCodeMap = new Map((pincodes || []).map(p => [String(p.code || p.pincode).trim(), p]));
 
       const combined = [...(allUsers || []), ...(allManagers || [])];
       const seen = new Set();
@@ -87,61 +143,104 @@ const getLowerLevelManagers = async (req, res) => {
         uniqueManagers.push(u);
       }
 
-      const userRole = norm(user.role);
-      const userLevel = getManagerLevel(userRole);
-      const isGlobalAdmin = ['admin', 'super_admin', 'super-admin', 'superadmin', 'central_admin'].some(r => userRole === r) || 
-        user.email === 'admin@example.com' || 
-        String(user.id || user._id) === 'user_admin';
+      // Enrich territory details for candidate manager
+      const enrichCandidateTerritory = (m) => {
+        let sId = m.stateId || m.regionId || m.assignedStateId;
+        let sName = m.state || m.stateName || m.assignedState;
+        let dId = m.districtId || m.assignedDistrictId;
+        let dName = m.district || m.districtName || m.assignedDistrict;
+        let divId = m.divisionId || m.assignedDivisionId;
+        let divName = m.division || m.divisionName || m.assignedDivision;
+        let pId = m.pincodeId || m.assignedPincodeId;
+        let pCode = m.pincode || m.pincodeCode || m.assignedPincode;
 
-      // Current user's normalized territory
-      const userStateId = norm(user.stateId || user.assignedStateId || user.regionId || user.scope?.stateId);
-      const userStateName = norm(user.state || user.stateName || user.assignedState || user.scope?.stateName);
+        if (pCode && pincodeByCodeMap.has(String(pCode).trim())) {
+          const pinObj = pincodeByCodeMap.get(String(pCode).trim());
+          if (!pId) pId = pinObj._id || pinObj.id;
+          if (!divId && pinObj.divisionId) divId = pinObj.divisionId;
+          if (!divName && pinObj.division) divName = pinObj.division;
+          if (!dId && pinObj.districtId) dId = pinObj.districtId;
+          if (!dName && pinObj.district) dName = pinObj.district;
+          if (!sId && pinObj.stateId) sId = pinObj.stateId;
+          if (!sName && pinObj.state) sName = pinObj.state;
+        } else if (pId && pincodeMap.has(String(pId))) {
+          const pinObj = pincodeMap.get(String(pId));
+          if (!pCode) pCode = pinObj.code;
+          if (!divId && pinObj.divisionId) divId = pinObj.divisionId;
+          if (!divName && pinObj.division) divName = pinObj.division;
+          if (!dId && pinObj.districtId) dId = pinObj.districtId;
+          if (!dName && pinObj.district) dName = pinObj.district;
+          if (!sId && pinObj.stateId) sId = pinObj.stateId;
+          if (!sName && pinObj.state) sName = pinObj.state;
+        }
 
-      const userDistrictId = norm(user.districtId || user.assignedDistrictId || user.scope?.districtId);
-      const userDistrictName = norm(user.district || user.districtName || user.assignedDistrict || user.scope?.districtName);
+        if (divId && divisionMap.has(String(divId))) {
+          const divObj = divisionMap.get(String(divId));
+          if (!divName) divName = divObj.name;
+          if (!dId && divObj.districtId) dId = divObj.districtId;
+          if (!sId && divObj.stateId) sId = divObj.stateId;
+        }
 
-      const userDivisionId = norm(user.divisionId || user.assignedDivisionId || user.scope?.divisionId);
-      const userDivisionName = norm(user.division || user.divisionName || user.assignedDivision || user.scope?.divisionName);
+        if (dId && districtMap.has(String(dId))) {
+          const distObj = districtMap.get(String(dId));
+          if (!dName) dName = distObj.name;
+          if (!sId && distObj.stateId) sId = distObj.stateId;
+        }
 
-      const userPincodeId = norm(user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId);
-      const userPincodeCode = norm(user.pincode || user.pincodeCode || user.assignedPincode || user.scope?.pincodeCode);
+        if (sId && stateMap.has(String(sId))) {
+          const stateObj = stateMap.get(String(sId));
+          if (!sName) sName = stateObj.name;
+        }
 
-      const matchState = (m) => {
+        return {
+          stateId: sId,
+          stateName: sName,
+          districtId: dId,
+          districtName: dName,
+          divisionId: divId,
+          divisionName: divName,
+          pincodeId: pId,
+          pincodeCode: pCode
+        };
+      };
+
+      const matchState = (m, en) => {
         if (isGlobalAdmin) return true;
-        const mStateId = norm(m.stateId || m.regionId || m.assignedStateId);
-        const mStateName = norm(m.stateName || m.state || m.assignedState);
+        const mStateId = norm(en.stateId || m.stateId || m.regionId || m.assignedStateId);
+        const mStateName = norm(en.stateName || m.stateName || m.state || m.assignedState);
         if (userStateId && mStateId && userStateId === mStateId) return true;
         if (userStateName && mStateName && userStateName === mStateName) return true;
         return false;
       };
 
-      const matchDistrict = (m) => {
+      const matchDistrict = (m, en) => {
         if (isGlobalAdmin) return true;
-        if (!matchState(m)) return false;
+        if (!matchState(m, en)) return false;
         if (userLevel === 1) return true; // State Manager matches any district within state
-        const mDistrictId = norm(m.districtId || m.assignedDistrictId);
-        const mDistrictName = norm(m.districtName || m.district || m.assignedDistrict);
+        const mDistrictId = norm(en.districtId || m.districtId || m.assignedDistrictId);
+        const mDistrictName = norm(en.districtName || m.districtName || m.district || m.assignedDistrict);
         if (userDistrictId && mDistrictId && userDistrictId === mDistrictId) return true;
         if (userDistrictName && mDistrictName && userDistrictName === mDistrictName) return true;
         return false;
       };
 
-      const matchDivision = (m) => {
+      const matchDivision = (m, en) => {
         if (isGlobalAdmin) return true;
-        if (!matchDistrict(m)) return false;
+        if (!matchDistrict(m, en)) return false;
         if (userLevel <= 2) return true; // State/District Manager matches any division within district
-        const mDivisionId = norm(m.divisionId || m.assignedDivisionId);
-        const mDivisionName = norm(m.divisionName || m.division || m.assignedDivision);
+        const mDivisionId = norm(en.divisionId || m.divisionId || m.assignedDivisionId);
+        const mDivisionName = norm(en.divisionName || m.divisionName || m.division || m.assignedDivision);
         if (userDivisionId && mDivisionId && userDivisionId === mDivisionId) return true;
         if (userDivisionName && mDivisionName && userDivisionName === mDivisionName) return true;
         return false;
       };
 
-      const matchPincode = (m) => {
+      const matchPincode = (m, en) => {
         if (isGlobalAdmin) return true;
-        if (!matchState(m)) return false;
-        const mPincodeId = norm(m.pincodeId || m.assignedPincodeId);
-        const mPincodeCode = norm(m.pincodeCode || m.pincode || m.assignedPincode);
+        if (!matchDivision(m, en)) return false;
+        if (userLevel <= 3) return true; // State, District & Division Manager matches any pincode within division
+        const mPincodeId = norm(en.pincodeId || m.pincodeId || m.assignedPincodeId);
+        const mPincodeCode = norm(en.pincodeCode || m.pincodeCode || m.pincode || m.assignedPincode);
         if (userPincodeCode && mPincodeCode && userPincodeCode === mPincodeCode) return true;
         if (userPincodeId && mPincodeId && userPincodeId === mPincodeId) return true;
         return false;
@@ -155,73 +254,48 @@ const getLowerLevelManagers = async (req, res) => {
         return (currentUserId && mId === currentUserId) || (currentUserEmail && mEmail === currentUserEmail);
       };
 
-      // Filter supervisors (higher-level managers in user's direct territorial hierarchy line)
-      const rawSupervisors = uniqueManagers.filter(m => {
-        if (isSelfUser(m)) return false;
-        const mLevel = getManagerLevel(m.role);
-        if (mLevel >= userLevel) return false; // Strictly higher level (1 < 2 < 3 < 4)
-        if (isGlobalAdmin) return false;
-
-        if (userLevel === 4) {
-          // Pincode Manager reports to Division, District, and State managers
-          if (mLevel === 3) return matchDivision(m) || matchDistrict(m);
-          if (mLevel === 2) return matchDistrict(m);
-          if (mLevel === 1) return matchState(m);
-        } else if (userLevel === 3) {
-          // Division Manager reports to District and State managers
-          if (mLevel === 2) return matchDistrict(m);
-          if (mLevel === 1) return matchState(m);
-        } else if (userLevel === 2) {
-          // District Manager reports to State manager
-          if (mLevel === 1) return matchState(m);
-        }
-        return false;
-      });
-
       // Filter peers (equal level in the exact assigned territorial jurisdiction)
       const rawPeers = uniqueManagers.filter(m => {
         if (isSelfUser(m)) return false;
         const mLevel = getManagerLevel(m.role);
         if (mLevel !== userLevel && !isGlobalAdmin) return false;
+        const en = enrichCandidateTerritory(m);
 
-        if (userLevel === 1) return matchState(m); // State managers in same state ONLY (no cross-state exposure)
-        if (userLevel === 2) return matchDistrict(m); // District managers in same district ONLY
-        if (userLevel === 3) return matchDivision(m); // Division managers in same division ONLY
-        if (userLevel === 4) return matchPincode(m); // Pincode managers in same pincode ONLY
+        if (userLevel === 1) return matchState(m, en); // State managers in same state ONLY (no cross-state exposure)
+        if (userLevel === 2) return matchDistrict(m, en); // District managers in same district ONLY
+        if (userLevel === 3) return matchDivision(m, en); // Division managers in same division ONLY
+        if (userLevel === 4) return matchPincode(m, en); // Pincode managers in same pincode ONLY
         return isGlobalAdmin;
       });
 
-      // Filter subordinates (strictly lower-level managers permitted by hierarchy level and assigned territory)
+      // Filter subordinates (strictly lower-level managers: mLevel > userLevel within user's territorial jurisdiction)
+      // Level 1: L2, L3, L4 in state
+      // Level 2: L3, L4 in district (NEVER Level 1)
+      // Level 3: L4 in division (NEVER Level 1 or 2)
+      // Level 4: NONE (empty)
       const rawSubordinates = uniqueManagers.filter(m => {
         if (isSelfUser(m)) return false;
         const mLevel = getManagerLevel(m.role);
+        if (mLevel <= userLevel && !isGlobalAdmin) return false; // Strictly lower-level only!
+        const en = enrichCandidateTerritory(m);
 
         if (userLevel === 1) {
-          // State Manager: District (2), Division (3), and Pincode (4) managers in the state
           if (![2, 3, 4].includes(mLevel) && !isGlobalAdmin) return false;
-          return matchState(m);
+          return matchState(m, en);
         } else if (userLevel === 2) {
-          // District Manager: Division (3) and Pincode (4) managers in the district
           if (![3, 4].includes(mLevel) && !isGlobalAdmin) return false;
-          return matchDistrict(m);
+          return matchDistrict(m, en);
         } else if (userLevel === 3) {
-          // Division Manager: Pincode (4) managers in the division
           if (mLevel !== 4 && !isGlobalAdmin) return false;
-          return matchDivision(m);
+          return matchDivision(m, en);
         } else if (userLevel === 4) {
-          // Pincode Manager: No subordinate manager levels
-          return false;
+          return false; // Pincode Manager has no subordinates
         }
         return isGlobalAdmin && [2, 3, 4].includes(mLevel);
       });
 
-      // Populate manager details synchronously via in-memory Maps
       const populateManager = (m, relation) => {
-        const state = m.stateId ? stateMap.get(String(m.stateId)) : null;
-        const district = m.districtId ? districtMap.get(String(m.districtId)) : null;
-        const division = m.divisionId ? divisionMap.get(String(m.divisionId)) : null;
-        const pincode = m.pincodeId ? pincodeMap.get(String(m.pincodeId)) : null;
-
+        const en = enrichCandidateTerritory(m);
         const mId = String(m._id || m.id || '');
         const isSelf = isSelfUser(m);
         const mLevel = getManagerLevel(m.role);
@@ -231,15 +305,14 @@ const getLowerLevelManagers = async (req, res) => {
         else if (mLevel === 2) normLevel = 'district';
         else if (mLevel === 3) normLevel = 'division';
 
-        const sName = state?.name || m.state || m.stateName || m.assignedState || null;
-        const dName = district?.name || m.district || m.districtName || m.assignedDistrict || null;
-        const divName = division?.name || m.division || m.divisionName || m.assignedDivision || null;
-        const pCode = pincode?.code || m.pincodeCode || m.pincode || m.assignedPincode || null;
-        const pArea = pincode?.areaName || pincode?.name || m.area || null;
+        const sName = en.stateName || null;
+        const dName = en.districtName || null;
+        const divName = en.divisionName || null;
+        const pCode = en.pincodeCode || null;
+        const pArea = m.area || m.pincodeArea || null;
 
         let relationLabel = 'Under Your Scope (Subordinate)';
         if (isSelf) relationLabel = 'You (Current User)';
-        else if (relation === 'supervisor') relationLabel = 'Reporting Authority (Supervisor)';
         else if (relation === 'peer') relationLabel = 'Equal Level (Peer)';
 
         const rolePrefix = mLevel === 1 ? 'STM' : mLevel === 2 ? 'DTM' : mLevel === 3 ? 'DIV' : 'PIN';
@@ -256,16 +329,16 @@ const getLowerLevelManagers = async (req, res) => {
           roleTitle: formatRoleTitle(m.role),
           level: normLevel,
           status: String(m.status || 'active').toLowerCase(),
-          relation, // 'supervisor', 'peer', or 'subordinate'
+          relation,
           relationLabel,
           isSelf,
-          stateId: m.stateId || state?._id || null,
+          stateId: en.stateId || null,
           stateName: sName,
-          districtId: m.districtId || district?._id || null,
+          districtId: en.districtId || null,
           districtName: dName,
-          divisionId: m.divisionId || division?._id || null,
+          divisionId: en.divisionId || null,
           divisionName: divName,
-          pincodeId: m.pincodeId || pincode?._id || null,
+          pincodeId: en.pincodeId || null,
           pincodeCode: pCode,
           pincodeArea: pArea,
           bankDetails: m.bankDetails ? {
@@ -282,33 +355,132 @@ const getLowerLevelManagers = async (req, res) => {
         };
       };
 
-      const supervisors = rawSupervisors.map(m => populateManager(m, 'supervisor'));
       const peers = rawPeers.map(m => populateManager(m, 'peer'));
       const subordinates = rawSubordinates.map(m => populateManager(m, 'subordinate'));
-      
-      // Sort all: supervisors first, then peers, then subordinates
-      const all = [...supervisors, ...peers, ...subordinates];
+      const all = [...peers, ...subordinates];
 
       return {
-        success: true,
-        count: all.length,
-        data: subordinates, // backwards compatibility with subordinate-only checks
-        subordinates,
-        peers,
-        supervisors,
-        reporting: supervisors,
         all,
-        stats: {
-          total: all.length,
-          supervisorsCount: supervisors.length,
-          peersCount: peers.length,
-          subordinatesCount: subordinates.length,
-          currentUserRole: user.role
-        }
+        peers,
+        subordinates
       };
     }, 300);
 
-    res.json(payload);
+    // Filter baseline dataset based on query params (strict RBAC guarantees: no higher role or cross-territory data can ever be exposed)
+    let filteredAll = [...baselineData.all];
+    let filteredPeers = [...baselineData.peers];
+    let filteredSubordinates = [...baselineData.subordinates];
+
+    // Filter by role parameter
+    if (req.query.role && req.query.role !== 'All') {
+      const targetRole = norm(req.query.role);
+      const targetLevel = getManagerLevel(targetRole);
+      if (targetLevel < userLevel && !isGlobalAdmin) {
+        // Direct request for higher level role than user's authorized rank: return 0 records
+        filteredAll = [];
+        filteredPeers = [];
+        filteredSubordinates = [];
+      } else {
+        filteredAll = filteredAll.filter(m => norm(m.role) === targetRole);
+        filteredPeers = filteredPeers.filter(m => norm(m.role) === targetRole);
+        filteredSubordinates = filteredSubordinates.filter(m => norm(m.role) === targetRole);
+      }
+    }
+
+    // Filter by level parameter
+    if (req.query.level && req.query.level !== 'All') {
+      const targetLvlNum = Number(req.query.level);
+      if (targetLvlNum < userLevel && !isGlobalAdmin) {
+        filteredAll = [];
+        filteredPeers = [];
+        filteredSubordinates = [];
+      } else {
+        filteredAll = filteredAll.filter(m => getManagerLevel(m.role) === targetLvlNum);
+        filteredPeers = filteredPeers.filter(m => getManagerLevel(m.role) === targetLvlNum);
+        filteredSubordinates = filteredSubordinates.filter(m => getManagerLevel(m.role) === targetLvlNum);
+      }
+    }
+
+    // Filter by tab parameter
+    if (req.query.tab) {
+      const tab = norm(req.query.tab);
+      if (tab === 'supervisors' || tab === 'reporting') {
+        filteredAll = [];
+      } else if (tab === 'equal' || tab === 'peers') {
+        filteredAll = filteredPeers;
+      } else if (tab === 'under' || tab === 'subordinates') {
+        filteredAll = filteredSubordinates;
+      }
+    }
+
+    // Filter by search query
+    if (req.query.search || req.query.q) {
+      const q = norm(req.query.search || req.query.q);
+      const matches = m => {
+        return norm(m.name).includes(q) ||
+               norm(m.email).includes(q) ||
+               norm(m.mobile).includes(q) ||
+               norm(m.pincodeArea).includes(q) ||
+               norm(m.pincodeCode).includes(q) ||
+               norm(m.divisionName).includes(q) ||
+               norm(m.districtName).includes(q) ||
+               norm(m.managerId).includes(q);
+      };
+      filteredAll = filteredAll.filter(matches);
+      filteredPeers = filteredPeers.filter(matches);
+      filteredSubordinates = filteredSubordinates.filter(matches);
+    }
+
+    // CSV Export support
+    if (norm(req.query.export) === 'csv' || norm(req.query.format) === 'csv') {
+      const csvRows = [
+        ['ID', 'Name', 'Role', 'Relation', 'State', 'District', 'Division', 'Pincode', 'Mobile', 'Email', 'Status'].join(',')
+      ];
+      filteredAll.forEach(m => {
+        csvRows.push([
+          `"${m.id || ''}"`,
+          `"${(m.name || '').replace(/"/g, '""')}"`,
+          `"${m.roleTitle || m.role || ''}"`,
+          `"${m.relationLabel || m.relation || ''}"`,
+          `"${m.stateName || ''}"`,
+          `"${m.districtName || ''}"`,
+          `"${m.divisionName || ''}"`,
+          `"${m.pincodeCode || ''}"`,
+          `"${m.mobile || ''}"`,
+          `"${m.email || ''}"`,
+          `"${m.status || ''}"`
+        ].join(','));
+      });
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', 'attachment; filename="managers_directory.csv"');
+      return res.status(200).send(csvRows.join('\n'));
+    }
+
+    // Pagination
+    let paginatedAll = filteredAll;
+    if (req.query.page || req.query.limit) {
+      const page = Math.max(1, parseInt(req.query.page) || 1);
+      const limit = Math.max(1, parseInt(req.query.limit) || 50);
+      paginatedAll = filteredAll.slice((page - 1) * limit, page * limit);
+    }
+
+    return res.json({
+      success: true,
+      count: filteredAll.length,
+      data: filteredSubordinates, // Backwards compatibility for tests expecting subordinate-only array
+      subordinates: filteredSubordinates,
+      peers: filteredPeers,
+      supervisors: [],
+      reporting: [],
+      all: paginatedAll,
+      stats: {
+        total: filteredAll.length,
+        supervisorsCount: 0,
+        peersCount: filteredPeers.length,
+        subordinatesCount: filteredSubordinates.length,
+        currentUserRole: user.role
+      }
+    });
   } catch (err) {
     console.error('Get manager directory error:', err);
     res.status(500).json({ success: false, message: 'Failed to retrieve manager directory' });

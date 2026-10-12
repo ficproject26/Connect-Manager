@@ -23,7 +23,6 @@ import {
   UserCheck,
   Download,
   Maximize2,
-  Star,
   Sparkles,
   X,
   User,
@@ -420,12 +419,6 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Operating Hours</span>
                   <span style={{ color: '#059669', fontWeight: 600 }}>{vendor.operatingHours || '9:00 AM - 9:00 PM'}</span>
-                </div>
-                <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Store Rating</span>
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#d97706', fontWeight: 700 }}>
-                    <Star size={14} fill="#f59e0b" color="#f59e0b" /> {vendor.rating || 5.0} / 5.0
-                  </span>
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Storefront Description</span>

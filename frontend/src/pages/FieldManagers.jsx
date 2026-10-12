@@ -39,6 +39,59 @@ const FieldManagers = () => {
   const [selectedManager, setSelectedManager] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
 
+  // Authenticated user hierarchy level: 0 = Admin, 1 = State, 2 = District, 3 = Division, 4 = Pincode
+  const userLevel = useMemo(() => {
+    const role = normalizeString(user?.role).toLowerCase();
+    if (role.includes('admin')) return 0;
+    if (role.includes('state')) return 1;
+    if (role.includes('district')) return 2;
+    if (role.includes('division') || role.includes('divisional')) return 3;
+    if (role.includes('pincode') || role.includes('pin_') || role.includes('pin ')) return 4;
+    return 99; // Unverified
+  }, [user?.role]);
+
+  // Fail closed: verify whether current user has valid assigned jurisdiction
+  const hasVerifiedJurisdiction = useMemo(() => {
+    if (!user || userLevel === 99) return false;
+    if (userLevel === 0) return true; // Global admin
+    if (userLevel === 1) return Boolean(user.stateId || user.state || user.stateName || user.assignedStateId || user.assignedState || user.scope?.stateId || user.scope?.stateName);
+    if (userLevel === 2) return Boolean(user.districtId || user.district || user.districtName || user.assignedDistrictId || user.assignedDistrict || user.scope?.districtId || user.scope?.districtName);
+    if (userLevel === 3) return Boolean(user.divisionId || user.division || user.divisionName || user.assignedDivisionId || user.assignedDivision || user.scope?.divisionId || user.scope?.divisionName);
+    if (userLevel === 4) return Boolean(user.pincodeId || user.pincode || user.pincodeCode || user.assignedPincodeId || user.assignedPincode || user.scope?.pincodeId || user.scope?.pincodeCode);
+    return false;
+  }, [user, userLevel]);
+
+  // Dynamic hierarchy role dropdown options strictly capped at user's hierarchy level
+  const permittedRoleOptions = useMemo(() => {
+    if (userLevel === 99 || !hasVerifiedJurisdiction) return [];
+
+    const options = [
+      { value: 'All', label: 'All Hierarchy Levels' }
+    ];
+
+    if (userLevel <= 1) {
+      options.push({ value: 'state_manager', label: 'State Managers (Level 1)' });
+    }
+    if (userLevel <= 2) {
+      options.push({ value: 'district_manager', label: 'District Managers (Level 2)' });
+    }
+    if (userLevel <= 3) {
+      options.push({ value: 'division_manager', label: 'Division Managers (Level 3)' });
+    }
+    if (userLevel <= 4) {
+      options.push({ value: 'pincode_manager', label: 'Pincode Managers (Level 4)' });
+    }
+
+    return options;
+  }, [userLevel, hasVerifiedJurisdiction]);
+
+  // Ensure roleFilter does not remain on an unauthorized level
+  useEffect(() => {
+    if (roleFilter !== 'All' && !permittedRoleOptions.some(opt => opt.value === roleFilter)) {
+      setRoleFilter('All');
+    }
+  }, [permittedRoleOptions, roleFilter]);
+
   const applyManagerData = (res) => {
     if (!res) return;
     const currentId = String(user?.id || user?._id || '');
@@ -59,8 +112,27 @@ const FieldManagers = () => {
     setSubordinatesList(subordinates);
   };
 
-  const fetchManagers = async (force = false) => {
-    const cacheKey = `managers:directory:${user?.id || user?._id || 'mgr'}`;
+  const fetchManagers = async (force = false, currentRoleFilter = roleFilter, currentTab = activeTab) => {
+    // Fail closed if user identity or territory is unverified
+    if (!authLoading && (!user || userLevel === 99 || !hasVerifiedJurisdiction)) {
+      setError('Authorization Required: Manager hierarchy role or geographical jurisdiction could not be verified.');
+      setAllManagers([]);
+      setSupervisorsList([]);
+      setPeersList([]);
+      setSubordinatesList([]);
+      setLoading(false);
+      return;
+    }
+
+    const queryParams = {};
+    if (currentRoleFilter && currentRoleFilter !== 'All') {
+      queryParams.role = currentRoleFilter;
+    }
+    if (currentTab && currentTab !== 'all') {
+      queryParams.tab = currentTab;
+    }
+
+    const cacheKey = `managers:directory:${user?.id || user?._id || 'mgr'}:${currentRoleFilter}:${currentTab}`;
     const cached = cacheClient.get(cacheKey);
     if (cached?.data && !force) {
       applyManagerData(cached.data);
@@ -73,7 +145,7 @@ const FieldManagers = () => {
       setError(null);
       const res = await cacheClient.fetchWithCache(
         cacheKey,
-        () => managerService.getManagerDirectory({}, user),
+        () => managerService.getManagerDirectory(queryParams, user),
         { force }
       );
       if (res && res.success) {
@@ -89,6 +161,16 @@ const FieldManagers = () => {
     }
   };
 
+  const handleRoleFilterChange = (newRole) => {
+    setRoleFilter(newRole);
+    fetchManagers(true, newRole, activeTab);
+  };
+
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    fetchManagers(true, roleFilter, newTab);
+  };
+
   useEffect(() => {
     if (!authLoading) {
       fetchManagers();
@@ -97,11 +179,11 @@ const FieldManagers = () => {
 
   useRealtime('manager', () => {
     cacheClient.invalidateQueries('managers');
-    fetchManagers(true);
+    fetchManagers(true, roleFilter, activeTab);
   });
   useRealtime('user', () => {
     cacheClient.invalidateQueries('managers');
-    fetchManagers(true);
+    fetchManagers(true, roleFilter, activeTab);
   });
 
 
@@ -403,7 +485,7 @@ const FieldManagers = () => {
           {/* Relation Tabs */}
           <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px', flexWrap: 'wrap' }}>
             <button
-              onClick={() => setActiveTab('all')}
+              onClick={() => handleTabChange('all')}
               style={{
                 background: activeTab === 'all' ? 'white' : 'transparent',
                 color: activeTab === 'all' ? 'var(--text-main)' : '#64748b',
@@ -420,7 +502,7 @@ const FieldManagers = () => {
               All Managers ({totalCount})
             </button>
             <button
-              onClick={() => setActiveTab('supervisors')}
+              onClick={() => handleTabChange('supervisors')}
               style={{
                 background: activeTab === 'supervisors' ? 'white' : 'transparent',
                 color: activeTab === 'supervisors' ? '#b45309' : '#64748b',
@@ -437,7 +519,7 @@ const FieldManagers = () => {
               Reporting Authority ({supervisorsCount})
             </button>
             <button
-              onClick={() => setActiveTab('equal')}
+              onClick={() => handleTabChange('equal')}
               style={{
                 background: activeTab === 'equal' ? 'white' : 'transparent',
                 color: activeTab === 'equal' ? '#3730a3' : '#64748b',
@@ -454,7 +536,7 @@ const FieldManagers = () => {
               Equal Level ({peersCount})
             </button>
             <button
-              onClick={() => setActiveTab('under')}
+              onClick={() => handleTabChange('under')}
               style={{
                 background: activeTab === 'under' ? 'white' : 'transparent',
                 color: activeTab === 'under' ? '#166534' : '#64748b',
@@ -490,13 +572,12 @@ const FieldManagers = () => {
               className="form-select"
               style={{ minWidth: '180px', maxWidth: '240px', height: '36px', fontSize: '0.82rem' }}
               value={roleFilter}
-              onChange={(e) => setRoleFilter(e.target.value)}
+              onChange={(e) => handleRoleFilterChange(e.target.value)}
+              disabled={permittedRoleOptions.length === 0}
             >
-              <option value="All">All Hierarchy Levels</option>
-              <option value="state_manager">State Managers (Level 1)</option>
-              <option value="district_manager">District Managers (Level 2)</option>
-              <option value="division_manager">Division Managers (Level 3)</option>
-              <option value="pincode_manager">Pincode Managers (Level 4)</option>
+              {permittedRoleOptions.map(opt => (
+                <option key={opt.value} value={opt.value}>{opt.label}</option>
+              ))}
             </select>
           </div>
         </div>
