@@ -165,6 +165,57 @@ const PRESET_TIME_SLOTS = [
 ];
 const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCancel }) => {
   const { user } = useAuth();
+
+  const normRole = (r) => {
+    const s = String(r || '').toLowerCase().replace(/[\s-]/g, '_');
+    if (s.includes('state')) return 'state_manager';
+    if (s.includes('district')) return 'district_manager';
+    if (s.includes('division')) return 'division_manager';
+    if (s.includes('pincode') || s.includes('pin_code')) return 'pincode_manager';
+    return s;
+  };
+
+  const role = normRole(user?.role);
+  const isStateManager = role === 'state_manager';
+  const isDistrictManager = role === 'district_manager';
+  const isDivisionManager = role === 'division_manager';
+  const isPincodeManager = role === 'pincode_manager';
+
+  // Role-Based Field Permissions:
+  // State Manager: State locked; District, Division, Pincode enabled
+  // District Manager: State, District locked; Division, Pincode enabled
+  // Division Manager: State, District, Division locked; Pincode enabled
+  // Pincode Manager: State, District, Division, Pincode all locked
+  const isStateLocked = true;
+  const isDistrictLocked = isDistrictManager || isDivisionManager || isPincodeManager;
+  const isDivisionLocked = isDivisionManager || isPincodeManager;
+  const isPincodeLocked = isPincodeManager;
+
+  const userStateId = user?.stateId || user?.scope?.stateId || user?.territory?.stateId || user?.regionId || user?.scope?.regionId || '';
+  const userStateName = user?.stateName || user?.state || user?.scope?.stateName || user?.territory?.state || user?.scope?.regionName || '';
+
+  const userDistrictId = user?.districtId || user?.scope?.districtId || user?.territory?.districtId || '';
+  const userDistrictName = user?.districtName || user?.district || user?.scope?.districtName || user?.territory?.district || '';
+
+  const userDivisionId = user?.divisionId || user?.scope?.divisionId || user?.territory?.divisionId || '';
+  const userDivisionName = user?.divisionName || user?.division || user?.scope?.divisionName || user?.territory?.division || '';
+
+  const userPincodeId = user?.pincodeId || user?.scope?.pincodeId || user?.territory?.pincodeId || '';
+  const userPincodeCode = user?.pincodeCode || user?.pincode || user?.scope?.pincodeCode || user?.territory?.pincode || '';
+  const userPincodeArea = user?.pincodeArea || user?.scope?.pincodeArea || user?.area || user?.territory?.pincodeArea || '';
+
+  // Validate manager territory scope completeness
+  let territoryConfigError = '';
+  if (isStateManager && !userStateId && !userStateName) {
+    territoryConfigError = 'Manager account does not have an assigned State. Cannot onboard vendor without assigned state.';
+  } else if (isDistrictManager && (!userDistrictId && !userDistrictName)) {
+    territoryConfigError = 'Manager account does not have an assigned District. Cannot onboard vendor without assigned district.';
+  } else if (isDivisionManager && (!userDivisionId && !userDivisionName)) {
+    territoryConfigError = 'Manager account does not have an assigned Division. Cannot onboard vendor without assigned division.';
+  } else if (isPincodeManager && (!userPincodeId && !userPincodeCode)) {
+    territoryConfigError = 'Manager account does not have an assigned Pincode. Cannot onboard vendor without assigned pincode.';
+  }
+
   const getBlank = () => {
     const prefillData = prefill || {};
     const initData = initialData || {};
@@ -187,10 +238,6 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       operatingHours: '09:00 AM - 09:00 PM',
       businessImages: [],
       businessImagePreviews: [],
-      stateId: '',
-      districtId: '',
-      divisionId: '',
-      pincodeId: '',
       name: '',
       alternatePhone: '',
       agentName: '',
@@ -215,7 +262,11 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       accountNumber: '',
       ifsc: '',
       declaration: false,
-      ...effectivePrefill
+      ...effectivePrefill,
+      stateId: userStateId || effectivePrefill.stateId || '',
+      ...(isDistrictLocked ? { districtId: userDistrictId } : {}),
+      ...(isDivisionLocked ? { divisionId: userDivisionId } : {}),
+      ...(isPincodeLocked ? { pincodeId: userPincodeId } : {})
     };
   };
   const [step, setStep] = useState(() => {
@@ -289,101 +340,212 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const [submitting,setSubmitting]=useState(false);
   const [globalError,setGlobalError]=useState('');
   const [uploadingDoc,setUploadingDoc]=useState(false);
-  const [districts,setDistricts]=useState([]);
-  const [divisions,setDivisions]=useState([]);
-  const [pincodes,setPincodes]=useState([]);
-  const logoRef=useRef(null),imgRef=useRef(null),licenseRef=useRef(null);
+  const [districts, setDistricts] = useState([]);
+  const [divisions, setDivisions] = useState([]);
+  const [pincodes, setPincodes] = useState([]);
+  const logoRef = useRef(null), imgRef = useRef(null), licenseRef = useRef(null);
 
-  useEffect(()=>{
-    const init=async()=>{
-      try{
-        setFormData(p=>({...p,stateId:user?.stateId||p.stateId,districtId:user?.districtId||p.districtId,divisionId:user?.divisionId||p.divisionId,pincodeId:user?.pincodeId||p.pincodeId}));
-        if(user?.role==='state_manager'||user?.role==='State Manager'||user?.role?.includes('state')){
-          const r=await locationService.getDistricts(user.stateId);
-          if(r&&r.success)setDistricts(Array.isArray(r.data)?r.data:Array.isArray(r.districts)?r.districts:[]);
+  useEffect(() => {
+    let isMounted = true;
+    const initTerritoryOptions = async () => {
+      try {
+        setFormData(p => {
+          const next = { ...p };
+          if (isStateLocked && userStateId) next.stateId = userStateId;
+          if (isDistrictLocked && userDistrictId) next.districtId = userDistrictId;
+          if (isDivisionLocked && userDivisionId) next.divisionId = userDivisionId;
+          if (isPincodeLocked && userPincodeId) next.pincodeId = userPincodeId;
+          return next;
+        });
+
+        // 1. If State Manager: load districts for assigned state
+        if (isStateManager && userStateId) {
+          const r = await locationService.getDistricts(userStateId);
+          if (isMounted && r && r.success) {
+            setDistricts(Array.isArray(r.data) ? r.data : Array.isArray(r.districts) ? r.districts : []);
+          }
         }
-        if(user?.districtId){
-          const r=await locationService.getDivisions(user.districtId);
-          if(r&&r.success)setDivisions(Array.isArray(r.data)?r.data:Array.isArray(r.divisions)?r.divisions:[]);
+
+        // 2. Load divisions:
+        // District Manager: divisions for assigned district
+        // State Manager: divisions for selected district (if already set)
+        const activeDistrictId = isDistrictLocked ? userDistrictId : formData.districtId;
+        if (activeDistrictId && !isDivisionLocked) {
+          const r = await locationService.getDivisions(activeDistrictId);
+          if (isMounted && r && r.success) {
+            setDivisions(Array.isArray(r.data) ? r.data : Array.isArray(r.divisions) ? r.divisions : []);
+          }
         }
-        if(user?.divisionId){
-          const r=await locationService.getPincodes(user.divisionId);
-          if(r&&r.success)setPincodes(Array.isArray(r.data)?r.data:Array.isArray(r.pincodes)?r.pincodes:[]);
+
+        // 3. Load pincodes:
+        // Division Manager: pincodes for assigned division
+        // State / District Manager: pincodes for selected division (if already set)
+        const activeDivisionId = isDivisionLocked ? userDivisionId : formData.divisionId;
+        if (activeDivisionId && !isPincodeLocked) {
+          const r = await locationService.getPincodes(activeDivisionId);
+          if (isMounted && r && r.success) {
+            setPincodes(Array.isArray(r.data) ? r.data : Array.isArray(r.pincodes) ? r.pincodes : []);
+          }
         }
-      }catch(e){console.error(e);}
+      } catch (e) {
+        console.error('Territory initialization error:', e);
+      }
     };
-    init();
-  },[user]);
+    initTerritoryOptions();
+    return () => { isMounted = false; };
+  }, [user, role, isStateManager, isDistrictLocked, isDivisionLocked, isPincodeLocked, userStateId, userDistrictId, userDivisionId, userPincodeId]);
 
-  
-  const handleDistrictChange=async(e)=>{
-    const id=e.target.value;
-    setFormData(p=>({...p,districtId:id,divisionId:'',pincodeId:''}));
+  const handleDistrictChange = async (e) => {
+    const id = e.target.value;
+    setFormData(p => ({ ...p, districtId: id, divisionId: '', pincodeId: '' }));
     setDivisions([]);
     setPincodes([]);
-    if(id){
-      const r=await locationService.getDivisions(id);
-      if(r&&r.success)setDivisions(Array.isArray(r.data)?r.data:Array.isArray(r.divisions)?r.divisions:[]);
+    if (errors.districtId || errors.divisionId || errors.pincodeId) {
+      setErrors(p => {
+        const next = { ...p };
+        delete next.districtId;
+        delete next.divisionId;
+        delete next.pincodeId;
+        return next;
+      });
     }
-  };
-  const handleDivisionChange=async(e)=>{
-    const id=e.target.value;
-    setFormData(p=>({...p,divisionId:id,pincodeId:''}));
-    setPincodes([]);
-    if(id){
-      const r=await locationService.getPincodes(id);
-      if(r&&r.success)setPincodes(Array.isArray(r.data)?r.data:Array.isArray(r.pincodes)?r.pincodes:[]);
-    }
-  };
-  const onLogo=e=>{const f=e.target.files[0];if(f){upd('logo',f);upd('logoPreview',URL.createObjectURL(f));}};
-  const onImgs=e=>{const files=Array.from(e.target.files);const all=[...formData.businessImages,...files].slice(0,5);const prev=[...formData.businessImagePreviews,...files.map(f=>URL.createObjectURL(f))].slice(0,5);upd('businessImages',all);upd('businessImagePreviews',prev);};
-  const rmImg=idx=>{upd('businessImages',formData.businessImages.filter((_,i)=>i!==idx));upd('businessImagePreviews',formData.businessImagePreviews.filter((_,i)=>i!==idx));};
-  const onLicense=e=>{if(e.target.files[0])upd('businessLicense',e.target.files[0]);};
-  const handleFileUpload=async(e)=>{const file=e.target.files?.[0];if(!file)return;setUploadingDoc(true);try{const r=await uploadService.uploadDocument(file);if(r.success&&r.file)upd('documents',[...formData.documents,r.file]);}catch(err){setGlobalError(err.message||'Upload failed');}finally{setUploadingDoc(false);}};
-
-  const validate=s=>{
-    const e={};
-    if(s===1){
-      if(!formData.businessName.trim())e.businessName='Business name is required';
-      else if(formData.businessName.trim().length > 100)e.businessName='Business name must not exceed 100 characters';
-      if(!formData.mobile.trim())e.mobile='Phone number is required';
-      else if(!phoneOk(formData.mobile))e.mobile='Must be 10 digits starting with 6-9';
-      if(!formData.email.trim())e.email='Email is required';
-      else if(formData.email.trim().length > 100)e.email='Email must not exceed 100 characters';
-      else if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email))e.email='Invalid email';
-      if(!formData.address.trim())e.address='Business address is required';
-      else if(formData.address.trim().length > 250)e.address='Business address must not exceed 250 characters';
-      if(!formData.pincodeId)e.pincodeId='Please select a pincode within your scope';
-    }
-    if(s===2){
-      if(!formData.name.trim())e.name='Owner name is required';
-      else if(formData.name.trim().length > 50)e.name='Owner name must not exceed 50 characters';
-      else if(!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(formData.name.trim()))e.name='Owner name must contain only letters and spaces';
-      if(formData.alternatePhone.trim()&&!phoneOk(formData.alternatePhone))e.alternatePhone='Must be 10 digits starting with 6-9';
-      if(!isEditing){
-        if(!formData.password)e.password='Password is required';
-        else if(formData.password.length<8)e.password='At least 8 characters';
-        if(!formData.confirmPassword)e.confirmPassword='Please confirm password';
-        else if(formData.password!==formData.confirmPassword)e.confirmPassword='Passwords do not match';
+    if (id) {
+      try {
+        const r = await locationService.getDivisions(id);
+        if (r && r.success) setDivisions(Array.isArray(r.data) ? r.data : Array.isArray(r.divisions) ? r.divisions : []);
+      } catch (err) {
+        console.error('Error fetching divisions:', err);
       }
     }
-    if(s===3){
-      if(formData.panNumber.trim()&&!panOk(formData.panNumber))e.panNumber='Invalid PAN (e.g. ABCDE1234F)';
-      if(formData.aadhaarNumber.trim()&&!aadhaarOk(formData.aadhaarNumber))e.aadhaarNumber='Must be 12 digits';
+  };
+
+  const handleDivisionChange = async (e) => {
+    const id = e.target.value;
+    setFormData(p => ({ ...p, divisionId: id, pincodeId: '' }));
+    setPincodes([]);
+    if (errors.divisionId || errors.pincodeId) {
+      setErrors(p => {
+        const next = { ...p };
+        delete next.divisionId;
+        delete next.pincodeId;
+        return next;
+      });
     }
-    if(s===4){
-      if(formData.accountNumber.trim()&&(formData.accountNumber.length<9||formData.accountNumber.length>18))e.accountNumber='Must be 9-18 digits';
-      if(formData.ifsc.trim()&&!ifscOk(formData.ifsc))e.ifsc='Invalid IFSC (e.g. HDFC0001234)';
+    if (id) {
+      try {
+        const r = await locationService.getPincodes(id);
+        if (r && r.success) setPincodes(Array.isArray(r.data) ? r.data : Array.isArray(r.pincodes) ? r.pincodes : []);
+      } catch (err) {
+        console.error('Error fetching pincodes:', err);
+      }
     }
-    if(s===5&&!formData.declaration)e.declaration='Please accept the declaration to proceed';
+  };
+
+  const onLogo = e => { const f = e.target.files[0]; if (f) { upd('logo', f); upd('logoPreview', URL.createObjectURL(f)); } };
+  const onImgs = e => { const files = Array.from(e.target.files); const all = [...formData.businessImages, ...files].slice(0, 5); const prev = [...formData.businessImagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5); upd('businessImages', all); upd('businessImagePreviews', prev); };
+  const rmImg = idx => { upd('businessImages', formData.businessImages.filter((_, i) => i !== idx)); upd('businessImagePreviews', formData.businessImagePreviews.filter((_, i) => i !== idx)); };
+  const onLicense = e => { if (e.target.files[0]) upd('businessLicense', e.target.files[0]); };
+  const handleFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingDoc(true); try { const r = await uploadService.uploadDocument(file); if (r.success && r.file) upd('documents', [...formData.documents, r.file]); } catch (err) { setGlobalError(err.message || 'Upload failed'); } finally { setUploadingDoc(false); } };
+
+  const validate = s => {
+    const e = {};
+    if (s === 1) {
+      if (territoryConfigError) e.territory = territoryConfigError;
+      if (!formData.businessName.trim()) e.businessName = 'Business name is required';
+      else if (formData.businessName.trim().length > 100) e.businessName = 'Business name must not exceed 100 characters';
+      if (!formData.mobile.trim()) e.mobile = 'Phone number is required';
+      else if (!phoneOk(formData.mobile)) e.mobile = 'Must be 10 digits starting with 6-9';
+      if (!formData.email.trim()) e.email = 'Email is required';
+      else if (formData.email.trim().length > 100) e.email = 'Email must not exceed 100 characters';
+      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
+      if (!formData.address.trim()) e.address = 'Business address is required';
+      else if (formData.address.trim().length > 250) e.address = 'Business address must not exceed 250 characters';
+
+      // Role-Based Territory Field Scope Validations
+      if (isStateLocked && !userStateId && !userStateName) {
+        e.stateId = 'Assigned state is missing on manager account';
+      }
+      if (!isDistrictLocked && !formData.districtId) {
+        e.districtId = 'Please select a district within your state';
+      }
+      if (!isDivisionLocked && !formData.divisionId) {
+        e.divisionId = 'Please select a division within your district';
+      }
+      if (!isPincodeLocked && !formData.pincodeId) {
+        e.pincodeId = 'Please select a pincode within your scope';
+      }
+      if (isPincodeLocked && !userPincodeId && !userPincodeCode) {
+        e.pincodeId = 'Assigned pincode is missing on manager account';
+      }
+    }
+    if (s === 2) {
+      if (!formData.name.trim()) e.name = 'Owner name is required';
+      else if (formData.name.trim().length > 50) e.name = 'Owner name must not exceed 50 characters';
+      else if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(formData.name.trim())) e.name = 'Owner name must contain only letters and spaces';
+      if (formData.alternatePhone.trim() && !phoneOk(formData.alternatePhone)) e.alternatePhone = 'Must be 10 digits starting with 6-9';
+      if (!isEditing) {
+        if (!formData.password) e.password = 'Password is required';
+        else if (formData.password.length < 8) e.password = 'At least 8 characters';
+        if (!formData.confirmPassword) e.confirmPassword = 'Please confirm password';
+        else if (formData.password !== formData.confirmPassword) e.confirmPassword = 'Passwords do not match';
+      }
+    }
+    if (s === 3) {
+      if (formData.panNumber.trim() && !panOk(formData.panNumber)) e.panNumber = 'Invalid PAN (e.g. ABCDE1234F)';
+      if (formData.aadhaarNumber.trim() && !aadhaarOk(formData.aadhaarNumber)) e.aadhaarNumber = 'Must be 12 digits';
+    }
+    if (s === 4) {
+      if (formData.accountNumber.trim() && (formData.accountNumber.length < 9 || formData.accountNumber.length > 18)) e.accountNumber = 'Must be 9-18 digits';
+      if (formData.ifsc.trim() && !ifscOk(formData.ifsc)) e.ifsc = 'Invalid IFSC (e.g. HDFC0001234)';
+    }
+    if (s === 5 && !formData.declaration) e.declaration = 'Please accept the declaration to proceed';
     return e;
   };
 
-  const next=()=>{const e=validate(step);if(Object.keys(e).length){setErrors(e);return;}setErrors({});setStep(s=>s+1);};
-  const prev=()=>{setErrors({});setStep(s=>s-1);};
-  const handleSubmit=async()=>{const e=validate(5);if(Object.keys(e).length){setErrors(e);return;}setGlobalError('');setSubmitting(true);try{await onSubmit(formData);}catch(err){setGlobalError(err.message||'Failed to submit');}finally{setSubmitting(false);};};
+  const next = () => {
+    const e = validate(step);
+    if (Object.keys(e).length) {
+      setErrors(e);
+      if (e.territory) setGlobalError(e.territory);
+      return;
+    }
+    setErrors({});
+    setStep(s => s + 1);
+  };
+  const prev = () => { setErrors({}); setStep(s => s - 1); };
 
-  const isStateLocked=!!user?.stateId,isDistrictLocked=!!user?.districtId,isDivisionLocked=!!user?.divisionId,isPincodeLocked=!!user?.pincodeId;
+  const handleSubmit = async () => {
+    const e = validate(5);
+    const step1Errors = validate(1);
+    const combinedErrors = { ...step1Errors, ...e };
+
+    if (Object.keys(combinedErrors).length) {
+      setErrors(combinedErrors);
+      setGlobalError(step1Errors.territory || step1Errors.districtId || step1Errors.divisionId || step1Errors.pincodeId || 'Please fix all required fields before submitting.');
+      return;
+    }
+
+    setGlobalError('');
+    setSubmitting(true);
+    try {
+      const payload = {
+        ...formData,
+        stateId: userStateId || formData.stateId,
+        districtId: isDistrictLocked ? userDistrictId : formData.districtId,
+        divisionId: isDivisionLocked ? userDivisionId : formData.divisionId,
+        pincodeId: isPincodeLocked ? userPincodeId : formData.pincodeId,
+        state: userStateName || formData.state,
+        district: isDistrictLocked ? userDistrictName : (districts.find(d => String(d._id || d.id) === String(formData.districtId))?.name || formData.district),
+        division: isDivisionLocked ? userDivisionName : (divisions.find(v => String(v._id || v.id) === String(formData.divisionId))?.name || formData.division),
+        pincode: isPincodeLocked ? userPincodeCode : (pincodes.find(p => String(p._id || p.id) === String(formData.pincodeId))?.code || formData.pincode)
+      };
+      await onSubmit(payload);
+    } catch (err) {
+      setGlobalError(err.message || 'Failed to submit');
+    } finally {
+      setSubmitting(false);
+    }
+  };
   const inp=(err=false)=>({width:'100%',padding:'8px 12px',fontSize:13,border:'1px solid '+(err?'#f87171':'var(--border)'),borderRadius:'var(--radius-sm)',background:'var(--surface)',color:'var(--text-primary)',outline:'none',boxSizing:'border-box'});
   const dashedBox={display:'flex',alignItems:'center',gap:12,padding:'10px 14px',border:'2px dashed var(--border)',borderRadius:'var(--radius-sm)',cursor:'pointer',transition:'border-color 0.2s'};
   const hb={onMouseEnter:e=>e.currentTarget.style.borderColor='var(--primary)',onMouseLeave:e=>e.currentTarget.style.borderColor='var(--border)'};
@@ -617,24 +779,154 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           <span style={{fontWeight:700,fontSize:13}}>Location & Field Jurisdiction</span>
           <span style={{fontSize:11,padding:'2px 10px',borderRadius:20,background:'#ede9fe',color:'var(--primary)',fontWeight:600}}>Constrained to your Scope</span>
         </div>
+
+        {territoryConfigError && (
+          <div style={{
+            padding: '8px 12px',
+            background: '#fee2e2',
+            border: '1px solid #fca5a5',
+            borderRadius: 8,
+            color: '#b91c1c',
+            marginBottom: 10,
+            fontSize: 12,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 6
+          }}>
+            <AlertCircle size={14} />
+            <span>{territoryConfigError}</span>
+          </div>
+        )}
+
         <div className="responsive-grid-4" style={{ gap: 12 }}>
+          {/* State: Locked for all 4 roles */}
           <div className="form-group" style={{marginBottom:0}}>
-            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>State {isStateLocked&&<Lock size={11} color="var(--text-muted)"/>}</label>
-            <input type="text" disabled className="form-input" value={user?.scope?.stateName||user?.state||'Tamil Nadu'} style={{...inp(),opacity:0.7}}/>
-            {isStateLocked&&<p style={{fontSize:10,color:'var(--text-muted)',marginTop:3}}>Locked to your state scope</p>}
+            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>State <Lock size={11} color="var(--text-muted)"/></label>
+            <input
+              type="text"
+              readOnly
+              disabled
+              className="form-input"
+              value={userStateName || 'Unassigned State'}
+              style={{...inp(), opacity: 0.85, background: 'var(--bg-subtle, #f8fafc)', cursor: 'not-allowed'}}
+            />
+            <p style={{fontSize:10,color:'var(--text-muted)',marginTop:3}}>Locked to your state scope</p>
           </div>
+
+          {/* District: Locked for District, Division, Pincode managers; Enabled for State Manager */}
           <div className="form-group" style={{marginBottom:0}}>
-            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>District {isDistrictLocked&&<Lock size={11} color="var(--text-muted)"/>}</label>
-            {isDistrictLocked?<input type="text" disabled className="form-input" value={user?.scope?.districtName||''} style={{...inp(),opacity:0.7}}/>:<select name="districtId" className="form-select" value={formData.districtId} onChange={handleDistrictChange} style={inp()}><option value="">Select District</option>{(districts || []).map(d=><option key={d._id} value={d._id}>{d.name}</option>)}</select>}
+            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>
+              District {isDistrictLocked ? <Lock size={11} color="var(--text-muted)"/> : <span style={{ color: '#ef4444' }}>*</span>}
+            </label>
+            {isDistrictLocked ? (
+              <>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  className="form-input"
+                  value={userDistrictName || 'Unassigned District'}
+                  style={{...inp(), opacity: 0.85, background: 'var(--bg-subtle, #f8fafc)', cursor: 'not-allowed'}}
+                />
+                <p style={{fontSize:10,color:'var(--text-muted)',marginTop:3}}>Locked to your district scope</p>
+              </>
+            ) : (
+              <>
+                <select
+                  name="districtId"
+                  className="form-select"
+                  value={formData.districtId}
+                  onChange={handleDistrictChange}
+                  style={inp(!!errors.districtId)}
+                >
+                  <option value="">Select District</option>
+                  {(districts || []).map(d=><option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>)}
+                </select>
+                {errors.districtId && (
+                  <p style={{fontSize:11,color:'#ef4444',marginTop:3,display:'flex',alignItems:'center',gap:4}}>
+                    <AlertCircle size={11}/>{errors.districtId}
+                  </p>
+                )}
+              </>
+            )}
           </div>
+
+          {/* Division: Locked for Division, Pincode managers; Enabled for State, District managers */}
           <div className="form-group" style={{marginBottom:0}}>
-            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>Division {isDivisionLocked&&<Lock size={11} color="var(--text-muted)"/>}</label>
-            {isDivisionLocked?<input type="text" disabled className="form-input" value={user?.scope?.divisionName||''} style={{...inp(),opacity:0.7}}/>:<select name="divisionId" className="form-select" value={formData.divisionId} onChange={handleDivisionChange} disabled={!formData.districtId&&!user?.districtId} style={inp()}><option value="">Select Division</option>{(divisions || []).map(d=><option key={d._id} value={d._id}>{d.name}</option>)}</select>}
+            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>
+              Division {isDivisionLocked ? <Lock size={11} color="var(--text-muted)"/> : <span style={{ color: '#ef4444' }}>*</span>}
+            </label>
+            {isDivisionLocked ? (
+              <>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  className="form-input"
+                  value={userDivisionName || 'Unassigned Division'}
+                  style={{...inp(), opacity: 0.85, background: 'var(--bg-subtle, #f8fafc)', cursor: 'not-allowed'}}
+                />
+                <p style={{fontSize:10,color:'var(--text-muted)',marginTop:3}}>Locked to your division scope</p>
+              </>
+            ) : (
+              <>
+                <select
+                  name="divisionId"
+                  className="form-select"
+                  value={formData.divisionId}
+                  onChange={handleDivisionChange}
+                  disabled={!formData.districtId && !userDistrictId}
+                  style={inp(!!errors.divisionId)}
+                >
+                  <option value="">Select Division</option>
+                  {(divisions || []).map(d=><option key={d._id || d.id} value={d._id || d.id}>{d.name}</option>)}
+                </select>
+                {errors.divisionId && (
+                  <p style={{fontSize:11,color:'#ef4444',marginTop:3,display:'flex',alignItems:'center',gap:4}}>
+                    <AlertCircle size={11}/>{errors.divisionId}
+                  </p>
+                )}
+              </>
+            )}
           </div>
+
+          {/* Pincode: Locked for Pincode manager; Enabled for State, District, Division managers */}
           <div className="form-group" style={{marginBottom:0}}>
-            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>Pincode {isPincodeLocked&&<Lock size={11} color="var(--text-muted)"/>}</label>
-            {isPincodeLocked?<input type="text" disabled className="form-input" value={(user?.scope?.pincodeCode||'')+' '+(user?.scope?.pincodeArea?'('+user.scope.pincodeArea+')':'')} style={{...inp(),opacity:0.7}}/>:<select name="pincodeId" className="form-select" value={formData.pincodeId} onChange={onChange} disabled={!formData.divisionId&&!user?.divisionId} style={inp(!!errors.pincodeId)}><option value="">Select Pincode</option>{(pincodes || []).map(p=><option key={p._id} value={p._id}>{p.code} - {p.areaName}</option>)}</select>}
-            {errors.pincodeId&&<p style={{fontSize:11,color:'#ef4444',marginTop:3,display:'flex',alignItems:'center',gap:4}}><AlertCircle size={11}/>{errors.pincodeId}</p>}
+            <label className="form-label" style={{display:'flex',alignItems:'center',gap:4}}>
+              Pincode {isPincodeLocked ? <Lock size={11} color="var(--text-muted)"/> : <span style={{ color: '#ef4444' }}>*</span>}
+            </label>
+            {isPincodeLocked ? (
+              <>
+                <input
+                  type="text"
+                  readOnly
+                  disabled
+                  className="form-input"
+                  value={`${userPincodeCode || ''}${userPincodeArea ? ` (${userPincodeArea})` : ''}`.trim() || 'Unassigned Pincode'}
+                  style={{...inp(), opacity: 0.85, background: 'var(--bg-subtle, #f8fafc)', cursor: 'not-allowed'}}
+                />
+                <p style={{fontSize:10,color:'var(--text-muted)',marginTop:3}}>Locked to your pincode scope</p>
+              </>
+            ) : (
+              <>
+                <select
+                  name="pincodeId"
+                  className="form-select"
+                  value={formData.pincodeId}
+                  onChange={onChange}
+                  disabled={!formData.divisionId && !userDivisionId}
+                  style={inp(!!errors.pincodeId)}
+                >
+                  <option value="">Select Pincode</option>
+                  {(pincodes || []).map(p=><option key={p._id || p.id} value={p._id || p.id}>{p.code} {p.areaName ? ` - ${p.areaName}` : p.name ? ` - ${p.name}` : ''}</option>)}
+                </select>
+                {errors.pincodeId && (
+                  <p style={{fontSize:11,color:'#ef4444',marginTop:3,display:'flex',alignItems:'center',gap:4}}>
+                    <AlertCircle size={11}/>{errors.pincodeId}
+                  </p>
+                )}
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -49,18 +49,21 @@ const getDistricts = async (req, res) => {
       return res.json(cached);
     }
 
-    let query = { status: 'Active' };
+    const userRole = String(user.role || '').toLowerCase().replace(/[\s-]/g, '_');
+    let query = {};
     if (targetStateId) {
       query.stateId = targetStateId;
     }
 
     let districts = await db.districts.find(query);
 
-    // If manager has specific district assignment, restrict to only that district
-    if (user.districtId) {
-      districts = districts.filter(d => String(d._id || d.id) === String(user.districtId));
-    } else if (user.district) {
-      districts = districts.filter(d => d.name?.toLowerCase() === user.district.toLowerCase());
+    // District, Division, and Pincode managers have their district locked to assigned district
+    if (['district_manager', 'division_manager', 'pincode_manager'].includes(userRole)) {
+      if (user.districtId) {
+        districts = districts.filter(d => String(d._id || d.id) === String(user.districtId));
+      } else if (user.district) {
+        districts = districts.filter(d => d.name?.toLowerCase() === user.district.toLowerCase());
+      }
     }
 
     const payload = { success: true, data: districts, districts };
@@ -76,12 +79,13 @@ const getDistricts = async (req, res) => {
 const getDivisions = async (req, res) => {
   try {
     const user = req.user || {};
+    const userRole = String(user.role || '').toLowerCase().replace(/[\s-]/g, '_');
     const { districtId, district, stateId } = req.query;
 
-    let targetDistrictId = districtId || user.districtId;
+    let targetDistrictId = districtId || (userRole !== 'state_manager' ? user.districtId : null);
     if (!targetDistrictId && (district || user.district)) {
       const distName = district || user.district;
-      const distDoc = await db.districts.findOne({ name: new RegExp('^' + distName.trim() + '$', 'i'), status: 'Active' });
+      const distDoc = await db.districts.findOne({ name: new RegExp('^' + distName.trim() + '$', 'i') });
       if (distDoc) {
         targetDistrictId = distDoc._id || distDoc.id;
       }
@@ -93,7 +97,7 @@ const getDivisions = async (req, res) => {
       return res.json(cached);
     }
 
-    let query = { status: 'Active' };
+    let query = {};
     if (targetDistrictId) {
       query.districtId = targetDistrictId;
     } else if (stateId || user.stateId) {
@@ -102,10 +106,13 @@ const getDivisions = async (req, res) => {
 
     let divisions = await db.divisions.find(query);
 
-    if (user.divisionId) {
-      divisions = divisions.filter(d => String(d._id || d.id) === String(user.divisionId));
-    } else if (user.division) {
-      divisions = divisions.filter(d => d.name?.toLowerCase() === user.division.toLowerCase());
+    // Division and Pincode managers have division locked to assigned division
+    if (['division_manager', 'pincode_manager'].includes(userRole)) {
+      if (user.divisionId) {
+        divisions = divisions.filter(d => String(d._id || d.id) === String(user.divisionId));
+      } else if (user.division) {
+        divisions = divisions.filter(d => d.name?.toLowerCase() === user.division.toLowerCase());
+      }
     }
 
     const payload = { success: true, data: divisions, divisions };
@@ -121,24 +128,25 @@ const getDivisions = async (req, res) => {
 const getPincodes = async (req, res) => {
   try {
     const user = req.user || {};
+    const userRole = String(user.role || '').toLowerCase().replace(/[\s-]/g, '_');
     const { divisionId, division, districtId, district, stateId } = req.query;
 
-    let targetDivisionId = divisionId || user.divisionId;
+    let targetDivisionId = divisionId || (['division_manager', 'pincode_manager'].includes(userRole) ? user.divisionId : null);
     if (!targetDivisionId && (division || user.division)) {
       const divName = division || user.division;
-      const divDoc = await db.divisions.findOne({ name: new RegExp('^' + divName.trim() + '$', 'i'), status: 'Active' });
+      const divDoc = await db.divisions.findOne({ name: new RegExp('^' + divName.trim() + '$', 'i') });
       if (divDoc) {
         targetDivisionId = divDoc._id || divDoc.id;
       }
     }
 
-    const cacheKey = `territory:pincodes:${user.id || 'public'}:${targetDivisionId || 'all'}:${user.pincodeId || user.pincode || 'all'}`;
+    const cacheKey = `territory:pincodes:${user.id || 'public'}:${targetDivisionId || 'all'}:${userRole === 'pincode_manager' ? (user.pincodeId || user.pincode || 'all') : 'all'}`;
     const cached = await cacheManager.get(cacheKey);
     if (cached) {
       return res.json(cached);
     }
 
-    let query = { status: 'Active' };
+    let query = {};
     if (targetDivisionId) {
       query.divisionId = targetDivisionId;
     } else if (districtId || user.districtId) {
@@ -149,10 +157,13 @@ const getPincodes = async (req, res) => {
 
     let pincodes = await db.pincodes.find(query);
 
-    if (user.pincodeId) {
-      pincodes = pincodes.filter(p => String(p._id || p.id) === String(user.pincodeId));
-    } else if (user.pincode) {
-      pincodes = pincodes.filter(p => String(p.code || p.pincode).trim() === String(user.pincode).trim());
+    // Strictly ONLY pincode_manager is restricted to their assigned single pincode!
+    if (userRole === 'pincode_manager') {
+      if (user.pincodeId) {
+        pincodes = pincodes.filter(p => String(p._id || p.id) === String(user.pincodeId));
+      } else if (user.pincode) {
+        pincodes = pincodes.filter(p => String(p.code || p.pincode).trim() === String(user.pincode).trim());
+      }
     }
 
     const payload = { success: true, data: pincodes, pincodes };

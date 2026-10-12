@@ -177,6 +177,28 @@ export const authService = {
       body: JSON.stringify({ currentPassword, newPassword })
     });
     return handleResponse(res);
+  },
+
+  async updateProfilePhoto(file) {
+    const formData = new FormData();
+    formData.append('avatar', file);
+    const token = getAuthToken();
+    const res = await fetch(`${API_BASE}/auth/profile-photo`, {
+      method: 'PUT',
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      },
+      body: formData
+    });
+    return handleResponse(res);
+  },
+
+  async removeProfilePhoto() {
+    const res = await fetch(`${API_BASE}/auth/profile-photo`, {
+      method: 'DELETE',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
   }
 };
 
@@ -1123,4 +1145,35 @@ export const managerOnboardingService = {
     return handleResponse(res);
   }
 };
+
+export const issueService = {
+  async getIssues(params = {}) {
+    const query = new URLSearchParams();
+    if (params.status && params.status !== 'All') query.append('status', params.status);
+    if (params.priority && params.priority !== 'All') query.append('priority', params.priority);
+    if (params.search) query.append('search', params.search);
+    const qs = query.toString();
+    const res = await fetch(`${API_BASE}/issues${qs ? `?${qs}` : ''}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async getIssueById(id) {
+    const res = await fetch(`${API_BASE}/issues/${id}`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async updateIssueStatus(id, status, notes = '') {
+    const res = await fetch(`${API_BASE}/issues/${id}/status`, {
+      method: 'PATCH',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ status, notes })
+    });
+    return handleResponse(res);
+  }
+};
+
 

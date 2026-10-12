@@ -512,7 +512,8 @@ const db = {
   submittedReports: new Collection('submitted_reports', 'reports'),
   agents: new Collection('agents', 'agents'),
   notifications: new Collection('notifications', 'notifications'),
-  settings: new Collection('settings', 'settings')
+  settings: new Collection('settings', 'settings'),
+  tickets: new Collection('tickets', 'tickets')
 };
 
 

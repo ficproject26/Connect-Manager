@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';
-import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff } from 'lucide-react';
+import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff, Camera, Upload, Trash2, X, Check, RefreshCw } from 'lucide-react';
 
 const Profile = () => {
   const { user, setSession } = useAuth();
@@ -15,6 +15,101 @@ const Profile = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Profile photo state
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
+  const [photoLoading, setPhotoLoading] = useState(false);
+  const [photoSuccess, setPhotoSuccess] = useState('');
+  const [photoError, setPhotoError] = useState('');
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const fileInputRef = useRef(null);
+
+  const handlePhotoSelect = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setPhotoError('');
+    setPhotoSuccess('');
+
+    // Strict client-side validation
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    if (!allowedTypes.includes(file.type.toLowerCase())) {
+      setPhotoError('Invalid image format. Please select a JPG, PNG, or WEBP file.');
+      e.target.value = '';
+      return;
+    }
+
+    // 5MB limit
+    if (file.size > 5 * 1024 * 1024) {
+      setPhotoError('File size exceeds 5MB limit. Please select a smaller photo.');
+      e.target.value = '';
+      return;
+    }
+
+    setPhotoFile(file);
+    const previewUrl = URL.createObjectURL(file);
+    setPhotoPreview(previewUrl);
+  };
+
+  const handleCancelPhoto = () => {
+    if (photoPreview) URL.revokeObjectURL(photoPreview);
+    setPhotoFile(null);
+    setPhotoPreview(null);
+    setPhotoError('');
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const handleSavePhoto = async () => {
+    if (!photoFile) return;
+    setPhotoLoading(true);
+    setPhotoError('');
+    setPhotoSuccess('');
+
+    try {
+      const res = await authService.updateProfilePhoto(photoFile);
+      if (res && res.success && res.avatarUrl) {
+        setSession({
+          ...user,
+          avatarUrl: res.avatarUrl
+        });
+        setPhotoSuccess('Profile photo updated successfully!');
+        handleCancelPhoto();
+        setTimeout(() => setPhotoSuccess(''), 4000);
+      } else {
+        setPhotoError(res?.message || 'Failed to update profile photo.');
+      }
+    } catch (err) {
+      setPhotoError(err.message || 'Error updating profile photo.');
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
+
+  const handleRemovePhoto = async () => {
+    setPhotoLoading(true);
+    setPhotoError('');
+    setPhotoSuccess('');
+
+    try {
+      const res = await authService.removeProfilePhoto();
+      if (res && res.success) {
+        setSession({
+          ...user,
+          avatarUrl: null
+        });
+        setConfirmRemove(false);
+        setPhotoSuccess('Profile photo removed successfully.');
+        setTimeout(() => setPhotoSuccess(''), 4000);
+      } else {
+        setPhotoError(res?.message || 'Failed to remove profile photo.');
+      }
+    } catch (err) {
+      setPhotoError(err.message || 'Error removing profile photo.');
+    } finally {
+      setPhotoLoading(false);
+    }
+  };
 
   // Simulate approval state
   const [simulating, setSimulating] = useState(false);
@@ -205,32 +300,268 @@ const Profile = () => {
           <div className="card-body">
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Photo & Name */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                <div style={{
-                  width: '64px',
-                  height: '64px',
-                  borderRadius: '50%',
-                  background: '#f1f5f9',
-                  border: '2px solid #e2e8f0',
-                  overflow: 'hidden',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0
-                }}>
-                  {user?.avatarUrl ? (
-                    <img src={user.avatarUrl} alt={user.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                  ) : (
-                    <span style={{ fontSize: '1.4rem', fontWeight: 800, color: '#6366f1' }}>
-                      {user?.name?.slice(0, 2).toUpperCase() || 'MG'}
-                    </span>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '18px' }}>
+                {/* Avatar with action */}
+                <div style={{ position: 'relative' }}>
+                  <div style={{
+                    width: '72px',
+                    height: '72px',
+                    borderRadius: '50%',
+                    background: '#f1f5f9',
+                    border: '2.5px solid var(--border)',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
+                  }}>
+                    {photoPreview ? (
+                      <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : user?.avatarUrl ? (
+                      <img
+                        src={user.avatarUrl}
+                        alt={user.name}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                        onError={(e) => {
+                          e.target.style.display = 'none';
+                          e.target.parentElement.innerText = user?.name?.slice(0, 2).toUpperCase() || 'SU';
+                        }}
+                      />
+                    ) : (
+                      <span style={{ fontSize: '1.5rem', fontWeight: 800, color: '#6366f1' }}>
+                        {user?.name?.slice(0, 2).toUpperCase() || 'SU'}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Hidden file input */}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    style={{ display: 'none' }}
+                    onChange={handlePhotoSelect}
+                  />
+
+                  {/* Camera overlay button on avatar */}
+                  {!photoPreview && (
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={photoLoading}
+                      title={user?.avatarUrl ? "Change Photo" : "Upload Photo"}
+                      style={{
+                        position: 'absolute',
+                        bottom: '-2px',
+                        right: '-2px',
+                        width: '26px',
+                        height: '26px',
+                        borderRadius: '50%',
+                        background: 'var(--forge-gold, #f59e0b)',
+                        color: '#0f172a',
+                        border: '2px solid #ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
+                      }}
+                    >
+                      <Camera size={13} />
+                    </button>
                   )}
                 </div>
-                <div>
-                  <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>{user?.name}</div>
-                  <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>{user?.email}</div>
+
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+                    {user?.name}
+                  </div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px', wordBreak: 'break-all' }}>
+                    {user?.email}
+                  </div>
+
+                  {/* Action buttons */}
+                  {photoPreview ? (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px' }}>
+                      <button
+                        type="button"
+                        onClick={handleSavePhoto}
+                        disabled={photoLoading}
+                        style={{
+                          padding: '5px 12px',
+                          fontSize: '0.78rem',
+                          fontWeight: 700,
+                          borderRadius: '6px',
+                          border: 'none',
+                          background: 'var(--forge-gold, #f59e0b)',
+                          color: '#0f172a',
+                          cursor: photoLoading ? 'not-allowed' : 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        {photoLoading ? (
+                          <>
+                            <RefreshCw size={12} className="animate-spin" />
+                            <span>Saving...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Check size={12} />
+                            <span>Save Photo</span>
+                          </>
+                        )}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleCancelPhoto}
+                        disabled={photoLoading}
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '0.78rem',
+                          fontWeight: 600,
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          background: '#ffffff',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px'
+                        }}
+                      >
+                        <X size={12} />
+                        <span>Cancel</span>
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={photoLoading}
+                        style={{
+                          padding: '5px 11px',
+                          fontSize: '0.76rem',
+                          fontWeight: 700,
+                          borderRadius: '6px',
+                          border: '1px solid var(--border)',
+                          background: '#f8fafc',
+                          color: 'var(--text-main)',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px'
+                        }}
+                      >
+                        <Camera size={12} color="var(--forge-gold, #f59e0b)" />
+                        <span>{user?.avatarUrl ? 'Change Photo' : 'Upload Photo'}</span>
+                      </button>
+
+                      {user?.avatarUrl && !confirmRemove && (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmRemove(true)}
+                          disabled={photoLoading}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '0.76rem',
+                            fontWeight: 600,
+                            borderRadius: '6px',
+                            border: '1px solid #fee2e2',
+                            background: '#fff5f5',
+                            color: '#dc2626',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px'
+                          }}
+                        >
+                          <Trash2 size={12} />
+                          <span>Remove</span>
+                        </button>
+                      )}
+
+                      {confirmRemove && (
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fee2e2', padding: '3px 8px', borderRadius: '6px' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#b91c1c', fontWeight: 700 }}>Remove photo?</span>
+                          <button
+                            type="button"
+                            onClick={handleRemovePhoto}
+                            disabled={photoLoading}
+                            style={{
+                              padding: '2px 7px',
+                              fontSize: '0.72rem',
+                              fontWeight: 700,
+                              borderRadius: '4px',
+                              border: 'none',
+                              background: '#dc2626',
+                              color: '#ffffff',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmRemove(false)}
+                            style={{
+                              padding: '2px 7px',
+                              fontSize: '0.72rem',
+                              fontWeight: 600,
+                              borderRadius: '4px',
+                              border: '1px solid #fca5a5',
+                              background: '#ffffff',
+                              color: '#334155',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            No
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
+
+              {/* Photo Feedback alerts */}
+              {photoSuccess && (
+                <div style={{
+                  padding: '8px 12px',
+                  background: '#dcfce7',
+                  border: '1px solid #86efac',
+                  borderRadius: '6px',
+                  color: '#15803d',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <CheckCircle2 size={14} />
+                  <span>{photoSuccess}</span>
+                </div>
+              )}
+              {photoError && (
+                <div style={{
+                  padding: '8px 12px',
+                  background: '#fee2e2',
+                  border: '1px solid #fca5a5',
+                  borderRadius: '6px',
+                  color: '#b91c1c',
+                  fontSize: '0.78rem',
+                  fontWeight: 600,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px'
+                }}>
+                  <AlertCircle size={14} />
+                  <span>{photoError}</span>
+                </div>
+              )}
 
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Account Status</label>

@@ -2,106 +2,19 @@
   {
     "_id": "dist_ballari",
     "code": "BALL",
-    "createdAt": "2026-10-10T11:39:57.284Z",
+    "createdAt": "2026-10-12T05:31:14.624Z",
     "id": "dist_ballari",
     "name": "Ballari",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-BALL",
-    "headquarters": "Ballari",
-    "notes": ""
-  },
-  {
-    "_id": "6aa10f71ca0932e6eaec1f5d",
-    "__v": 0,
-    "code": "KRIS",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "",
-    "districtId": "DIST-KRIS-5079",
-    "headquarters": "",
-    "name": "Krishnagiri",
-    "notes": "",
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
-  },
-  {
-    "_id": "6aa10fa8ca0932e6eaec1f5f",
-    "__v": 0,
-    "code": "DPI",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "",
-    "districtId": "DIST-TAM-DHRI",
-    "headquarters": "Dharmapuri",
-    "name": "Dharmapuri",
-    "notes": "",
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
-  },
-  {
-    "_id": "6ab661bab499c69d9e5b6269",
-    "__v": 0,
-    "code": "NMK",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "",
-    "districtId": "DIST-NMK",
-    "headquarters": "",
-    "name": "Namakkal",
-    "notes": "",
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
-  },
-  {
-    "_id": "6ab9f245bec0ef28c6e813fb",
-    "__v": 0,
-    "code": "DGL",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "",
-    "districtId": "DIST-TAM-DGL",
-    "headquarters": "",
-    "name": "Dindigul",
-    "notes": "",
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
-  },
-  {
-    "_id": "6ab9f296bec0ef28c6e813fd",
-    "__v": 0,
-    "code": "TUP",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "",
-    "districtId": "DIST-TAM-TUP",
-    "headquarters": "",
-    "name": "Tiruppur",
-    "notes": "",
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
-  },
-  {
-    "_id": "6ab9f393bec0ef28c6e813ff",
-    "__v": 0,
-    "code": "MDU",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "",
-    "districtId": "DIST-TAM-MDU",
-    "headquarters": "",
-    "name": "Madurai",
-    "notes": "",
-    "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z",
+    "districtId": "DIST-KAR-BALLARI"
   },
   {
     "_id": "6ab9f3a8bec0ef28c6e81401",
     "__v": 0,
     "code": "CBE",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:32:30.678Z",
     "description": "",
     "districtId": "DIST-TAM-CBE",
     "headquarters": "",
@@ -109,13 +22,97 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
+  },
+  {
+    "_id": "6aa10f71ca0932e6eaec1f5d",
+    "__v": 0,
+    "code": "KRIS",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KRIS-5079",
+    "headquarters": "",
+    "name": "Krishnagiri",
+    "notes": "",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "updatedAt": "2026-10-12T05:33:15.847Z"
+  },
+  {
+    "_id": "6aa10fa8ca0932e6eaec1f5f",
+    "__v": 0,
+    "code": "DPI",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-TAM-DHRI",
+    "headquarters": "",
+    "name": "Dharmapuri",
+    "notes": "",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "updatedAt": "2026-10-12T05:33:15.847Z"
+  },
+  {
+    "_id": "6ab661bab499c69d9e5b6269",
+    "__v": 0,
+    "code": "NMK",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-NMK",
+    "headquarters": "",
+    "name": "Namakkal",
+    "notes": "",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "updatedAt": "2026-10-12T05:33:15.847Z"
+  },
+  {
+    "_id": "6ab9f245bec0ef28c6e813fb",
+    "__v": 0,
+    "code": "DGL",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-TAM-DGL",
+    "headquarters": "",
+    "name": "Dindigul",
+    "notes": "",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "updatedAt": "2026-10-12T05:33:15.847Z"
+  },
+  {
+    "_id": "6ab9f296bec0ef28c6e813fd",
+    "__v": 0,
+    "code": "TUP",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-TAM-TUP",
+    "headquarters": "",
+    "name": "Tiruppur",
+    "notes": "",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "updatedAt": "2026-10-12T05:33:15.847Z"
+  },
+  {
+    "_id": "6ab9f393bec0ef28c6e813ff",
+    "__v": 0,
+    "code": "MDU",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-TAM-MDU",
+    "headquarters": "",
+    "name": "Madurai",
+    "notes": "",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f3c1bec0ef28c6e81403",
     "__v": 0,
     "code": "ED",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-ED",
     "headquarters": "",
@@ -123,13 +120,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f3e9bec0ef28c6e81405",
     "__v": 0,
     "code": "SLM",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-SLM",
     "headquarters": "",
@@ -137,13 +134,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f411bec0ef28c6e81407",
     "__v": 0,
     "code": "SGG",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-SGG",
     "headquarters": "",
@@ -151,13 +148,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f41cbec0ef28c6e81409",
     "__v": 0,
     "code": "TH",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TH",
     "headquarters": "",
@@ -165,13 +162,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f454bec0ef28c6e8140b",
     "__v": 0,
     "code": "TRY",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TRY",
     "headquarters": "",
@@ -179,13 +176,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f474bec0ef28c6e8140d",
     "__v": 0,
     "code": "KUR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-KUR",
     "headquarters": "",
@@ -193,13 +190,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f4a1bec0ef28c6e8140f",
     "__v": 0,
     "code": "NIL",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-NIL",
     "headquarters": "",
@@ -207,13 +204,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f4b7bec0ef28c6e81411",
     "__v": 0,
     "code": "VNR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-VNR",
     "headquarters": "",
@@ -221,13 +218,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f4cfbec0ef28c6e81413",
     "__v": 0,
     "code": "PDKT",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-PDKT",
     "headquarters": "",
@@ -235,13 +232,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f63abec0ef28c6e81415",
     "__v": 0,
     "code": "ALU",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-ALU",
     "headquarters": "",
@@ -249,13 +246,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f691bec0ef28c6e81417",
     "__v": 0,
     "code": "TVL",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TVL",
     "headquarters": "",
@@ -263,13 +260,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f6d3bec0ef28c6e81419",
     "__v": 0,
     "code": "TVM",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TVM",
     "headquarters": "",
@@ -277,13 +274,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f703af9e0372e50b7041",
     "__v": 0,
     "code": "CHN",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-CHE",
     "headquarters": "",
@@ -291,13 +288,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f890af9e0372e50b7043",
     "__v": 0,
     "code": "CUD",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-CUD",
     "headquarters": "",
@@ -305,13 +302,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f920af9e0372e50b7046",
     "__v": 0,
     "code": "KL",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-KL",
     "headquarters": "",
@@ -319,13 +316,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f950af9e0372e50b7048",
     "__v": 0,
     "code": "CG",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-CG",
     "headquarters": "",
@@ -333,13 +330,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f984af9e0372e50b704a",
     "__v": 0,
     "code": "KPM",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-KPM",
     "headquarters": "",
@@ -347,13 +344,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f9e4af9e0372e50b704c",
     "__v": 0,
     "code": "VPM",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-VPM",
     "headquarters": "",
@@ -361,13 +358,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f9e8af9e0372e50b704e",
     "__v": 0,
     "code": "KK",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-KK",
     "headquarters": "",
@@ -375,13 +372,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9f9f8af9e0372e50b7050",
     "__v": 0,
     "code": "VEL",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-VEL",
     "headquarters": "",
@@ -389,13 +386,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa0baf9e0372e50b7052",
     "__v": 0,
     "code": "MYD",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-MYD",
     "headquarters": "",
@@ -403,13 +400,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa0baf9e0372e50b7054",
     "__v": 0,
     "code": "TVR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TVR",
     "headquarters": "",
@@ -417,13 +414,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Inactive",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa1daf9e0372e50b7056",
     "__v": 0,
     "code": "NG",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-NG",
     "headquarters": "",
@@ -431,13 +428,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa3baf9e0372e50b7059",
     "__v": 0,
     "code": "TLR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TLR",
     "headquarters": "",
@@ -445,13 +442,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa4daf9e0372e50b705b",
     "__v": 0,
     "code": "TPT",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TPT",
     "headquarters": "",
@@ -459,13 +456,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa6eaf9e0372e50b705e",
     "__v": 0,
     "code": "PB",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-PB",
     "headquarters": "",
@@ -473,13 +470,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa70af9e0372e50b7060",
     "__v": 0,
     "code": "TUT",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TUT",
     "headquarters": "",
@@ -487,13 +484,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa8aaf9e0372e50b7062",
     "__v": 0,
     "code": "RPT",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-RPT",
     "headquarters": "",
@@ -501,13 +498,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fa95af9e0372e50b7064",
     "__v": 0,
     "code": "RM",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-RM",
     "headquarters": "",
@@ -515,13 +512,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9faadaf9e0372e50b7066",
     "__v": 0,
     "code": "TNJ",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TNJ",
     "headquarters": "",
@@ -529,13 +526,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6ab9fab6af9e0372e50b7068",
     "__v": 0,
     "code": "TS",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TAM-TS",
     "headquarters": "",
@@ -543,13 +540,13 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6abb46d7305af8d5cc1abede",
     "__v": 0,
     "code": "PY",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-PY-PY",
     "headquarters": "",
@@ -557,13 +554,13 @@
     "notes": "",
     "stateId": "6abb46c1305af8d5cc1abed8",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "6abca9af597c1350407b6deb",
     "__v": 0,
     "code": "TVUR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
+    "createdAt": "2026-10-12T05:33:15.847Z",
     "description": "",
     "districtId": "DIST-TN-TVUR",
     "headquarters": "",
@@ -571,272 +568,272 @@
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
-    "_id": "dist_bengaluru_urban",
+    "_id": "dist_blr_u",
     "__v": 0,
-    "code": "BLRU",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-BLRU",
-    "headquarters": "Bengaluru Urban",
+    "code": "BENG",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-BLR_U",
+    "headquarters": "",
     "name": "Bengaluru Urban",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_mys",
     "__v": 0,
-    "code": "MYS",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
+    "code": "MYSU",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
     "districtId": "DIST-KAR-MYS",
-    "headquarters": "Mysuru",
+    "headquarters": "",
     "name": "Mysuru",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_mandya",
     "__v": 0,
     "code": "MAND",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-MAND",
-    "headquarters": "Mandya",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-MANDYA",
+    "headquarters": "",
     "name": "Mandya",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_hassan",
     "__v": 0,
     "code": "HASS",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-HASS",
-    "headquarters": "Hassan",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-HASSAN",
+    "headquarters": "",
     "name": "Hassan",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_blr_r",
     "__v": 0,
-    "code": "BLRR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-BLRR",
-    "headquarters": "Bengaluru Rural",
+    "code": "BENG",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-BLR_R",
+    "headquarters": "",
     "name": "Bengaluru Rural",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_belagavi",
     "__v": 0,
     "code": "BELA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-BELA",
-    "headquarters": "Belagavi",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-BELAGAVI",
+    "headquarters": "",
     "name": "Belagavi",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_hubballi",
     "__v": 0,
     "code": "DHAR",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-DHAR",
-    "headquarters": "Dharwad",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-HUBBALLI",
+    "headquarters": "",
     "name": "Dharwad",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_kalaburagi",
     "__v": 0,
     "code": "KALA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-KALA",
-    "headquarters": "Kalaburagi",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-KALABURAGI",
+    "headquarters": "",
     "name": "Kalaburagi",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_vijayapura",
     "__v": 0,
     "code": "VIJA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-VIJA",
-    "headquarters": "Vijayapura",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-VIJAYAPURA",
+    "headquarters": "",
     "name": "Vijayapura",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_bidar",
     "__v": 0,
     "code": "BIDA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-BIDA",
-    "headquarters": "Bidar",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-BIDAR",
+    "headquarters": "",
     "name": "Bidar",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_davanagere",
     "__v": 0,
     "code": "DAVA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-DAVA",
-    "headquarters": "Davanagere",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-DAVANAGERE",
+    "headquarters": "",
     "name": "Davanagere",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_kolar",
     "__v": 0,
     "code": "KOLA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-KOLA",
-    "headquarters": "Kolar",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-KOLAR",
+    "headquarters": "",
     "name": "Kolar",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_chitradurga",
     "__v": 0,
     "code": "CHIT",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-CHIT",
-    "headquarters": "Chitradurga",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-CHITRADURGA",
+    "headquarters": "",
     "name": "Chitradurga",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_mangaluru",
     "__v": 0,
     "code": "DAKS",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-DAKS",
-    "headquarters": "Dakshina Kannada",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-MANGALURU",
+    "headquarters": "",
     "name": "Dakshina Kannada",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_udupi",
     "__v": 0,
     "code": "UDUP",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-UDUP",
-    "headquarters": "Udupi",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-UDUPI",
+    "headquarters": "",
     "name": "Udupi",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_shivamogga",
     "__v": 0,
     "code": "SHIV",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-SHIV",
-    "headquarters": "Shivamogga",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-SHIVAMOGGA",
+    "headquarters": "",
     "name": "Shivamogga",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_karwar",
     "__v": 0,
     "code": "UTTA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-UTTA",
-    "headquarters": "Uttara Kannada",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-KARWAR",
+    "headquarters": "",
     "name": "Uttara Kannada",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_tumakuru",
     "__v": 0,
     "code": "TUMA",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-TUMA",
-    "headquarters": "Tumakuru",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-TUMAKURU",
+    "headquarters": "",
     "name": "Tumakuru",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   },
   {
     "_id": "dist_raichur",
     "__v": 0,
     "code": "RAIC",
-    "createdAt": "2026-10-10T11:45:20.140Z",
-    "description": "District of Karnataka",
-    "districtId": "DIST-KAR-RAIC",
-    "headquarters": "Raichur",
+    "createdAt": "2026-10-12T05:33:15.847Z",
+    "description": "",
+    "districtId": "DIST-KAR-RAICHUR",
+    "headquarters": "",
     "name": "Raichur",
     "notes": "",
     "stateId": "state_ka",
     "status": "Active",
-    "updatedAt": "2026-10-10T11:45:20.140Z"
+    "updatedAt": "2026-10-12T05:33:15.847Z"
   }
 ]

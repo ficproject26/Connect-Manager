@@ -28,12 +28,14 @@ const normalizeUser = (u) => {
     pincodeId: u.pincodeId || territory.pincodeId || scope.pincodeId || null,
     pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
     pincodeCode: u.pincodeCode || u.pincode || territory.pincodeCode || territory.pincode || scope.pincodeCode || null,
+    pincodeArea: u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null,
     territory: {
       ...territory,
       state: u.state || u.stateName || territory.state || scope.stateName || null,
       district: u.district || u.districtName || territory.district || scope.districtName || null,
       division: u.division || u.divisionName || territory.division || scope.divisionName || null,
-      pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null
+      pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
+      pincodeArea: u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null
     },
     scope: {
       ...scope,
@@ -44,7 +46,8 @@ const normalizeUser = (u) => {
       divisionId: u.divisionId || territory.divisionId || scope.divisionId || null,
       divisionName: u.division || u.divisionName || territory.division || scope.divisionName || null,
       pincodeId: u.pincodeId || territory.pincodeId || scope.pincodeId || null,
-      pincodeCode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null
+      pincodeCode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
+      pincodeArea: u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null
     }
   };
 };

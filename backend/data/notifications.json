@@ -1751,7 +1751,9 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-10T09:58:10.202Z",
-    "userId": "usr_mgr_1790666281762_1jqk"
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "isResolved": true,
+    "resolvedAt": "2026-10-10T13:25:26.373Z"
   },
   {
     "_id": "fb2d3b10-8eae-4157-92e7-4cb9d9732e61",
@@ -1799,7 +1801,9 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-10T09:58:18.791Z",
-    "userId": "usr_mgr_1790666281762_1jqk"
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "isResolved": true,
+    "resolvedAt": "2026-10-10T13:25:26.373Z"
   },
   {
     "_id": "0e5c9e55-f786-451f-bfcf-2074a5862b59",
@@ -1947,13 +1951,15 @@
     "_id": "f6ede94a-435a-4e06-a379-aafdf7e9650b",
     "createdAt": "2026-10-10T06:26:06.191Z",
     "id": "f6ede94a-435a-4e06-a379-aafdf7e9650b",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga logged field visit for antigraviity (Interested).",
     "recordId": "9f717608-7d8e-4592-912a-542444ceda5c",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-10T06:26:06.191Z",
-    "userId": "usr_mgr_1790666281762_1jqk"
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "isResolved": true,
+    "resolvedAt": "2026-10-10T13:25:26.373Z"
   },
   {
     "_id": "edff0393-2374-44f2-a8ed-6a1cd9678678",
@@ -2043,12 +2049,12 @@
     "_id": "8a87b4c5-81ac-49bb-9cbe-dfddd230105b",
     "createdAt": "2026-10-10T09:39:56.120Z",
     "id": "8a87b4c5-81ac-49bb-9cbe-dfddd230105b",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga marked task QCT-33737526 as Accepted.",
     "recordId": "TSK-1790933737526-72C6Q",
     "title": "Task QCT-33737526 Accepted",
     "type": "task_updated",
-    "updatedAt": "2026-10-10T09:39:56.120Z",
+    "updatedAt": "2026-10-10T13:37:59.564Z",
     "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
@@ -2079,13 +2085,15 @@
     "_id": "c3d44724-25dc-480d-9a9c-6b15fff5accd",
     "createdAt": "2026-10-10T10:08:05.895Z",
     "id": "c3d44724-25dc-480d-9a9c-6b15fff5accd",
-    "isRead": false,
+    "isRead": true,
     "message": "Muruga logged field visit for antigraviity (Interested).",
     "recordId": "5d45161b-5014-4b95-b567-178b0a81f737",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-10T10:08:05.895Z",
-    "userId": "usr_mgr_1790666281762_1jqk"
+    "userId": "usr_mgr_1790666281762_1jqk",
+    "isResolved": true,
+    "resolvedAt": "2026-10-10T13:25:26.373Z"
   },
   {
     "_id": "9203d7cb-5dec-4294-9135-980c77ba64de",
@@ -2121,6 +2129,90 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-10T12:13:27.916Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "dcf0d3c4-b9e3-4d01-9dce-28dde2e5ef3c",
+    "createdAt": "2026-10-10T13:38:15.998Z",
+    "id": "dcf0d3c4-b9e3-4d01-9dce-28dde2e5ef3c",
+    "isRead": false,
+    "message": "Muruga marked task QCT-02135312 as Completed.",
+    "recordId": "TSK-1791202135312-CHD1B",
+    "title": "Task QCT-02135312 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-10T13:38:15.998Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "037d9f6d-752d-4b63-b906-42b5221a6892",
+    "createdAt": "2026-10-12T04:17:38.035Z",
+    "id": "037d9f6d-752d-4b63-b906-42b5221a6892",
+    "isRead": true,
+    "message": "Surya logged field visit for Dinesh store (Interested).",
+    "recordId": "e22c0960-b7b9-4667-8518-33dba278eb56",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T04:39:51.172Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "864bb511-2608-46a1-b905-e0a0812eb466",
+    "createdAt": "2026-10-12T04:32:45.649Z",
+    "id": "864bb511-2608-46a1-b905-e0a0812eb466",
+    "isRead": true,
+    "message": "Surya logged field visit for Toys store (Interested).",
+    "recordId": "f3da3209-e439-48e9-919c-b5f88653c033",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T04:39:49.639Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "81343cf4-2ef2-495a-8b52-d0324745a300",
+    "createdAt": "2026-10-12T05:23:23.562Z",
+    "id": "81343cf4-2ef2-495a-8b52-d0324745a300",
+    "isRead": false,
+    "message": "Surya logged field visit for store1 (Interested).",
+    "recordId": "ea44d5b3-20e0-448e-9fdf-5453e4b631e0",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T05:23:23.562Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "13d9b758-d3a0-4954-a996-0f9e66af15d9",
+    "createdAt": "2026-10-12T05:24:59.134Z",
+    "id": "13d9b758-d3a0-4954-a996-0f9e66af15d9",
+    "isRead": false,
+    "message": "Javeed logged field visit for Abdul (Interested).",
+    "recordId": "c94fefcc-b407-4f02-af05-dfb6b3569c97",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T05:24:59.134Z",
+    "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9"
+  },
+  {
+    "_id": "60d8be16-6fa1-4b61-8c98-28ca963b5b9f",
+    "createdAt": "2026-10-12T05:27:35.200Z",
+    "id": "60d8be16-6fa1-4b61-8c98-28ca963b5b9f",
+    "isRead": false,
+    "message": "Surya logged field visit for Kalam (Interested).",
+    "recordId": "4922fe85-ec90-43ac-aac7-27e4bf679584",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T05:27:35.200Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "7b0f19b2-0702-4d6e-bb63-7294dd566f94",
+    "createdAt": "2026-10-12T05:38:45.591Z",
+    "id": "7b0f19b2-0702-4d6e-bb63-7294dd566f94",
+    "isRead": false,
+    "message": "iniya logged field visit for store2 (Interested).",
+    "recordId": "ed23fda9-6ea8-4ad8-bd37-7718c5ea9c97",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-12T05:38:45.591Z",
     "userId": "usr_mgr_1790592319962_fx3y"
   }
 ]

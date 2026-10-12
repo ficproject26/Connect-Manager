@@ -25,5 +25,7 @@ router.post('/reset-password', authLimiter, authController.resetPassword);
 router.get('/me', authMiddleware, authController.getMe);
 router.post('/refresh', authMiddleware, authController.refreshToken);
 router.put('/change-password', authMiddleware, authController.changePassword);
+router.put('/profile-photo', authMiddleware, uploadLimiter, upload.single('avatar'), authController.updateProfilePhoto);
+router.delete('/profile-photo', authMiddleware, authController.removeProfilePhoto);
 
 module.exports = router;

@@ -1399,6 +1399,13 @@
         "byRole": "pincode_manager",
         "at": "2026-10-10T09:40:09.170Z",
         "notes": "Status changed to In Progress"
+      },
+      {
+        "action": "Task Completed",
+        "by": "Muruga",
+        "byRole": "pincode_manager",
+        "at": "2026-10-10T13:38:15.878Z",
+        "notes": "ertyui"
       }
     ],
     "assignedManagerId": "usr_mgr_1790666281762_1jqk",
@@ -1406,7 +1413,19 @@
     "assignedManagerName": "Muruga",
     "assignedManagerRole": "Pincode Manager",
     "category": "Vendor Onboarding",
-    "completionDetails": null,
+    "completionDetails": {
+      "completionPhoto": "/uploads/1791639489583_f3a88955b81515669180f1642a2e45bf.png",
+      "completionPhotos": [
+        "/uploads/1791639489583_f3a88955b81515669180f1642a2e45bf.png"
+      ],
+      "workCompleted": "ertyui",
+      "resolutionDetails": "ertyui",
+      "completionAudio": "/uploads/1791639494568_3b46fd4b6b82360b9d84024c251788c0.webm",
+      "voiceNote": "/uploads/1791639494568_3b46fd4b6b82360b9d84024c251788c0.webm",
+      "completedBy": "Muruga",
+      "completedById": "usr_mgr_1790666281762_1jqk",
+      "completedAt": "2026-10-10T13:38:15.878Z"
+    },
     "createdAt": "2026-10-05T12:08:55.312Z",
     "createdByAdminId": "ADM-PIN-608A42",
     "createdByAdminName": "Maran",
@@ -1426,17 +1445,17 @@
     "pincodeId": "6aba6ffb16711d5e7d54bb5d",
     "priority": "High",
     "qcIssueId": null,
-    "remarks": "",
+    "remarks": "ertyui",
     "state": "Tamil Nadu",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "stateName": "Tamil Nadu",
-    "status": "In Progress",
+    "status": "Completed",
     "suspendRequest": null,
     "taskNumber": "QCT-02135312",
     "title": "5 tie up",
-    "updatedAt": "2026-10-10T09:40:09.170Z",
+    "updatedAt": "2026-10-10T13:38:15.878Z",
     "assignmentStatus": "ACCEPTED",
-    "executionStatus": "IN_PROGRESS",
+    "executionStatus": "COMPLETED",
     "history": [
       {
         "action": "Task In Progress",
@@ -1448,13 +1467,31 @@
         "remarks": "",
         "photo": null,
         "audio": null
+      },
+      {
+        "action": "Task Completed",
+        "status": "Completed",
+        "actor": "Muruga",
+        "actorId": "usr_mgr_1790666281762_1jqk",
+        "actorRole": "pincode_manager",
+        "timestamp": "2026-10-10T13:38:15.878Z",
+        "remarks": "ertyui",
+        "photo": "/uploads/1791639489583_f3a88955b81515669180f1642a2e45bf.png",
+        "audio": "/uploads/1791639494568_3b46fd4b6b82360b9d84024c251788c0.webm"
       }
     ],
-    "lastUpdate": "2026-10-10T09:40:09.170Z",
-    "progress": 50,
+    "lastUpdate": "2026-10-10T13:38:15.878Z",
+    "progress": 100,
     "startedAt": "2026-10-10T09:40:09.170Z",
     "startedBy": "Muruga",
-    "startedById": "usr_mgr_1790666281762_1jqk"
+    "startedById": "usr_mgr_1790666281762_1jqk",
+    "completedDate": "2026-10-10T13:38:15.878Z",
+    "isResolved": true,
+    "photos": [
+      "/uploads/1791639489583_f3a88955b81515669180f1642a2e45bf.png"
+    ],
+    "shopPhoto": "/uploads/1791639489583_f3a88955b81515669180f1642a2e45bf.png",
+    "voiceNote": "/uploads/1791639494568_3b46fd4b6b82360b9d84024c251788c0.webm"
   },
   {
     "_id": "bench_task_1791348972292_1",

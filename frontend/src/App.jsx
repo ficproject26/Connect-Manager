@@ -12,7 +12,7 @@ import Dashboard from './pages/Dashboard';
 import Vendors from './pages/Vendors';
 import VendorRequests from './pages/VendorRequests';
 import Tasks from './pages/Tasks';
-import Issues from './pages/Tasks';
+import Issues from './pages/Issues';
 import Leaderboard from './pages/Leaderboard';
 import Notifications from './pages/Notifications';
 import AddVendor from './pages/AddVendor';
@@ -236,9 +236,14 @@ function AppInner() {
             </div>
           )}
           {currentPage === 'vendor-requests' && <VendorRequests onNavigate={navigate} />}
-          {(visitedPages.has('tasks') || visitedPages.has('issues')) && (
-            <div style={{ display: (currentPage === 'tasks' || currentPage === 'issues') ? 'block' : 'none', width: '100%' }}>
+          {visitedPages.has('tasks') && (
+            <div style={{ display: currentPage === 'tasks' ? 'block' : 'none', width: '100%' }}>
               <Tasks onNavigate={navigate} filterParams={navParams} />
+            </div>
+          )}
+          {visitedPages.has('issues') && (
+            <div style={{ display: currentPage === 'issues' ? 'block' : 'none', width: '100%' }}>
+              <Issues onNavigate={navigate} filterParams={navParams} />
             </div>
           )}
           {visitedPages.has('leaderboard') && (

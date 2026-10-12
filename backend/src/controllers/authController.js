@@ -955,6 +955,64 @@ const uploadAvatar = async (req, res) => {
   }
 };
 
+const updateProfilePhoto = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'Please select a valid image file to upload.' });
+    }
+
+    const fileUrl = `/uploads/${req.file.filename}`;
+    const userId = req.user.id || req.user._id;
+
+    // Update in users collection
+    let updatedUser = await db.users.findByIdAndUpdate(userId, { avatarUrl: fileUrl });
+    if (!updatedUser && db.managers) {
+      updatedUser = await db.managers.findByIdAndUpdate(userId, { avatarUrl: fileUrl });
+    } else if (db.managers) {
+      await db.managers.findByIdAndUpdate(userId, { avatarUrl: fileUrl }).catch(() => {});
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo updated successfully',
+      avatarUrl: fileUrl,
+      user: {
+        ...(updatedUser || req.user),
+        avatarUrl: fileUrl
+      }
+    });
+  } catch (err) {
+    console.error('Update profile photo error:', err);
+    res.status(500).json({ success: false, message: 'Failed to update profile photo.' });
+  }
+};
+
+const removeProfilePhoto = async (req, res) => {
+  try {
+    const userId = req.user.id || req.user._id;
+
+    let updatedUser = await db.users.findByIdAndUpdate(userId, { avatarUrl: null });
+    if (!updatedUser && db.managers) {
+      updatedUser = await db.managers.findByIdAndUpdate(userId, { avatarUrl: null });
+    } else if (db.managers) {
+      await db.managers.findByIdAndUpdate(userId, { avatarUrl: null }).catch(() => {});
+    }
+
+    res.json({
+      success: true,
+      message: 'Profile photo removed successfully',
+      avatarUrl: null,
+      user: {
+        ...(updatedUser || req.user),
+        avatarUrl: null
+      }
+    });
+  } catch (err) {
+    console.error('Remove profile photo error:', err);
+    res.status(500).json({ success: false, message: 'Failed to remove profile photo.' });
+  }
+};
+
 const getMe = async (req, res) => {
   try {
     let user = await db.users.findById(req.user.id);
@@ -1443,6 +1501,8 @@ module.exports = {
   simulateKyc,
   getRegistrationLocations,
   uploadAvatar,
+  updateProfilePhoto,
+  removeProfilePhoto,
   uploadDocument,
   getMe,
   changePassword,

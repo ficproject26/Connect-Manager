@@ -11,13 +11,14 @@ const {
   rejectOnboarding,
   getOnboardingById
 } = require('../controllers/managerOnboardingController');
+const { validateVendorCreationScope } = require('../middleware/scopeMiddleware');
 
 router.use(authMiddleware);
 router.use(checkRole());
 
 // Manager routes - Canonical Field Shop Visit
 router.post('/field-visit', shopVisitController.createShopVisit);
-router.post('/submit', submitVendorOnboarding);
+router.post('/submit', validateVendorCreationScope, submitVendorOnboarding);
 router.get('/', getManagerOnboardings);
 
 // Admin / Pincode Admin routes

@@ -125,81 +125,208 @@ const verifyVendorScope = async (req, res, next) => {
 const validateVendorCreationScope = async (req, res, next) => {
   try {
     const user = req.user;
-    const body = req.body;
-    const userRegion = user.regionId || user.stateId;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized: User session required.' });
+    }
 
-    if (user.role === 'pincode_manager') {
+    const body = req.body;
+    const rawRole = String(user.role || '').toLowerCase().replace(/[\s-]/g, '_');
+    const userRegion = user.regionId || user.stateId;
+    const norm = (id) => (id ? String(id).trim() : '');
+
+    // 1. PINCODE MANAGER
+    if (rawRole === 'pincode_manager') {
+      const assignedState = norm(user.stateId || userRegion);
+      const assignedDistrict = norm(user.districtId);
+      const assignedDivision = norm(user.divisionId);
+      const assignedPincode = norm(user.pincodeId || user.pincode);
+
+      if (!assignedState || !assignedDistrict || !assignedDivision || !assignedPincode) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: Manager profile is missing assigned territory assignments. Cannot onboard vendor.'
+        });
+      }
+
+      // Reject if client submitted territory outside manager scope
+      if (body.stateId && norm(body.stateId) !== assignedState) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned state.'
+        });
+      }
+      if (body.districtId && norm(body.districtId) !== assignedDistrict) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned district.'
+        });
+      }
+      if (body.divisionId && norm(body.divisionId) !== assignedDivision) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned division.'
+        });
+      }
+      if (body.pincodeId && norm(body.pincodeId) !== assignedPincode) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned pincode.'
+        });
+      }
+
       body.regionId = userRegion;
-      body.stateId = user.stateId;
+      body.stateId = user.stateId || userRegion;
       body.districtId = user.districtId;
       body.divisionId = user.divisionId;
-      body.pincodeId = user.pincodeId;
-    } else if (user.role === 'division_manager') {
-      body.regionId = userRegion;
-      body.stateId = user.stateId;
-      body.districtId = user.districtId;
-      body.divisionId = user.divisionId;
+      body.pincodeId = user.pincodeId || user.pincode;
+    }
+    // 2. DIVISION MANAGER
+    else if (rawRole === 'division_manager') {
+      const assignedState = norm(user.stateId || userRegion);
+      const assignedDistrict = norm(user.districtId);
+      const assignedDivision = norm(user.divisionId);
+
+      if (!assignedState || !assignedDistrict || !assignedDivision) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: Manager profile is missing assigned state, district, or division. Cannot onboard vendor.'
+        });
+      }
+
+      if (body.stateId && norm(body.stateId) !== assignedState) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned state.'
+        });
+      }
+      if (body.districtId && norm(body.districtId) !== assignedDistrict) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned district.'
+        });
+      }
+      if (body.divisionId && norm(body.divisionId) !== assignedDivision) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned division.'
+        });
+      }
 
       if (!body.pincodeId) {
         return res.status(400).json({ success: false, message: 'Pincode is required' });
       }
+
       const pincode = await db.pincodes.findById(body.pincodeId);
-      if (!pincode || pincode.divisionId !== user.divisionId) {
+      if (!pincode || norm(pincode.divisionId) !== assignedDivision) {
         return res.status(403).json({
           success: false,
           message: 'Selected pincode does not belong to your assigned division.'
         });
       }
-    } else if (user.role === 'district_manager') {
+
       body.regionId = userRegion;
-      body.stateId = user.stateId;
+      body.stateId = user.stateId || userRegion;
       body.districtId = user.districtId;
+      body.divisionId = user.divisionId;
+    }
+    // 3. DISTRICT MANAGER
+    else if (rawRole === 'district_manager') {
+      const assignedState = norm(user.stateId || userRegion);
+      const assignedDistrict = norm(user.districtId);
+
+      if (!assignedState || !assignedDistrict) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: Manager profile is missing assigned state or district. Cannot onboard vendor.'
+        });
+      }
+
+      if (body.stateId && norm(body.stateId) !== assignedState) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned state.'
+        });
+      }
+      if (body.districtId && norm(body.districtId) !== assignedDistrict) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned district.'
+        });
+      }
 
       if (!body.divisionId || !body.pincodeId) {
         return res.status(400).json({ success: false, message: 'Division and Pincode are required' });
       }
+
       const division = await db.divisions.findById(body.divisionId);
-      if (!division || division.districtId !== user.districtId) {
+      if (!division || norm(division.districtId) !== assignedDistrict) {
         return res.status(403).json({
           success: false,
           message: 'Selected division does not belong to your assigned district.'
         });
       }
+
       const pincode = await db.pincodes.findById(body.pincodeId);
-      if (!pincode || pincode.divisionId !== body.divisionId) {
+      if (!pincode || norm(pincode.divisionId) !== norm(body.divisionId)) {
         return res.status(403).json({
           success: false,
           message: 'Selected pincode does not belong to the selected division.'
         });
       }
-    } else if (user.role === 'state_manager' || user.role === 'state_admin') {
+
       body.regionId = userRegion;
       body.stateId = user.stateId || userRegion;
+      body.districtId = user.districtId;
+    }
+    // 4. STATE MANAGER / STATE ADMIN
+    else if (rawRole === 'state_manager' || rawRole === 'state_admin' || rawRole.includes('state')) {
+      const assignedState = norm(user.stateId || userRegion);
+
+      if (!assignedState) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: Manager profile is missing assigned state. Cannot onboard vendor.'
+        });
+      }
+
+      if (body.stateId && norm(body.stateId) !== assignedState) {
+        return res.status(403).json({
+          success: false,
+          message: 'Access Denied: You cannot onboard vendors outside your assigned state.'
+        });
+      }
 
       if (!body.districtId || !body.divisionId || !body.pincodeId) {
         return res.status(400).json({ success: false, message: 'District, Division, and Pincode are required' });
       }
+
       const district = await db.districts.findById(body.districtId);
-      if (!district || district.regionId !== userRegion) {
+      const districtState = norm(district?.stateId || district?.regionId);
+      if (!district || districtState !== assignedState) {
         return res.status(403).json({
           success: false,
           message: 'Selected district does not belong to your assigned regional jurisdiction.'
         });
       }
+
       const division = await db.divisions.findById(body.divisionId);
-      if (!division || division.districtId !== body.districtId) {
+      if (!division || norm(division.districtId) !== norm(body.districtId)) {
         return res.status(403).json({
           success: false,
           message: 'Selected division does not belong to the selected district.'
         });
       }
+
       const pincode = await db.pincodes.findById(body.pincodeId);
-      if (!pincode || pincode.divisionId !== body.divisionId) {
+      if (!pincode || norm(pincode.divisionId) !== norm(body.divisionId)) {
         return res.status(403).json({
           success: false,
           message: 'Selected pincode does not belong to the selected division.'
         });
       }
+
+      body.regionId = userRegion;
+      body.stateId = user.stateId || userRegion;
     }
 
     next();

@@ -132,6 +132,7 @@ const agentRoutes = require('./routes/agentRoutes');
 const settingsRoutes = require('./routes/settingsRoutes');
 const realtimeRoutes = require('./routes/realtimeRoutes');
 const managerOnboardingRoutes = require('./routes/managerOnboardingRoutes');
+const issueRoutes = require('./routes/issueRoutes');
 
 app.use('/api/auth', authRoutes);
 app.use('/api/vendors', vendorRoutes);
@@ -142,6 +143,7 @@ app.use('/api/uploads', uploadRoutes);
 app.use('/api/managers', managerDirectoryRoutes);
 app.use('/api/notifications', notificationRoutes);
 app.use('/api/qc-tasks', taskRoutes);
+app.use('/api/issues', issueRoutes);
 app.use('/api/shop-visits', shopVisitRoutes);
 app.use('/api/operations', agentRoutes);
 app.use('/api/settings', settingsRoutes);

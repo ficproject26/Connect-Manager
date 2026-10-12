@@ -837,7 +837,7 @@ const Dashboard = ({ onNavigate }) => {
                       strokeDasharray={seg.dashArray}
                       strokeDashoffset={seg.dashOffset}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => onNavigate && onNavigate('tasks')}
+                      onClick={() => onNavigate && onNavigate('issues', { status: seg.label })}
                       onMouseEnter={() => setHoveredIssue(seg.id)}
                       onMouseLeave={() => setHoveredIssue(null)}
                     />
@@ -847,7 +847,7 @@ const Dashboard = ({ onNavigate }) => {
               <div 
                 className="donut-center-text"
                 style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate && onNavigate('tasks')}
+                onClick={() => onNavigate && onNavigate('issues', { status: hoveredIssue ? issueSegments.find(s => s.id === hoveredIssue)?.label : 'All' })}
               >
                 <div 
                   className="donut-center-num" 
@@ -876,7 +876,7 @@ const Dashboard = ({ onNavigate }) => {
                     key={seg.id} 
                     className={`donut-legend-row ${isHovered ? 'active' : ''}`}
                     style={{ cursor: 'pointer' }}
-                    onClick={() => onNavigate && onNavigate('tasks')}
+                    onClick={() => onNavigate && onNavigate('issues', { status: seg.label })}
                     onMouseEnter={() => setHoveredIssue(seg.id)}
                     onMouseLeave={() => setHoveredIssue(null)}
                   >
@@ -901,7 +901,7 @@ const Dashboard = ({ onNavigate }) => {
                     {currentIssueStats.slaRate}% SLA Met
                   </strong>
                 ) : (
-                  <strong style={{ color: '#94a3b8' }}>Unavailable (No resolved tasks)</strong>
+                  <strong style={{ color: '#94a3b8' }}>Unavailable (No resolved issues)</strong>
                 )}
               </div>
               <div className="issue-health-bar">
@@ -921,7 +921,7 @@ const Dashboard = ({ onNavigate }) => {
               <div 
                 className="issue-stat-box"
                 style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate && onNavigate('tasks')}
+                onClick={() => onNavigate && onNavigate('issues', { status: 'Resolved' })}
               >
                 <div className="stat-icon-wrap" style={{ background: '#f0fdf4', color: '#16a34a' }}>
                   <Clock size={13} />
@@ -938,7 +938,7 @@ const Dashboard = ({ onNavigate }) => {
               <div 
                 className="issue-stat-box"
                 style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate && onNavigate('tasks')}
+                onClick={() => onNavigate && onNavigate('issues', { status: 'Escalated' })}
               >
                 <div className="stat-icon-wrap" style={{ background: '#fef2f2', color: '#ef4444' }}>
                   <AlertTriangle size={13} />
@@ -952,9 +952,9 @@ const Dashboard = ({ onNavigate }) => {
 
             <button 
               className="btn-view-issues"
-              onClick={() => onNavigate && onNavigate('tasks')}
+              onClick={() => onNavigate && onNavigate('issues')}
             >
-              <span>View & Manage Tasks</span>
+              <span>View & Manage Issues</span>
               <ArrowRight size={13} />
             </button>
           </div>
