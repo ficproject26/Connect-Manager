@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { authService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -31,7 +31,9 @@ import {
   PenTool,
   Home,
   CheckSquare,
-  Square
+  Square,
+  Landmark,
+  Banknote
 } from 'lucide-react';
 
 const ROLES = [
@@ -129,26 +131,35 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
   // Declaration Acceptance
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
 
+  // Bank Details
+  const [bankDetails, setBankDetails] = useState({
+    accountHolderName: '',
+    bankName: '',
+    branchName: '',
+    street: '',
+    city: '',
+    accountNumber: '',
+    ifscCode: ''
+  });
+  const [bankErrors, setBankErrors] = useState({});
+
   // Geographic Selection
   const [stateId, setStateId] = useState(initialUser?.scope?.stateId || initialUser?.stateId || '');
   const [districtId, setDistrictId] = useState(initialUser?.scope?.districtId || initialUser?.districtId || '');
   const [divisionId, setDivisionId] = useState(initialUser?.scope?.divisionId || initialUser?.divisionId || '');
   const [pincodeId, setPincodeId] = useState(initialUser?.scope?.pincodeId || initialUser?.pincodeId || '');
 
-  // Location Data & Hierarchy
-  const [locationsData, setLocationsData] = useState({
-    states: [],
-    districts: [],
-    divisions: [],
-    pincodes: []
-  });
+  // Location Data — states always loaded; lower levels are lazily loaded via cascading fetches
+  const [states, setStates] = useState([]);
   const [filteredDistricts, setFilteredDistricts] = useState([]);
   const [filteredDivisions, setFilteredDivisions] = useState([]);
   const [filteredPincodes, setFilteredPincodes] = useState([]);
+  const [locationsLoading, setLocationsLoading] = useState(false);
 
   // Capacity & Exclusivity Status
   const [capacityInfo, setCapacityInfo] = useState(null);
   const [capacityLoading, setCapacityLoading] = useState(false);
+
 
   // Profile Photo
   const [avatarFile, setAvatarFile] = useState(null);
@@ -240,34 +251,32 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
     }
   };
 
-  // Load locations on mount
+  // Load states on mount (fast — no sync delay)
   useEffect(() => {
-    const loadLocations = async () => {
+    const loadStates = async () => {
+      setLocationsLoading(true);
       try {
-        const res = await authService.getRegistrationLocations();
-        if (res.success) {
-          setLocationsData({
-            states: res.states || [],
-            districts: res.districts || [],
-            divisions: res.divisions || [],
-            pincodes: res.pincodes || []
-          });
+        const res = await authService.getStates();
+        const stateList = res.states || res.data || [];
+        setStates(stateList);
 
-          // Preselect first available state if available
-          if (res.states && res.states.length > 0) {
-            const available = res.states.find(s => !s.isFull) || res.states[0];
-            setStateId(available._id);
-          }
+        // Preselect first available state
+        if (stateList.length > 0 && !stateId) {
+          const available = stateList.find(s => !s.isFull) || stateList[0];
+          setStateId(available._id || available.id);
         }
       } catch (err) {
-        console.error('Failed to load locations for registration:', err);
+        console.error('Failed to load states:', err);
+      } finally {
+        setLocationsLoading(false);
       }
     };
-    loadLocations();
-  }, []);
+    loadStates();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // When state changes, reset lower cascade
-  const handleStateChange = (newStId) => {
+
+  // When state changes, reset lower levels and fetch districts
+  const handleStateChange = useCallback(async (newStId) => {
     setStateId(newStId);
     setDistrictId('');
     setDivisionId('');
@@ -275,75 +284,72 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
     setFilteredDistricts([]);
     setFilteredDivisions([]);
     setFilteredPincodes([]);
-  };
-
-  // Filter districts when state changes
-  useEffect(() => {
-    if (stateId) {
-      const dists = locationsData.districts.filter(d => d.stateId === stateId);
-      setFilteredDistricts(dists);
-      setDistrictId('');
-      setDivisionId('');
-      setPincodeId('');
-    } else {
-      setFilteredDistricts([]);
-      setDistrictId('');
-      setDivisionId('');
-      setPincodeId('');
+    if (!newStId) return;
+    try {
+      const res = await authService.getDistricts(newStId);
+      setFilteredDistricts(res.districts || res.data || []);
+    } catch (err) {
+      console.error('Failed to load districts:', err);
     }
-  }, [stateId, locationsData.districts]);
+  }, []);
 
-  // Filter divisions when district changes
-  useEffect(() => {
-    if (districtId) {
-      const divs = locationsData.divisions.filter(v => v.districtId === districtId);
-      setFilteredDivisions(divs);
-      setDivisionId('');
-      setPincodeId('');
-    } else {
-      setFilteredDivisions([]);
-      setDivisionId('');
-      setPincodeId('');
+  // When district changes, reset lower levels and fetch divisions
+  const handleDistrictChange = useCallback(async (newDstId) => {
+    setDistrictId(newDstId);
+    setDivisionId('');
+    setPincodeId('');
+    setFilteredDivisions([]);
+    setFilteredPincodes([]);
+    if (!newDstId) return;
+    try {
+      const res = await authService.getDivisions(newDstId);
+      setFilteredDivisions(res.divisions || res.data || []);
+    } catch (err) {
+      console.error('Failed to load divisions:', err);
     }
-  }, [districtId, locationsData.divisions]);
+  }, []);
 
-  // Filter pincodes when division changes
-  useEffect(() => {
-    if (divisionId) {
-      const pins = locationsData.pincodes.filter(p => p.divisionId === divisionId);
-      setFilteredPincodes(pins);
-      setPincodeId('');
-    } else {
-      setFilteredPincodes([]);
-      setPincodeId('');
+  // When division changes, reset pincodes and fetch them
+  const handleDivisionChange = useCallback(async (newDivId) => {
+    setDivisionId(newDivId);
+    setPincodeId('');
+    setFilteredPincodes([]);
+    if (!newDivId) return;
+    try {
+      const res = await authService.getPincodes(newDivId);
+      setFilteredPincodes(res.pincodes || res.data || []);
+    } catch (err) {
+      console.error('Failed to load pincodes:', err);
     }
-  }, [divisionId, locationsData.pincodes]);
+  }, []);
 
-  // Prevent holding filled location selection when role or location changes
+  // Fetch districts when stateId is pre-populated (e.g. from initialUser)
   useEffect(() => {
-    if (role === 'state_manager' && stateId) {
-      const curState = locationsData.states.find(s => s._id === stateId);
-      if (curState?.isFull) {
-        const nextAvail = locationsData.states.find(s => !s.isFull);
-        setStateId(nextAvail ? nextAvail._id : '');
-      }
-    } else if (role === 'district_manager' && districtId) {
-      const curDist = filteredDistricts.find(d => d._id === districtId);
-      if (curDist?.isFull) {
-        setDistrictId('');
-      }
-    } else if (role === 'division_manager' && divisionId) {
-      const curDiv = filteredDivisions.find(v => v._id === divisionId);
-      if (curDiv?.isFull) {
-        setDivisionId('');
-      }
-    } else if (role === 'pincode_manager' && pincodeId) {
-      const curPin = filteredPincodes.find(p => p._id === pincodeId);
-      if (curPin?.isFull) {
-        setPincodeId('');
-      }
+    if (stateId && filteredDistricts.length === 0) {
+      authService.getDistricts(stateId)
+        .then(res => setFilteredDistricts(res.districts || res.data || []))
+        .catch(() => {});
     }
-  }, [role, stateId, districtId, divisionId, pincodeId, locationsData.states, filteredDistricts, filteredDivisions, filteredPincodes]);
+  }, [stateId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch divisions when districtId is pre-populated
+  useEffect(() => {
+    if (districtId && filteredDivisions.length === 0) {
+      authService.getDivisions(districtId)
+        .then(res => setFilteredDivisions(res.divisions || res.data || []))
+        .catch(() => {});
+    }
+  }, [districtId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Fetch pincodes when divisionId is pre-populated
+  useEffect(() => {
+    if (divisionId && filteredPincodes.length === 0) {
+      authService.getPincodes(divisionId)
+        .then(res => setFilteredPincodes(res.pincodes || res.data || []))
+        .catch(() => {});
+    }
+  }, [divisionId]); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   // Check Capacity / Place Vacancy when role or selected location changes
   useEffect(() => {
@@ -562,7 +568,29 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
       return;
     }
 
-    // Capacity verification
+    // Bank Details validation
+    const bdErrors = {};
+    if (!bankDetails.accountHolderName.trim()) bdErrors.accountHolderName = 'Account Holder Name is required.';
+    if (!bankDetails.bankName.trim()) bdErrors.bankName = 'Bank Name is required.';
+    if (!bankDetails.branchName.trim()) bdErrors.branchName = 'Bank Branch is required.';
+    if (!bankDetails.city.trim()) bdErrors.city = 'Bank City is required.';
+    if (!bankDetails.accountNumber.trim()) {
+      bdErrors.accountNumber = 'Account Number is required.';
+    } else if (!/^\d{9,18}$/.test(bankDetails.accountNumber.trim().replace(/\s/g, ''))) {
+      bdErrors.accountNumber = 'Account Number must be 9–18 digits.';
+    }
+    if (!bankDetails.ifscCode.trim()) {
+      bdErrors.ifscCode = 'IFSC Code is required.';
+    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankDetails.ifscCode.trim().toUpperCase())) {
+      bdErrors.ifscCode = 'Invalid IFSC Code format (e.g. SBIN0001234).';
+    }
+    if (Object.keys(bdErrors).length > 0) {
+      setBankErrors(bdErrors);
+      setError('Please fill in all required Bank Details correctly.');
+      return;
+    }
+    setBankErrors({});
+
     if (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager') {
       setError('Capacity reached for this location. Registration not allowed.');
       return;
@@ -655,7 +683,16 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
         districtId: districtId || null,
         divisionId: divisionId || null,
         pincodeId: pincodeId || null,
-        avatarUrl: uploadedAvatarUrl
+        avatarUrl: uploadedAvatarUrl,
+        bankDetails: {
+          accountHolderName: bankDetails.accountHolderName.trim(),
+          bankName: bankDetails.bankName.trim(),
+          branchName: bankDetails.branchName.trim(),
+          street: bankDetails.street.trim() || null,
+          city: bankDetails.city.trim(),
+          accountNumber: bankDetails.accountNumber.trim().replace(/\s/g, ''),
+          ifscCode: bankDetails.ifscCode.trim().toUpperCase()
+        }
       };
 
       const res = await authService.register(regPayload);
@@ -1350,16 +1387,16 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         required
                       >
                         <option value="">Select State / UT</option>
-                        {locationsData.states.map((s) => {
+                        {states.map((s) => {
                           const isFilled = role === 'state_manager' && s.isFull;
                           return (
                             <option
-                              key={s._id}
-                              value={s._id}
+                              key={s._id || s.id}
+                              value={s._id || s.id}
                               disabled={isFilled}
                               style={isFilled ? { color: '#94a3b8', background: '#f8fafc' } : {}}
                             >
-                              {s.name} ({s.code}) {isFilled ? '⛔ (Place Filled)' : ''}
+                              {s.name}{s.code ? ` (${s.code})` : ''} {isFilled ? '⛔ (Place Filled)' : ''}
                             </option>
                           );
                         })}
@@ -1377,7 +1414,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         className="form-select"
                         style={{ height: '38px', fontSize: '0.84rem' }}
                         value={districtId}
-                        onChange={(e) => setDistrictId(e.target.value)}
+                        onChange={(e) => handleDistrictChange(e.target.value)}
                         disabled={!stateId || role === 'state_manager'}
                         required={['district_manager', 'division_manager', 'pincode_manager'].includes(role)}
                       >
@@ -1420,7 +1457,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         className="form-select"
                         style={{ height: '38px', fontSize: '0.84rem' }}
                         value={divisionId}
-                        onChange={(e) => setDivisionId(e.target.value)}
+                        onChange={(e) => handleDivisionChange(e.target.value)}
                         disabled={!districtId || ['state_manager', 'district_manager'].includes(role)}
                         required={['division_manager', 'pincode_manager'].includes(role)}
                       >
@@ -1502,10 +1539,10 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                       whiteSpace: 'nowrap'
                     }}>
                       {(() => {
-                        const st = locationsData.states.find(s => s._id === stateId)?.name;
-                        const dt = filteredDistricts.find(d => d._id === districtId)?.name;
-                        const dv = filteredDivisions.find(v => v._id === divisionId)?.name;
-                        const pin = filteredPincodes.find(p => p._id === pincodeId)?.code;
+                        const st = states.find(s => (s._id || s.id) === stateId)?.name;
+                        const dt = filteredDistricts.find(d => (d._id || d.id) === districtId)?.name;
+                        const dv = filteredDivisions.find(v => (v._id || v.id) === divisionId)?.name;
+                        const pin = filteredPincodes.find(p => (p._id || p.id) === pincodeId)?.code;
                         const parts = [st, dt, dv, pin ? `PIN ${pin}` : null].filter(Boolean);
                         return parts.length > 0 ? parts.join(' › ') : 'Select location above';
                       })()}
@@ -1957,6 +1994,193 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         </button>
                       )}
                     </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            {/* Section 4: Bank Details (Full Width Card) */}
+            <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+              <div className="card-body" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Header */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '10px', borderBottom: '1.5px solid #e2e8f0' }}>
+                  <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #0f766e, #0d9488)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Landmark size={14} color="#fff" />
+                  </div>
+                  <div>
+                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>4. Bank Details</div>
+                    <div style={{ fontSize: '0.71rem', color: '#64748b' }}>Required for commission & incentive payments</div>
+                  </div>
+                </div>
+
+                {/* Row 1: Account Holder Name & Bank Name */}
+                <div className="responsive-grid-2">
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                      Account Holder Name *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <User size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <input
+                        id="reg-bank-holder-name"
+                        type="text"
+                        className="form-input"
+                        placeholder="As per bank records"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.accountHolderName ? '#ef4444' : undefined }}
+                        value={bankDetails.accountHolderName}
+                        onChange={(e) => {
+                          setBankDetails(prev => ({ ...prev, accountHolderName: e.target.value }));
+                          if (bankErrors.accountHolderName) setBankErrors(prev => ({ ...prev, accountHolderName: '' }));
+                        }}
+                        maxLength={100}
+                      />
+                    </div>
+                    {bankErrors.accountHolderName && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.accountHolderName}</div>}
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                      Bank Name *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Landmark size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <input
+                        id="reg-bank-name"
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. State Bank of India"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.bankName ? '#ef4444' : undefined }}
+                        value={bankDetails.bankName}
+                        onChange={(e) => {
+                          setBankDetails(prev => ({ ...prev, bankName: e.target.value }));
+                          if (bankErrors.bankName) setBankErrors(prev => ({ ...prev, bankName: '' }));
+                        }}
+                        maxLength={100}
+                      />
+                    </div>
+                    {bankErrors.bankName && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.bankName}</div>}
+                  </div>
+                </div>
+
+                {/* Row 2: Bank Branch & Bank City */}
+                <div className="responsive-grid-2">
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                      Bank Branch *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <MapPin size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <input
+                        id="reg-bank-branch"
+                        type="text"
+                        className="form-input"
+                        placeholder="Branch name or location"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.branchName ? '#ef4444' : undefined }}
+                        value={bankDetails.branchName}
+                        onChange={(e) => {
+                          setBankDetails(prev => ({ ...prev, branchName: e.target.value }));
+                          if (bankErrors.branchName) setBankErrors(prev => ({ ...prev, branchName: '' }));
+                        }}
+                        maxLength={100}
+                      />
+                    </div>
+                    {bankErrors.branchName && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.branchName}</div>}
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                      Bank City *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Building size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <input
+                        id="reg-bank-city"
+                        type="text"
+                        className="form-input"
+                        placeholder="City where branch is located"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.city ? '#ef4444' : undefined }}
+                        value={bankDetails.city}
+                        onChange={(e) => {
+                          setBankDetails(prev => ({ ...prev, city: e.target.value }));
+                          if (bankErrors.city) setBankErrors(prev => ({ ...prev, city: '' }));
+                        }}
+                        maxLength={80}
+                      />
+                    </div>
+                    {bankErrors.city && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.city}</div>}
+                  </div>
+                </div>
+
+                {/* Row 3: Bank Street Address (optional, full width) */}
+                <div className="form-group" style={{ margin: 0 }}>
+                  <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Bank Street / Address</span>
+                    <span style={{ color: '#94a3b8', fontSize: '0.68rem' }}>Optional</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Home size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                    <input
+                      id="reg-bank-street"
+                      type="text"
+                      className="form-input"
+                      placeholder="Street address of the bank branch (optional)"
+                      style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem' }}
+                      value={bankDetails.street}
+                      onChange={(e) => setBankDetails(prev => ({ ...prev, street: e.target.value }))}
+                      maxLength={200}
+                    />
+                  </div>
+                </div>
+
+                {/* Row 4: Account Number & IFSC Code */}
+                <div className="responsive-grid-2">
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                      Account Number *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Banknote size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <input
+                        id="reg-bank-account-number"
+                        type="text"
+                        className="form-input"
+                        placeholder="9–18 digit account number"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', letterSpacing: '0.05em', borderColor: bankErrors.accountNumber ? '#ef4444' : undefined }}
+                        value={bankDetails.accountNumber}
+                        onChange={(e) => {
+                          const val = e.target.value.replace(/\D/g, '').slice(0, 18);
+                          setBankDetails(prev => ({ ...prev, accountNumber: val }));
+                          if (bankErrors.accountNumber) setBankErrors(prev => ({ ...prev, accountNumber: '' }));
+                        }}
+                        inputMode="numeric"
+                        maxLength={18}
+                      />
+                    </div>
+                    {bankErrors.accountNumber && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.accountNumber}</div>}
+                  </div>
+
+                  <div className="form-group" style={{ margin: 0 }}>
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                      IFSC Code *
+                    </label>
+                    <div style={{ position: 'relative' }}>
+                      <Hash size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <input
+                        id="reg-bank-ifsc"
+                        type="text"
+                        className="form-input"
+                        placeholder="e.g. SBIN0001234"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'monospace', borderColor: bankErrors.ifscCode ? '#ef4444' : undefined }}
+                        value={bankDetails.ifscCode}
+                        onChange={(e) => {
+                          const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+                          setBankDetails(prev => ({ ...prev, ifscCode: val }));
+                          if (bankErrors.ifscCode) setBankErrors(prev => ({ ...prev, ifscCode: '' }));
+                        }}
+                        maxLength={11}
+                      />
+                    </div>
+                    {bankErrors.ifscCode && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.ifscCode}</div>}
+                    <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '2px' }}>Format: 4 letters + 0 + 6 alphanumeric</div>
                   </div>
                 </div>
               </div>

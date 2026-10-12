@@ -117,6 +117,30 @@ export const authService = {
     return handleResponse(res);
   },
 
+  // Fast cascading territory loaders (use /api/states, /api/districts, etc. — no sync delay)
+  async getStates() {
+    const res = await fetch(`${API_BASE}/states`);
+    return handleResponse(res);
+  },
+
+  async getDistricts(stateId) {
+    const query = stateId ? `?stateId=${encodeURIComponent(stateId)}` : '';
+    const res = await fetch(`${API_BASE}/districts${query}`);
+    return handleResponse(res);
+  },
+
+  async getDivisions(districtId) {
+    const query = districtId ? `?districtId=${encodeURIComponent(districtId)}` : '';
+    const res = await fetch(`${API_BASE}/divisions${query}`);
+    return handleResponse(res);
+  },
+
+  async getPincodes(divisionId) {
+    const query = divisionId ? `?divisionId=${encodeURIComponent(divisionId)}` : '';
+    const res = await fetch(`${API_BASE}/pincodes${query}`);
+    return handleResponse(res);
+  },
+
   async simulateApproval(userId) {
     const res = await fetch(`${API_BASE}/auth/simulate-approval`, {
       method: 'POST',

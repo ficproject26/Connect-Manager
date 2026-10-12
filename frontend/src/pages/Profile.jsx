@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';
-import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff, Camera, Upload, Trash2, X, Check, RefreshCw } from 'lucide-react';
+import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff, Camera, Upload, Trash2, X, Check, RefreshCw, Landmark, Copy } from 'lucide-react';
 
 const Profile = () => {
   const { user, setSession } = useAuth();
@@ -15,6 +15,10 @@ const Profile = () => {
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+
+  // Bank details visibility & copy state
+  const [showAccountNumber, setShowAccountNumber] = useState(false);
+  const [copiedBankField, setCopiedBankField] = useState(null);
 
   // Profile photo state
   const [photoFile, setPhotoFile] = useState(null);
@@ -633,6 +637,198 @@ const Profile = () => {
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+
+        {/* Bank Account Details Card */}
+        <div className="card">
+          <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Landmark size={18} color="var(--primary)" /> Bank Account Details
+            </h3>
+            {user?.bankDetails && (
+              <span style={{
+                background: '#dcfce7',
+                border: '1px solid #bbf7d0',
+                color: '#15803d',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '0.7rem',
+                fontWeight: 700
+              }}>
+                Registered
+              </span>
+            )}
+          </div>
+          <div className="card-body">
+            {user?.bankDetails ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
+                    Account Holder Name
+                  </label>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                    {user.bankDetails.accountHolderName || '-'}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                    <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
+                      Bank Name
+                    </label>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                      {user.bankDetails.bankName || '-'}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                    <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
+                      Branch Name
+                    </label>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                      {user.bankDetails.branchName || '-'}
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                    <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
+                      City
+                    </label>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                      {user.bankDetails.city || '-'}
+                    </div>
+                  </div>
+
+                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                    <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
+                      Branch Street / Address
+                    </label>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: user.bankDetails.street ? 'inherit' : 'var(--text-muted)' }}>
+                      {user.bankDetails.street || 'Not provided'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Number with Mask / Reveal & Copy */}
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+                      Account Number
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setShowAccountNumber(!showAccountNumber)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: '#6366f1',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          fontSize: '0.72rem',
+                          fontWeight: 700,
+                          padding: '2px 6px'
+                        }}
+                      >
+                        {showAccountNumber ? <EyeOff size={13} /> : <Eye size={13} />}
+                        <span>{showAccountNumber ? 'Mask' : 'Reveal'}</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (user.bankDetails.accountNumber) {
+                            navigator.clipboard.writeText(user.bankDetails.accountNumber);
+                            setCopiedBankField('account');
+                            setTimeout(() => setCopiedBankField(null), 2000);
+                          }
+                        }}
+                        style={{
+                          background: copiedBankField === 'account' ? '#dcfce7' : '#f1f5f9',
+                          border: '1px solid #cbd5e1',
+                          borderRadius: '4px',
+                          padding: '2px 6px',
+                          fontSize: '0.72rem',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          color: copiedBankField === 'account' ? '#15803d' : '#475569',
+                          fontWeight: 600
+                        }}
+                      >
+                        <Copy size={11} />
+                        <span>{copiedBankField === 'account' ? 'Copied' : 'Copy'}</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: '#0f172a' }}>
+                    {showAccountNumber
+                      ? user.bankDetails.accountNumber
+                      : (user.bankDetails.accountNumber ? `•••• •••• •••• ${String(user.bankDetails.accountNumber).slice(-4)}` : '-')}
+                  </div>
+                </div>
+
+                {/* IFSC Code with Copy */}
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
+                    <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
+                      IFSC Code
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (user.bankDetails.ifscCode) {
+                          navigator.clipboard.writeText(user.bankDetails.ifscCode);
+                          setCopiedBankField('ifsc');
+                          setTimeout(() => setCopiedBankField(null), 2000);
+                        }
+                      }}
+                      style={{
+                        background: copiedBankField === 'ifsc' ? '#dcfce7' : '#f1f5f9',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '4px',
+                        padding: '2px 6px',
+                        fontSize: '0.72rem',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '3px',
+                        color: copiedBankField === 'ifsc' ? '#15803d' : '#475569',
+                        fontWeight: 600
+                      }}
+                    >
+                      <Copy size={11} />
+                      <span>{copiedBankField === 'ifsc' ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                  <div style={{ fontSize: '0.98rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: '#0f172a' }}>
+                    {user.bankDetails.ifscCode || '-'}
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div style={{
+                background: '#f8fafc',
+                border: '1px dashed #cbd5e1',
+                borderRadius: 'var(--radius-sm)',
+                padding: '28px 16px',
+                textAlign: 'center',
+                color: 'var(--text-muted)'
+              }}>
+                <Landmark size={32} style={{ margin: '0 auto 8px', color: '#94a3b8' }} />
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                  Bank details not provided
+                </div>
+                <p style={{ fontSize: '0.78rem', margin: 0 }}>
+                  No banking details are currently recorded for this account. Contact administrative support to submit or update banking information.
+                </p>
+              </div>
+            )}
           </div>
         </div>
 

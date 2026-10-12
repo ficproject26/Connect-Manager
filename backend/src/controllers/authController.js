@@ -266,6 +266,7 @@ const login = async (req, res) => {
         panNumber: user.panNumber || user.documents?.panNumber || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
+        bankDetails: user.bankDetails || null,
         scope: {
           regionId: user.stateId || null,
           regionName: resolvedState,
@@ -307,7 +308,8 @@ const register = async (req, res) => {
       pincodeId,
       avatarUrl,
       aadharNumber,
-      panNumber
+      panNumber,
+      bankDetails
     } = req.body;
 
     if (!name || !email || !mobile || !password || !role) {
@@ -369,6 +371,42 @@ const register = async (req, res) => {
     if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(role)) {
       return res.status(400).json({ success: false, message: 'Invalid manager role selected.' });
     }
+
+    // Bank Details Validation (mandatory fields)
+    if (!bankDetails || typeof bankDetails !== 'object') {
+      return res.status(400).json({ success: false, message: 'Bank details are required for manager registration.' });
+    }
+    const bd = bankDetails;
+    const requiredBankFields = [
+      { key: 'accountHolderName', label: 'Account Holder Name' },
+      { key: 'bankName', label: 'Bank Name' },
+      { key: 'branchName', label: 'Bank Branch' },
+      { key: 'city', label: 'Bank City' },
+      { key: 'accountNumber', label: 'Account Number' },
+      { key: 'ifscCode', label: 'IFSC Code' }
+    ];
+    for (const { key, label } of requiredBankFields) {
+      if (!bd[key] || !String(bd[key]).trim()) {
+        return res.status(400).json({ success: false, message: `${label} is required in Bank Details.` });
+      }
+    }
+    const cleanIfsc = String(bd.ifscCode).trim().toUpperCase();
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
+      return res.status(400).json({ success: false, message: 'IFSC Code must be in valid format (e.g., SBIN0001234).' });
+    }
+    const cleanAccountNumber = String(bd.accountNumber).trim().replace(/\s/g, '');
+    if (!/^\d{9,18}$/.test(cleanAccountNumber)) {
+      return res.status(400).json({ success: false, message: 'Account Number must be between 9 and 18 digits.' });
+    }
+    const sanitizedBankDetails = {
+      accountHolderName: String(bd.accountHolderName).trim(),
+      bankName: String(bd.bankName).trim(),
+      branchName: String(bd.branchName).trim(),
+      street: bd.street ? String(bd.street).trim() : null,
+      city: String(bd.city).trim(),
+      accountNumber: cleanAccountNumber,
+      ifscCode: cleanIfsc
+    };
 
     // Role-specific location validation
     if (role === 'state_manager' && !stateId) {
@@ -502,7 +540,8 @@ const register = async (req, res) => {
       divisionName: divDoc?.name || null,
       pincodeCode: pinDoc?.code || null,
       regionId: stateId || null,
-      avatarUrl: avatarUrl || null
+      avatarUrl: avatarUrl || null,
+      bankDetails: sanitizedBankDetails
     });
 
     // Record audit log
@@ -541,6 +580,7 @@ const register = async (req, res) => {
         documents: newUser.documents || {},
         kycStatus: newUser.kycStatus || 'pending_verification',
         avatarUrl: newUser.avatarUrl || null,
+        bankDetails: sanitizedBankDetails,
         scope: {
           stateName: state?.name || null,
           zone: zone || district?.zone || null,
@@ -653,6 +693,7 @@ const simulateApproval = async (req, res) => {
         documents: updatedUser.documents || {},
         kycStatus: updatedUser.kycStatus || 'pending_verification',
         avatarUrl: updatedUser.avatarUrl || null,
+        bankDetails: updatedUser.bankDetails || null,
         regionId: updatedUser.regionId || updatedUser.stateId,
         scope: {
           regionId: updatedUser.regionId || updatedUser.stateId,
@@ -761,6 +802,7 @@ const simulateKyc = async (req, res) => {
         documents: updatedUser.documents || {},
         kycStatus: 'verified',
         avatarUrl: updatedUser.avatarUrl || null,
+        bankDetails: updatedUser.bankDetails || null,
         regionId: updatedUser.regionId || updatedUser.stateId,
         scope: {
           regionId: updatedUser.regionId || updatedUser.stateId,
@@ -784,6 +826,7 @@ const simulateKyc = async (req, res) => {
 };
 
 // Sync Admin Master Territory Hierarchy into Manager Portal Collections
+// Uses short timeouts so a dead local port fails in <2s instead of hanging for minutes.
 async function syncAdminMasterTerritories() {
   const endpoints = [
     'http://127.0.0.1:8004/api/territory/hierarchy',
@@ -793,7 +836,14 @@ async function syncAdminMasterTerritories() {
 
   for (const url of endpoints) {
     try {
-      const res = await fetch(url, { headers: { 'Accept': 'application/json' } });
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 1500); // Fail fast after 1.5s
+      let res;
+      try {
+        res = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       if (res.ok) {
         const json = await res.json();
         const hierarchy = json.hierarchy || json.states || [];
@@ -885,8 +935,16 @@ async function syncAdminMasterTerritories() {
 
 const getRegistrationLocations = async (req, res) => {
   try {
-    // Synchronize strictly with Admin Master Territory Database
-    await syncAdminMasterTerritories();
+    // Only block on sync if no states exist at all; otherwise serve from DB immediately
+    // and trigger sync in background for freshness.
+    const existingStatesCount = (await db.states.find({ status: 'Active' })).length;
+    if (existingStatesCount === 0) {
+      // First-time or empty DB: attempt sync (will fail fast with 1.5s timeout per endpoint)
+      try { await syncAdminMasterTerritories(); } catch (e) { /* ignore */ }
+    } else {
+      // Background refresh — does NOT block the response
+      setImmediate(() => syncAdminMasterTerritories().catch(() => {}));
+    }
 
     const states = await db.states.find({ status: 'Active' });
     const districts = await db.districts.find({ status: 'Active' });
@@ -1123,6 +1181,7 @@ const getMe = async (req, res) => {
         panNumber: user.panNumber || user.documents?.panNumber || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
+        bankDetails: user.bankDetails || null,
         territory: {
           state: stateName,
           stateId: stateId,
@@ -1444,6 +1503,7 @@ const verifyOtp = async (req, res) => {
         address: user.address || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
+        bankDetails: user.bankDetails || null,
         regionId: user.regionId || user.stateId,
         scope: {
           regionId: user.regionId || user.stateId,

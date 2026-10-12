@@ -20,7 +20,8 @@ import {
   Eye, 
   X,
   ExternalLink,
-  Shield
+  Shield,
+  Landmark
 } from 'lucide-react';
 
 const FieldManagers = () => {
@@ -998,6 +999,95 @@ const FieldManagers = () => {
                     </button>
                   </div>
                 </div>
+              </div>
+
+              {/* Bank Details Box */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Landmark size={13} color="var(--primary)" />
+                  <span>Bank Account Details</span>
+                </div>
+
+                {selectedManager.bankDetails ? (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem' }}>
+                    <div className="responsive-grid-2" style={{ gap: '10px' }}>
+                      <div>
+                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Account Holder:</span>
+                        <strong>{selectedManager.bankDetails.accountHolderName || '-'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Bank & Branch:</span>
+                        <strong>{selectedManager.bankDetails.bankName || '-'} ({selectedManager.bankDetails.branchName || '-'})</strong>
+                      </div>
+                    </div>
+
+                    <div className="responsive-grid-2" style={{ gap: '10px' }}>
+                      <div>
+                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>City:</span>
+                        <strong>{selectedManager.bankDetails.city || '-'}</strong>
+                      </div>
+                      <div>
+                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>IFSC Code:</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{selectedManager.bankDetails.ifscCode || '-'}</strong>
+                          {selectedManager.bankDetails.ifscCode && (
+                            <button
+                              type="button"
+                              onClick={() => handleCopy(selectedManager.bankDetails.ifscCode, 'modal_ifsc')}
+                              style={{
+                                background: copiedField === 'modal_ifsc' ? '#dcfce7' : '#f1f5f9',
+                                border: '1px solid #cbd5e1',
+                                borderRadius: '4px',
+                                padding: '1px 6px',
+                                fontSize: '0.7rem',
+                                cursor: 'pointer',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '3px'
+                              }}
+                            >
+                              {copiedField === 'modal_ifsc' ? <CheckCircle2 size={11} color="#16a34a" /> : <Copy size={11} color="#64748b" />}
+                              <span>{copiedField === 'modal_ifsc' ? 'Copied' : 'Copy'}</span>
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Account Number:</span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ fontFamily: 'monospace', letterSpacing: '0.08em', color: '#0f172a' }}>
+                          {selectedManager.bankDetails.accountNumber || '-'}
+                        </strong>
+                        {selectedManager.bankDetails.accountNumber && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(selectedManager.bankDetails.accountNumber, 'modal_account')}
+                            style={{
+                              background: copiedField === 'modal_account' ? '#dcfce7' : '#f1f5f9',
+                              border: '1px solid #cbd5e1',
+                              borderRadius: '4px',
+                              padding: '1px 6px',
+                              fontSize: '0.7rem',
+                              cursor: 'pointer',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '3px'
+                            }}
+                          >
+                            {copiedField === 'modal_account' ? <CheckCircle2 size={11} color="#16a34a" /> : <Copy size={11} color="#64748b" />}
+                            <span>{copiedField === 'modal_account' ? 'Copied' : 'Copy'}</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ color: '#94a3b8', fontSize: '0.8rem', fontStyle: 'italic' }}>
+                    Bank details not provided
+                  </div>
+                )}
               </div>
 
               {/* Close Action Button */}

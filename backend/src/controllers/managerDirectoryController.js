@@ -267,7 +267,18 @@ const getLowerLevelManagers = async (req, res) => {
           divisionName: divName,
           pincodeId: m.pincodeId || pincode?._id || null,
           pincodeCode: pCode,
-          pincodeArea: pArea
+          pincodeArea: pArea,
+          bankDetails: m.bankDetails ? {
+            accountHolderName: m.bankDetails.accountHolderName || '',
+            bankName: m.bankDetails.bankName || '',
+            branchName: m.bankDetails.branchName || '',
+            city: m.bankDetails.city || '',
+            street: m.bankDetails.street || null,
+            ifscCode: m.bankDetails.ifscCode || '',
+            accountNumber: (isSelf || isGlobalAdmin) 
+              ? m.bankDetails.accountNumber 
+              : (m.bankDetails.accountNumber ? `•••• •••• ${String(m.bankDetails.accountNumber).slice(-4)}` : null)
+          } : null
         };
       };
 
