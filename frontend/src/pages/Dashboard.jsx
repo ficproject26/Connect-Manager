@@ -14,7 +14,8 @@ import {
   Calendar, 
   MapPin, 
   ArrowRight,
-  Clock
+  Clock,
+  X
 } from 'lucide-react';
 
 import { reportService } from '../services/api';

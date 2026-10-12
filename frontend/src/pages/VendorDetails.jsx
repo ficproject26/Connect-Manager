@@ -219,6 +219,37 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
           {/* Right: Quick Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {(vendor.status === 'Pending' || vendor.status === 'Under Review') && (
+              <button
+                className="btn btn-sm"
+                onClick={() => {
+                  if (onNavigate) {
+                    onNavigate('resume-onboarding', {
+                      fieldVisitId: vendor.fieldVisitId || vendor._id,
+                      prefillData: {
+                        ...vendor,
+                        shopName: vendor.businessName || vendor.name,
+                        businessName: vendor.businessName || vendor.name,
+                        category: vendor.category || 'Products',
+                        mobile: vendor.mobile || vendor.phone || ''
+                      }
+                    });
+                  }
+                }}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 700,
+                  boxShadow: '0 2px 6px rgba(245, 158, 11, 0.3)'
+                }}
+              >
+                <Sparkles size={14} /> Resume Onboarding
+              </button>
+            )}
             <button
               className="btn btn-secondary btn-sm"
               onClick={toggleMask}

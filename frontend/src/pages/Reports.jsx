@@ -83,7 +83,7 @@ const getLevelBadgeStyle = (role) => {
   return { bg: '#dcfce7', color: '#15803d', border: '#bbf7d0' };
 };
 
-const Reports = ({ onNavigate }) => {
+const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   const { user } = useAuth();
 
   const userRole = (user?.role || '').toLowerCase();
@@ -93,17 +93,32 @@ const Reports = ({ onNavigate }) => {
   const isPincodeManager = userRole.includes('pincode') || userRole === 'pincode_manager';
 
   // Active Main Tab: 'visits' (Field Shop Visits) | 'team_reports' (Team Reports)
-  const [activeTab, setActiveTab] = useState('visits');
+  const [activeTab, setActiveTab] = useState(() => {
+    if (initialTab === 'shop-visits' || initialTab === 'visits') return 'visits';
+    if (initialTab === 'team_reports' || initialTab === 'reports') return 'team_reports';
+    return 'visits';
+  });
 
   // --- SHOP VISITS STATE ---
   const [viewScope, setViewScope] = useState(isPincodeManager ? 'self' : 'all');
   const [visits, setVisits] = useState([]);
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
   const [loadingVisits, setLoadingVisits] = useState(false);
-  const [searchVisit, setSearchVisit] = useState('');
+  const [searchVisit, setSearchVisit] = useState(filterParams?.search || '');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [selectedVisit, setSelectedVisit] = useState(null);
+
+  useEffect(() => {
+    if (filterParams?.search) {
+      setSearchVisit(filterParams.search);
+      setSearchReport(filterParams.search);
+    }
+    if (initialTab) {
+      if (initialTab === 'shop-visits' || initialTab === 'visits') setActiveTab('visits');
+      if (initialTab === 'team_reports' || initialTab === 'reports') setActiveTab('team_reports');
+    }
+  }, [filterParams, initialTab]);
 
   // --- SUBMITTED TEAM REPORTS STATE ---
   const [submittedReports, setSubmittedReports] = useState([]);
@@ -761,9 +776,58 @@ const Reports = ({ onNavigate }) => {
                           {/* Interest Status */}
                           <td style={{ padding: '16px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
                             {isYes ? (
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#d1fae5', color: '#047857', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #a7f3d0' }}>
-                                <CheckCircle2 size={13} /> Interested
-                              </span>
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
+                                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#d1fae5', color: '#047857', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #a7f3d0' }}>
+                                  <CheckCircle2 size={13} /> Interested
+                                </span>
+                                {v.vendorId ? (
+                                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: '0.68rem', color: '#059669', fontWeight: 700, background: '#ecfdf5', padding: '1px 6px', borderRadius: 4 }}>
+                                    <CheckCircle2 size={10} /> Onboarded
+                                  </span>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      if (onNavigate) {
+                                        onNavigate('resume-onboarding', {
+                                          fieldVisitId: v._id || v.id,
+                                          prefillData: {
+                                            shopName: v.shopName,
+                                            businessName: v.shopName,
+                                            category: v.category || 'Products',
+                                            storefrontPhoto: v.storefrontPhoto || v.shopPhoto || '',
+                                            mobile: v.mobile || v.phone || '',
+                                            pincodeCode: v.pincodeCode || v.pincode || '',
+                                            pincodeId: v.pincodeId || '',
+                                            districtId: v.districtId || '',
+                                            stateId: v.stateId || '',
+                                            address: v.address || v.location || '',
+                                            fieldVisitId: v._id || v.id
+                                          }
+                                        });
+                                      }
+                                    }}
+                                    style={{
+                                      padding: '3px 8px',
+                                      borderRadius: 6,
+                                      border: '1px solid #f59e0b',
+                                      background: '#fffbeb',
+                                      color: '#b45309',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 700,
+                                      cursor: 'pointer',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 3,
+                                      boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)'
+                                    }}
+                                    title="Resume onboarding for this interested merchant"
+                                  >
+                                    <Sparkles size={11} /> Resume Onboarding
+                                  </button>
+                                )}
+                              </div>
                             ) : (
                               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
                                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#fee2e2', color: '#b91c1c', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #fecaca' }}>
@@ -2125,25 +2189,71 @@ const Reports = ({ onNavigate }) => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              flexShrink: 0
+              flexShrink: 0,
+              gap: 12
             }}>
               <span style={{ fontSize: '0.76rem', color: '#94a3b8' }}>Forge India Connect Field Portal</span>
-              <button
-                type="button"
-                onClick={() => setSelectedVisit(null)}
-                style={{
-                  padding: '8px 20px',
-                  borderRadius: 8,
-                  border: 'none',
-                  background: '#0f172a',
-                  color: '#ffffff',
-                  fontSize: '0.84rem',
-                  fontWeight: 700,
-                  cursor: 'pointer'
-                }}
-              >
-                Close
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {selectedVisit.interestedStatus === 'YES' && !selectedVisit.vendorId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = selectedVisit;
+                      setSelectedVisit(null);
+                      if (onNavigate) {
+                        onNavigate('resume-onboarding', {
+                          fieldVisitId: v._id || v.id,
+                          prefillData: {
+                            shopName: v.shopName,
+                            businessName: v.shopName,
+                            category: v.category || 'Products',
+                            storefrontPhoto: v.storefrontPhoto || v.shopPhoto || '',
+                            mobile: v.mobile || v.phone || '',
+                            pincodeCode: v.pincodeCode || v.pincode || '',
+                            pincodeId: v.pincodeId || '',
+                            districtId: v.districtId || '',
+                            stateId: v.stateId || '',
+                            address: v.address || v.location || '',
+                            fieldVisitId: v._id || v.id
+                          }
+                        });
+                      }
+                    }}
+                    style={{
+                      padding: '8px 18px',
+                      borderRadius: 8,
+                      border: 'none',
+                      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                      color: '#ffffff',
+                      fontSize: '0.84rem',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 6,
+                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.35)'
+                    }}
+                  >
+                    <Sparkles size={14} /> Resume Onboarding
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setSelectedVisit(null)}
+                  style={{
+                    padding: '8px 20px',
+                    borderRadius: 8,
+                    border: 'none',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    fontSize: '0.84rem',
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Close
+                </button>
+              </div>
             </div>
           </div>
         </div>

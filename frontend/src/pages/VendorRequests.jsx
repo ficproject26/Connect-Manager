@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { vendorService } from '../services/api';
-import { UserCheck, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight } from 'lucide-react';
+import { UserCheck, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight, Sparkles } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 import { useRealtime } from '../realtime';
 
@@ -110,13 +110,44 @@ const VendorRequests = ({ onNavigate }) => {
                     {new Date(v.createdAt).toLocaleDateString()}
                   </td>
                   <td style={{ textAlign: 'center', paddingRight: '20px' }}>
-                    <button
-                      className="btn btn-secondary btn-sm"
-                      onClick={() => onNavigate('vendor-details', { vendorId: v._id })}
-                      style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: 600 }}
-                    >
-                      Review KYC <ArrowRight size={13} />
-                    </button>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                      <button
+                        className="btn btn-secondary btn-sm"
+                        onClick={() => onNavigate('vendor-details', { vendorId: v._id })}
+                        style={{ padding: '5px 10px', fontSize: '0.76rem', fontWeight: 600 }}
+                      >
+                        Review KYC <ArrowRight size={13} />
+                      </button>
+                      <button
+                        className="btn btn-sm"
+                        title="Resume Incomplete Onboarding"
+                        onClick={() => onNavigate('resume-onboarding', {
+                          fieldVisitId: v.fieldVisitId || v._id,
+                          prefillData: {
+                            ...v,
+                            shopName: v.businessName || v.name,
+                            businessName: v.businessName || v.name,
+                            category: v.category || 'Products',
+                            mobile: v.mobile || v.phone || ''
+                          }
+                        })}
+                        style={{
+                          padding: '5px 10px',
+                          fontSize: '0.76rem',
+                          fontWeight: 700,
+                          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                          color: '#ffffff',
+                          border: 'none',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 3
+                        }}
+                      >
+                        <Sparkles size={12} /> Resume
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))

@@ -218,9 +218,21 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       ...effectivePrefill
     };
   };
-  const [step,setStep]=useState(1);
-    const [formData,setFormData]=useState(getBlank);
-  const [errors,setErrors]=useState({});
+  const [step, setStep] = useState(() => {
+    if (initialData?.step) return Number(initialData.step);
+    if (prefill?.step) return Number(prefill.step);
+    const eff = { ...(prefill || {}), ...(initialData || {}) };
+    if (eff.bankName || eff.accountNumber || eff.ifsc) return 4;
+    if (eff.panNumber || eff.aadhaarNumber) return 3;
+    if (eff.name || eff.ownerName || eff.mobile || eff.phone) return 2;
+    return 1;
+  });
+  const [formData, setFormData] = useState(getBlank);
+  const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    setFormData(getBlank());
+  }, [initialData, prefill]);
     const upd = (k, v) => {
     setFormData(p => ({ ...p, [k]: v }));
     if (errors[k]) setErrors(p => { const e = { ...p }; delete e[k]; return e; });

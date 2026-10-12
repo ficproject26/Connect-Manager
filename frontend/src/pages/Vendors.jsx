@@ -11,7 +11,8 @@ import {
   ChevronLeft, 
   ChevronRight, 
   RotateCcw,
-  Store
+  Store,
+  Sparkles
 } from 'lucide-react';
 import StatusBadge from '../components/StatusBadge';
 
@@ -36,7 +37,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   const [loading, setLoading] = useState(true);
 
   // Filters
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(filterParams.search || '');
   const [category, setCategory] = useState('All');
   const [status, setStatus] = useState(filterParams.status || 'All');
   const [districtId, setDistrictId] = useState(filterParams.districtId || '');
@@ -45,6 +46,9 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
 
   // Synchronize filters when navigating with params (e.g. Active Outlets KPI)
   useEffect(() => {
+    if (filterParams.search !== undefined) {
+      setSearch(filterParams.search || '');
+    }
     if (filterParams.status !== undefined) {
       setStatus(filterParams.status || 'All');
     }
@@ -437,7 +441,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     <StatusBadge status={v.status} />
                   </td>
                   <td style={{ textAlign: 'center', paddingRight: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
                       <button
                         className="btn btn-outline-primary btn-sm"
                         title="View Details"
@@ -446,6 +450,37 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                       >
                         <Eye size={13} /> View
                       </button>
+                      {(v.status === 'Pending' || v.status === 'Under Review') && (
+                        <button
+                          className="btn btn-sm"
+                          title="Resume Incomplete Onboarding"
+                          onClick={() => onNavigate('resume-onboarding', {
+                            fieldVisitId: v.fieldVisitId || v._id,
+                            prefillData: {
+                              ...v,
+                              shopName: v.businessName || v.name,
+                              businessName: v.businessName || v.name,
+                              category: v.category || 'Products',
+                              mobile: v.mobile || v.phone || ''
+                            }
+                          })}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '0.74rem',
+                            fontWeight: 700,
+                            color: '#b45309',
+                            border: '1px solid #f59e0b',
+                            background: '#fffbeb',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3,
+                            cursor: 'pointer',
+                            borderRadius: '6px'
+                          }}
+                        >
+                          <Sparkles size={11} /> Resume
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

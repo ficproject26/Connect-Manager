@@ -26,7 +26,7 @@ import FieldManagers from './pages/FieldManagers';
 import AgentDirectory from './pages/AgentDirectory';
 import ShopVisits from './pages/ShopVisits';
 import FieldShopVisitModal from './components/FieldShopVisitModal';
-import { managerOnboardingService, vendorService } from './services/api';
+import { managerOnboardingService, vendorService, shopVisitService } from './services/api';
 
 
 class GlobalErrorBoundary extends React.Component {
@@ -161,6 +161,12 @@ function AppInner() {
   };
 
   const navigate = (page, params = {}) => {
+    if (page === 'resume-onboarding' || page === 'resume-onboard') {
+      const fId = params.fieldVisitId || params._id || params.id || null;
+      const prefill = params.prefillData || params;
+      handleFieldVisitProceed(fId, prefill);
+      return;
+    }
     setNavParams(params);
     setCurrentPage(page);
     setVisitedPages(prev => {
@@ -177,23 +183,6 @@ function AppInner() {
     setNavParams(params);
     setAuthPage(page);
   };
-
-  if (loading) {
-    return (
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        background: '#f8fafc',
-        color: '#f59e0b',
-        fontSize: '1.2rem',
-        fontWeight: 700
-      }}>
-        Initializing Forge India Connect Portal...
-      </div>
-    );
-  }
 
   // Unauthenticated Flow
   if (!isAuthenticated) {
@@ -249,7 +238,7 @@ function AppInner() {
           {currentPage === 'vendor-requests' && <VendorRequests onNavigate={navigate} />}
           {(visitedPages.has('tasks') || visitedPages.has('issues')) && (
             <div style={{ display: (currentPage === 'tasks' || currentPage === 'issues') ? 'block' : 'none', width: '100%' }}>
-              <Tasks onNavigate={navigate} />
+              <Tasks onNavigate={navigate} filterParams={navParams} />
             </div>
           )}
           {visitedPages.has('leaderboard') && (
@@ -264,7 +253,7 @@ function AppInner() {
           )}
           {visitedPages.has('field-managers') && (
             <div style={{ display: currentPage === 'field-managers' ? 'block' : 'none', width: '100%' }}>
-              <FieldManagers onNavigate={navigate} />
+              <FieldManagers onNavigate={navigate} filterParams={navParams} />
             </div>
           )}
           {(visitedPages.has('agents-directory') || visitedPages.has('agent-directory')) && (
@@ -274,7 +263,7 @@ function AppInner() {
           )}
           {visitedPages.has('shop-visits') && (
             <div style={{ display: currentPage === 'shop-visits' ? 'block' : 'none', width: '100%' }}>
-              <Reports onNavigate={navigate} initialTab="shop-visits" />
+              <Reports onNavigate={navigate} initialTab="shop-visits" filterParams={navParams} />
             </div>
           )}
           {/* add-vendor page kept as fallback */}
@@ -368,6 +357,14 @@ function AppInner() {
                       }
 
                       if (res && (res.success || res.status === 'success')) {
+                        const createdVendorId = res.data?._id || res.data?.id;
+                        if (pendingFieldVisitId && createdVendorId) {
+                          try {
+                            await shopVisitService.updateShopVisit(pendingFieldVisitId, { vendorId: createdVendorId });
+                          } catch (e) {
+                            console.warn('Failed to link shop visit with vendor:', e);
+                          }
+                        }
                         setOnboardModalOpen(false);
                         setPendingFieldVisitId(null);
                         setPendingPrefill({});
@@ -383,7 +380,7 @@ function AppInner() {
                     {currentPage === 'vendor-details' && <VendorDetails vendorId={navParams.vendorId} onNavigate={navigate} />}
           {visitedPages.has('reports') && (
             <div style={{ display: currentPage === 'reports' ? 'block' : 'none', width: '100%' }}>
-              <Reports onNavigate={navigate} initialTab={navParams.tab || 'vendors'} />
+              <Reports onNavigate={navigate} initialTab={navParams.tab || 'vendors'} filterParams={navParams} />
             </div>
           )}
           {visitedPages.has('audit-logs') && (

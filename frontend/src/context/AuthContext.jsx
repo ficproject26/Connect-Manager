@@ -98,7 +98,10 @@ export const AuthProvider = ({ children }) => {
     if (saved) localStorage.removeItem('agent_mgr_token');
     return null;
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    const saved = localStorage.getItem('agent_mgr_token');
+    return Boolean(saved && !isTokenExpired(saved));
+  });
 
   const logout = () => {
     localStorage.removeItem('agent_mgr_token');
