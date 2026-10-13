@@ -80,13 +80,18 @@ const Login = ({ onNavigate }) => {
     setLoading(true);
     try {
       const res = await login(identifier.trim(), password);
-      const userStatus = String(res?.user?.status || '').toLowerCase();
-      if (res?.user && userStatus !== 'active' && userStatus !== 'approved') {
-        const flowState = userStatus === 'kyc_pending' ? 'kyc_pending' : 'under_review';
+      const userStatus = String(res?.user?.status || res?.approvalStatus || '').toLowerCase();
+      if (!res?.isApproved || (res?.user && userStatus !== 'active' && userStatus !== 'approved')) {
+        let flowState = 'under_review';
+        if (userStatus === 'pending_kyc_approval' || userStatus === 'kyc_pending') {
+          flowState = 'kyc_pending';
+        } else if (res.isRejected || ['rejected', 'rejected_by_sub_admin', 'kyc_rejected'].includes(userStatus)) {
+          flowState = 'rejected';
+        }
         onNavigate('register', {
           user: res.user,
           flowState,
-          token: res.token
+          rejectionReason: res.rejectionReason
         });
       }
     } catch (err) {
@@ -155,13 +160,18 @@ const Login = ({ onNavigate }) => {
     setLoading(true);
     try {
       const res = await loginWithOtp(mobile.trim(), otp.trim());
-      const userStatus = String(res?.user?.status || '').toLowerCase();
-      if (res?.user && userStatus !== 'active' && userStatus !== 'approved') {
-        const flowState = userStatus === 'kyc_pending' ? 'kyc_pending' : 'under_review';
+      const userStatus = String(res?.user?.status || res?.approvalStatus || '').toLowerCase();
+      if (!res?.isApproved || (res?.user && userStatus !== 'active' && userStatus !== 'approved')) {
+        let flowState = 'under_review';
+        if (userStatus === 'pending_kyc_approval' || userStatus === 'kyc_pending') {
+          flowState = 'kyc_pending';
+        } else if (res.isRejected || ['rejected', 'rejected_by_sub_admin', 'kyc_rejected'].includes(userStatus)) {
+          flowState = 'rejected';
+        }
         onNavigate('register', {
           user: res.user,
           flowState,
-          token: res.token
+          rejectionReason: res.rejectionReason
         });
       }
     } catch (err) {

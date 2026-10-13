@@ -88,13 +88,18 @@ export const AuthProvider = ({ children }) => {
             .join('')
         );
         const parsed = JSON.parse(jsonPayload);
-        return normalizeUser(parsed);
+        const st = String(parsed.status || '').toLowerCase().trim();
+        if (st === 'active' || st === 'approved') {
+          return normalizeUser(parsed);
+        }
+        return null;
       } catch (e) {
         return null;
       }
     }
     return null;
   });
+  const [pendingUser, setPendingUser] = useState(null);
   const [token, setToken] = useState(() => {
     const saved = localStorage.getItem('agent_mgr_token');
     if (saved && !isTokenExpired(saved)) return saved;
@@ -112,6 +117,7 @@ export const AuthProvider = ({ children }) => {
     dataPrefetcher.reset();
     setToken(null);
     setUser(null);
+    setPendingUser(null);
     realtimeClient.disconnect();
   };
 
@@ -132,12 +138,26 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authService.getMe();
       if (res && res.success && res.user) {
-        setUser(normalizeUser(res.user));
-      } else if (res && (res.status === 401 || res.message?.includes('Unauthorized') || res.message?.includes('Invalid token'))) {
+        const userStatus = String(res.user.status || '').toLowerCase().trim();
+        if (userStatus === 'active' || userStatus === 'approved') {
+          setUser(normalizeUser(res.user));
+          setPendingUser(null);
+        } else {
+          // Manager registration is not fully approved - lock dashboard access
+          logout();
+          setPendingUser(normalizeUser(res.user));
+        }
+      } else if (res && (res.status === 401 || res.status === 403 || res.message?.includes('Unauthorized') || res.message?.includes('Invalid token'))) {
         logout();
       }
     } catch (err) {
-      console.warn('[AuthContext] initAuth network warning:', err?.message);
+      if (err.status === 403 && err.data?.user) {
+        // Approval required or blocked
+        logout();
+        setPendingUser(normalizeUser(err.data.user));
+      } else {
+        console.warn('[AuthContext] initAuth network warning:', err?.message);
+      }
     } finally {
       setLoading(false);
     }
@@ -175,57 +195,153 @@ export const AuthProvider = ({ children }) => {
   }, [token, user]);
 
   const login = async (identifier, password) => {
-    const res = await authService.login(identifier, password);
-    if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
-      const token = res.token || res.data?.token;
-      const rawUser = res.user || res.data?.user || res.data;
-      const user = normalizeUser(rawUser);
-      localStorage.setItem('agent_mgr_token', token);
-      setToken(token);
-      setUser(user);
-      return { success: true, token, user };
+    try {
+      const res = await authService.login(identifier, password);
+      if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
+        const token = res.token || res.data?.token;
+        const rawUser = res.user || res.data?.user || res.data;
+        const normalized = normalizeUser(rawUser);
+        const userStatus = String(normalized?.status || '').toLowerCase().trim();
+
+        if (userStatus === 'active' || userStatus === 'approved') {
+          localStorage.setItem('agent_mgr_token', token);
+          setToken(token);
+          setUser(normalized);
+          setPendingUser(null);
+          return { success: true, isApproved: true, token, user: normalized };
+        } else {
+          // Unapproved user: strictly never grant dashboard session
+          logout();
+          setPendingUser(normalized);
+          return {
+            success: false,
+            isApproved: false,
+            isPendingApproval: true,
+            approvalStatus: normalized.status,
+            user: normalized,
+            message: 'Manager registration approval is pending. Dashboard access is locked.'
+          };
+        }
+      }
+      throw new Error(res.message || 'Login failed. Invalid response from server.');
+    } catch (err) {
+      if (err.data && (err.data.code === 'APPROVAL_REQUIRED' || err.data.code === 'REGISTRATION_REJECTED')) {
+        logout();
+        const pending = normalizeUser(err.data.user);
+        if (pending) setPendingUser(pending);
+        return {
+          success: false,
+          isApproved: false,
+          isPendingApproval: err.data.code === 'APPROVAL_REQUIRED',
+          isRejected: err.data.code === 'REGISTRATION_REJECTED',
+          code: err.data.code,
+          approvalStatus: err.data.approvalStatus,
+          adminApprovalStatus: err.data.adminApprovalStatus,
+          kycStatus: err.data.kycStatus,
+          rejectionReason: err.data.rejectionReason,
+          user: pending,
+          message: err.message
+        };
+      }
+      throw err;
     }
-    throw new Error(res.message || 'Login failed. Invalid response from server.');
   };
 
   const loginWithOtp = async (mobile, otp) => {
-    const res = await authService.verifyOtp(mobile, otp);
-    if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
-      const token = res.token || res.data?.token;
-      const rawUser = res.user || res.data?.user || res.data;
-      const user = normalizeUser(rawUser);
-      localStorage.setItem('agent_mgr_token', token);
-      setToken(token);
-      setUser(user);
-      return { success: true, token, user };
+    try {
+      const res = await authService.verifyOtp(mobile, otp);
+      if ((res.success || res.status === 'success') && (res.token || res.data?.token)) {
+        const token = res.token || res.data?.token;
+        const rawUser = res.user || res.data?.user || res.data;
+        const normalized = normalizeUser(rawUser);
+        const userStatus = String(normalized?.status || '').toLowerCase().trim();
+
+        if (userStatus === 'active' || userStatus === 'approved') {
+          localStorage.setItem('agent_mgr_token', token);
+          setToken(token);
+          setUser(normalized);
+          setPendingUser(null);
+          return { success: true, isApproved: true, token, user: normalized };
+        } else {
+          logout();
+          setPendingUser(normalized);
+          return {
+            success: false,
+            isApproved: false,
+            isPendingApproval: true,
+            approvalStatus: normalized.status,
+            user: normalized,
+            message: 'Manager registration approval is pending. Dashboard access is locked.'
+          };
+        }
+      }
+      throw new Error(res.message || 'OTP verification failed.');
+    } catch (err) {
+      if (err.data && (err.data.code === 'APPROVAL_REQUIRED' || err.data.code === 'REGISTRATION_REJECTED')) {
+        logout();
+        const pending = normalizeUser(err.data.user);
+        if (pending) setPendingUser(pending);
+        return {
+          success: false,
+          isApproved: false,
+          isPendingApproval: err.data.code === 'APPROVAL_REQUIRED',
+          isRejected: err.data.code === 'REGISTRATION_REJECTED',
+          code: err.data.code,
+          approvalStatus: err.data.approvalStatus,
+          adminApprovalStatus: err.data.adminApprovalStatus,
+          kycStatus: err.data.kycStatus,
+          rejectionReason: err.data.rejectionReason,
+          user: pending,
+          message: err.message
+        };
+      }
+      throw err;
     }
-    throw new Error(res.message || 'OTP verification failed.');
   };
 
-
   const setSession = (userData, tokenString) => {
-    if (tokenString) {
-      localStorage.setItem('agent_mgr_token', tokenString);
-      setToken(tokenString);
+    const normalized = normalizeUser(userData);
+    const userStatus = String(normalized?.status || '').toLowerCase().trim();
+    if (userStatus === 'active' || userStatus === 'approved') {
+      if (tokenString) {
+        localStorage.setItem('agent_mgr_token', tokenString);
+        setToken(tokenString);
+      }
+      setUser(normalized);
+      setPendingUser(null);
+    } else {
+      logout();
+      setPendingUser(normalized);
     }
-    setUser(normalizeUser(userData));
   };
 
   const refreshUser = async () => {
     try {
       const res = await authService.getMe();
       if (res.success && res.user) {
-        setUser(normalizeUser(res.user));
+        const userStatus = String(res.user.status || '').toLowerCase().trim();
+        if (userStatus === 'active' || userStatus === 'approved') {
+          setUser(normalizeUser(res.user));
+        } else {
+          logout();
+          setPendingUser(normalizeUser(res.user));
+        }
       }
     } catch (err) {
       console.error('Failed to refresh user profile:', err);
     }
   };
 
+  const isAuthenticated = Boolean(
+    user && (String(user.status || '').toLowerCase() === 'active' || String(user.status || '').toLowerCase() === 'approved')
+  );
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        pendingUser,
+        setPendingUser,
         token,
         loading,
         login,
@@ -233,7 +349,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         setSession,
         refreshUser,
-        isAuthenticated: !!user
+        isAuthenticated
       }}
     >
       {children}

@@ -141,6 +141,24 @@ export const authService = {
     return handleResponse(res);
   },
 
+  async subAdminApproval(userId, action = 'approve', rejectionReason = '') {
+    const res = await fetch(`${API_BASE}/auth/subadmin-approval`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, action, rejectionReason })
+    });
+    return handleResponse(res);
+  },
+
+  async kycApproval(userId, action = 'approve', rejectionReason = '') {
+    const res = await fetch(`${API_BASE}/auth/kyc-approval`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, action, rejectionReason })
+    });
+    return handleResponse(res);
+  },
+
   async simulateApproval(userId) {
     const res = await fetch(`${API_BASE}/auth/simulate-approval`, {
       method: 'POST',
@@ -199,6 +217,15 @@ export const authService = {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify({ currentPassword, newPassword })
+    });
+    return handleResponse(res);
+  },
+
+  async updateBankDetails(bankDetails) {
+    const res = await fetch(`${API_BASE}/auth/bank-details`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(bankDetails)
     });
     return handleResponse(res);
   },

@@ -1,5 +1,5 @@
 const db = require('../config/db');
-const { getScopeFilter } = require('../middleware/scopeMiddleware');
+const territoryScopeService = require('../services/territoryScopeService');
 const { broadcastNotification } = require('../routes/notificationRoutes');
 
 // Helper: Resolve precise onboarding status and resume eligibility for a shop visit
@@ -21,6 +21,26 @@ function resolveVisitOnboarding(visit, vendors = [], onboardings = []) {
   }
   if (!linkedVendor && vId) {
     linkedVendor = vendors.find(vend => vend.fieldVisitId && String(vend.fieldVisitId) === vId);
+  }
+
+  // Fallback match by phone number
+  if (!linkedVendor && (visit.phone || visit.mobile || visit.merchantPhone)) {
+    const rawP = String(visit.phone || visit.mobile || visit.merchantPhone).replace(/\D/g, '');
+    if (rawP.length >= 10) {
+      linkedVendor = vendors.find(vend => {
+        const vp = String(vend.phone || vend.mobile || vend.merchantPhone || vend.contactPhone || '').replace(/\D/g, '');
+        return vp && vp.slice(-10) === rawP.slice(-10);
+      });
+    }
+  }
+
+  // Fallback match by shop / business name
+  if (!linkedVendor && (visit.shopName || visit.storeName)) {
+    const sName = String(visit.shopName || visit.storeName).trim().toLowerCase();
+    linkedVendor = vendors.find(vend => {
+      const vn = String(vend.businessName || vend.shopName || vend.name || vend.storeName || '').trim().toLowerCase();
+      return vn && vn === sName;
+    });
   }
 
   let vendorCompleted = false;
@@ -77,69 +97,13 @@ function resolveVisitOnboarding(visit, vendors = [], onboardings = []) {
   return {
     ...visit,
     vendorId: linkedVendor ? String(linkedVendor._id || linkedVendor.id) : (visit.vendorId || null),
+    vendorName: linkedVendor ? (linkedVendor.businessName || linkedVendor.name || linkedVendor.shopName) : (directCompleted ? visit.shopName : null),
+    vendorStatus: linkedVendor ? (linkedVendor.status || 'Active') : (directCompleted ? 'Active' : null),
     onboardingStatus,
     isOnboardingCompleted,
     isOnboardingIncomplete,
     isEligibleForResume
   };
-}
-
-// Helper: Strict territory jurisdiction enforcement by role
-function isVisitInUserJurisdiction(v, user) {
-  if (!v || !user) return false;
-  const role = (user.role || '').toLowerCase();
-  const isAdmin = ['admin', 'super_admin', 'super-admin'].some(r => role.includes(r)) || user.email === 'admin@example.com';
-  if (isAdmin) return true;
-
-  const isOwner = String(v.recordedById || v.managerId) === String(user.id || user._id);
-
-  if (role.includes('pincode')) {
-    // Pincode Manager / Admin: strictly restricted to their assigned pincode territory or own visits
-    if (isOwner) return true;
-    const userPinId = user.pincodeId || user.assignedPincodeId || user.scope?.pincodeId;
-    const userPinCode = user.pincode || user.pincodeCode || user.scope?.pincodeCode;
-    const visitPinId = v.pincodeId;
-    const visitPinCode = v.pincode || v.pincodeCode;
-
-    if (userPinId && visitPinId && String(userPinId) === String(visitPinId)) return true;
-    if (userPinCode && visitPinCode && String(userPinCode) === String(visitPinCode)) return true;
-    return false;
-  }
-
-  if (role.includes('division')) {
-    if (isOwner) return true;
-    const userDivId = user.divisionId || user.assignedDivisionId || user.scope?.divisionId;
-    const visitDivId = v.divisionId;
-    if (userDivId && visitDivId && String(userDivId) === String(visitDivId)) return true;
-    const userDiv = (user.division || user.divisionName || '').toLowerCase().trim();
-    const visitDiv = (v.division || '').toLowerCase().trim();
-    if (userDiv && visitDiv && userDiv === visitDiv) return true;
-    return false;
-  }
-
-  if (role.includes('district')) {
-    if (isOwner) return true;
-    const userDistId = user.districtId || user.assignedDistrictId || user.scope?.districtId;
-    const visitDistId = v.districtId;
-    if (userDistId && visitDistId && String(userDistId) === String(visitDistId)) return true;
-    const userDist = (user.district || user.districtName || '').toLowerCase().trim();
-    const visitDist = (v.district || '').toLowerCase().trim();
-    if (userDist && visitDist && userDist === visitDist) return true;
-    return false;
-  }
-
-  if (role.includes('state')) {
-    if (isOwner) return true;
-    const userStateId = user.stateId || user.assignedStateId || user.scope?.stateId;
-    const visitStateId = v.stateId;
-    if (userStateId && visitStateId && String(userStateId) === String(visitStateId)) return true;
-    const userState = (user.state || user.stateName || '').toLowerCase().trim();
-    const visitState = (v.state || '').toLowerCase().trim();
-    if (userState && visitState && userState === visitState) return true;
-    return false;
-  }
-
-  return isOwner;
 }
 
 // GET /api/shop-visits - Get scoped list of shop visits with pagination, onboarding status & eligibility filtering
@@ -160,38 +124,32 @@ const getShopVisits = async (req, res) => {
 
     const enrichedVisits = allVisits.map(v => resolveVisitOnboarding(v, allVendors, allOnboardings));
 
+    // Filter using territoryScopeService for strict role and territory isolation
+    const scopedVisits = [];
+    for (const v of enrichedVisits) {
+      const visible = await territoryScopeService.isReportVisible(v, user, scope || 'all');
+      if (visible) {
+        scopedVisits.push(v);
+      }
+    }
+
     // Compute scoped KPI totals strictly within user's assigned jurisdiction
-    const scopedForKpi = enrichedVisits.filter(v => {
-      if (!isVisitInUserJurisdiction(v, user)) return false;
-      if (scope === 'self' && String(v.recordedById || v.managerId) !== String(user.id || user._id)) return false;
-      return true;
-    });
+    const allAuthorizedForKpi = [];
+    for (const v of enrichedVisits) {
+      if (await territoryScopeService.isReportVisible(v, user, scope === 'self' ? 'self' : 'all')) {
+        allAuthorizedForKpi.push(v);
+      }
+    }
 
     const kpi = {
-      total: scopedForKpi.length,
-      interested: scopedForKpi.filter(v => v.interestedStatus === 'YES' || v.interestStatus === 'YES').length,
-      notInterested: scopedForKpi.filter(v => v.interestedStatus === 'NO' || v.interestStatus === 'NO').length,
-      pendingOnboarding: scopedForKpi.filter(v => v.isEligibleForResume).length,
-      completedOnboarding: scopedForKpi.filter(v => v.isOnboardingCompleted).length
+      total: allAuthorizedForKpi.length,
+      interested: allAuthorizedForKpi.filter(v => v.interestedStatus === 'YES' || v.interestStatus === 'YES').length,
+      notInterested: allAuthorizedForKpi.filter(v => v.interestedStatus === 'NO' || v.interestStatus === 'NO').length,
+      pendingOnboarding: allAuthorizedForKpi.filter(v => v.isEligibleForResume).length,
+      completedOnboarding: allAuthorizedForKpi.filter(v => v.isOnboardingCompleted).length
     };
 
-    let filtered = enrichedVisits.filter(v => {
-      // Strict role-based jurisdiction scope enforcement
-      if (!isVisitInUserJurisdiction(v, user)) return false;
-
-      // Scope filtering
-      if (scope === 'self') {
-        if (String(v.recordedById || v.managerId) !== String(user.id || user._id)) return false;
-      } else if (scope === 'state_managers') {
-        if (v.managerRole !== 'state_manager') return false;
-      } else if (scope === 'district_managers') {
-        if (v.managerRole !== 'district_manager') return false;
-      } else if (scope === 'division_managers') {
-        if (v.managerRole !== 'division_manager') return false;
-      } else if (scope === 'pincode_managers') {
-        if (v.managerRole !== 'pincode_manager' && v.managerRole !== 'Pincode Admin') return false;
-      }
-
+    let filtered = scopedVisits.filter(v => {
       // Pending Onboarding Eligibility Filter:
       // When pendingOnboardingOnly or eligibleOnly is true, return ONLY records satisfying ALL conditions:
       // 1. Visit recorded
@@ -199,7 +157,7 @@ const getShopVisits = async (req, res) => {
       // 3. Onboarding is pending or incomplete
       // 4. Onboarding has not completed successfully
       if (pendingOnboardingOnly === 'true' || eligibleOnly === 'true') {
-        if (!v.isEligibleForResume) return false;
+        if (!v.isEligibleForResume || v.isOnboardingCompleted) return false;
       }
 
       // Status filter ('YES', 'NO', 'Converted')

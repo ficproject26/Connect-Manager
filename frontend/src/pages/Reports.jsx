@@ -850,9 +850,16 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                                 </span>
                               </div>
 
-                              <div style={{ fontSize: 11, color: '#94a3b8' }}>
-                                {v.onboardingStatus === 'INCOMPLETE' ? 'Onboarding In Progress' : 'Field Visit Record'}
-                              </div>
+                              {v.isOnboardingCompleted ? (
+                                <div style={{ fontSize: 11, color: '#059669', display: 'flex', alignItems: 'center', gap: 4, fontWeight: 700 }}>
+                                  <CheckCircle2 size={11} color="#059669" />
+                                  <span>{v.vendorName ? `${v.vendorName} • ` : ''}{v.vendorStatus || 'Active'}</span>
+                                </div>
+                              ) : (
+                                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                                  {v.onboardingStatus === 'INCOMPLETE' ? 'Onboarding In Progress' : 'Field Visit Record'}
+                                </div>
+                              )}
                             </div>
                           </td>
 
@@ -893,28 +900,45 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#d1fae5', color: '#047857', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #a7f3d0' }}>
                                 <CheckCircle2 size={13} /> Interested
                               </span>
-                              <button
-                                type="button"
-                                onClick={(e) => handleResumeOnboarding(e, v)}
-                                style={{
-                                  padding: '4px 10px',
+                              {v.isOnboardingCompleted ? (
+                                <span style={{
+                                  padding: '3px 8px',
                                   borderRadius: 6,
-                                  border: '1px solid #f59e0b',
-                                  background: '#fffbeb',
-                                  color: '#b45309',
-                                  fontSize: '0.74rem',
+                                  background: '#dcfce7',
+                                  color: '#15803d',
+                                  fontSize: '0.72rem',
                                   fontWeight: 700,
-                                  cursor: 'pointer',
+                                  border: '1px solid #bbf7d0',
                                   display: 'inline-flex',
                                   alignItems: 'center',
-                                  gap: 4,
-                                  boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)',
-                                  transition: 'all 0.15s'
-                                }}
-                                title="Resume onboarding for this interested merchant"
-                              >
-                                <Sparkles size={11} /> Resume Onboarding
-                              </button>
+                                  gap: 3
+                                }}>
+                                  <CheckCircle2 size={11} /> {v.vendorStatus ? `Onboarded • ${v.vendorStatus}` : 'Onboarded'}
+                                </span>
+                              ) : v.isEligibleForResume ? (
+                                <button
+                                  type="button"
+                                  onClick={(e) => handleResumeOnboarding(e, v)}
+                                  style={{
+                                    padding: '4px 10px',
+                                    borderRadius: 6,
+                                    border: '1px solid #f59e0b',
+                                    background: '#fffbeb',
+                                    color: '#b45309',
+                                    fontSize: '0.74rem',
+                                    fontWeight: 700,
+                                    cursor: 'pointer',
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)',
+                                    transition: 'all 0.15s'
+                                  }}
+                                  title="Resume onboarding for this interested merchant"
+                                >
+                                  <Sparkles size={11} /> Resume Onboarding
+                                </button>
+                              ) : null}
                             </div>
                           </td>
                         </tr>

@@ -1,10 +1,14 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';
-import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff, Camera, Upload, Trash2, X, Check, RefreshCw, Landmark, Copy } from 'lucide-react';
+import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff, Camera, Upload, Trash2, X, Check, RefreshCw, Landmark, Copy, Edit3 } from 'lucide-react';
 
 const Profile = () => {
-  const { user, setSession } = useAuth();
+  const { user, setSession, refreshUser } = useAuth();
+
+  useEffect(() => {
+    if (refreshUser) refreshUser();
+  }, []);
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -19,6 +23,59 @@ const Profile = () => {
   // Bank details visibility & copy state
   const [showAccountNumber, setShowAccountNumber] = useState(false);
   const [copiedBankField, setCopiedBankField] = useState(null);
+
+  // Bank details edit modal state
+  const [bankModalOpen, setBankModalOpen] = useState(false);
+  const [bankForm, setBankForm] = useState({
+    accountHolderName: '',
+    bankName: '',
+    branchName: '',
+    city: '',
+    street: '',
+    accountNumber: '',
+    ifscCode: ''
+  });
+  const [bankSaving, setBankSaving] = useState(false);
+  const [bankError, setBankError] = useState('');
+  const [bankSuccess, setBankSuccess] = useState('');
+
+  const openBankModal = () => {
+    setBankForm({
+      accountHolderName: user?.bankDetails?.accountHolderName || user?.name || '',
+      bankName: user?.bankDetails?.bankName || '',
+      branchName: user?.bankDetails?.branchName || '',
+      city: user?.bankDetails?.city || '',
+      street: user?.bankDetails?.street || '',
+      accountNumber: user?.bankDetails?.accountNumber || '',
+      ifscCode: user?.bankDetails?.ifscCode || ''
+    });
+    setBankError('');
+    setBankSuccess('');
+    setBankModalOpen(true);
+  };
+
+  const handleSaveBankDetails = async (e) => {
+    e.preventDefault();
+    setBankSaving(true);
+    setBankError('');
+    setBankSuccess('');
+
+    try {
+      const res = await authService.updateBankDetails(bankForm);
+      if (res.success) {
+        setBankSuccess('Bank details saved and persisted to database successfully.');
+        if (refreshUser) await refreshUser();
+        setTimeout(() => {
+          setBankModalOpen(false);
+          setBankSuccess('');
+        }, 1200);
+      }
+    } catch (err) {
+      setBankError(err.message || 'Failed to save bank details.');
+    } finally {
+      setBankSaving(false);
+    }
+  };
 
   // Profile photo state
   const [photoFile, setPhotoFile] = useState(null);
@@ -625,15 +682,55 @@ const Profile = () => {
                 <label className="form-label" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MapPin size={14} color="var(--primary)" /> Assigned Jurisdiction
                 </label>
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0', fontSize: '0.875rem' }}>
-                  {user?.scope?.stateName && <div><strong>State:</strong> {user.scope.stateName}</div>}
-                  {user?.scope?.districtName && <div><strong>District:</strong> {user.scope.districtName}</div>}
-                  {user?.scope?.divisionName && <div><strong>Division:</strong> {user.scope.divisionName}</div>}
-                  {user?.scope?.pincodeCode && (
-                    <div>
-                      <strong>Pincode:</strong> {user.scope.pincodeCode} ({user.scope.pincodeArea || ''})
-                    </div>
-                  )}
+                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  {(() => {
+                    const role = (user?.role || '').toLowerCase();
+                    const stateVal = user?.scope?.stateName || user?.stateName || user?.state;
+                    const distVal = user?.scope?.districtName || user?.districtName || user?.district;
+                    const divVal = user?.scope?.divisionName || user?.divisionName || user?.division;
+                    const pinVal = user?.scope?.pincodeCode || user?.pincodeCode || user?.pincode;
+                    const pinArea = (user?.scope?.pincodeArea || user?.pincodeArea || user?.area || '').trim();
+
+                    const isState = role === 'state_manager' || user?.level === 1;
+                    const isDistrict = role === 'district_manager' || user?.level === 2;
+                    const isDivision = role === 'division_manager' || user?.level === 3;
+
+                    if (isState) {
+                      return stateVal ? <div><strong>State:</strong> {stateVal}</div> : <div style={{ color: '#94a3b8' }}>State not assigned</div>;
+                    }
+
+                    if (isDistrict) {
+                      return (
+                        <>
+                          {stateVal && <div><strong>State:</strong> {stateVal}</div>}
+                          {distVal && <div><strong>District:</strong> {distVal}</div>}
+                        </>
+                      );
+                    }
+
+                    if (isDivision) {
+                      return (
+                        <>
+                          {stateVal && <div><strong>State:</strong> {stateVal}</div>}
+                          {distVal && <div><strong>District:</strong> {distVal}</div>}
+                          {divVal && <div><strong>Division:</strong> {divVal}</div>}
+                        </>
+                      );
+                    }
+
+                    return (
+                      <>
+                        {stateVal && <div><strong>State:</strong> {stateVal}</div>}
+                        {distVal && <div><strong>District:</strong> {distVal}</div>}
+                        {divVal && <div><strong>Division:</strong> {divVal}</div>}
+                        {pinVal && (
+                          <div>
+                            <strong>Pincode:</strong> {pinVal}{pinArea ? ` (${pinArea})` : ''}
+                          </div>
+                        )}
+                      </>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
@@ -646,19 +743,41 @@ const Profile = () => {
             <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px' }}>
               <Landmark size={18} color="var(--primary)" /> Bank Account Details
             </h3>
-            {user?.bankDetails && (
-              <span style={{
-                background: '#dcfce7',
-                border: '1px solid #bbf7d0',
-                color: '#15803d',
-                padding: '2px 8px',
-                borderRadius: '12px',
-                fontSize: '0.7rem',
-                fontWeight: 700
-              }}>
-                Registered
-              </span>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {user?.bankDetails && (
+                <span style={{
+                  background: '#dcfce7',
+                  border: '1px solid #bbf7d0',
+                  color: '#15803d',
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  fontSize: '0.7rem',
+                  fontWeight: 700
+                }}>
+                  Registered
+                </span>
+              )}
+              <button
+                type="button"
+                onClick={openBankModal}
+                style={{
+                  background: 'none',
+                  border: '1px solid #cbd5e1',
+                  borderRadius: '6px',
+                  padding: '4px 10px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  color: '#0284c7',
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+              >
+                <Edit3 size={12} />
+                <span>{user?.bankDetails ? 'Edit Details' : 'Add Bank Details'}</span>
+              </button>
+            </div>
           </div>
           <div className="card-body">
             {user?.bankDetails ? (
@@ -824,13 +943,243 @@ const Profile = () => {
                 <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
                   Bank details not provided
                 </div>
-                <p style={{ fontSize: '0.78rem', margin: 0 }}>
-                  No banking details are currently recorded for this account. Contact administrative support to submit or update banking information.
+                <p style={{ fontSize: '0.78rem', margin: '0 0 14px' }}>
+                  No banking details are currently recorded for this account. You can submit or update your banking details below.
                 </p>
+                <button
+                  type="button"
+                  onClick={openBankModal}
+                  style={{
+                    background: 'var(--primary)',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '8px 16px',
+                    fontSize: '0.8rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px'
+                  }}
+                >
+                  <Landmark size={14} />
+                  <span>Add Bank Account Details</span>
+                </button>
               </div>
             )}
           </div>
         </div>
+
+        {/* Modal: Edit Bank Details */}
+        {bankModalOpen && (
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            background: 'rgba(15, 23, 42, 0.6)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 9999,
+            padding: '20px'
+          }}>
+            <div style={{
+              background: '#ffffff',
+              borderRadius: '16px',
+              width: '100%',
+              maxWidth: '520px',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              overflow: 'hidden'
+            }}>
+              <div style={{
+                padding: '18px 24px',
+                borderBottom: '1px solid #e2e8f0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                background: '#f8fafc'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Landmark size={20} color="var(--primary)" />
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                    {user?.bankDetails ? 'Update Bank Account Details' : 'Add Bank Account Details'}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setBankModalOpen(false)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#64748b' }}
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <form onSubmit={handleSaveBankDetails} style={{ padding: '24px' }}>
+                {bankError && (
+                  <div style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: '#fee2e2',
+                    border: '1px solid #fecaca',
+                    color: '#b91c1c',
+                    fontSize: '0.82rem',
+                    marginBottom: '16px'
+                  }}>
+                    {bankError}
+                  </div>
+                )}
+                {bankSuccess && (
+                  <div style={{
+                    padding: '10px 14px',
+                    borderRadius: '8px',
+                    background: '#dcfce7',
+                    border: '1px solid #bbf7d0',
+                    color: '#15803d',
+                    fontSize: '0.82rem',
+                    marginBottom: '16px'
+                  }}>
+                    {bankSuccess}
+                  </div>
+                )}
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                      Account Holder Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={bankForm.accountHolderName}
+                      onChange={(e) => setBankForm({ ...bankForm, accountHolderName: e.target.value })}
+                      placeholder="e.g. Balavignesh"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                        Bank Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="form-input"
+                        value={bankForm.bankName}
+                        onChange={(e) => setBankForm({ ...bankForm, bankName: e.target.value })}
+                        placeholder="e.g. HDFC Bank"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                        Branch Name *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="form-input"
+                        value={bankForm.branchName}
+                        onChange={(e) => setBankForm({ ...bankForm, branchName: e.target.value })}
+                        placeholder="e.g. Vandalur"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                        City *
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        className="form-input"
+                        value={bankForm.city}
+                        onChange={(e) => setBankForm({ ...bankForm, city: e.target.value })}
+                        placeholder="e.g. Chengalpattu"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                        Street / Address
+                      </label>
+                      <input
+                        type="text"
+                        className="form-input"
+                        value={bankForm.street}
+                        onChange={(e) => setBankForm({ ...bankForm, street: e.target.value })}
+                        placeholder="Optional address"
+                        style={{ width: '100%' }}
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                      Account Number *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={bankForm.accountNumber}
+                      onChange={(e) => setBankForm({ ...bankForm, accountNumber: e.target.value.replace(/\D/g, '') })}
+                      placeholder="9 to 18 digit account number"
+                      maxLength={18}
+                      style={{ width: '100%', fontFamily: 'monospace', letterSpacing: '0.05em' }}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="form-label" style={{ fontSize: '0.8rem', fontWeight: 600, color: '#334155', marginBottom: '4px', display: 'block' }}>
+                      IFSC Code *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      className="form-input"
+                      value={bankForm.ifscCode}
+                      onChange={(e) => setBankForm({ ...bankForm, ifscCode: e.target.value.toUpperCase() })}
+                      placeholder="e.g. HDFC0001234"
+                      maxLength={11}
+                      style={{ width: '100%', fontFamily: 'monospace', letterSpacing: '0.05em' }}
+                    />
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '24px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setBankModalOpen(false)}
+                    className="btn btn-secondary"
+                    disabled={bankSaving}
+                    style={{ padding: '8px 18px', borderRadius: '8px', cursor: 'pointer' }}
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn btn-primary"
+                    disabled={bankSaving}
+                    style={{ padding: '8px 22px', borderRadius: '8px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    {bankSaving && <RefreshCw size={14} className="animate-spin" />}
+                    <span>{bankSaving ? 'Saving...' : 'Save Bank Details'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
 
         {/* Change Password Card */}
         <div className="card">

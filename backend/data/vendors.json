@@ -1547,9 +1547,89 @@
     "panNumber": "ABCDE1238M",
     "pincodeId": "6aba6ffb16711d5e7d54bb5d",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Approved",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-12T09:32:29.759Z",
+    "contactName": "store5",
+    "isActive": true,
+    "isApproved": true,
+    "kycStatus": "approved",
+    "membership": {
+      "status": "none"
+    },
+    "phone": "9999999966",
+    "totalBookings": 0,
+    "totalOrders": 0,
+    "totalRevenue": 0
+  },
+  {
+    "_id": "5b57c281-9d9b-4685-b585-cdf24d13909c",
+    "accountHolderName": "Man Account",
+    "accountNumber": "874797164709639956",
+    "bankName": "Indian Bank",
+    "businessName": "Man",
+    "category": "Services",
+    "createdAt": "2026-10-12T12:13:07.892Z",
+    "createdBy": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "description": "",
+    "districtId": "6ab9f393bec0ef28c6e813ff",
+    "divisionId": "6aba0f80af9e0372e50b70d3",
+    "documents": [
+      {
+        "url": "/uploads/1791806912346_0daa0170f2c81d12febb4e52bd3611c7.jpg",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "man@gmail.com",
+    "gstNumber": "",
+    "id": "5b57c281-9d9b-4685-b585-cdf24d13909c",
+    "ifsc": "IDIB000B009",
+    "mobile": "9876544567",
+    "name": "Man ",
+    "panNumber": "IUYTR8765R",
+    "pincodeId": "6abbad527ff2862ecee7b8eb",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Active",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-12T12:13:07.892Z",
+    "approvalStatus": "Approved",
+    "isActive": true,
+    "isApproved": true
+  },
+  {
+    "_id": "91600148-afd2-4818-a465-830252b01e34",
+    "accountHolderName": "",
+    "accountNumber": "",
+    "bankName": "",
+    "businessName": "dpistore",
+    "category": "Daily Needs",
+    "createdAt": "2026-10-13T05:12:55.457Z",
+    "createdBy": "34ae555f-38ee-4755-8207-13c90d03ce3f",
+    "description": "",
+    "districtId": "6aa10fa8ca0932e6eaec1f5f",
+    "divisionId": "6aba1536af9e0372e50b716b",
+    "documents": [
+      {
+        "url": "/uploads/1791868295035_fc19d1f8fe6354793cc74800662df9d0.jpg",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "dpistore@gmial.com",
+    "gstNumber": "",
+    "id": "91600148-afd2-4818-a465-830252b01e34",
+    "ifsc": "",
+    "mobile": "9876545678",
+    "name": "Dpistore",
+    "panNumber": "",
+    "pincodeId": "6abe0df53c4400f34fa48083",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Pending",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-12T09:32:29.759Z"
+    "updatedAt": "2026-10-13T05:12:55.457Z"
   }
 ]

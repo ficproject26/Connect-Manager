@@ -193,6 +193,7 @@ function AppInner() {
           initialUser={navParams.user}
           initialFlowState={navParams.flowState}
           initialToken={navParams.token}
+          initialRejectionReason={navParams.rejectionReason}
         />
       );
     }

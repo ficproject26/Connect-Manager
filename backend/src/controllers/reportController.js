@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const territoryScopeService = require('../services/territoryScopeService');
 const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
 const { getManagerTerritoryProfile, isTaskInManagerTerritory } = require('./taskController');
 const { cacheManager } = require('../realtime');
@@ -25,111 +26,52 @@ const getDashboardStats = async (req, res) => {
       // Load all vendors and deduplicate
       const rawVendors = await db.vendors.find({});
       const seen = new Set();
-    const uniqueVendors = [];
-    for (const v of rawVendors) {
-      const key = String(v.registrationId || v._id || v.id || `${v.phone || v.mobile}_${v.businessName}`);
-      if (!seen.has(key)) {
-        seen.add(key);
-        uniqueVendors.push(v);
-      }
-    }
-
-    // Filter strictly by caller's scope
-    const vendors = uniqueVendors.filter(v => isVendorInScope(v, user));
-
-    // Common status counts computed live from database
-    const statusCounts = {
-      total: vendors.length,
-      active: vendors.filter(v => isVendorActive(v.status)).length,
-      pending: vendors.filter(v => isVendorPending(v.status)).length,
-      underReview: vendors.filter(v => String(v.status || '').toLowerCase().includes('review')).length,
-      rejected: vendors.filter(v => isVendorRejected(v.status)).length,
-      inactive: vendors.filter(v => isVendorInactive(v.status)).length
-    };
-
-    // Category distribution
-    const categoryCounts = {};
-    vendors.forEach(v => {
-      const cat = v.category || 'Uncategorized';
-      categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-    });
-
-    // Compute comprehensive territory breakdowns strictly from scoped vendors
-    const districtMap = new Map();
-    const divisionMap = new Map();
-    const pincodeMap = new Map();
-
-    vendors.forEach(v => {
-      // District grouping
-      const dName = (v.district || v.districtName || '').trim();
-      if (dName) {
-        const key = dName.toLowerCase();
-        if (!districtMap.has(key)) {
-          districtMap.set(key, {
-            districtId: v.districtId || dName,
-            districtName: dName,
-            totalVendors: 0,
-            activeVendors: 0,
-            tieUps: 0,
-            pendingVendors: 0
-          });
+      const uniqueVendors = [];
+      for (const v of rawVendors) {
+        const key = String(v.registrationId || v._id || v.id || `${v.phone || v.mobile}_${v.businessName}`);
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniqueVendors.push(v);
         }
-        const dRec = districtMap.get(key);
-        dRec.totalVendors++;
-        if (isVendorActive(v.status)) { dRec.activeVendors++; dRec.tieUps++; }
-        if (isVendorPending(v.status)) { dRec.pendingVendors++; }
       }
 
-      // Division grouping
-      const divName = (v.division || v.divisionName || '').trim();
-      if (divName) {
-        const key = divName.toLowerCase();
-        if (!divisionMap.has(key)) {
-          divisionMap.set(key, {
-            divisionId: v.divisionId || divName,
-            divisionName: divName,
-            totalVendors: 0,
-            activeVendors: 0,
-            tieUps: 0,
-            pendingVendors: 0
-          });
+      // Filter strictly by caller's scope using centralized territory hierarchy
+      const vendors = [];
+      for (const v of uniqueVendors) {
+        if (await territoryScopeService.isRecordInScope(v, user)) {
+          vendors.push(v);
         }
-        const divRec = divisionMap.get(key);
-        divRec.totalVendors++;
-        if (isVendorActive(v.status)) { divRec.activeVendors++; divRec.tieUps++; }
-        if (isVendorPending(v.status)) { divRec.pendingVendors++; }
       }
 
-      // Pincode grouping
-      const pCode = String(v.pincode || v.pincodeCode || '').trim();
-      if (pCode) {
-        if (!pincodeMap.has(pCode)) {
-          pincodeMap.set(pCode, {
-            pincodeId: v.pincodeId || pCode,
-            pincodeCode: pCode,
-            areaName: v.area || v.division || '',
-            totalVendors: 0,
-            activeVendors: 0,
-            tieUps: 0,
-            pendingVendors: 0
-          });
-        }
-        const pinRec = pincodeMap.get(pCode);
-        pinRec.totalVendors++;
-        if (isVendorActive(v.status)) { pinRec.activeVendors++; pinRec.tieUps++; }
-        if (isVendorPending(v.status)) { pinRec.pendingVendors++; }
-      }
-    });
+      // Common status counts computed live from database
+      const statusCounts = {
+        total: vendors.length,
+        active: vendors.filter(v => isVendorActive(v.status)).length,
+        pending: vendors.filter(v => isVendorPending(v.status)).length,
+        underReview: vendors.filter(v => String(v.status || '').toLowerCase().includes('review')).length,
+        rejected: vendors.filter(v => isVendorRejected(v.status)).length,
+        inactive: vendors.filter(v => isVendorInactive(v.status)).length
+      };
 
-    const districtBreakdown = Array.from(districtMap.values()).sort((a, b) => b.totalVendors - a.totalVendors || b.tieUps - a.tieUps);
-    const divisionBreakdown = Array.from(divisionMap.values()).sort((a, b) => b.totalVendors - a.totalVendors || b.tieUps - a.tieUps);
-    const pincodeBreakdown = Array.from(pincodeMap.values()).sort((a, b) => b.totalVendors - a.totalVendors || b.tieUps - a.tieUps);
+      // Category distribution
+      const categoryCounts = {};
+      vendors.forEach(v => {
+        const cat = v.category || 'Uncategorized';
+        categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      });
 
-    let roleSpecificData = {
-      districtBreakdown,
-      divisionBreakdown,
-      pincodeBreakdown
-    };
+      // Compute comprehensive territory breakdowns strictly from scoped database records (vendors + visits)
+      const [districtBreakdown, divisionBreakdown, pincodeBreakdown] = await Promise.all([
+        territoryScopeService.getTerritoryPerformance(user, 'dist'),
+        territoryScopeService.getTerritoryPerformance(user, 'div'),
+        territoryScopeService.getTerritoryPerformance(user, 'pin')
+      ]);
+
+      let roleSpecificData = {
+        districtBreakdown,
+        divisionBreakdown,
+        pincodeBreakdown
+      };
 
     if (user.role === 'state_manager') {
       const state = await db.states.findById(user.stateId);
@@ -531,7 +473,8 @@ const getVendorReportData = async (req, res) => {
 const getLeaderboardData = async (req, res) => {
   try {
     const user = req.user;
-    const cacheKey = `reports:leaderboard:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}`;
+    const period = String(req.query.period || 'month').toLowerCase();
+    const cacheKey = `reports:leaderboard:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}:${period}`;
 
     const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
       const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
@@ -575,24 +518,18 @@ const getLeaderboardData = async (req, res) => {
           continue;
         }
 
-        // Territory scope enforcement based on authenticated manager's level
+        const status = String(m.status || '').toLowerCase();
+        const isSelf = String(m._id || m.id) === String(user?.id || user?._id);
+        const isEligible = status === 'active' || status === 'approved' || status === 'active & authorized' || status === 'under_review' || isSelf;
+        if (!isEligible) continue;
+
+        // Territory scope enforcement: Managers compete within their assigned state jurisdiction
         if (!isGlobalAdmin) {
-          if (user.role === 'state_manager') {
-            const uState = String(user.stateId || user.state || '').trim().toLowerCase();
-            const mState = String(m.stateId || m.state || '').trim().toLowerCase();
-            if (uState && mState && uState !== mState) continue;
-          } else if (user.role === 'district_manager') {
-            const uDist = String(user.districtId || user.district || '').trim().toLowerCase();
-            const mDist = String(m.districtId || m.district || '').trim().toLowerCase();
-            if (uDist && mDist && uDist !== mDist) continue;
-          } else if (user.role === 'division_manager') {
-            const uDiv = String(user.divisionId || user.division || '').trim().toLowerCase();
-            const mDiv = String(m.divisionId || m.division || '').trim().toLowerCase();
-            if (uDiv && mDiv && uDiv !== mDiv) continue;
-          } else if (user.role === 'pincode_manager') {
-            const uPin = String(user.pincodeId || user.pincode || user.pincodeCode || '').trim().toLowerCase();
-            const mPin = String(m.pincodeId || m.pincode || m.pincodeCode || '').trim().toLowerCase();
-            if (uPin && mPin && uPin !== mPin) continue;
+          const uState = String(user?.stateId || user?.state || user?.stateName || user?.scope?.stateName || 'Tamil Nadu').trim().toLowerCase();
+          const mState = String(m.stateId || m.state || m.stateName || stateMap.get(String(m.stateId))?.name || '').trim().toLowerCase();
+          if (uState && mState) {
+            const match = uState === mState || uState.includes(mState) || mState.includes(uState);
+            if (!match) continue;
           }
         }
 
@@ -619,6 +556,14 @@ const getLeaderboardData = async (req, res) => {
 
       const colorPalette = ['#0284c7', '#8b5cf6', '#f59e0b', '#0d9488', '#ea580c', '#d97706', '#6366f1', '#ec4899'];
 
+      const now = new Date();
+      const periodMs = period === 'quarter' 
+        ? 90 * 24 * 60 * 60 * 1000 
+        : (period === 'year' || period === 'fullyear' 
+          ? 365 * 24 * 60 * 60 * 1000 
+          : 30 * 24 * 60 * 60 * 1000);
+      const periodStart = new Date(now.getTime() - periodMs);
+
       const rankedList = candidateManagers.map((m, idx) => {
         const state = m.stateId ? stateMap.get(String(m.stateId)) : null;
         const district = m.districtId ? districtMap.get(String(m.districtId)) : null;
@@ -631,9 +576,18 @@ const getLeaderboardData = async (req, res) => {
           String(v.createdBy || '') === mId
         );
 
-        const totalVendors = managerVendors.length;
-        const activeVendors = managerVendors.filter(v => String(v.status || '').toLowerCase() === 'active').length;
-        const pendingVendors = managerVendors.filter(v => {
+        // Filter by selected time period
+        const periodVendors = managerVendors.filter(v => {
+          if (!v.createdAt) return true;
+          return new Date(v.createdAt) >= periodStart;
+        });
+
+        const totalVendors = periodVendors.length;
+        const activeVendors = periodVendors.filter(v => {
+          const st = String(v.status || '').toLowerCase();
+          return st === 'active' || st === 'approved';
+        }).length;
+        const pendingVendors = periodVendors.filter(v => {
           const st = String(v.status || '').toLowerCase();
           return st === 'pending' || st.includes('review');
         }).length;
@@ -647,7 +601,8 @@ const getLeaderboardData = async (req, res) => {
         let territoryText = state?.name || m.state || 'Assigned Territory';
         if (pincode?.code || m.pincodeCode || m.pincode) {
           const pin = pincode?.code || m.pincodeCode || m.pincode;
-          territoryText = `PIN ${pin}`;
+          const divName = division?.name || m.division || '';
+          territoryText = divName ? `PIN ${pin} (${divName})` : `PIN ${pin}`;
         } else if (division?.name || m.division) {
           const divName = division?.name || m.division;
           const distName = district?.name || m.district || '';
@@ -769,29 +724,27 @@ const getSubmittedReports = async (req, res) => {
       db.pincodes.find(user.divisionId ? { divisionId: user.divisionId } : {})
     ]);
 
-    let filtered = allReports.filter(r => {
-      // Scope filtering
-      if (user.role === 'state_manager' && user.stateId && r.stateId && r.stateId !== user.stateId) return false;
-      if (user.role === 'district_manager' && user.districtId && r.districtId && r.districtId !== user.districtId) return false;
-      if (user.role === 'division_manager' && user.divisionId && r.divisionId && r.divisionId !== user.divisionId) return false;
-      if (user.role === 'pincode_manager' && user.pincodeId && r.pincodeId && r.pincodeId !== user.pincodeId) return false;
+    const filtered = [];
+    for (const r of allReports) {
+      const visible = await territoryScopeService.isReportVisible(r, user, req.query.scope || 'all');
+      if (!visible) continue;
 
       // Filter params
-      if (district && district !== 'All' && String(r.districtId || '') !== String(district) && String(r.district || '') !== String(district)) return false;
-      if (division && division !== 'All' && String(r.divisionId || '') !== String(division) && String(r.division || '') !== String(division)) return false;
-      if (pincode && pincode !== 'All' && String(r.pincodeId || '') !== String(pincode) && String(r.pincode || '') !== String(pincode)) return false;
-      if (managerRole && managerRole !== 'All' && String(r.managerRole || '').toLowerCase() !== String(managerRole).toLowerCase()) return false;
+      if (district && district !== 'All' && String(r.districtId || '') !== String(district) && String(r.district || '') !== String(district)) continue;
+      if (division && division !== 'All' && String(r.divisionId || '') !== String(division) && String(r.division || '') !== String(division)) continue;
+      if (pincode && pincode !== 'All' && String(r.pincodeId || '') !== String(pincode) && String(r.pincode || '') !== String(pincode)) continue;
+      if (managerRole && managerRole !== 'All' && String(r.managerRole || '').toLowerCase() !== String(managerRole).toLowerCase()) continue;
 
       if (search && search.trim()) {
         const q = search.toLowerCase();
         const matchCode = (r.reportCode || '').toLowerCase().includes(q);
         const matchName = (r.managerName || '').toLowerCase().includes(q);
         const matchPeriod = (r.periodLabel || '').toLowerCase().includes(q);
-        if (!matchCode && !matchName && !matchPeriod) return false;
+        if (!matchCode && !matchName && !matchPeriod) continue;
       }
 
-      return true;
-    });
+      filtered.push(r);
+    }
 
     filtered.sort((a, b) => new Date(b.submittedAt || b.createdAt) - new Date(a.submittedAt || a.createdAt));
 
@@ -837,21 +790,8 @@ const getSubmittedReportById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Submitted report not found' });
     }
 
-    const isAdmin = ['admin', 'super_admin', 'super-admin'].includes(String(user.role).toLowerCase()) || user.email === 'admin@example.com';
-    const isOwner = String(report.managerId) === String(user.id || user._id);
-
-    let isWithinScope = false;
-    if (user.role === 'state_manager') {
-      isWithinScope = !report.stateId || String(report.stateId) === String(user.stateId);
-    } else if (user.role === 'district_manager') {
-      isWithinScope = !report.districtId || String(report.districtId) === String(user.districtId);
-    } else if (user.role === 'division_manager') {
-      isWithinScope = !report.divisionId || String(report.divisionId) === String(user.divisionId);
-    } else if (user.role === 'pincode_manager') {
-      isWithinScope = !report.pincodeId || String(report.pincodeId) === String(user.pincodeId);
-    }
-
-    if (!isAdmin && !isOwner && !isWithinScope) {
+    const isVisible = await territoryScopeService.isReportVisible(report, user, 'all');
+    if (!isVisible) {
       return res.status(403).json({
         success: false,
         message: 'Access Denied: You do not have permission to access reports outside your assigned territory.'

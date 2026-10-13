@@ -502,11 +502,13 @@ class Collection {
     this._write(filtered);
 
     if (this._mongoCol) {
-      this._mongoCol.deleteOne(cleanQuery).catch(err => {
+      try {
+        await this._mongoCol.deleteOne(cleanQuery);
+        if (this.name === 'users' && this._mongoDb) {
+          await this._mongoDb.collection('managers').deleteOne(cleanQuery);
+        }
+      } catch (err) {
         console.error(`[Manager MongoDB] deleteOne error in ${this.name}:`, err.message);
-      });
-      if (this.name === 'users' && this._mongoDb) {
-        this._mongoDb.collection('managers').deleteOne(cleanQuery).catch(() => {});
       }
     }
 

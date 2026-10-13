@@ -28,10 +28,23 @@ const authMiddleware = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ success: false, message: 'User account not found.' });
     }
-    const userStatus = String(user.status || '').toLowerCase();
-    const isBlockedStatus = userStatus === 'inactive' || userStatus === 'rejected' || userStatus === 'suspended';
+    const userStatus = String(user.status || '').toLowerCase().trim();
+    const isBlockedStatus = userStatus === 'inactive' || 
+      userStatus === 'suspended' || 
+      userStatus === 'deactivated' || 
+      userStatus === 'rejected' ||
+      userStatus === 'rejected_by_sub_admin' ||
+      userStatus === 'kyc_rejected';
     if (isBlockedStatus) {
-      return res.status(401).json({ success: false, message: 'User account is inactive or suspended.' });
+      return res.status(403).json({ 
+        success: false, 
+        code: 'ACCOUNT_BLOCKED',
+        approvalStatus: user.status,
+        rejectionReason: user.rejectionReason || null,
+        message: user.rejectionReason 
+          ? `User account is restricted: ${user.rejectionReason}`
+          : 'User account is inactive, rejected, or suspended.' 
+      });
     }
 
     // Extract base territory identifiers from user, scope, territory, and decoded token
@@ -116,6 +129,14 @@ const authMiddleware = async (req, res, next) => {
       role: user.role,
       level: user.level,
       status: user.status,
+      adminApprovalStatus: user.adminApprovalStatus || (['active', 'approved'].includes(String(user.status).toLowerCase()) ? 'approved' : 'pending'),
+      kycStatus: user.kycStatus || (['active', 'approved'].includes(String(user.status).toLowerCase()) ? 'verified' : 'pending'),
+      rejectionReason: user.rejectionReason || null,
+      assignedSubAdminId: user.assignedSubAdminId || null,
+      assignedSubAdminName: user.assignedSubAdminName || null,
+      assignedSubAdminRole: user.assignedSubAdminRole || null,
+      routingQueue: user.routingQueue || null,
+      subAdminRoutingStatus: user.subAdminRoutingStatus || null,
       stateId,
       assignedStateId: stateId,
       districtId,

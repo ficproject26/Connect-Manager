@@ -37,10 +37,9 @@ const Leaderboard = ({ onNavigate }) => {
   useEffect(() => {
     const fetchLeaderboard = async () => {
       try {
-        if (!cacheClient.get('leaderboard')?.data) {
-          setLoading(true);
-        }
-        const res = await cacheClient.fetchWithCache('leaderboard', () => reportService.getLeaderboardData());
+        setLoading(true);
+        const cacheKey = `leaderboard_${period}`;
+        const res = await cacheClient.fetchWithCache(cacheKey, () => reportService.getLeaderboardData({ period }));
         if (res && res.success) {
           const list = Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
           setAllRankings(list);
@@ -53,11 +52,16 @@ const Leaderboard = ({ onNavigate }) => {
     };
 
     fetchLeaderboard();
-  }, [user]);
+  }, [user, period]);
 
   const tierRankings = useMemo(() => {
     const safeRankings = Array.isArray(allRankings) ? allRankings : [];
-    const list = safeRankings.filter((m) => tierFilter === 'All' || m.role === tierFilter);
+    const list = safeRankings.filter((m) => {
+      if (tierFilter === 'All') return true;
+      const r = String(m.role || '').toLowerCase();
+      const tf = String(tierFilter || '').toLowerCase();
+      return r === tf || r.includes(tf.replace('_manager', ''));
+    });
     return list.map((m, idx) => ({
       ...m,
       displayRank: tierFilter === 'All' ? m.rank : idx + 1

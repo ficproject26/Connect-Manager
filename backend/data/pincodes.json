@@ -61,15 +61,14 @@
   },
   {
     "_id": "pin_560001",
-    "code": "560001",
-    "createdAt": "2026-10-09T14:04:39.028Z",
-    "districtId": "dist_bengaluru_urban",
-    "divisionId": "div_blr_c",
     "id": "pin_560001",
-    "name": "MG Road / Brigade Rd / Cantt",
-    "stateId": "state_ka",
+    "code": "560001",
+    "divisionId": "div_blr_south",
+    "districtId": "dist_blr",
+    "stateId": "state_test_ka",
     "status": "Active",
-    "updatedAt": "2026-10-09T14:04:39.028Z"
+    "createdAt": "2026-10-13T07:17:42.146Z",
+    "updatedAt": "2026-10-13T07:17:42.146Z"
   },
   {
     "_id": "pin_562149",
@@ -301,15 +300,14 @@
   },
   {
     "_id": "pin_560002",
-    "code": "560002",
-    "createdAt": "2026-10-09T14:04:39.028Z",
-    "districtId": "dist_bengaluru_urban",
-    "divisionId": "div_blr_c",
     "id": "pin_560002",
-    "name": "Shivajinagar / Commercial St / City Market",
-    "stateId": "state_ka",
+    "code": "560002",
+    "divisionId": "div_blr_south",
+    "districtId": "dist_blr",
+    "stateId": "state_test_ka",
     "status": "Active",
-    "updatedAt": "2026-10-09T14:04:39.028Z"
+    "createdAt": "2026-10-13T07:17:42.148Z",
+    "updatedAt": "2026-10-13T07:17:42.148Z"
   },
   {
     "_id": "pin_560003",
@@ -24238,5 +24236,16 @@
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
     "updatedAt": "2026-10-09T14:04:39.041Z"
+  },
+  {
+    "_id": "pin_560099",
+    "id": "pin_560099",
+    "code": "560099",
+    "divisionId": "div_blr_north",
+    "districtId": "dist_blr",
+    "stateId": "state_test_ka",
+    "status": "Active",
+    "createdAt": "2026-10-13T07:17:42.150Z",
+    "updatedAt": "2026-10-13T07:17:42.150Z"
   }
 ]

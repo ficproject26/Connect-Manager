@@ -322,6 +322,32 @@ const createVendor = async (req, res) => {
 
     const fieldVisitId = req.body.fieldVisitId || null;
 
+    // Duplicate Prevention: Check if vendor is already onboarded or active
+    const existingVendors = await db.vendors.find();
+    const cleanPhone = String(mobile).trim().replace(/\D/g, '');
+    const cleanBusiness = String(businessName).trim().toLowerCase();
+
+    const existingMatch = existingVendors.find(v => {
+      if (fieldVisitId && String(v.fieldVisitId) === String(fieldVisitId)) return true;
+      const vp = String(v.phone || v.mobile || '').trim().replace(/\D/g, '');
+      if (cleanPhone.length >= 10 && vp.length >= 10 && vp.slice(-10) === cleanPhone.slice(-10)) return true;
+      const vn = String(v.businessName || v.name || '').trim().toLowerCase();
+      if (vn && vn === cleanBusiness) return true;
+      return false;
+    });
+
+    if (existingMatch) {
+      const isCompleted = ['Approved', 'Active', 'Completed'].includes(existingMatch.status);
+      if (isCompleted) {
+        return res.status(409).json({
+          success: false,
+          duplicate: true,
+          message: `Vendor "${existingMatch.businessName || existingMatch.name}" is already successfully onboarded (${existingMatch.status}).`,
+          vendor: existingMatch
+        });
+      }
+    }
+
     const newVendor = await db.vendors.insertOne({
       name,
       mobile,

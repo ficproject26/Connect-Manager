@@ -71,5 +71,29 @@
     "createdAt": "2026-09-25T07:54:38.353Z",
     "updatedAt": "2026-09-25T07:54:38.353Z",
     "__v": 0
+  },
+  {
+    "_id": "6acdc082cd3c3b1568359c40",
+    "ticketId": "TKT-I7S9810M",
+    "creator": "6a8ffe58b346b0af44cf2036",
+    "creatorRole": "state",
+    "creatorName": "Tamil",
+    "assignedAgent": "Pincode Agent",
+    "vendorName": "Tamil Merchant",
+    "storeName": "y",
+    "state": "Tamil Nadu",
+    "district": "Salem",
+    "division": "Thalaivasal",
+    "pincode": "636112",
+    "territory": "Salem → Thalaivasal → 636112",
+    "category": "Payment",
+    "description": "fix the issue",
+    "priority": "high",
+    "status": "in_progress",
+    "attachmentName": "logo.jpg.jpeg",
+    "createdAt": "2026-10-13T05:24:18.360Z",
+    "updatedAt": "2026-10-13T05:29:26.278Z",
+    "__v": 0,
+    "resolutionDetails": "[State Response 13/10/2026]: fix quickly | Assigned to Pincode Agent by State Desk"
   }
 ]

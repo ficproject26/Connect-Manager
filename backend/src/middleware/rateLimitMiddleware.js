@@ -21,6 +21,9 @@ const createRateLimiter = ({ windowMs = 60 * 1000, max = 100, message = 'Too man
   cleanupInterval.unref();
 
   return (req, res, next) => {
+    if (process.env.NODE_ENV === 'test') {
+      return next();
+    }
     // Determine client IP safely
     let clientIp = req.ip || req.connection?.remoteAddress || '127.0.0.1';
     const forwarded = req.headers['x-forwarded-for'];

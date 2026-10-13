@@ -83,8 +83,25 @@ const ROLES = [
   }
 ];
 
-export default function Register({ onNavigate, initialUser = null, initialFlowState = null, initialToken = null }) {
+export default function Register({ 
+  onNavigate, 
+  initialUser = null, 
+  initialFlowState = null, 
+  initialToken = null,
+  initialRejectionReason = ''
+}) {
   const { setSession } = useAuth();
+
+  const getInitialFlowState = (u, fs) => {
+    if (fs) return fs;
+    if (!u) return 'form';
+    const st = String(u.status || '').toLowerCase().trim();
+    if (st === 'active' || st === 'approved') return 'approved';
+    if (st === 'pending_kyc_approval' || st === 'kyc_pending') return 'kyc_pending';
+    if (['rejected', 'rejected_by_sub_admin', 'kyc_rejected'].includes(st)) return 'rejected';
+    if (st === 'pending_sub_admin_approval' || st === 'under_review') return 'under_review';
+    return 'form';
+  };
 
   // Form State - Credentials & Identity
   const [role, setRole] = useState(initialUser?.role || 'state_manager');
@@ -160,24 +177,27 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
   const [capacityInfo, setCapacityInfo] = useState(null);
   const [capacityLoading, setCapacityLoading] = useState(false);
 
-
   // Profile Photo
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(initialUser?.avatarUrl || null);
 
-  // UI Flow Status: 'form' | 'under_review' | 'kyc_pending' | 'approved'
-  const [flowState, setFlowState] = useState(
-    initialFlowState || (initialUser ? (initialUser.status === 'kyc_pending' ? 'kyc_pending' : 'under_review') : 'form')
-  );
+  // UI Flow Status: 'form' | 'under_review' | 'kyc_pending' | 'rejected' | 'approved'
+  const [flowState, setFlowState] = useState(() => getInitialFlowState(initialUser, initialFlowState));
   const [registeredUser, setRegisteredUser] = useState(initialUser || null);
   const [approvedToken, setApprovedToken] = useState(initialToken || null);
+  const [rejectionReason, setRejectionReason] = useState(
+    initialRejectionReason || initialUser?.rejectionReason || ''
+  );
 
   // Sync if props change
   useEffect(() => {
     if (initialUser) {
       setRegisteredUser(initialUser);
-      setFlowState(initialFlowState || (initialUser.status === 'kyc_pending' ? 'kyc_pending' : 'under_review'));
+      setFlowState(getInitialFlowState(initialUser, initialFlowState));
       if (initialToken) setApprovedToken(initialToken);
+      if (initialRejectionReason || initialUser.rejectionReason) {
+        setRejectionReason(initialRejectionReason || initialUser.rejectionReason);
+      }
       if (initialUser.role) setRole(initialUser.role);
       if (initialUser.name) setName(initialUser.name);
       if (initialUser.email) setEmail(initialUser.email);
@@ -189,7 +209,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
         setPanNumber(initialUser.panNumber || initialUser.documents?.panNumber);
       }
     }
-  }, [initialUser, initialFlowState, initialToken]);
+  }, [initialUser, initialFlowState, initialToken, initialRejectionReason]);
 
   // Messages & Loading
   const [loading, setLoading] = useState(false);
@@ -413,11 +433,34 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
   const handleDocSelect = (type, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      setError(`File size for ${type.toUpperCase()} must not exceed 5MB`);
+
+    const docNames = {
+      aadhar: 'Aadhaar Card',
+      pan: 'PAN Card',
+      bank: 'Bank Passbook',
+      signature: 'Digital Signature'
+    };
+    const docTitle = docNames[type] || 'Document';
+
+    // Format validation: Only PDF, JPG, and PNG allowed
+    const allowedMimes = ['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'];
+    const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+    const fileName = file.name || '';
+    const fileExt = fileName.slice(fileName.lastIndexOf('.')).toLowerCase();
+
+    if (!allowedMimes.includes((file.type || '').toLowerCase()) && !allowedExtensions.includes(fileExt)) {
+      setError(`Invalid file format for ${docTitle}. Only PDF, JPG, and PNG files are allowed.`);
+      if (e.target) e.target.value = '';
       return;
     }
-    const isImage = file.type.startsWith('image/');
+
+    if (file.size > 5 * 1024 * 1024) {
+      setError(`File size for ${docTitle} must not exceed 5MB.`);
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    const isImage = (file.type || '').startsWith('image/') || ['.jpg', '.jpeg', '.png'].includes(fileExt);
     const previewUrl = isImage ? URL.createObjectURL(file) : null;
 
     if (type === 'aadhar') {
@@ -591,6 +634,24 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
     }
     setBankErrors({});
 
+    // 4 Mandatory KYC Document Uploads Validation
+    if (!aadharFile) {
+      setError('Please upload your Aadhaar Card document (mandatory).');
+      return;
+    }
+    if (!panFile) {
+      setError('Please upload your PAN Card document (mandatory).');
+      return;
+    }
+    if (!bankFile) {
+      setError('Please upload your Bank Passbook / Cheque document (mandatory).');
+      return;
+    }
+    if (!signatureFile) {
+      setError('Please upload your Digital Signature specimen (mandatory).');
+      return;
+    }
+
     if (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager') {
       setError('Capacity reached for this location. Registration not allowed.');
       return;
@@ -612,46 +673,58 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
         }
       }
 
-      // 2. Upload KYC Documents & Signature
+      // 2. Upload Mandatory KYC Documents & Signature (Strict - no mock fallbacks)
       let aadharUrl = null;
       let panUrl = null;
       let bankUrl = null;
       let signatureUrl = null;
 
-      if (aadharFile) {
-        try {
-          const res = await authService.uploadDocument(aadharFile);
-          if (res.success && res.file?.url) aadharUrl = res.file.url;
-        } catch (e) {
-          aadharUrl = `/uploads/${Date.now()}_aadhar.pdf`;
+      try {
+        const res = await authService.uploadDocument(aadharFile);
+        if (!res.success || !res.file?.url) {
+          throw new Error(res.message || 'Aadhaar Card upload failed');
         }
+        aadharUrl = res.file.url;
+      } catch (e) {
+        setError(`Aadhaar Card upload failed: ${e.message || 'Please check file and try again.'}`);
+        setLoading(false);
+        return;
       }
 
-      if (panFile) {
-        try {
-          const res = await authService.uploadDocument(panFile);
-          if (res.success && res.file?.url) panUrl = res.file.url;
-        } catch (e) {
-          panUrl = `/uploads/${Date.now()}_pan.pdf`;
+      try {
+        const res = await authService.uploadDocument(panFile);
+        if (!res.success || !res.file?.url) {
+          throw new Error(res.message || 'PAN Card upload failed');
         }
+        panUrl = res.file.url;
+      } catch (e) {
+        setError(`PAN Card upload failed: ${e.message || 'Please check file and try again.'}`);
+        setLoading(false);
+        return;
       }
 
-      if (bankFile) {
-        try {
-          const res = await authService.uploadDocument(bankFile);
-          if (res.success && res.file?.url) bankUrl = res.file.url;
-        } catch (e) {
-          bankUrl = `/uploads/${Date.now()}_bank.pdf`;
+      try {
+        const res = await authService.uploadDocument(bankFile);
+        if (!res.success || !res.file?.url) {
+          throw new Error(res.message || 'Bank Passbook upload failed');
         }
+        bankUrl = res.file.url;
+      } catch (e) {
+        setError(`Bank Passbook upload failed: ${e.message || 'Please check file and try again.'}`);
+        setLoading(false);
+        return;
       }
 
-      if (signatureFile) {
-        try {
-          const res = await authService.uploadDocument(signatureFile);
-          if (res.success && res.file?.url) signatureUrl = res.file.url;
-        } catch (e) {
-          signatureUrl = `/uploads/${Date.now()}_sig.png`;
+      try {
+        const res = await authService.uploadDocument(signatureFile);
+        if (!res.success || !res.file?.url) {
+          throw new Error(res.message || 'Digital Signature upload failed');
         }
+        signatureUrl = res.file.url;
+      } catch (e) {
+        setError(`Digital Signature upload failed: ${e.message || 'Please check file and try again.'}`);
+        setLoading(false);
+        return;
       }
 
       // 3. Submit Registration
@@ -669,14 +742,18 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
         documents: {
           aadharNumber: cleanAadhar,
           panNumber: cleanPan,
-          aadharUrl: aadharUrl || (aadharFile ? `/uploads/${aadharFile.name}` : null),
-          panUrl: panUrl || (panFile ? `/uploads/${panFile.name}` : null),
-          bankUrl: bankUrl || (bankFile ? `/uploads/${bankFile.name}` : null),
-          signatureUrl: signatureUrl || (signatureFile ? `/uploads/${signatureFile.name}` : null),
-          aadharFileName: aadharFile?.name || null,
-          panFileName: panFile?.name || null,
-          bankFileName: bankFile?.name || null,
-          signatureFileName: signatureFile?.name || null
+          aadharUrl,
+          panUrl,
+          bankUrl,
+          signatureUrl,
+          aadharCard: aadharUrl,
+          panCard: panUrl,
+          bankPassbook: bankUrl,
+          digitalSignature: signatureUrl,
+          aadharFileName: aadharFile.name,
+          panFileName: panFile.name,
+          bankFileName: bankFile.name,
+          signatureFileName: signatureFile.name
         },
         declarationAccepted,
         stateId: stateId || null,
@@ -1629,7 +1706,9 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         }}>
                           <FileText size={15} />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>Aadhaar Card</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                          Aadhaar Card <span style={{ color: '#ef4444' }}>*</span>
+                        </span>
                       </div>
                       {aadharFile && (
                         <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
@@ -1713,7 +1792,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         gap: '4px'
                       }}>
                         <Upload size={11} /> {aadharFile ? 'Change' : 'Upload Aadhaar'}
-                        <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => handleDocSelect('aadhar', e)} />
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('aadhar', e)} />
                       </label>
                       {aadharFile && (
                         <button type="button" onClick={() => handleRemoveDoc('aadhar')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -1747,7 +1826,9 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         }}>
                           <CreditCard size={15} />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>PAN Card</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                          PAN Card <span style={{ color: '#ef4444' }}>*</span>
+                        </span>
                       </div>
                       {panFile && (
                         <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
@@ -1832,7 +1913,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         gap: '4px'
                       }}>
                         <Upload size={11} /> {panFile ? 'Change' : 'Upload PAN'}
-                        <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => handleDocSelect('pan', e)} />
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('pan', e)} />
                       </label>
                       {panFile && (
                         <button type="button" onClick={() => handleRemoveDoc('pan')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -1866,7 +1947,9 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         }}>
                           <Building size={15} />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>Bank Passbook</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                          Bank Passbook <span style={{ color: '#ef4444' }}>*</span>
+                        </span>
                       </div>
                       {bankFile && (
                         <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
@@ -1909,7 +1992,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         gap: '4px'
                       }}>
                         <Upload size={11} /> {bankFile ? 'Change' : 'Upload Passbook'}
-                        <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => handleDocSelect('bank', e)} />
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('bank', e)} />
                       </label>
                       {bankFile && (
                         <button type="button" onClick={() => handleRemoveDoc('bank')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -1943,7 +2026,9 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         }}>
                           <PenTool size={15} />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>Digital Signature</span>
+                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                          Digital Signature <span style={{ color: '#ef4444' }}>*</span>
+                        </span>
                       </div>
                       {signatureFile && (
                         <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
@@ -1986,7 +2071,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                         gap: '4px'
                       }}>
                         <Upload size={11} /> {signatureFile ? 'Change' : 'Upload Signature'}
-                        <input type="file" accept="image/*,application/pdf" style={{ display: 'none' }} onChange={(e) => handleDocSelect('signature', e)} />
+                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('signature', e)} />
                       </label>
                       {signatureFile && (
                         <button type="button" onClick={() => handleRemoveDoc('signature')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
@@ -2384,7 +2469,7 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   color: '#b45309',
                   border: '1px solid #fde68a'
                 }}>
-                  Under Review
+                  Pending Sub-Admin Approval
                 </span>
               </div>
 
@@ -2408,16 +2493,99 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                       <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Done</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#b45309', fontWeight: 700 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> 2. Regional Admin Approval</span>
-                      <span style={{ fontSize: '0.7rem', background: '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>In Review</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> 2. Territorial Sub-admin Review</span>
+                      <span style={{ fontSize: '0.7rem', background: '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>Pending</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 3. Portal Access Activated</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 3. KYC Document Clearance</span>
+                      <span style={{ fontSize: '0.7rem', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>Locked</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 4. Dashboard Portal Access</span>
                       <span style={{ fontSize: '0.7rem', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>Locked</span>
                     </div>
                   </div>
                 </div>
 
+                <div style={{
+                  padding: '14px',
+                  background: '#fffbeb',
+                  border: '1px solid #fde68a',
+                  borderRadius: 'var(--radius-md)',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '50%',
+                    background: '#f59e0b',
+                    color: 'white',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    margin: '0 auto 8px'
+                  }}>
+                    <Clock size={20} />
+                  </div>
+                  <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#92400e', margin: '0 0 4px 0' }}>
+                    Awaiting Sub-Admin Approval
+                  </h4>
+                  <p style={{ fontSize: '0.76rem', color: '#b45309', margin: 0, lineHeight: 1.45 }}>
+                    {registeredUser.assignedSubAdminName 
+                      ? `Your registration is queued with Sub-admin (${registeredUser.assignedSubAdminName}) for territorial approval.`
+                      : 'Your registration is queued in the Sub-admin approval queue awaiting territorial assignment.'}
+                    {' '}Dashboard access is strictly locked until both Sub-admin and KYC team approvals are completed.
+                  </p>
+                </div>
+
+                {/* Sub-admin Approval Simulation */}
+                <div style={{
+                  marginTop: 'auto',
+                  background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+                  border: '1px solid #fde68a',
+                  borderRadius: 'var(--radius-md)',
+                  padding: '14px',
+                  textAlign: 'center'
+                }}>
+                  <div style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '0.76rem',
+                    fontWeight: 700,
+                    color: '#92400e',
+                    marginBottom: '4px'
+                  }}>
+                    <Sparkles size={14} /> Sub-Admin Approval Simulation
+                  </div>
+                  <p style={{ fontSize: '0.74rem', color: '#78350f', marginBottom: '12px' }}>
+                    Simulate territorial Sub-admin review to grant Stage 1 approval and advance to KYC verification queue.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleSimulateApproval}
+                    disabled={approving}
+                    className="btn btn-primary"
+                    style={{
+                      width: '100%',
+                      padding: '10px 14px',
+                      background: 'linear-gradient(135deg, #d97706, #f59e0b)',
+                      fontSize: '0.86rem',
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    {approving ? 'Processing Approval...' : (
+                      <>
+                        <Sparkles size={15} /> Simulate Sub-Admin Approval
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2815,6 +2983,85 @@ export default function Register({ onNavigate, initialUser = null, initialFlowSt
                   onClick={handleActivateAccess}
                 >
                   Activate Access & Enter Dashboard <ArrowRight size={16} />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ----------------- STAGE REJECTED: SUB-ADMIN OR KYC REJECTED ----------------- */}
+        {flowState === 'rejected' && registeredUser && (
+          <div className="register-columns-grid">
+            <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)', textAlign: 'center', padding: '28px' }}>
+              <div style={{
+                width: '60px',
+                height: '60px',
+                borderRadius: '50%',
+                background: '#fee2e2',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+                border: '2px solid #fca5a5'
+              }}>
+                <X size={32} />
+              </div>
+
+              <h3 style={{ fontSize: '1.25rem', fontWeight: 800, color: '#991b1b', margin: '0 0 6px 0' }}>
+                Manager Registration Not Approved
+              </h3>
+              <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '0 0 16px 0', lineHeight: 1.5 }}>
+                Your manager application for <strong>{registeredUser.name}</strong> was reviewed and could not be approved at this time.
+              </p>
+
+              <div style={{
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 'var(--radius-md)',
+                padding: '16px',
+                textAlign: 'left',
+                marginBottom: '16px'
+              }}>
+                <div style={{ fontSize: '0.74rem', fontWeight: 700, color: '#991b1b', textTransform: 'uppercase', marginBottom: '6px' }}>
+                  Reason for Decision
+                </div>
+                <div style={{ fontSize: '0.88rem', color: '#b91c1c', fontWeight: 600 }}>
+                  {rejectionReason || registeredUser.rejectionReason || 'Application documents or territorial allocation did not meet current onboarding criteria.'}
+                </div>
+              </div>
+
+              <div style={{
+                background: '#f8fafc',
+                border: '1px solid #e2e8f0',
+                borderRadius: 'var(--radius-sm)',
+                padding: '12px',
+                fontSize: '0.8rem',
+                textAlign: 'left',
+                marginBottom: '20px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#64748b' }}>Assigned Level:</span>
+                  <span style={{ fontWeight: 600, color: '#0f172a' }}>{registeredUser.role?.replace('_', ' ').toUpperCase()}</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <span style={{ color: '#64748b' }}>Dashboard Access:</span>
+                  <span style={{ fontWeight: 700, color: '#dc2626' }}>Locked (Authorization Restricted)</span>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: '#64748b' }}>Contact Support:</span>
+                  <span style={{ color: '#475569' }}>Please contact your regional administrator for next steps.</span>
+                </div>
+              </div>
+
+              <div style={{ marginTop: 'auto' }}>
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  style={{ width: '100%', padding: '12px', fontSize: '0.88rem', fontWeight: 700 }}
+                  onClick={() => onNavigate('login')}
+                >
+                  <ArrowLeft size={16} /> Return to Sign In
                 </button>
               </div>
             </div>

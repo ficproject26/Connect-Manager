@@ -175,14 +175,14 @@ const Dashboard = ({ onNavigate }) => {
     if (Array.isArray(rawList) && rawList.length > 0) {
       const maxM = Math.max(...rawList.map(d => d.merchants || 0), 0);
       const maxT = Math.max(...rawList.map(d => d.tieUps || 0), 0);
-      const merchScaleMax = maxM > 100 ? Math.ceil(maxM / 50) * 50 : (maxM > 20 ? 100 : 20);
-      const tieupsScaleMax = maxT > 500 ? Math.max(1000, Math.ceil(maxT / 200) * 200) : maxT > 100 ? 500 : maxT > 20 ? 100 : 50;
+      const merchScaleMax = maxM > 100 ? Math.ceil(maxM / 50) * 50 : (maxM > 20 ? Math.ceil(maxM / 10) * 10 : (maxM > 5 ? Math.ceil(maxM / 5) * 5 : 10));
+      const tieupsScaleMax = maxT > 100 ? Math.ceil(maxT / 50) * 50 : (maxT > 20 ? Math.ceil(maxT / 10) * 10 : (maxT > 5 ? Math.ceil(maxT / 5) * 5 : 10));
 
       return rawList.map(d => {
         const merchants = d.merchants || 0;
         const tieUps = d.tieUps || 0;
-        const barH = merchants > 0 ? Math.max(6, Math.round((merchants / merchScaleMax) * 112)) : 0;
-        const dotY = 130 - (tieUps > 0 ? Math.max(6, Math.round((tieUps / tieupsScaleMax) * 112)) : 0);
+        const barH = merchants > 0 ? Math.max(8, Math.round((merchants / merchScaleMax) * 112)) : 0;
+        const dotY = 130 - (tieUps > 0 ? Math.max(8, Math.round((tieUps / tieupsScaleMax) * 112)) : 0);
         return {
           month: d.month,
           merchants,
@@ -207,8 +207,8 @@ const Dashboard = ({ onNavigate }) => {
         tieUps: 0,
         barH: 0,
         dotY: 130,
-        merchScaleMax: 100,
-        tieupsScaleMax: 1000
+        merchScaleMax: 10,
+        tieupsScaleMax: 10
       });
     }
     return months;
@@ -232,17 +232,17 @@ const Dashboard = ({ onNavigate }) => {
     if (territoryFilter === 'dist') {
       list = (roleData?.districtBreakdown || []).map(d => ({
         name: d.districtName,
-        value: d.totalVendors || d.tieups || 0
+        value: (d.totalVendors || 0) > 0 ? d.totalVendors : (d.shopVisits || d.tieUps || 0)
       }));
     } else if (territoryFilter === 'div') {
       list = (roleData?.divisionBreakdown || []).map(div => ({
         name: div.divisionName,
-        value: div.totalVendors || div.tieups || 0
+        value: (div.totalVendors || 0) > 0 ? div.totalVendors : (div.shopVisits || div.tieUps || 0)
       }));
     } else if (territoryFilter === 'pin') {
       list = (roleData?.pincodeBreakdown || []).map(p => ({
         name: `PIN ${p.pincodeCode || p.pincodeId}`,
-        value: p.totalVendors || p.tieups || 0
+        value: (p.totalVendors || 0) > 0 ? p.totalVendors : (p.shopVisits || p.tieUps || 0)
       }));
     }
 
@@ -262,15 +262,14 @@ const Dashboard = ({ onNavigate }) => {
     const raw = Array.isArray(dashboardData?.recentActivities) ? dashboardData.recentActivities : [];
     return raw.map((act, idx) => {
       const action = act.action || act.title || 'Activity';
-      const isKyc = action.toLowerCase().includes('kyc');
       const isTieup = action.toLowerCase().includes('tieup') || action.toLowerCase().includes('merchant');
       const isIssue = action.toLowerCase().includes('issue') || action.toLowerCase().includes('escalat');
       const isReport = action.toLowerCase().includes('report');
       
-      const category = isKyc ? 'kyc' : isTieup ? 'tieup' : isIssue ? 'escalation' : isReport ? 'report' : 'vendor';
-      const icon = isKyc ? CheckCircle : isTieup ? Handshake : isIssue ? AlertTriangle : isReport ? FileText : UserPlus;
-      const bg = isKyc ? '#dcfce7' : isTieup ? '#fef3c7' : isIssue ? '#fee2e2' : isReport ? '#ede9fe' : '#e0f2fe';
-      const color = isKyc ? '#16a34a' : isTieup ? '#d97706' : isIssue ? '#dc2626' : isReport ? '#7c3aed' : '#0284c7';
+      const category = isTieup ? 'tieup' : isIssue ? 'escalation' : isReport ? 'report' : 'vendor';
+      const icon = isTieup ? Handshake : isIssue ? AlertTriangle : isReport ? FileText : UserPlus;
+      const bg = isTieup ? '#fef3c7' : isIssue ? '#fee2e2' : isReport ? '#ede9fe' : '#e0f2fe';
+      const color = isTieup ? '#d97706' : isIssue ? '#dc2626' : isReport ? '#7c3aed' : '#0284c7';
 
       return {
         id: act._id || act.id || idx + 1,
@@ -1093,7 +1092,6 @@ const Dashboard = ({ onNavigate }) => {
               {[
                 { id: 'all', label: 'All Activities' },
                 { id: 'vendor', label: 'Vendors' },
-                { id: 'kyc', label: 'KYC' },
                 { id: 'tieup', label: 'Tie-ups' },
                 { id: 'escalation', label: 'Escalations' },
                 { id: 'report', label: 'Reports' }
