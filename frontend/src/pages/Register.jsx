@@ -110,6 +110,7 @@ export default function Register({
   const [email, setEmail] = useState(initialUser?.email || '');
   const [mobile, setMobile] = useState(initialUser?.mobile || '');
   const [dob, setDob] = useState(initialUser?.dob || '');
+  const [gender, setGender] = useState(initialUser?.gender || 'male');
   const [addressFields, setAddressFields] = useState({
     doorNumberStreet: initialUser?.residentialAddress?.doorNumberStreet || initialUser?.doorNumberStreet || (typeof initialUser?.address === 'string' ? initialUser.address : '') || '',
     villageTown: initialUser?.residentialAddress?.villageTown || initialUser?.villageTown || '',
@@ -217,6 +218,8 @@ export default function Register({
       if (initialUser.name) setName(initialUser.name);
       if (initialUser.email) setEmail(initialUser.email);
       if (initialUser.mobile) setMobile(initialUser.mobile);
+      if (initialUser.dob) setDob(initialUser.dob);
+      if (initialUser.gender) setGender(initialUser.gender);
       if (initialUser.aadharNumber || initialUser.documents?.aadharNumber) {
         setAadharNumber(initialUser.aadharNumber || initialUser.documents?.aadharNumber);
       }
