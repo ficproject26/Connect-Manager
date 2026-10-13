@@ -39,7 +39,7 @@ function request(method, path, body = null, token = null) {
 
 async function runTestSuite() {
   console.log('\n========================================================================');
-  console.log('🧪 CONNECT APP - MANAGER REGISTRATION APPROVAL & ACCESS CONTROL TEST SUITE');
+  console.log('🧪 CONNECT APP - MANAGER MULTI-STAGE APPROVAL & ACCESS CONTROL TEST SUITE');
   console.log('========================================================================\n');
 
   let passed = 0;
@@ -103,7 +103,7 @@ async function runTestSuite() {
 
   try {
     // -------------------------------------------------------------------------
-    // SCENARIO 1: Newly registered Manager attempts login before Sub-admin approval -> Denied
+    // SCENARIO 1: Manager Registration -> Initial Status PENDING_SUB_ADMIN_APPROVAL
     // -------------------------------------------------------------------------
     console.log('\n--- [SCENARIO 1] Newly Registered Manager Login Before Sub-Admin Approval ---');
     const regTimestamp = Date.now();
@@ -130,11 +130,21 @@ async function runTestSuite() {
 
     assert(regRes1.status === 201, `Manager registered successfully (HTTP 201). Got: ${regRes1.status}`);
     assert(regRes1.data?.status === 'PENDING_SUB_ADMIN_APPROVAL', `Initial status is PENDING_SUB_ADMIN_APPROVAL (Got: ${regRes1.data?.status})`);
+    assert(regRes1.data?.overallRegistrationStatus === 'PENDING_SUB_ADMIN_APPROVAL', `overallRegistrationStatus is PENDING_SUB_ADMIN_APPROVAL`);
+    assert(regRes1.data?.subAdminApprovalStatus === 'pending', `subAdminApprovalStatus is pending`);
+    assert(regRes1.data?.mainAdminApprovalStatus === 'waiting_subadmin', `mainAdminApprovalStatus is waiting_subadmin`);
+    assert(regRes1.data?.kycVerificationStatus === 'not_started', `kycVerificationStatus is not_started`);
     assert(regRes1.data?.isApproved === false, 'isApproved is explicitly false in registration response');
     assert(!regRes1.data?.token, 'No authentication token is granted at registration');
 
     const manager1Id = regRes1.data?.user?.id;
     if (manager1Id) createdTestUserIds.push(manager1Id);
+
+    // Live status route check (no token needed)
+    const statusRes1 = await request('GET', `/api/auth/registration-status/${manager1Id}`);
+    assert(statusRes1.status === 200, `Live registration status fetched without token (HTTP 200)`);
+    assert(statusRes1.data?.data?.overallRegistrationStatus === 'PENDING_SUB_ADMIN_APPROVAL', `Live status reflects PENDING_SUB_ADMIN_APPROVAL`);
+    assert(statusRes1.data?.data?.subAdminApprovalStatus === 'pending', `Live subAdminApprovalStatus is pending`);
 
     // Attempt login while pending Sub-admin approval
     const loginRes1 = await request('POST', '/api/auth/login', {
@@ -149,72 +159,133 @@ async function runTestSuite() {
     assert(loginRes1.data?.approvalStatus === 'PENDING_SUB_ADMIN_APPROVAL', 'approvalStatus accurately reflects PENDING_SUB_ADMIN_APPROVAL');
 
     // -------------------------------------------------------------------------
-    // SCENARIO 2 & 3: Direct Protected Dashboard APIs Access While Pending -> Blocked
+    // SCENARIO 2: Prerequisite Enforcements Before Sub-admin Approval
     // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 2 & 3] Direct Protected Dashboard APIs Access While Pending ---');
-    // Calling protected APIs without token
-    const noTokenVendors = await request('GET', '/api/vendors');
-    assert(noTokenVendors.status === 401, `Calling /api/vendors without token returns 401 Unauthorized (Got: ${noTokenVendors.status})`);
+    console.log('\n--- [SCENARIO 2] Premature Main Admin and KYC Approvals Blocked ---');
+    // Main Admin attempts premature approval before Sub-admin
+    const prematureMainRes = await request('POST', '/api/auth/mainadmin-approval', {
+      userId: manager1Id,
+      action: 'approve'
+    });
+    assert(prematureMainRes.status === 400, `Premature Main Admin approval rejected with HTTP 400 (Got: ${prematureMainRes.status})`);
+    assert(prematureMainRes.data?.code === 'SUBADMIN_APPROVAL_REQUIRED', `Premature Main Admin code is SUBADMIN_APPROVAL_REQUIRED`);
 
-    const noTokenReports = await request('GET', '/api/reports/dashboard');
-    assert(noTokenReports.status === 401, `Calling /api/reports/dashboard without token returns 401 Unauthorized (Got: ${noTokenReports.status})`);
+    // KYC attempts premature approval before Sub-admin and Main Admin
+    const prematureKycRes = await request('POST', '/api/auth/kyc-approval', {
+      userId: manager1Id,
+      action: 'approve'
+    });
+    assert(prematureKycRes.status === 400, `Premature KYC approval rejected with HTTP 400 (Got: ${prematureKycRes.status})`);
 
-    // Calling protected APIs with token for the pending user
-    const pendingToken = jwt.sign(
-      { id: manager1Id, role: 'district_manager', status: 'PENDING_SUB_ADMIN_APPROVAL' },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-    const pendingApiRes1 = await request('GET', '/api/vendors', null, pendingToken);
-    assert(pendingApiRes1.status === 403, `Protected API /api/vendors returns 403 Forbidden for pending user (Got: ${pendingApiRes1.status})`);
-    assert(pendingApiRes1.data?.code === 'APPROVAL_REQUIRED', `Protected API error code is APPROVAL_REQUIRED (Got: ${pendingApiRes1.data?.code})`);
-
-    const pendingApiRes2 = await request('GET', '/api/reports/dashboard', null, pendingToken);
-    assert(pendingApiRes2.status === 403, `Protected API /api/reports/dashboard returns 403 Forbidden for pending user (Got: ${pendingApiRes2.status})`);
-
-    const pendingApiRes3 = await request('GET', '/api/managers', null, pendingToken);
-    assert(pendingApiRes3.status === 403, `Protected API /api/managers returns 403 Forbidden for pending user (Got: ${pendingApiRes3.status})`);
+    // Simulation routes are permanently blocked / removed (HTTP 404)
+    const simApproveRes = await request('POST', '/api/auth/simulate-approval', { userId: manager1Id });
+    assert(simApproveRes.status === 404, `simulate-approval route is deleted (HTTP 404). Got: ${simApproveRes.status}`);
+    const simKycRes = await request('POST', '/api/auth/simulate-kyc', { userId: manager1Id });
+    assert(simKycRes.status === 404, `simulate-kyc route is deleted (HTTP 404). Got: ${simKycRes.status}`);
 
     // -------------------------------------------------------------------------
-    // SCENARIO 4: Sub-admin Approves, but KYC is Pending -> Dashboard Access Remains Denied
+    // SCENARIO 3: Sub-admin Approves -> Transitions to PENDING_MAIN_ADMIN_APPROVAL
     // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 4] Sub-admin Approves, KYC Pending -> Dashboard Access Remains Denied ---');
+    console.log('\n--- [SCENARIO 3] Sub-admin Approves -> Transitions to PENDING_MAIN_ADMIN_APPROVAL ---');
     const subAdminApprovalRes = await request('POST', '/api/auth/subadmin-approval', {
       userId: manager1Id,
       action: 'approve'
     });
 
     assert(subAdminApprovalRes.status === 200, `Sub-admin approval succeeded (HTTP 200). Got: ${subAdminApprovalRes.status}`);
-    assert(subAdminApprovalRes.data?.status === 'PENDING_KYC_APPROVAL', `Status transitioned to PENDING_KYC_APPROVAL (Got: ${subAdminApprovalRes.data?.status})`);
-    assert(subAdminApprovalRes.data?.isApproved === false, 'isApproved remains false when only Sub-admin has approved');
-    assert(!subAdminApprovalRes.data?.token, 'No dashboard session token granted upon Sub-admin approval alone');
+    assert(subAdminApprovalRes.data?.status === 'PENDING_MAIN_ADMIN_APPROVAL', `Status transitioned to PENDING_MAIN_ADMIN_APPROVAL (Got: ${subAdminApprovalRes.data?.status})`);
+    assert(subAdminApprovalRes.data?.subAdminApprovalStatus === 'approved', 'subAdminApprovalStatus is approved');
+    assert(subAdminApprovalRes.data?.mainAdminApprovalStatus === 'pending', 'mainAdminApprovalStatus is now pending');
+    assert(subAdminApprovalRes.data?.isApproved === false, 'isApproved remains false');
+    assert(!subAdminApprovalRes.data?.token, 'No session token granted upon Sub-admin approval alone');
 
-    // Attempt login when KYC is pending
-    const loginRes2 = await request('POST', '/api/auth/login', {
+    // Live status check shows Main Admin review stage
+    const statusRes2 = await request('GET', `/api/auth/registration-status/${manager1Id}`);
+    assert(statusRes2.data?.data?.overallRegistrationStatus === 'PENDING_MAIN_ADMIN_APPROVAL', `Live status is PENDING_MAIN_ADMIN_APPROVAL`);
+    assert(statusRes2.data?.data?.subAdminApprovalStatus === 'approved', `Live subAdminApprovalStatus is approved`);
+    assert(statusRes2.data?.data?.mainAdminApprovalStatus === 'pending', `Live mainAdminApprovalStatus is pending`);
+
+    // Login still strictly blocked
+    const loginResStage2 = await request('POST', '/api/auth/login', {
+      identifier: testEmail1,
+      password: 'Password@123'
+    });
+    assert(loginResStage2.status === 403, `Login blocked at PENDING_MAIN_ADMIN_APPROVAL stage (HTTP 403). Got: ${loginResStage2.status}`);
+    assert(loginResStage2.data?.code === 'APPROVAL_REQUIRED', `Code is APPROVAL_REQUIRED`);
+
+    // KYC approval still premature (Main Admin has not approved yet)
+    const prematureKycRes2 = await request('POST', '/api/auth/kyc-approval', {
+      userId: manager1Id,
+      action: 'approve'
+    });
+    assert(prematureKycRes2.status === 400, `KYC approval rejected while Main Admin approval is pending (HTTP 400). Got: ${prematureKycRes2.status}`);
+
+    // -------------------------------------------------------------------------
+    // SCENARIO 4: Main Admin Approves -> Transitions to PENDING_KYC_VERIFICATION
+    // -------------------------------------------------------------------------
+    console.log('\n--- [SCENARIO 4] Main Admin Approves -> Transitions to PENDING_KYC_VERIFICATION ---');
+    const mainAdminApprovalRes = await request('POST', '/api/auth/mainadmin-approval', {
+      userId: manager1Id,
+      action: 'approve'
+    });
+
+    assert(mainAdminApprovalRes.status === 200, `Main Admin approval succeeded (HTTP 200). Got: ${mainAdminApprovalRes.status}`);
+    assert(mainAdminApprovalRes.data?.status === 'PENDING_KYC_VERIFICATION', `Status transitioned to PENDING_KYC_VERIFICATION (Got: ${mainAdminApprovalRes.data?.status})`);
+    assert(mainAdminApprovalRes.data?.mainAdminApprovalStatus === 'approved', 'mainAdminApprovalStatus is approved');
+    assert(mainAdminApprovalRes.data?.kycVerificationStatus === 'pending', 'kycVerificationStatus is now pending');
+    assert(mainAdminApprovalRes.data?.isApproved === false, 'isApproved remains false');
+    assert(!mainAdminApprovalRes.data?.token, 'No session token granted upon Main Admin approval alone');
+
+    // Login still strictly blocked
+    const loginResStage3 = await request('POST', '/api/auth/login', {
+      identifier: testEmail1,
+      password: 'Password@123'
+    });
+    assert(loginResStage3.status === 403, `Login blocked at PENDING_KYC_VERIFICATION stage (HTTP 403). Got: ${loginResStage3.status}`);
+
+    // -------------------------------------------------------------------------
+    // SCENARIO 5: KYC Verification Clearance -> Manager Account Activated!
+    // -------------------------------------------------------------------------
+    console.log('\n--- [SCENARIO 5] KYC Clearance -> Manager Account Activated ---');
+    const kycApprovalRes = await request('POST', '/api/auth/kyc-approval', {
+      userId: manager1Id,
+      action: 'approve'
+    });
+
+    assert(kycApprovalRes.status === 200, `KYC clearance succeeded (HTTP 200). Got: ${kycApprovalRes.status}`);
+    assert(kycApprovalRes.data?.status === 'active', `Status transitioned to active (Got: ${kycApprovalRes.data?.status})`);
+    assert(kycApprovalRes.data?.isApproved === true, 'isApproved is true');
+    assert(kycApprovalRes.data?.isActive === true, 'isActive is true');
+    assert(kycApprovalRes.data?.kycVerificationStatus === 'approved', 'kycVerificationStatus is approved');
+
+    // Live status reflects fully active
+    const statusResActive = await request('GET', `/api/auth/registration-status/${manager1Id}`);
+    assert(statusResActive.data?.data?.overallRegistrationStatus === 'active', `Live status reflects active`);
+    assert(statusResActive.data?.data?.isActive === true, `Live isActive is true`);
+
+    // Manager can now log in successfully!
+    const loginResApproved = await request('POST', '/api/auth/login', {
       identifier: testEmail1,
       password: 'Password@123'
     });
 
-    assert(loginRes2.status === 403, `Login rejected with HTTP 403 when KYC is pending (Got: ${loginRes2.status})`);
-    assert(loginRes2.data?.code === 'APPROVAL_REQUIRED', `Response code is APPROVAL_REQUIRED (Got: ${loginRes2.data?.code})`);
-    assert(loginRes2.data?.approvalStatus === 'PENDING_KYC_APPROVAL', `approvalStatus is PENDING_KYC_APPROVAL (Got: ${loginRes2.data?.approvalStatus})`);
-    assert(loginRes2.data?.adminApprovalStatus === 'approved', 'adminApprovalStatus reflects approved');
-    assert(loginRes2.data?.routingQueue === 'KYC_APPROVAL_QUEUE', 'routingQueue reflects KYC_APPROVAL_QUEUE');
-    assert(!loginRes2.data?.token, 'No session token granted when KYC is pending');
+    assert(loginResApproved.status === 200, `Activated manager logs in successfully (HTTP 200). Got: ${loginResApproved.status}`);
+    assert(Boolean(loginResApproved.data?.token), 'JWT session token issued in login response');
+    assert(loginResApproved.data?.user?.status === 'active', 'User status is active');
 
-    // Attempt API call with token for KYC-pending user
-    const kycPendingToken = jwt.sign(
-      { id: manager1Id, role: 'district_manager', status: 'PENDING_KYC_APPROVAL' },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-    const kycPendingApiRes = await request('GET', '/api/vendors', null, kycPendingToken);
-    assert(kycPendingApiRes.status === 403, `API /api/vendors blocked with HTTP 403 when KYC is pending (Got: ${kycPendingApiRes.status})`);
+    const approvedToken = loginResApproved.data?.token;
+
+    // Call protected dashboard APIs with approved token
+    const approvedVendors = await request('GET', '/api/vendors', null, approvedToken);
+    assert(approvedVendors.status === 200, `Approved manager calls /api/vendors successfully (HTTP 200). Got: ${approvedVendors.status}`);
+
+    const approvedReports = await request('GET', '/api/reports/dashboard', null, approvedToken);
+    assert(approvedReports.status === 200, `Approved manager calls /api/reports/dashboard successfully (HTTP 200). Got: ${approvedReports.status}`);
 
     // -------------------------------------------------------------------------
-    // SCENARIO 5: Sub-admin Rejects Registration -> Access Denied & Reason Preserved
+    // SCENARIO 6: Sub-admin Rejection -> REJECTED_BY_SUB_ADMIN & Reason Required
     // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 5] Sub-admin Rejects Registration -> Access Denied ---');
+    console.log('\n--- [SCENARIO 6] Sub-admin Rejection ---');
     const testEmail2 = `manager.rejected.sub_${regTimestamp}@example.com`;
     const testMobile2 = `98764${String(regTimestamp).slice(-5)}`;
 
@@ -234,38 +305,43 @@ async function runTestSuite() {
     const manager2Id = regRes2.data?.user?.id;
     if (manager2Id) createdTestUserIds.push(manager2Id);
 
-    // Sub-admin rejects registration
+    // Reject without reason fails
+    const noReasonSubReject = await request('POST', '/api/auth/subadmin-approval', {
+      userId: manager2Id,
+      action: 'reject',
+      rejectionReason: ''
+    });
+    assert(noReasonSubReject.status === 400, `Sub-admin reject without reason rejected (HTTP 400)`);
+
+    // Reject with reason succeeds
     const subAdminRejectRes = await request('POST', '/api/auth/subadmin-approval', {
       userId: manager2Id,
       action: 'reject',
-      rejectionReason: 'Territory already has allocated active manager. Quota exceeded.'
+      rejectionReason: 'Jurisdiction quota exceeded for this division.'
     });
 
     assert(subAdminRejectRes.status === 200, `Sub-admin reject processed (HTTP 200). Got: ${subAdminRejectRes.status}`);
     assert(subAdminRejectRes.data?.status === 'REJECTED_BY_SUB_ADMIN', `Status is REJECTED_BY_SUB_ADMIN (Got: ${subAdminRejectRes.data?.status})`);
-    assert(subAdminRejectRes.data?.isApproved === false, 'isApproved is false');
-    assert(Boolean(subAdminRejectRes.data?.rejectionReason && subAdminRejectRes.data?.rejectionReason.includes('Quota exceeded')), 'Rejection reason is recorded');
+    assert(subAdminRejectRes.data?.subAdminApprovalStatus === 'rejected', `subAdminApprovalStatus is rejected`);
 
-    // Attempt login when rejected by Sub-admin
+    // Login blocked with reason
     const loginRejectSub = await request('POST', '/api/auth/login', {
       identifier: testEmail2,
       password: 'Password@123'
     });
-
-    assert(loginRejectSub.status === 403, `Login rejected with HTTP 403 for Sub-admin rejected account (Got: ${loginRejectSub.status})`);
-    assert(loginRejectSub.data?.code === 'REGISTRATION_REJECTED', `Response code is REGISTRATION_REJECTED (Got: ${loginRejectSub.data?.code})`);
-    assert(Boolean(loginRejectSub.data?.rejectionReason && loginRejectSub.data?.rejectionReason.includes('Quota exceeded')), 'Rejection reason returned to user');
-    assert(!loginRejectSub.data?.token, 'No token granted to rejected account');
+    assert(loginRejectSub.status === 403, `Login blocked for Sub-admin rejected user (HTTP 403)`);
+    assert(loginRejectSub.data?.code === 'REGISTRATION_REJECTED', `Code is REGISTRATION_REJECTED`);
+    assert(loginRejectSub.data?.rejectionReason?.includes('quota exceeded'), `Rejection reason returned in login error`);
 
     // -------------------------------------------------------------------------
-    // SCENARIO 6: KYC Rejects Documents -> Access Denied & Reason Preserved
+    // SCENARIO 7: Main Admin Rejection -> REJECTED_BY_MAIN_ADMIN & Reason Required
     // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 6] KYC Rejects Documents -> Access Denied ---');
-    const testEmail3 = `manager.rejected.kyc_${regTimestamp}@example.com`;
+    console.log('\n--- [SCENARIO 7] Main Admin Rejection ---');
+    const testEmail3 = `manager.rejected.main_${regTimestamp}@example.com`;
     const testMobile3 = `98763${String(regTimestamp).slice(-5)}`;
 
     const regRes3 = await request('POST', '/api/auth/register', {
-      name: 'Anitha Selvam',
+      name: 'Ramesh Sundaram',
       email: testEmail3,
       mobile: testMobile3,
       password: 'Password@123',
@@ -280,151 +356,108 @@ async function runTestSuite() {
     const manager3Id = regRes3.data?.user?.id;
     if (manager3Id) createdTestUserIds.push(manager3Id);
 
-    // Sub-admin approves first
+    // Sub-admin approves
     await request('POST', '/api/auth/subadmin-approval', { userId: manager3Id, action: 'approve' });
+
+    // Main Admin rejects
+    const mainAdminRejectRes = await request('POST', '/api/auth/mainadmin-approval', {
+      userId: manager3Id,
+      action: 'reject',
+      rejectionReason: 'Background check discrepancies noted by executive panel.'
+    });
+
+    assert(mainAdminRejectRes.status === 200, `Main Admin reject processed (HTTP 200). Got: ${mainAdminRejectRes.status}`);
+    assert(mainAdminRejectRes.data?.status === 'REJECTED_BY_MAIN_ADMIN', `Status is REJECTED_BY_MAIN_ADMIN (Got: ${mainAdminRejectRes.data?.status})`);
+    assert(mainAdminRejectRes.data?.mainAdminApprovalStatus === 'rejected', `mainAdminApprovalStatus is rejected`);
+
+    const loginRejectMain = await request('POST', '/api/auth/login', {
+      identifier: testEmail3,
+      password: 'Password@123'
+    });
+    assert(loginRejectMain.status === 403, `Login blocked for Main Admin rejected user (HTTP 403)`);
+    assert(loginRejectMain.data?.rejectionReason?.includes('discrepancies'), `Main Admin rejection reason returned`);
+
+    // -------------------------------------------------------------------------
+    // SCENARIO 8: KYC Rejection -> KYC_REJECTED & Reason Required
+    // -------------------------------------------------------------------------
+    console.log('\n--- [SCENARIO 8] KYC Rejection ---');
+    const testEmail4 = `manager.rejected.kyc_${regTimestamp}@example.com`;
+    const testMobile4 = `98762${String(regTimestamp).slice(-5)}`;
+
+    const regRes4 = await request('POST', '/api/auth/register', {
+      name: 'Anitha Selvam',
+      email: testEmail4,
+      mobile: testMobile4,
+      password: 'Password@123',
+      role: 'division_manager',
+      stateId: tnState?._id,
+      districtId: salemDist?._id,
+      divisionId: thalaivasalDiv?._id,
+      documents: validDocs,
+      bankDetails: validBank,
+      declarationAccepted: true
+    });
+    const manager4Id = regRes4.data?.user?.id;
+    if (manager4Id) createdTestUserIds.push(manager4Id);
+
+    // Sub-admin approves
+    await request('POST', '/api/auth/subadmin-approval', { userId: manager4Id, action: 'approve' });
+    // Main Admin approves
+    await request('POST', '/api/auth/mainadmin-approval', { userId: manager4Id, action: 'approve' });
 
     // KYC rejects
     const kycRejectRes = await request('POST', '/api/auth/kyc-approval', {
-      userId: manager3Id,
+      userId: manager4Id,
       action: 'reject',
-      rejectionReason: 'Aadhaar document image is blurred and unreadable. Re-upload required.'
+      rejectionReason: 'Aadhaar document image is blurred and unreadable.'
     });
 
     assert(kycRejectRes.status === 200, `KYC reject processed (HTTP 200). Got: ${kycRejectRes.status}`);
     assert(kycRejectRes.data?.status === 'KYC_REJECTED', `Status is KYC_REJECTED (Got: ${kycRejectRes.data?.status})`);
-    assert(Boolean(kycRejectRes.data?.rejectionReason && kycRejectRes.data?.rejectionReason.includes('blurred')), 'KYC rejection reason is recorded');
+    assert(kycRejectRes.data?.kycVerificationStatus === 'rejected', `kycVerificationStatus is rejected`);
 
-    // Attempt login when KYC rejected
     const loginRejectKyc = await request('POST', '/api/auth/login', {
-      identifier: testEmail3,
+      identifier: testEmail4,
       password: 'Password@123'
     });
-
-    assert(loginRejectKyc.status === 403, `Login rejected with HTTP 403 for KYC rejected account (Got: ${loginRejectKyc.status})`);
-    assert(loginRejectKyc.data?.code === 'REGISTRATION_REJECTED', `Response code is REGISTRATION_REJECTED (Got: ${loginRejectKyc.data?.code})`);
-    assert(Boolean(loginRejectKyc.data?.rejectionReason && loginRejectKyc.data?.rejectionReason.includes('blurred')), 'Rejection reason returned to user');
-    assert(!loginRejectKyc.data?.token, 'No token granted to KYC rejected account');
+    assert(loginRejectKyc.status === 403, `Login blocked for KYC rejected user (HTTP 403)`);
+    assert(loginRejectKyc.data?.rejectionReason?.includes('blurred'), `KYC rejection reason returned`);
 
     // -------------------------------------------------------------------------
-    // SCENARIO 7: Sub-admin Approval AND KYC Approval Completed -> Dashboard Access Granted
+    // SCENARIO 9: Full Multi-Stage Workflow for All 4 Manager Levels
     // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 7] Sub-admin & KYC Approvals Completed -> Dashboard Access Granted ---');
-    // Complete KYC approval for manager 1 (who already had Sub-admin approval in Scenario 4)
-    const kycApprovalRes1 = await request('POST', '/api/auth/kyc-approval', {
-      userId: manager1Id,
-      action: 'approve'
-    });
-
-    assert(kycApprovalRes1.status === 200, `KYC approval completed (HTTP 200). Got: ${kycApprovalRes1.status}`);
-    assert(kycApprovalRes1.data?.status === 'active', `Status is now active (Got: ${kycApprovalRes1.data?.status})`);
-    assert(kycApprovalRes1.data?.isApproved === true, 'isApproved is true');
-    assert(Boolean(kycApprovalRes1.data?.token), 'JWT token generated upon final activation');
-
-    // Manager logs in now
-    const loginResApproved = await request('POST', '/api/auth/login', {
-      identifier: testEmail1,
-      password: 'Password@123'
-    });
-
-    assert(loginResApproved.status === 200, `Approved manager logs in successfully (HTTP 200). Got: ${loginResApproved.status}`);
-    assert(Boolean(loginResApproved.data?.token), 'JWT session token issued in login response');
-    assert(loginResApproved.data?.user?.status === 'active', 'User status is active');
-
-    const approvedToken = loginResApproved.data?.token;
-
-    // Call protected dashboard APIs with approved token
-    const approvedVendors = await request('GET', '/api/vendors', null, approvedToken);
-    assert(approvedVendors.status === 200, `Approved manager calls /api/vendors successfully (HTTP 200). Got: ${approvedVendors.status}`);
-
-    const approvedReports = await request('GET', '/api/reports/dashboard', null, approvedToken);
-    assert(approvedReports.status === 200, `Approved manager calls /api/reports/dashboard successfully (HTTP 200). Got: ${approvedReports.status}`);
-
-    const approvedManagers = await request('GET', '/api/managers', null, approvedToken);
-    assert(approvedManagers.status === 200, `Approved manager calls /api/managers successfully (HTTP 200). Got: ${approvedManagers.status}`);
-
-    // -------------------------------------------------------------------------
-    // SCENARIO 8: Already Approved Managers Log In -> Existing Authorized Access Preserved
-    // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 8] Existing Approved Managers Log In ---');
-    // Ensure an existing approved manager fixture exists
-    const existingApprovedEmail = 'existing.approved.manager@connect.com';
-    let existingApproved = await db.users.findOne({ email: existingApprovedEmail });
-    const bcrypt = require('bcryptjs');
-    const existingPwHash = await bcrypt.hash('Password@123', 10);
-    if (!existingApproved) {
-      existingApproved = await db.users.insertOne({
-        name: 'Existing Active Manager',
-        email: existingApprovedEmail,
-        mobile: '9899998888',
-        passwordHash: existingPwHash,
-        role: 'state_manager',
-        level: 1,
-        status: 'active',
-        isApproved: true,
-        adminApprovalStatus: 'approved',
-        kycStatus: 'verified',
-        stateId: tnState?._id,
-        state: 'Tamil Nadu'
-      });
-      createdTestUserIds.push(existingApproved._id);
-    } else {
-      await db.users.findByIdAndUpdate(existingApproved._id, {
-        status: 'active',
-        isApproved: true,
-        passwordHash: existingPwHash
-      });
-    }
-
-    const existingManagerLogin = await request('POST', '/api/auth/login', {
-      identifier: existingApprovedEmail,
-      password: 'Password@123'
-    });
-
-    assert(existingManagerLogin.status === 200, `Existing State Manager logged in successfully (HTTP 200). Got: ${existingManagerLogin.status}`);
-    assert(Boolean(existingManagerLogin.data?.token), 'Token issued to existing manager');
-    const existingToken = existingManagerLogin.data?.token;
-
-    const existingApiRes = await request('GET', '/api/reports/dashboard', null, existingToken);
-    assert(existingApiRes.status === 200, `Existing manager can access /api/reports/dashboard (HTTP 200). Got: ${existingApiRes.status}`);
-
-    // -------------------------------------------------------------------------
-    // SCENARIO 9: Independent Testing for State, District, Division, and Pincode Managers
-    // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 9] Independent Testing of All 4 Hierarchy Levels ---');
+    console.log('\n--- [SCENARIO 9] Independent Testing of All 4 Hierarchy Levels Through Full Workflow ---');
     const levels = [
       {
         role: 'state_manager',
         label: 'State Manager',
-        payload: { stateId: tnState?._id },
-        expectedSubAdminRole: 'State Admin'
+        payload: { stateId: tnState?._id }
       },
       {
         role: 'district_manager',
         label: 'District Manager',
-        payload: { stateId: tnState?._id, districtId: dharmapuriDist?._id },
-        expectedSubAdminRole: 'Admin'
+        payload: { stateId: tnState?._id, districtId: dharmapuriDist?._id }
       },
       {
         role: 'division_manager',
         label: 'Division Manager',
-        payload: { stateId: tnState?._id, districtId: salemDist?._id, divisionId: thalaivasalDiv?._id },
-        expectedSubAdminRole: 'Division Admin'
+        payload: { stateId: tnState?._id, districtId: salemDist?._id, divisionId: thalaivasalDiv?._id }
       },
       {
         role: 'pincode_manager',
         label: 'Pincode Manager',
-        payload: { stateId: tnState?._id, districtId: krishnagiriDist?._id, divisionId: hosurDiv?._id, pincodeId: hosurPin?._id },
-        expectedSubAdminRole: 'Pincode Admin'
+        payload: { stateId: tnState?._id, districtId: krishnagiriDist?._id, divisionId: hosurDiv?._id, pincodeId: hosurPin?._id }
       }
     ];
 
     for (const lvl of levels) {
       const ts = Date.now() + Math.floor(Math.random() * 1000);
-      const email = `mgr.${lvl.role}_${ts}@example.com`;
-      const mobile = `9810${String(ts).slice(-6)}`;
+      const email = `mgr.full.${lvl.role}_${ts}@example.com`;
+      const mobile = `9811${String(ts).slice(-6)}`;
 
+      // 1. Registration
       const reg = await request('POST', '/api/auth/register', {
-        name: `Tester ${lvl.label.replace(' ', '')}`,
+        name: `MultiStage ${lvl.label.replace(' ', '')}`,
         email,
         mobile,
         password: 'Password@123',
@@ -435,147 +468,26 @@ async function runTestSuite() {
         ...lvl.payload
       });
 
-      assert(reg.status === 201, `${lvl.label} registration returned 201. Status: ${reg.data?.status}`);
-      assert(reg.data?.status === 'PENDING_SUB_ADMIN_APPROVAL', `${lvl.label} initial status is PENDING_SUB_ADMIN_APPROVAL`);
-
+      assert(reg.status === 201 && reg.data?.status === 'PENDING_SUB_ADMIN_APPROVAL', `${lvl.label} registered -> PENDING_SUB_ADMIN_APPROVAL`);
       const uid = reg.data?.user?.id;
       if (uid) createdTestUserIds.push(uid);
 
-      // Pending login check
-      const lPending = await request('POST', '/api/auth/login', { identifier: email, password: 'Password@123' });
-      assert(lPending.status === 403, `${lvl.label} login blocked while pending (HTTP 403). Code: ${lPending.data?.code}`);
+      // 2. Sub-admin Approval
+      const subRes = await request('POST', '/api/auth/subadmin-approval', { userId: uid, action: 'approve' });
+      assert(subRes.status === 200 && subRes.data?.status === 'PENDING_MAIN_ADMIN_APPROVAL', `${lvl.label} Sub-admin approved -> PENDING_MAIN_ADMIN_APPROVAL`);
 
-      // Sub-admin approve
-      const subApp = await request('POST', '/api/auth/subadmin-approval', { userId: uid, action: 'approve' });
-      assert(subApp.status === 200 && subApp.data?.status === 'PENDING_KYC_APPROVAL', `${lvl.label} Sub-admin approved -> PENDING_KYC_APPROVAL`);
+      // 3. Main Admin Approval
+      const mainRes = await request('POST', '/api/auth/mainadmin-approval', { userId: uid, action: 'approve' });
+      assert(mainRes.status === 200 && mainRes.data?.status === 'PENDING_KYC_VERIFICATION', `${lvl.label} Main Admin approved -> PENDING_KYC_VERIFICATION`);
 
-      // KYC approve
-      const kycApp = await request('POST', '/api/auth/kyc-approval', { userId: uid, action: 'approve' });
-      assert(kycApp.status === 200 && kycApp.data?.status === 'active', `${lvl.label} KYC approved -> active`);
+      // 4. KYC Clearance
+      const kycRes = await request('POST', '/api/auth/kyc-approval', { userId: uid, action: 'approve' });
+      assert(kycRes.status === 200 && kycRes.data?.status === 'active', `${lvl.label} KYC approved -> active`);
 
-      // Approved login
-      const lApproved = await request('POST', '/api/auth/login', { identifier: email, password: 'Password@123' });
-      assert(lApproved.status === 200, `${lvl.label} final login successful (HTTP 200)`);
+      // 5. Final Login
+      const logRes = await request('POST', '/api/auth/login', { identifier: email, password: 'Password@123' });
+      assert(logRes.status === 200 && Boolean(logRes.data?.token), `${lvl.label} login successful with active session`);
     }
-
-    // -------------------------------------------------------------------------
-    // SCENARIO 10: Stale/Forged Token with status: 'active' Rejected by Live DB Check
-    // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 10] Stale/Forged Token with status: "active" Cannot Bypass Live DB Check ---');
-    const tsStale = Date.now();
-    const emailStale = `stale.user_${tsStale}@example.com`;
-    const mobileStale = '9' + Math.floor(100000000 + Math.random() * 900000000);
-
-    const regStale = await request('POST', '/api/auth/register', {
-      name: 'Stale Token Tester',
-      email: emailStale,
-      mobile: mobileStale,
-      password: 'Password@123',
-      role: 'district_manager',
-      stateId: 'state_ka',
-      districtId: 'dist_bengaluru_urban',
-      documents: validDocs,
-      bankDetails: validBank,
-      declarationAccepted: true
-    });
-    assert(regStale.status === 201, `Stale test user registered successfully (HTTP 201). Got: ${regStale.status}`);
-    const staleUserId = regStale.data?.user?.id;
-    if (staleUserId) createdTestUserIds.push(staleUserId);
-
-    // Create a forged/stale token that fraudulently claims { status: 'active' }
-    const forgedToken = jwt.sign(
-      {
-        id: staleUserId,
-        role: 'district_manager',
-        status: 'active' // Forged claim! Live DB is PENDING_SUB_ADMIN_APPROVAL
-      },
-      JWT_SECRET,
-      { expiresIn: '1h' }
-    );
-
-    // Call protected API using forged token
-    const bypassAttemptRes = await request('GET', '/api/vendors', null, forgedToken);
-    assert(
-      bypassAttemptRes.status === 403,
-      `Forged/stale token claiming status: 'active' rejected with HTTP 403 Forbidden! (Got: ${bypassAttemptRes.status})`
-    );
-    assert(
-      bypassAttemptRes.data?.code === 'APPROVAL_REQUIRED',
-      `Live DB validation enforced APPROVAL_REQUIRED on protected API (Got: ${bypassAttemptRes.data?.code})`
-    );
-
-    // -------------------------------------------------------------------------
-    // SCENARIO 11: Direct URL / Page Refresh (/api/auth/me) Validates Live DB Status
-    // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 11] Direct URL / Page Refresh (/api/auth/me) Enforces Approval Status ---');
-    // Call /api/auth/me with forged token for pending user
-    const meRes = await request('GET', '/api/auth/me', null, forgedToken);
-    assert(
-      meRes.status === 200,
-      `GET /api/auth/me returns profile for status evaluation (HTTP 200)`
-    );
-    assert(
-      meRes.data?.user?.status === 'PENDING_SUB_ADMIN_APPROVAL',
-      `GET /api/auth/me returns real live DB status PENDING_SUB_ADMIN_APPROVAL (Got: ${meRes.data?.user?.status})`
-    );
-    assert(
-      meRes.data?.user?.adminApprovalStatus === 'pending',
-      `adminApprovalStatus is pending in live profile`
-    );
-
-    // -------------------------------------------------------------------------
-    // SCENARIO 12: Territory-Based Sub-admin Routing & Unassigned Fallback
-    // -------------------------------------------------------------------------
-    console.log('\n--- [SCENARIO 12] Territory-Based Sub-admin Routing & Unassigned Territory Handling ---');
-    // Check that notifications were placed in the Sub-admin's queue
-    const allNotifs = await db.notifications.find({});
-    const regNotifs = allNotifs.filter(n => n.type === 'sub_admin_approval_request');
-    assert(
-      regNotifs.length > 0,
-      `Territory Sub-admin notification queue received registration requests (Found: ${regNotifs.length})`
-    );
-
-    // Test unmapped territory (Pondicherry has active state record but no assigned sub-admin)
-    const tsUnmapped = Date.now();
-    const regUnmapped = await request('POST', '/api/auth/register', {
-      name: 'Unmapped Territory Tester',
-      email: `unmapped_${tsUnmapped}@example.com`,
-      mobile: '9' + Math.floor(100000000 + Math.random() * 900000000),
-      password: 'Password@123',
-      role: 'state_manager',
-      stateId: pondicherryState?._id,
-      documents: validDocs,
-      bankDetails: validBank,
-      declarationAccepted: true
-    });
-
-    assert(regUnmapped.status === 201, `Unmapped manager registration returned 201. Status: ${regUnmapped.status}`);
-    assert(
-      regUnmapped.data?.status === 'PENDING_SUB_ADMIN_APPROVAL',
-      `Unmapped manager remains PENDING_SUB_ADMIN_APPROVAL (Never auto-approved!)`
-    );
-    assert(
-      regUnmapped.data?.user?.subAdminRoutingStatus === 'UNASSIGNED_ROUTING_PENDING',
-      `subAdminRoutingStatus set to UNASSIGNED_ROUTING_PENDING (Got: ${regUnmapped.data?.user?.subAdminRoutingStatus})`
-    );
-    const unmappedUserId = regUnmapped.data?.user?.id;
-    if (unmappedUserId) createdTestUserIds.push(unmappedUserId);
-
-    // Prerequisite Enforcement Test: Attempt KYC approval before Sub-admin approval
-    console.log('\n--- [PREREQUISITE ENFORCEMENT] KYC Approval Before Sub-admin Approval Blocked ---');
-    const prematureKycRes = await request('POST', '/api/auth/kyc-approval', {
-      userId: unmappedUserId,
-      action: 'approve'
-    });
-
-    assert(
-      prematureKycRes.status === 400,
-      `Premature KYC approval before Sub-admin approval rejected with HTTP 400 Bad Request! (Got: ${prematureKycRes.status})`
-    );
-    assert(
-      Boolean(prematureKycRes.data?.message && prematureKycRes.data?.message.includes('Pre-requisite violation')),
-      `Prerequisite violation message returned: "${prematureKycRes.data?.message}"`
-    );
 
   } finally {
     // Clean up created test accounts so the database remains pristine

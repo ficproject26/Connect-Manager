@@ -33,7 +33,8 @@ import {
   CheckSquare,
   Square,
   Landmark,
-  Banknote
+  Banknote,
+  RefreshCw
 } from 'lucide-react';
 
 const ROLES = [
@@ -95,11 +96,11 @@ export default function Register({
   const getInitialFlowState = (u, fs) => {
     if (fs) return fs;
     if (!u) return 'form';
-    const st = String(u.status || '').toLowerCase().trim();
+    const st = String(u.overallRegistrationStatus || u.status || '').toLowerCase().trim();
     if (st === 'active' || st === 'approved') return 'approved';
-    if (st === 'pending_kyc_approval' || st === 'kyc_pending') return 'kyc_pending';
-    if (['rejected', 'rejected_by_sub_admin', 'kyc_rejected'].includes(st)) return 'rejected';
-    if (st === 'pending_sub_admin_approval' || st === 'under_review') return 'under_review';
+    if (st === 'pending_kyc_verification' || st === 'pending_kyc_approval' || st === 'kyc_pending') return 'kyc_pending';
+    if (['rejected', 'rejected_by_sub_admin', 'rejected_by_main_admin', 'kyc_rejected'].includes(st)) return 'rejected';
+    if (st === 'pending_sub_admin_approval' || st === 'pending_main_admin_approval' || st === 'under_review') return 'under_review';
     return 'form';
   };
 
@@ -213,8 +214,7 @@ export default function Register({
 
   // Messages & Loading
   const [loading, setLoading] = useState(false);
-  const [approving, setApproving] = useState(false);
-  const [verifyingKyc, setVerifyingKyc] = useState(false);
+  const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState('');
 
@@ -786,51 +786,30 @@ export default function Register({
     }
   };
 
-  // Simulate Admin Approval -> transitions to kyc_pending
-  const handleSimulateApproval = async () => {
+  // Live Registration Status Polling / Refresh
+  const handleRefreshStatus = async () => {
     if (!registeredUser?.id) return;
-    setApproving(true);
+    setRefreshingStatus(true);
     setError('');
 
     try {
-      const res = await authService.simulateApproval(registeredUser.id);
-      if (res.success) {
-        setRegisteredUser(res.user);
-        setFlowState('kyc_pending');
+      const res = await authService.getRegistrationStatus(registeredUser.id);
+      if (res.success && res.data) {
+        const updated = {
+          ...registeredUser,
+          ...res.data,
+          status: res.data.overallRegistrationStatus || res.data.status
+        };
+        setRegisteredUser(updated);
+        setFlowState(getInitialFlowState(updated));
+        if (res.data.rejectionReason) {
+          setRejectionReason(res.data.rejectionReason);
+        }
       }
     } catch (err) {
-      setError(err.message || 'Failed to simulate admin approval.');
+      setError(err.message || 'Failed to refresh registration status.');
     } finally {
-      setApproving(false);
-    }
-  };
-
-  // Simulate KYC Verification -> transitions to approved & activated
-  const handleSimulateKyc = async () => {
-    if (!registeredUser?.id) return;
-    setVerifyingKyc(true);
-    setError('');
-
-    try {
-      const res = await authService.simulateKyc(registeredUser.id);
-      if (res.success) {
-        setRegisteredUser(res.user);
-        setApprovedToken(res.token);
-        setFlowState('approved');
-      }
-    } catch (err) {
-      setError(err.message || 'Failed to simulate KYC verification.');
-    } finally {
-      setVerifyingKyc(false);
-    }
-  };
-
-  // Activate & Enter Dashboard
-  const handleActivateAccess = () => {
-    if (registeredUser && approvedToken) {
-      setSession(registeredUser, approvedToken);
-    } else {
-      onNavigate('login');
+      setRefreshingStatus(false);
     }
   };
 
@@ -2337,7 +2316,7 @@ export default function Register({
           </form>
         )}
 
-        {/* ----------------- STAGE 1: UNDER REVIEW & SIMULATE ADMIN APPROVAL ----------------- */}
+        {/* ----------------- STAGE 1: UNDER REVIEW (AWAITING APPROVAL) ----------------- */}
         {flowState === 'under_review' && registeredUser && (
           <div className="register-columns-grid">
             {/* Left Card: Registered Application Details */}
@@ -2451,7 +2430,7 @@ export default function Register({
               </div>
             </div>
 
-            {/* Right Card: Stage 1 Status & Simulate Admin Approval Button */}
+            {/* Right Card: Stage 1 Status & Pipeline Tracking */}
             <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
               <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2492,16 +2471,28 @@ export default function Register({
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 1. Registration Submitted</span>
                       <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Done</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#b45309', fontWeight: 700 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> 2. Territorial Sub-admin Review</span>
-                      <span style={{ fontSize: '0.7rem', background: '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>Pending</span>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: registeredUser.subAdminApprovalStatus === 'approved' ? '#15803d' : '#b45309', fontWeight: 700 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {registeredUser.subAdminApprovalStatus === 'approved' ? <CheckCircle2 size={14} /> : <Clock size={14} />} 2. Territorial Sub-admin Review
+                      </span>
+                      <span style={{ fontSize: '0.7rem', background: registeredUser.subAdminApprovalStatus === 'approved' ? '#dcfce7' : '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>
+                        {registeredUser.subAdminApprovalStatus === 'approved' ? 'Approved' : 'Pending'}
+                      </span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: registeredUser.mainAdminApprovalStatus === 'approved' ? '#15803d' : registeredUser.subAdminApprovalStatus === 'approved' ? '#b45309' : '#94a3b8', fontWeight: registeredUser.subAdminApprovalStatus === 'approved' ? 700 : 500 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {registeredUser.mainAdminApprovalStatus === 'approved' ? <CheckCircle2 size={14} /> : registeredUser.subAdminApprovalStatus === 'approved' ? <Clock size={14} /> : <Lock size={14} />} 3. Main Admin Approval
+                      </span>
+                      <span style={{ fontSize: '0.7rem', background: registeredUser.mainAdminApprovalStatus === 'approved' ? '#dcfce7' : registeredUser.subAdminApprovalStatus === 'approved' ? '#fef3c7' : '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
+                        {registeredUser.mainAdminApprovalStatus === 'approved' ? 'Approved' : registeredUser.subAdminApprovalStatus === 'approved' ? 'Pending' : 'Waiting Sub-admin'}
+                      </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 3. KYC Document Clearance</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 4. KYC Document Clearance</span>
                       <span style={{ fontSize: '0.7rem', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>Locked</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 4. Dashboard Portal Access</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 5. Dashboard Portal Access</span>
                       <span style={{ fontSize: '0.7rem', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>Locked</span>
                     </div>
                   </div>
@@ -2528,62 +2519,75 @@ export default function Register({
                     <Clock size={20} />
                   </div>
                   <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#92400e', margin: '0 0 4px 0' }}>
-                    Awaiting Sub-Admin Approval
+                    {registeredUser.subAdminApprovalStatus === 'approved' ? 'Awaiting Main Admin Authorization' : 'Awaiting Sub-Admin Approval'}
                   </h4>
                   <p style={{ fontSize: '0.76rem', color: '#b45309', margin: 0, lineHeight: 1.45 }}>
-                    {registeredUser.assignedSubAdminName 
-                      ? `Your registration is queued with Sub-admin (${registeredUser.assignedSubAdminName}) for territorial approval.`
-                      : 'Your registration is queued in the Sub-admin approval queue awaiting territorial assignment.'}
-                    {' '}Dashboard access is strictly locked until both Sub-admin and KYC team approvals are completed.
+                    {registeredUser.subAdminApprovalStatus === 'approved'
+                      ? 'Territorial Sub-admin review is approved! Your application is now in the Main Admin authorization queue.'
+                      : (registeredUser.assignedSubAdminName 
+                          ? `Your registration is queued with Sub-admin (${registeredUser.assignedSubAdminName}) for territorial approval.`
+                          : 'Your registration is queued in the Sub-admin approval queue awaiting territorial assignment.')}
+                    {' '}Dashboard access is strictly locked until all approvals and KYC verification are completed.
                   </p>
                 </div>
 
-                {/* Sub-admin Approval Simulation */}
+                {/* Live Authorization Status Tracking Card */}
                 <div style={{
                   marginTop: 'auto',
-                  background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
-                  border: '1px solid #fde68a',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
                   borderRadius: 'var(--radius-md)',
-                  padding: '14px',
+                  padding: '16px',
                   textAlign: 'center'
                 }}>
                   <div style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    fontSize: '0.76rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
-                    color: '#92400e',
-                    marginBottom: '4px'
+                    color: '#1e293b',
+                    marginBottom: '6px'
                   }}>
-                    <Sparkles size={14} /> Sub-Admin Approval Simulation
+                    <Clock size={15} style={{ color: '#f59e0b' }} /> Official Review In Progress
                   </div>
-                  <p style={{ fontSize: '0.74rem', color: '#78350f', marginBottom: '12px' }}>
-                    Simulate territorial Sub-admin review to grant Stage 1 approval and advance to KYC verification queue.
+                  <p style={{ fontSize: '0.74rem', color: '#64748b', marginBottom: '14px', lineHeight: 1.45 }}>
+                    Your application is being evaluated in accordance with territorial jurisdiction rules. You will receive access once all administrative reviews and KYC verification are cleared.
                   </p>
 
                   <button
                     type="button"
-                    onClick={handleSimulateApproval}
-                    disabled={approving}
+                    onClick={handleRefreshStatus}
+                    disabled={refreshingStatus}
                     className="btn btn-primary"
                     style={{
                       width: '100%',
                       padding: '10px 14px',
-                      background: 'linear-gradient(135deg, #d97706, #f59e0b)',
+                      background: 'linear-gradient(135deg, #4f46e5, #6366f1)',
                       fontSize: '0.86rem',
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px'
+                      gap: '8px',
+                      marginBottom: '8px'
                     }}
                   >
-                    {approving ? 'Processing Approval...' : (
-                      <>
-                        <Sparkles size={15} /> Simulate Sub-Admin Approval
-                      </>
-                    )}
+                    <RefreshCw size={15} className={refreshingStatus ? 'animate-spin' : ''} />
+                    {refreshingStatus ? 'Checking Status...' : 'Check / Refresh Status'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('login')}
+                    className="btn btn-secondary"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    <ArrowLeft size={13} /> Back to Sign In
                   </button>
                 </div>
               </div>
@@ -2591,7 +2595,7 @@ export default function Register({
           </div>
         )}
 
-        {/* ----------------- STAGE 2: KYC PENDING & SIMULATE KYC VERIFICATION ----------------- */}
+        {/* ----------------- STAGE 2: KYC PENDING ----------------- */}
         {flowState === 'kyc_pending' && registeredUser && (
           <div className="register-columns-grid">
             {/* Left Card: Registered Application Details */}
@@ -2700,7 +2704,7 @@ export default function Register({
               </div>
             </div>
 
-            {/* Right Card: Stage 2 Status & Simulate KYC Button */}
+            {/* Right Card: Stage 2 Status & Compliance Tracking */}
             <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
               <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2742,15 +2746,19 @@ export default function Register({
                       <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Done</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#15803d', fontWeight: 600 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 2. Regional Admin Approval</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 2. Territorial Sub-admin Review</span>
+                      <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Approved</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#15803d', fontWeight: 600 }}>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 3. Main Admin Approval</span>
                       <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Approved</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#0284c7', fontWeight: 700 }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> 3. KYC Document Verification</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Clock size={14} /> 4. KYC Document Verification</span>
                       <span style={{ fontSize: '0.7rem', background: '#e0f2fe', padding: '1px 6px', borderRadius: '4px' }}>Pending</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
-                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 4. Portal Access Activated</span>
+                      <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Lock size={14} /> 5. Portal Access Activated</span>
                       <span style={{ fontSize: '0.7rem', background: '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>Locked</span>
                     </div>
                   </div>
@@ -2777,59 +2785,70 @@ export default function Register({
                     <Shield size={22} />
                   </div>
                   <h4 style={{ fontSize: '1.02rem', fontWeight: 800, color: '#0369a1', margin: '0 0 4px 0' }}>
-                    Admin Approved &bull; KYC Pending
+                    Admins Approved &bull; KYC In Progress
                   </h4>
                   <p style={{ fontSize: '0.78rem', color: '#0284c7', margin: 0, lineHeight: 1.45 }}>
-                    Great news! Your regional administrator has approved your manager registration. The compliance team is currently verifying your Aadhaar, PAN, Bank Passbook, and Digital Signature documents.
+                    Both Sub-admin and Main Admin have approved your manager registration! The KYC Compliance team is now conducting verification of your Aadhaar, PAN, Bank Passbook, and Digital Signature.
                   </p>
                 </div>
 
-                {/* KYC Simulation Box */}
+                {/* Live KYC Status Tracking Card */}
                 <div style={{
                   marginTop: 'auto',
-                  background: 'linear-gradient(135deg, #f0fdf4, #ecfeff)',
-                  border: '1px solid #a7f3d0',
+                  background: '#f8fafc',
+                  border: '1px solid #e2e8f0',
                   borderRadius: 'var(--radius-md)',
-                  padding: '14px',
+                  padding: '16px',
                   textAlign: 'center'
                 }}>
                   <div style={{
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '6px',
-                    fontSize: '0.76rem',
+                    fontSize: '0.8rem',
                     fontWeight: 700,
-                    color: '#065f46',
-                    marginBottom: '4px'
+                    color: '#0369a1',
+                    marginBottom: '6px'
                   }}>
-                    <Sparkles size={14} /> KYC Compliance Simulation
+                    <Shield size={15} style={{ color: '#0284c7' }} /> KYC Compliance Clearance In Progress
                   </div>
-                  <p style={{ fontSize: '0.74rem', color: '#475569', marginBottom: '12px' }}>
-                    Simulate compliance document verification to verify KYC credentials and unlock manager dashboard access.
+                  <p style={{ fontSize: '0.74rem', color: '#64748b', marginBottom: '14px', lineHeight: 1.45 }}>
+                    The KYC Verification team is evaluating your uploaded identity documents. Once verified, your manager account will be immediately activated.
                   </p>
 
                   <button
                     type="button"
-                    onClick={handleSimulateKyc}
-                    disabled={verifyingKyc}
+                    onClick={handleRefreshStatus}
+                    disabled={refreshingStatus}
                     className="btn btn-primary"
                     style={{
                       width: '100%',
                       padding: '10px 14px',
-                      background: 'linear-gradient(135deg, #059669, #10b981)',
+                      background: 'linear-gradient(135deg, #0284c7, #0369a1)',
                       fontSize: '0.86rem',
                       fontWeight: 700,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      gap: '8px'
+                      gap: '8px',
+                      marginBottom: '8px'
                     }}
                   >
-                    {verifyingKyc ? 'Verifying KYC Documents...' : (
-                      <>
-                        <Sparkles size={15} /> Simulate KYC Verification
-                      </>
-                    )}
+                    <RefreshCw size={15} className={refreshingStatus ? 'animate-spin' : ''} />
+                    {refreshingStatus ? 'Checking Status...' : 'Check / Refresh KYC Status'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onNavigate('login')}
+                    className="btn btn-secondary"
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      fontSize: '0.8rem',
+                      fontWeight: 600
+                    }}
+                  >
+                    <ArrowLeft size={13} /> Back to Sign In
                   </button>
                 </div>
               </div>
@@ -2934,12 +2953,20 @@ export default function Register({
                   <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Done</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#15803d', fontWeight: 600 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 2. Regional Admin Approval</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 2. Territorial Sub-admin Review</span>
                   <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Approved</span>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#15803d', fontWeight: 600 }}>
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 3. KYC Document Verification</span>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 3. Main Admin Authorization</span>
+                  <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Approved</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#15803d', fontWeight: 600 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 4. KYC Document Verification</span>
                   <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Verified</span>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#15803d', fontWeight: 600 }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 5. Account Activated</span>
+                  <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Active</span>
                 </div>
               </div>
 
@@ -2980,9 +3007,9 @@ export default function Register({
                     justifyContent: 'center',
                     gap: '8px'
                   }}
-                  onClick={handleActivateAccess}
+                  onClick={() => onNavigate('login')}
                 >
-                  Activate Access & Enter Dashboard <ArrowRight size={16} />
+                  Sign In to Dashboard <ArrowRight size={16} />
                 </button>
               </div>
             </div>

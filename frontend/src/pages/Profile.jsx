@@ -172,11 +172,6 @@ const Profile = () => {
     }
   };
 
-  // Simulate approval state
-  const [simulating, setSimulating] = useState(false);
-  const [approvalSuccess, setApprovalSuccess] = useState('');
-  const [approvalError, setApprovalError] = useState('');
-
   const handlePasswordChange = async (e) => {
     e.preventDefault();
     setMessage('');
@@ -208,26 +203,7 @@ const Profile = () => {
     }
   };
 
-  const handleSimulateApproval = async () => {
-    if (!user?.id) return;
-    setSimulating(true);
-    setApprovalSuccess('');
-    setApprovalError('');
-
-    try {
-      const res = await authService.simulateApproval(user.id);
-      if (res.success) {
-        setSession(res.user, res.token);
-        setApprovalSuccess('Profile successfully approved! Full manager access is now activated.');
-      }
-    } catch (err) {
-      setApprovalError(err.message || 'Failed to simulate admin approval.');
-    } finally {
-      setSimulating(false);
-    }
-  };
-
-  const isUnderReview = user?.status === 'under_review';
+  const isUnderReview = user?.status === 'under_review' || user?.overallRegistrationStatus === 'PENDING_SUB_ADMIN_APPROVAL' || user?.overallRegistrationStatus === 'PENDING_MAIN_ADMIN_APPROVAL';
 
   return (
     <div>
@@ -238,115 +214,53 @@ const Profile = () => {
         </p>
       </div>
 
-      {/* Under Review Simulated Approval Banner */}
+      {/* Under Review Informational Banner */}
       {isUnderReview && (
         <div style={{
-          background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+          background: '#fffbeb',
           border: '1.5px solid #fde68a',
           borderRadius: 'var(--radius-md)',
-          padding: '18px 20px',
+          padding: '16px 20px',
           marginBottom: '24px',
-          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.12)',
+          boxShadow: '0 2px 8px rgba(245, 158, 11, 0.08)',
           display: 'flex',
-          flexWrap: 'wrap',
           alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '16px'
+          gap: '14px'
         }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', maxWidth: '600px' }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '50%',
-              background: '#f59e0b',
-              color: 'white',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <Clock size={22} />
-            </div>
-            <div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <h4 style={{ fontSize: '1rem', fontWeight: 800, color: '#92400e', margin: 0 }}>
-                  Account Status: Under Administrative Review
-                </h4>
-                <span style={{
-                  background: '#fef3c7',
-                  border: '1px solid #fde68a',
-                  color: '#b45309',
-                  padding: '2px 8px',
-                  borderRadius: '12px',
-                  fontSize: '0.72rem',
-                  fontWeight: 700
-                }}>
-                  Pending Approval
-                </span>
-              </div>
-              <p style={{ fontSize: '0.82rem', color: '#78350f', marginTop: '4px', margin: 0 }}>
-                Your registration has been submitted. Since the Admin Portal is not yet integrated, you can simulate administrative approval below to activate full manager capabilities.
-              </p>
-            </div>
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '50%',
+            background: '#f59e0b',
+            color: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            flexShrink: 0
+          }}>
+            <Clock size={20} />
           </div>
-
-          <button
-            type="button"
-            onClick={handleSimulateApproval}
-            disabled={simulating}
-            className="btn btn-primary"
-            style={{
-              padding: '10px 18px',
-              fontSize: '0.85rem',
-              fontWeight: 700,
-              background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              boxShadow: '0 4px 12px rgba(99, 102, 241, 0.25)'
-            }}
-          >
-            <Sparkles size={16} />
-            {simulating ? 'Approving...' : 'Simulate Admin Approval'}
-          </button>
-        </div>
-      )}
-
-      {/* Approval Success Banner */}
-      {approvalSuccess && (
-        <div style={{
-          padding: '12px 16px',
-          background: '#dcfce7',
-          border: '1px solid #86efac',
-          borderRadius: 'var(--radius-sm)',
-          color: '#15803d',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontSize: '0.875rem'
-        }}>
-          <CheckCircle2 size={18} />
-          <span>{approvalSuccess}</span>
-        </div>
-      )}
-
-      {/* Approval Error Banner */}
-      {approvalError && (
-        <div style={{
-          padding: '12px 16px',
-          background: '#fee2e2',
-          border: '1px solid #fca5a5',
-          borderRadius: 'var(--radius-sm)',
-          color: '#b91c1c',
-          marginBottom: '20px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          fontSize: '0.875rem'
-        }}>
-          <AlertCircle size={18} />
-          <span>{approvalError}</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#92400e', margin: 0 }}>
+                Account Under Administrative Review
+              </h4>
+              <span style={{
+                background: '#fef3c7',
+                border: '1px solid #fde68a',
+                color: '#b45309',
+                padding: '2px 8px',
+                borderRadius: '12px',
+                fontSize: '0.72rem',
+                fontWeight: 700
+              }}>
+                Pending Authorization
+              </span>
+            </div>
+            <p style={{ fontSize: '0.8rem', color: '#78350f', marginTop: '3px', margin: 0 }}>
+              Your account is currently progressing through the administrative approval pipeline. Sub-admin territorial authorization, Main Admin approval, and KYC clearance are required.
+            </p>
+          </div>
         </div>
       )}
 

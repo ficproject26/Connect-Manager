@@ -13,10 +13,10 @@ router.post('/verify-otp', otpLimiter, authController.verifyOtp);
 router.post('/register', authLimiter, authController.register);
 router.get('/locations', authController.getRegistrationLocations);
 router.get('/check-capacity', authController.checkCapacity);
+router.get('/registration-status/:userId', authController.getRegistrationStatus);
 router.post('/subadmin-approval', authLimiter, authController.subAdminApproval);
+router.post('/mainadmin-approval', authLimiter, authController.mainAdminApproval);
 router.post('/kyc-approval', authLimiter, authController.kycApproval);
-router.post('/simulate-approval', authLimiter, authController.simulateApproval);
-router.post('/simulate-kyc', authLimiter, authController.simulateKyc);
 router.post('/upload-avatar', uploadLimiter, upload.single('avatar'), authController.uploadAvatar);
 router.post('/upload-document', uploadLimiter, upload.single('document'), authController.uploadDocument);
 

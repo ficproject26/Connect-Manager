@@ -159,20 +159,16 @@ export const authService = {
     return handleResponse(res);
   },
 
-  async simulateApproval(userId) {
-    const res = await fetch(`${API_BASE}/auth/simulate-approval`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
-    });
+  async getRegistrationStatus(userId) {
+    const res = await fetch(`${API_BASE}/auth/registration-status/${encodeURIComponent(userId)}`);
     return handleResponse(res);
   },
 
-  async simulateKyc(userId) {
-    const res = await fetch(`${API_BASE}/auth/simulate-kyc`, {
+  async mainAdminApproval(userId, action = 'approve', rejectionReason = '') {
+    const res = await fetch(`${API_BASE}/auth/mainadmin-approval`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId })
+      body: JSON.stringify({ userId, action, rejectionReason })
     });
     return handleResponse(res);
   },
