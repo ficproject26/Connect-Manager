@@ -14,16 +14,16 @@
   },
   {
     "_id": "a84ae084-58f9-4b83-a86f-a6dabd3a08b4",
-    "autoAssignTasks": true,
+    "autoAssignTasks": false,
     "createdAt": "2026-09-30T03:45:11.993Z",
     "dailyDigest": true,
-    "emailAlerts": true,
+    "emailAlerts": false,
     "id": "a84ae084-58f9-4b83-a86f-a6dabd3a08b4",
     "kycAlerts": true,
-    "statusChangeAlerts": true,
+    "statusChangeAlerts": false,
     "territoryAlertRadiusKm": 15,
     "theme": "light",
-    "updatedAt": "2026-10-10T10:04:19.181Z",
+    "updatedAt": "2026-10-13T12:10:12.402Z",
     "userId": "usr_mgr_1790580930154_8uge"
   },
   {
@@ -163,7 +163,7 @@
     "statusChangeAlerts": true,
     "territoryAlertRadiusKm": 15,
     "theme": "light",
-    "updatedAt": "2026-10-12T12:45:32.444Z",
+    "updatedAt": "2026-10-13T10:07:06.105Z",
     "userId": "599bef8d-4392-43bd-b015-ac5371e15842"
   },
   {
@@ -249,5 +249,33 @@
     "theme": "light",
     "updatedAt": "2026-10-13T06:55:50.068Z",
     "userId": "e8b5ccfc-3689-45f0-933d-4c7c8d30da67"
+  },
+  {
+    "_id": "0ee59aeb-cc6e-4447-b5f5-61fe74eadb75",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-13T07:49:10.579Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "0ee59aeb-cc6e-4447-b5f5-61fe74eadb75",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-13T07:49:10.579Z",
+    "userId": "4f720462-5f97-488f-b622-ca3444ab5e46"
+  },
+  {
+    "_id": "7eb007c4-921a-4f99-9237-02c2a98c6047",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-13T07:51:55.438Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "7eb007c4-921a-4f99-9237-02c2a98c6047",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-13T07:51:55.438Z",
+    "userId": "4ca09d12-835c-4034-a1c6-a2964ba719cd"
   }
 ]

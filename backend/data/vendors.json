@@ -1631,5 +1631,38 @@
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
     "updatedAt": "2026-10-13T05:12:55.457Z"
+  },
+  {
+    "_id": "9ab540a7-3610-4cb9-a63a-741bf2cdf5b4",
+    "accountHolderName": "",
+    "accountNumber": "874797164709639956",
+    "bankName": "",
+    "businessName": "Kumar",
+    "category": "Daily Needs",
+    "createdAt": "2026-10-13T09:45:16.728Z",
+    "createdBy": "599bef8d-4392-43bd-b015-ac5371e15842",
+    "description": "",
+    "districtId": "6ab9f393bec0ef28c6e813ff",
+    "divisionId": "6aba0f80af9e0372e50b70d3",
+    "documents": [
+      {
+        "url": "/uploads/1791884244035_e8afa766f3fe6081f79ccb1f4588dbec.jpg",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "uhecihc@gmail.com",
+    "gstNumber": "",
+    "id": "9ab540a7-3610-4cb9-a63a-741bf2cdf5b4",
+    "ifsc": "IDIB000B009",
+    "mobile": "9987654567",
+    "name": "Opoiuytr",
+    "panNumber": "",
+    "pincodeId": "6abbacd17ff2862ecee7b8e3",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-13T09:45:16.728Z"
   }
 ]

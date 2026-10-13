@@ -38,7 +38,7 @@
     "mobile": "6789456756",
     "name": "Surya",
     "panNumber": "ABCD00787G",
-    "passwordHash": "$2a$10$qO0lw.RWqlgcjbtSC9MFjuWxlow.xNTUrc3PO87hs/RI/jpJxwia2",
+    "passwordHash": "$2a$12$Xicm9YhNzuHJT.So3xn8juBWCJH9qDyG1CFcpPKW.v6JEYTFQdHcO",
     "phone": "6789456756",
     "pincode": "635126",
     "pincodeId": "6aba0f82af9e0372e50b70d5",
@@ -51,7 +51,7 @@
     "targetAdminName": "Dhanu",
     "targetAdminRole": "State Admin",
     "targetJurisdiction": "PIN: 635126",
-    "updatedAt": "2026-10-08T09:13:00.296Z"
+    "updatedAt": "2026-10-13T10:12:03.476Z"
   },
   {
     "_id": "usr_mgr_1790588690346_2iph",
@@ -1005,5 +1005,27 @@
     "zone": null,
     "adminApprovedAt": "2026-10-13T06:59:55.872Z",
     "kycVerifiedAt": "2026-10-13T06:59:56.445Z"
+  },
+  {
+    "_id": "6acde2cc14371f1f2178a3bb",
+    "managerId": "MGR-STA-20261013-5625",
+    "name": "Moothy",
+    "email": "moorthy1@gmail.com",
+    "phone": "9876545678",
+    "altPhone": "",
+    "level": "state",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "",
+    "assignedDivision": "",
+    "assignedPincode": "",
+    "address": "ugyifsgkakuvgdlskvdef",
+    "parentAdminId": "6abc986678d7803cf6a444d9",
+    "requestedBy": null,
+    "approvedBy": "6abc986678d7803cf6a444d9",
+    "status": "Active",
+    "notes": "Synced from Manager registration application",
+    "createdAt": "2026-10-13T07:50:36.658Z",
+    "updatedAt": "2026-10-13T07:50:36.658Z",
+    "__v": 0
   }
 ]

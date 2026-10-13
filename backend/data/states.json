@@ -1,68 +1,52 @@
 [
   {
-    "_id": "6acc8895488562fc701f6dd5",
-    "code": "GJ",
-    "createdAt": "2026-10-12T10:58:50.365Z",
-    "id": "6acc8895488562fc701f6dd5",
-    "name": "Gujarat",
-    "status": "Active",
-    "updatedAt": "2026-10-12T11:32:34.267Z",
-    "description": "State of Gujarat",
-    "stateId": "ST-GJ"
-  },
-  {
     "_id": "state_ka",
-    "__v": 0,
     "code": "KAR",
-    "createdAt": "2026-10-12T11:27:42.304Z",
-    "description": "State of Karnataka",
-    "logo": "",
+    "createdAt": "2026-10-13T11:26:51.619Z",
+    "id": "state_ka",
     "name": "Karnataka",
-    "notes": "",
-    "stateId": "ST-KAR-0001",
     "status": "Active",
-    "updatedAt": "2026-10-12T11:32:30.862Z"
+    "updatedAt": "2026-10-13T12:46:28.746Z",
+    "description": "State of Karnataka",
+    "stateId": "ST-KAR-0001"
   },
   {
     "_id": "6aa10f70ca0932e6eaec1f5c",
     "__v": 0,
     "code": "TN",
-    "createdAt": "2026-10-12T11:28:48.024Z",
+    "createdAt": "2026-10-13T12:46:28.853Z",
     "description": "State of Tamil Nadu",
     "logo": "",
     "name": "Tamil Nadu",
     "notes": "",
     "stateId": "ST-TAM-4607",
     "status": "Active",
-    "updatedAt": "2026-10-12T11:32:31.092Z"
+    "updatedAt": "2026-10-13T12:46:28.853Z"
   },
   {
     "_id": "6abb46c1305af8d5cc1abed8",
     "__v": 0,
     "code": "PY",
-    "createdAt": "2026-10-12T11:28:48.461Z",
+    "createdAt": "2026-10-13T12:46:28.945Z",
     "description": "Union Territory of Pondicherry",
     "logo": "",
     "name": "Pondicherry",
     "notes": "",
     "stateId": "ST-PY",
     "status": "Active",
-    "updatedAt": "2026-10-12T11:32:33.821Z"
+    "updatedAt": "2026-10-13T12:46:28.945Z"
   },
   {
-    "_id": "state_test_ka",
-    "id": "state_test_ka",
-    "name": "Karnataka",
+    "_id": "6acc8895488562fc701f6dd5",
+    "__v": 0,
+    "code": "GJ",
+    "createdAt": "2026-10-13T12:46:29.001Z",
+    "description": "State of Gujarat",
+    "logo": "",
+    "name": "Gujarat",
+    "notes": "",
+    "stateId": "ST-GJ",
     "status": "Active",
-    "createdAt": "2026-10-13T07:17:42.137Z",
-    "updatedAt": "2026-10-13T07:17:42.138Z"
-  },
-  {
-    "_id": "state_test_tn",
-    "id": "state_test_tn",
-    "name": "Tamil Nadu",
-    "status": "Active",
-    "createdAt": "2026-10-13T07:17:42.143Z",
-    "updatedAt": "2026-10-13T07:17:42.143Z"
+    "updatedAt": "2026-10-13T12:46:29.001Z"
   }
 ]
