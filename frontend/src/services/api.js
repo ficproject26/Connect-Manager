@@ -851,6 +851,28 @@ export const uploadService = {
       } catch (_) {}
       throw err;
     }
+  },
+
+  async deleteFile(fileUrlOrName) {
+    if (!fileUrlOrName) return { success: true };
+    const token = getAuthToken();
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    try {
+      const res = await fetch(`${API_BASE}/uploads/file`, {
+        method: 'DELETE',
+        headers,
+        body: JSON.stringify({ url: fileUrlOrName, filename: fileUrlOrName })
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+      return { success: false, status: res.status };
+    } catch (err) {
+      console.warn('File delete network warning:', err.message);
+      return { success: false, error: err.message };
+    }
   }
 };
 

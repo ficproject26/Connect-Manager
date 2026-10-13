@@ -215,6 +215,19 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
 
   useEffect(() => {
     fetchCount();
+    const handleUpdate = (e) => {
+      if (e?.detail && typeof e.detail.unreadCount === 'number') {
+        setUnreadCount(e.detail.unreadCount);
+      } else {
+        fetchCount();
+      }
+    };
+    window.addEventListener('notifications-updated', handleUpdate);
+    window.addEventListener('unread-count-updated', handleUpdate);
+    return () => {
+      window.removeEventListener('notifications-updated', handleUpdate);
+      window.removeEventListener('unread-count-updated', handleUpdate);
+    };
   }, []);
 
   // Real-time synchronization for notifications

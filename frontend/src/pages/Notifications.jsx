@@ -26,9 +26,16 @@ const Notifications = ({ onNavigate }) => {
   const token = localStorage.getItem('agent_mgr_token') || '';
 
 
+  const broadcastUnreadCount = (count) => {
+    const safeCount = Math.max(0, count);
+    window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { unreadCount: safeCount } }));
+    window.dispatchEvent(new CustomEvent('unread-count-updated', { detail: { safeCount } }));
+  };
+
   const fetchNotifications = async () => {
     if (!token || token.startsWith('mock_token_')) {
       setNotifications([]);
+      broadcastUnreadCount(0);
       return;
     }
     try {
@@ -38,16 +45,22 @@ const Notifications = ({ onNavigate }) => {
       });
       if (!res.ok) {
         setNotifications([]);
+        broadcastUnreadCount(0);
         return;
       }
       const data = await res.json().catch(() => ({}));
-      if (data.success) {
-        setNotifications(data.notifications || []);
+      if (data.success && Array.isArray(data.notifications)) {
+        setNotifications(data.notifications);
+        const unread = data.notifications.filter(n => !n.isRead).length;
+        broadcastUnreadCount(unread);
       } else {
         setNotifications([]);
+        broadcastUnreadCount(0);
       }
     } catch (err) {
+      console.error('Fetch notifications error:', err);
       setNotifications([]);
+      broadcastUnreadCount(0);
     } finally {
       setLoading(false);
     }
@@ -60,51 +73,97 @@ const Notifications = ({ onNavigate }) => {
   // Real-time synchronization
   useRealtime('notification', (ev) => {
     if (ev.action === 'created' && ev.data) {
-      setNotifications(prev => [ev.data, ...prev.filter(n => (n._id || n.id) !== (ev.data._id || ev.data.id))]);
+      setNotifications(prev => {
+        const nextList = [ev.data, ...prev.filter(n => (n._id || n.id) !== (ev.data._id || ev.data.id))];
+        broadcastUnreadCount(nextList.filter(n => !n.isRead).length);
+        return nextList;
+      });
     } else if (ev.action === 'updated' && ev.data) {
-      setNotifications(prev => prev.map(n => ((n._id || n.id) === (ev.data._id || ev.data.id) ? { ...n, ...ev.data } : n)));
+      setNotifications(prev => {
+        const nextList = prev.map(n => ((n._id || n.id) === (ev.data._id || ev.data.id) ? { ...n, ...ev.data } : n));
+        broadcastUnreadCount(nextList.filter(n => !n.isRead).length);
+        return nextList;
+      });
     } else if (ev.action === 'deleted') {
       const delId = String(ev.entityId);
-      setNotifications(prev => prev.filter(n => String(n._id || n.id) !== delId));
+      setNotifications(prev => {
+        const nextList = prev.filter(n => String(n._id || n.id) !== delId);
+        broadcastUnreadCount(nextList.filter(n => !n.isRead).length);
+        return nextList;
+      });
     }
   });
 
   const markAsRead = async (id) => {
+    const target = notifications.find(n => (n._id === id || n.id === id));
+    if (!target || target.isRead) {
+      return; // Prevent duplicate requests
+    }
+
+    const previousNotifications = notifications;
+    const updated = notifications.map(n => (n._id === id || n.id === id ? { ...n, isRead: true } : n));
+    setNotifications(updated);
+    const remainingUnread = updated.filter(n => !n.isRead).length;
+    broadcastUnreadCount(remainingUnread);
+
     try {
       if (token && !token.startsWith('mock_token_')) {
-        await fetch(`${API_BASE}/notifications/${id}/read`, {
+        const res = await fetch(`${API_BASE}/notifications/${id}/read`, {
           method: 'PATCH',
           headers: { Authorization: `Bearer ${token}` }
         });
+        if (!res.ok) throw new Error('Failed to update read state on server');
       }
-      setNotifications(prev =>
-        prev.map(n => (n._id === id || n.id === id ? { ...n, isRead: true } : n))
-      );
-    } catch (err) {}
+    } catch (err) {
+      console.error('Mark as read error:', err);
+      setNotifications(previousNotifications);
+      broadcastUnreadCount(previousNotifications.filter(n => !n.isRead).length);
+    }
   };
 
   const markAllAsRead = async () => {
+    const unreadCountBefore = notifications.filter(n => !n.isRead).length;
+    if (unreadCountBefore === 0) return;
+
+    const previousNotifications = notifications;
+    const updated = notifications.map(n => ({ ...n, isRead: true }));
+    setNotifications(updated);
+    broadcastUnreadCount(0);
+
     try {
       if (token && !token.startsWith('mock_token_')) {
-        await fetch(`${API_BASE}/notifications/mark-all-read`, {
+        const res = await fetch(`${API_BASE}/notifications/mark-all-read`, {
           method: 'POST',
           headers: { Authorization: `Bearer ${token}` }
         });
+        if (!res.ok) throw new Error('Failed to mark all as read on server');
       }
-      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
-    } catch (err) {}
+    } catch (err) {
+      console.error('Mark all as read error:', err);
+      setNotifications(previousNotifications);
+      broadcastUnreadCount(unreadCountBefore);
+    }
   };
 
   const removeNotification = async (id) => {
+    const previousNotifications = notifications;
+    const updated = notifications.filter(n => n._id !== id && n.id !== id);
+    setNotifications(updated);
+    broadcastUnreadCount(updated.filter(n => !n.isRead).length);
+
     try {
       if (token && !token.startsWith('mock_token_')) {
-        await fetch(`${API_BASE}/notifications/${id}`, {
+        const res = await fetch(`${API_BASE}/notifications/${id}`, {
           method: 'DELETE',
           headers: { Authorization: `Bearer ${token}` }
         });
+        if (!res.ok) throw new Error('Delete failed');
       }
-      setNotifications(prev => prev.filter(n => n._id !== id && n.id !== id));
-    } catch (err) {}
+    } catch (err) {
+      console.error('Delete notification error:', err);
+      setNotifications(previousNotifications);
+      broadcastUnreadCount(previousNotifications.filter(n => !n.isRead).length);
+    }
   };
 
   const getRelativeTime = (isoString) => {
@@ -167,33 +226,7 @@ const Notifications = ({ onNavigate }) => {
           </p>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <button
-            type="button"
-            onClick={fetchNotifications}
-            disabled={loading}
-            title="Reload latest notifications"
-            style={{
-              height: '40px',
-              padding: '0 16px',
-              background: '#ffffff',
-              border: '1px solid var(--border-normal)',
-              borderRadius: '8px',
-              fontWeight: 600,
-              fontSize: '0.84rem',
-              color: 'var(--text-main)',
-              cursor: loading ? 'not-allowed' : 'pointer',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--primary)' }} />
-            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
-          </button>
-
+        <div>
           {unreadTotal > 0 && (
             <button
               type="button"
@@ -221,7 +254,7 @@ const Notifications = ({ onNavigate }) => {
         </div>
       </div>
 
-      {/* Filter Tabs & Search Bar */}
+      {/* Filter Tabs, Search Bar & Refresh Button Toolbar */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -231,7 +264,8 @@ const Notifications = ({ onNavigate }) => {
         width: '100%',
         flexWrap: 'wrap'
       }}>
-        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+        {/* Filter Pills */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {[
             { id: 'all', label: 'All' },
             { id: 'unread', label: `Unread (${unreadTotal})` },
@@ -242,11 +276,11 @@ const Notifications = ({ onNavigate }) => {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               style={{
-                height: '38px',
+                height: '40px',
                 padding: '0 16px',
-                borderRadius: '20px',
-                fontSize: '0.82rem',
-                fontWeight: 600,
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                fontWeight: activeTab === t.id ? 700 : 600,
                 cursor: 'pointer',
                 border: activeTab === t.id ? '1.5px solid var(--forge-gold-vibrant)' : '1px solid var(--border-normal)',
                 background: activeTab === t.id ? '#fffbeb' : '#ffffff',
@@ -262,73 +296,117 @@ const Notifications = ({ onNavigate }) => {
           ))}
         </div>
 
-        {/* Enhanced Search Bar */}
-        <div style={{ position: 'relative', width: '100%', maxWidth: '340px', minWidth: '240px' }}>
-          <Search
-            size={16}
-            style={{
-              position: 'absolute',
-              left: '12px',
-              top: '50%',
-              transform: 'translateY(-50%)',
-              color: '#94a3b8',
-              pointerEvents: 'none'
-            }}
-          />
-          <input
-            type="text"
-            placeholder="Search alerts by merchant, task or text..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            style={{
-              width: '100%',
-              height: '40px',
-              padding: '0 36px 0 38px',
-              fontSize: '0.86rem',
-              borderRadius: '8px',
-              border: '1px solid var(--border-normal)',
-              outline: 'none',
-              background: '#ffffff',
-              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
-              boxSizing: 'border-box',
-              transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
-            }}
-            onFocus={(e) => {
-              e.target.style.borderColor = 'var(--forge-gold-vibrant)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.15)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'var(--border-normal)';
-              e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
-            }}
-          />
-          {searchQuery && (
-            <button
-              type="button"
-              onClick={() => setSearchQuery('')}
-              title="Clear search"
-              aria-label="Clear alert search"
+        {/* Search Bar + Refresh Button Group */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          flex: '1 1 360px',
+          maxWidth: '520px',
+          justifyContent: 'flex-end',
+          minWidth: '280px'
+        }}>
+          {/* Enhanced Search Bar */}
+          <div style={{ position: 'relative', flex: 1, minWidth: '200px' }}>
+            <Search
+              size={17}
               style={{
                 position: 'absolute',
-                right: '10px',
+                left: '12px',
                 top: '50%',
                 transform: 'translateY(-50%)',
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
                 color: '#94a3b8',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '4px',
-                borderRadius: '50%'
+                pointerEvents: 'none'
               }}
-              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
-              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
-            >
-              <X size={14} />
-            </button>
-          )}
+            />
+            <input
+              type="text"
+              placeholder="Search notifications..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: '100%',
+                height: '40px',
+                padding: '0 36px 0 38px',
+                fontSize: '0.86rem',
+                borderRadius: '8px',
+                border: '1px solid var(--border-normal)',
+                outline: 'none',
+                background: '#ffffff',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+                boxSizing: 'border-box',
+                transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+              }}
+              onFocus={(e) => {
+                e.target.style.borderColor = 'var(--forge-gold-vibrant)';
+                e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.15)';
+              }}
+              onBlur={(e) => {
+                e.target.style.borderColor = 'var(--border-normal)';
+                e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
+              }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                title="Clear search"
+                aria-label="Clear alert search"
+                style={{
+                  position: 'absolute',
+                  right: '10px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '4px',
+                  borderRadius: '50%'
+                }}
+                onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+              >
+                <X size={14} />
+              </button>
+            )}
+          </div>
+
+          {/* Refresh Button Aligned With Search */}
+          <button
+            type="button"
+            onClick={fetchNotifications}
+            disabled={loading}
+            title="Refresh notifications"
+            aria-label="Refresh notifications"
+            style={{
+              height: '40px',
+              padding: '0 16px',
+              background: '#ffffff',
+              border: '1px solid var(--border-normal)',
+              borderRadius: '8px',
+              fontWeight: 600,
+              fontSize: '0.84rem',
+              color: 'var(--text-main)',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              transition: 'all 0.15s ease',
+              flexShrink: 0
+            }}
+          >
+            <RefreshCw
+              size={16}
+              className={loading ? 'animate-spin' : ''}
+              style={{ color: 'var(--primary)' }}
+            />
+            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
+          </button>
         </div>
       </div>
 

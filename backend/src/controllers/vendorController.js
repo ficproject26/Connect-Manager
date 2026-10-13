@@ -115,6 +115,74 @@ const populateVendorLocations = async (vendor) => {
   };
 };
 
+const formatManagerRole = (role) => {
+  const r = String(role || '').toLowerCase().trim();
+  if (r.includes('state')) return 'State Manager';
+  if (r.includes('district')) return 'District Manager';
+  if (r.includes('division')) return 'Division Manager';
+  if (r.includes('pincode') || r.includes('pin_code')) return 'Pincode Manager';
+  if (r.includes('supervisor')) return 'Field Supervisor';
+  if (r.includes('agent')) return 'Field Agent';
+  if (r.includes('admin')) return 'Administrator';
+  return role ? role.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Field Manager';
+};
+
+// Populate assigned field manager and field supervisor from database single source of truth
+const populateVendorManagers = async (vendor) => {
+  if (!vendor) return vendor;
+
+  const assigningManagerId = vendor.assignedManagerId || vendor.assignedTo || vendor.assignedManager || vendor.createdBy;
+  let assigningManager = null;
+  if (assigningManagerId) {
+    assigningManager = (await db.users.findById(assigningManagerId).catch(() => null)) ||
+                       (await db.managers.findById(assigningManagerId).catch(() => null));
+    if (!assigningManager) {
+      assigningManager = (await db.users.findOne({ $or: [{ id: assigningManagerId }, { managerId: assigningManagerId }] }).catch(() => null)) ||
+                         (await db.managers.findOne({ $or: [{ id: assigningManagerId }, { managerId: assigningManagerId }] }).catch(() => null));
+    }
+  }
+
+  const fieldSupervisorId = vendor.fieldSupervisorId || vendor.supervisorId;
+  let fieldSupervisor = null;
+  if (fieldSupervisorId && String(fieldSupervisorId) !== String(assigningManagerId)) {
+    fieldSupervisor = (await db.users.findById(fieldSupervisorId).catch(() => null)) ||
+                      (await db.managers.findById(fieldSupervisorId).catch(() => null));
+  }
+
+  const assignedFieldManager = assigningManager ? {
+    id: assigningManager._id || assigningManager.id,
+    name: assigningManager.name,
+    role: assigningManager.role,
+    designation: formatManagerRole(assigningManager.role),
+    mobile: assigningManager.mobile || assigningManager.phone,
+    email: assigningManager.email,
+    managerId: assigningManager.managerId || null
+  } : (vendor.assignedManagerName ? {
+    name: vendor.assignedManagerName,
+    role: vendor.assignedManagerRole || 'manager',
+    designation: formatManagerRole(vendor.assignedManagerRole)
+  } : null);
+
+  const fieldSupervisorObj = fieldSupervisor ? {
+    id: fieldSupervisor._id || fieldSupervisor.id,
+    name: fieldSupervisor.name,
+    role: fieldSupervisor.role,
+    designation: 'Field Supervisor',
+    mobile: fieldSupervisor.mobile || fieldSupervisor.phone
+  } : (vendor.fieldSupervisorName ? {
+    name: vendor.fieldSupervisorName,
+    designation: 'Field Supervisor'
+  } : null);
+
+  return {
+    ...vendor,
+    assignedFieldManager,
+    assignedManager: assignedFieldManager,
+    fieldSupervisor: fieldSupervisorObj,
+    addedBy: assignedFieldManager || vendor.addedBy || null
+  };
+};
+
 // GET /api/vendors - Paginated, filtered, strictly scope-enforced
 const getVendors = async (req, res) => {
   try {
@@ -216,11 +284,12 @@ const getVendors = async (req, res) => {
     const populated = await Promise.all(pagedVendors.map(async (v) => {
       const enriched = await resolveVendorBankDetails(v);
       const populatedVendor = await populateVendorLocations(enriched);
+      const withManagers = await populateVendorManagers(populatedVendor);
       return {
-        ...populatedVendor,
-        panNumber: maskPan(populatedVendor.panNumber),
-        accountNumber: maskAccount(populatedVendor.accountNumber),
-        gstNumber: maskGst(populatedVendor.gstNumber)
+        ...withManagers,
+        panNumber: maskPan(withManagers.panNumber),
+        accountNumber: maskAccount(withManagers.accountNumber),
+        gstNumber: maskGst(withManagers.gstNumber)
       };
     }));
 
@@ -250,15 +319,16 @@ const getVendorById = async (req, res) => {
     const vendor = req.targetVendor;
     const enriched = await resolveVendorBankDetails(vendor);
     const populated = await populateVendorLocations(enriched);
+    const withManagers = await populateVendorManagers(populated);
 
     // Check if client requested unmasked view (detail view permission)
     const showFull = req.query.unmask === 'true';
 
     const responseData = {
-      ...populated,
-      panNumber: showFull ? populated.panNumber : maskPan(populated.panNumber),
-      accountNumber: showFull ? populated.accountNumber : maskAccount(populated.accountNumber),
-      gstNumber: showFull ? populated.gstNumber : maskGst(populated.gstNumber),
+      ...withManagers,
+      panNumber: showFull ? withManagers.panNumber : maskPan(withManagers.panNumber),
+      accountNumber: showFull ? withManagers.accountNumber : maskAccount(withManagers.accountNumber),
+      gstNumber: showFull ? withManagers.gstNumber : maskGst(withManagers.gstNumber),
       isMasked: !showFull
     };
 
@@ -373,7 +443,11 @@ const createVendor = async (req, res) => {
       isActive: false,
       isApproved: false,
       kycStatus: 'pending',
-      createdBy: user.id
+      createdBy: user.id || user._id,
+      assignedManagerId: user.id || user._id,
+      assignedManagerName: user.name || null,
+      assignedManagerRole: user.role || null,
+      assignedAt: new Date().toISOString()
     });
 
     // If originated from a field shop visit, link it immediately

@@ -317,7 +317,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
           </div>
         </div>
 
-        {/* Card 3: Assigned Pincode Manager */}
+        {/* Card 3: Assigned Field Manager */}
         <div style={{
           background: '#ffffff',
           borderRadius: '14px',
@@ -332,12 +332,17 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
             <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Assigned Field Manager
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '4px' }}>
-              {vendor.addedBy?.name || 'Shiva'}
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: (vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name) ? 'var(--text-main)' : 'var(--text-muted)', marginTop: '4px' }}>
+              {vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name || 'Assignment details unavailable'}
             </div>
             <div style={{ fontSize: '0.74rem', color: '#6366f1', marginTop: '2px', fontWeight: 600 }}>
-              {vendor.addedBy?.role === 'pincode_manager' ? 'Pincode Manager' : 'Field Supervisor'}
+              {vendor.assignedFieldManager?.designation || (vendor.assignedManagerRole ? vendor.assignedManagerRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : (vendor.addedBy?.role === 'pincode_manager' ? 'Pincode Manager' : (vendor.assignedFieldManager?.name ? 'Field Manager' : 'Unassigned')))}
             </div>
+            {vendor.fieldSupervisor?.name && (
+              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '3px', fontWeight: 500 }}>
+                Supervisor: {vendor.fieldSupervisor.name}
+              </div>
+            )}
           </div>
           <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={22} />
@@ -544,7 +549,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                   <div>
                     <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>Vendor Application Submitted</div>
                     <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                      Registered by {vendor.addedBy?.name || 'Field Manager'} on {formatDateSafe(vendor.createdAt)}
+                      Registered by {vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name || 'Field Manager'} on {formatDateSafe(vendor.createdAt)}
                     </div>
                   </div>
                 </div>

@@ -5,7 +5,7 @@ import {
   Lock, Upload, CheckCircle2, AlertCircle, Store, User,
   FileText, CreditCard, CheckCircle,
   ChevronRight, ChevronLeft, Eye, EyeOff, X,
-  Camera, BadgeCheck, Image as ImageIcon, Clock, Sparkles
+  Camera, BadgeCheck, Image as ImageIcon, Clock, Sparkles, Trash2
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -280,18 +280,43 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   });
   const [formData, setFormData] = useState(getBlank);
   const [errors, setErrors] = useState({});
+  const [touched, setTouched] = useState({});
+  const [fileFeedback, setFileFeedback] = useState(null);
 
   useEffect(() => {
     setFormData(getBlank());
   }, [initialData, prefill]);
-    const upd = (k, v) => {
-    setFormData(p => ({ ...p, [k]: v }));
-    if (errors[k]) setErrors(p => { const e = { ...p }; delete e[k]; return e; });
+
+  const upd = (k, v) => {
+    setFormData(p => {
+      const nextData = { ...p, [k]: v };
+      if (errors[k] || touched[k]) {
+        const err = validateField(k, v, nextData);
+        setErrors(prev => {
+          const nextErr = { ...prev };
+          if (err) nextErr[k] = err;
+          else delete nextErr[k];
+          return nextErr;
+        });
+      }
+      if (k === 'gstStatus') {
+        const gstErr = validateField('gstNumber', nextData.gstNumber, nextData);
+        setErrors(prev => {
+          const nextErr = { ...prev };
+          if (gstErr) nextErr.gstNumber = gstErr;
+          else delete nextErr.gstNumber;
+          return nextErr;
+        });
+      }
+      return nextData;
+    });
   };
+
   const onChange = e => {
     const { name, value, type, checked } = e.target;
     upd(name, type === "checkbox" ? checked : value);
   };
+
   const handleNameChange = e => {
     const raw = e.target.value;
     const clean = raw.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
@@ -441,87 +466,345 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     }
   };
 
-  const onLogo = e => { const f = e.target.files[0]; if (f) { upd('logo', f); upd('logoPreview', URL.createObjectURL(f)); } };
-  const onImgs = e => { const files = Array.from(e.target.files); const all = [...formData.businessImages, ...files].slice(0, 5); const prev = [...formData.businessImagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5); upd('businessImages', all); upd('businessImagePreviews', prev); };
-  const rmImg = idx => { upd('businessImages', formData.businessImages.filter((_, i) => i !== idx)); upd('businessImagePreviews', formData.businessImagePreviews.filter((_, i) => i !== idx)); };
-  const onLicense = e => { if (e.target.files[0]) upd('businessLicense', e.target.files[0]); };
-  const handleFileUpload = async (e) => { const file = e.target.files?.[0]; if (!file) return; setUploadingDoc(true); try { const r = await uploadService.uploadDocument(file); if (r.success && r.file) upd('documents', [...formData.documents, r.file]); } catch (err) { setGlobalError(err.message || 'Upload failed'); } finally { setUploadingDoc(false); } };
+  const onLogo = e => {
+    const f = e.target.files[0];
+    if (f) {
+      upd('logo', f);
+      upd('logoPreview', URL.createObjectURL(f));
+    }
+  };
 
-  const validate = s => {
-    const e = {};
-    if (s === 1) {
-      if (territoryConfigError) e.territory = territoryConfigError;
-      if (!formData.businessName.trim()) e.businessName = 'Business name is required';
-      else if (formData.businessName.trim().length > 100) e.businessName = 'Business name must not exceed 100 characters';
-      if (!formData.mobile.trim()) e.mobile = 'Phone number is required';
-      else if (!phoneOk(formData.mobile)) e.mobile = 'Must be 10 digits starting with 6-9';
-      if (!formData.email.trim()) e.email = 'Email is required';
-      else if (formData.email.trim().length > 100) e.email = 'Email must not exceed 100 characters';
-      else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) e.email = 'Invalid email';
-      if (!formData.address.trim()) e.address = 'Business address is required';
-      else if (formData.address.trim().length > 250) e.address = 'Business address must not exceed 250 characters';
+  const handleRemoveLogo = async (e) => {
+    if (e) e.stopPropagation();
+    try {
+      if (typeof formData.logo === 'string' && formData.logo.startsWith('/uploads')) {
+        await uploadService.deleteFile(formData.logo);
+      }
+    } catch (err) {
+      console.warn('Could not delete logo from server:', err);
+    }
+    setFormData(p => ({ ...p, logo: null, logoPreview: null }));
+    if (logoRef.current) logoRef.current.value = '';
+    setFileFeedback({ message: 'Shop logo removed' });
+    setTimeout(() => setFileFeedback(null), 2500);
+  };
 
-      // Role-Based Territory Field Scope Validations
-      if (isStateLocked && !userStateId && !userStateName) {
-        e.stateId = 'Assigned state is missing on manager account';
-      }
-      if (!isDistrictLocked && !formData.districtId) {
-        e.districtId = 'Please select a district within your state';
-      }
-      if (!isDivisionLocked && !formData.divisionId) {
-        e.divisionId = 'Please select a division within your district';
-      }
-      if (!isPincodeLocked && !formData.pincodeId) {
-        e.pincodeId = 'Please select a pincode within your scope';
-      }
-      if (isPincodeLocked && !userPincodeId && !userPincodeCode) {
-        e.pincodeId = 'Assigned pincode is missing on manager account';
-      }
-    }
-    if (s === 2) {
-      if (!formData.name.trim()) e.name = 'Owner name is required';
-      else if (formData.name.trim().length > 50) e.name = 'Owner name must not exceed 50 characters';
-      else if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(formData.name.trim())) e.name = 'Owner name must contain only letters and spaces';
-      if (formData.alternatePhone.trim() && !phoneOk(formData.alternatePhone)) e.alternatePhone = 'Must be 10 digits starting with 6-9';
-      if (!isEditing) {
-        if (!formData.password) e.password = 'Password is required';
-        else if (formData.password.length < 8) e.password = 'At least 8 characters';
-        if (!formData.confirmPassword) e.confirmPassword = 'Please confirm password';
-        else if (formData.password !== formData.confirmPassword) e.confirmPassword = 'Passwords do not match';
+  const onImgs = e => {
+    const files = Array.from(e.target.files);
+    const all = [...formData.businessImages, ...files].slice(0, 5);
+    const prev = [...formData.businessImagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5);
+    upd('businessImages', all);
+    upd('businessImagePreviews', prev);
+  };
+
+  const rmImg = async (idx) => {
+    const targetImg = formData.businessImages[idx];
+    if (typeof targetImg === 'string' && targetImg.startsWith('/uploads')) {
+      try {
+        await uploadService.deleteFile(targetImg);
+      } catch (err) {
+        console.warn('Could not delete image from server:', err);
       }
     }
-    if (s === 3) {
-      if (formData.panNumber.trim() && !panOk(formData.panNumber)) e.panNumber = 'Invalid PAN (e.g. ABCDE1234F)';
-      if (formData.aadhaarNumber.trim() && !aadhaarOk(formData.aadhaarNumber)) e.aadhaarNumber = 'Must be 12 digits';
+    upd('businessImages', formData.businessImages.filter((_, i) => i !== idx));
+    upd('businessImagePreviews', formData.businessImagePreviews.filter((_, i) => i !== idx));
+  };
+
+  const onLicense = e => {
+    if (e.target.files[0]) upd('businessLicense', e.target.files[0]);
+  };
+
+  const handleRemoveLicense = async (e) => {
+    if (e) e.stopPropagation();
+    try {
+      const cur = formData.businessLicense;
+      if (typeof cur === 'string' && cur.startsWith('/uploads')) {
+        await uploadService.deleteFile(cur);
+      } else if (cur?.url) {
+        await uploadService.deleteFile(cur.url);
+      }
+    } catch (err) {
+      console.warn('Could not delete license from server:', err);
     }
-    if (s === 4) {
-      if (formData.accountNumber.trim() && (formData.accountNumber.length < 9 || formData.accountNumber.length > 18)) e.accountNumber = 'Must be 9-18 digits';
-      if (formData.ifsc.trim() && !ifscOk(formData.ifsc)) e.ifsc = 'Invalid IFSC (e.g. HDFC0001234)';
+    setFormData(p => ({ ...p, businessLicense: null }));
+    if (licenseRef.current) licenseRef.current.value = '';
+    setFileFeedback({ message: 'Business document removed' });
+    setTimeout(() => setFileFeedback(null), 2500);
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingDoc(true);
+    try {
+      const r = await uploadService.uploadDocument(file);
+      if (r.success && r.file) {
+        upd('documents', [...formData.documents, r.file]);
+        setFileFeedback({ message: `"${file.name}" uploaded successfully` });
+        setTimeout(() => setFileFeedback(null), 2500);
+      }
+    } catch (err) {
+      setGlobalError(err.message || 'Upload failed');
+    } finally {
+      setUploadingDoc(false);
+      if (e.target) e.target.value = '';
     }
-    if (s === 5 && !formData.declaration) e.declaration = 'Please accept the declaration to proceed';
-    return e;
+  };
+
+  const handleRemoveDocument = async (idx, doc) => {
+    const isApproved = initialData && ['Approved', 'Active', 'Completed'].includes(initialData.status);
+    if (isApproved) {
+      setGlobalError('Cannot delete documents permanently associated with an approved vendor.');
+      return;
+    }
+    try {
+      if (doc?.url) {
+        await uploadService.deleteFile(doc.url);
+      }
+    } catch (err) {
+      console.warn('Could not delete document from server:', err);
+    }
+    setFormData(p => ({
+      ...p,
+      documents: (p.documents || []).filter((_, i) => i !== idx)
+    }));
+    setFileFeedback({ message: `"${doc?.name || 'Document'}" removed` });
+    setTimeout(() => setFileFeedback(null), 2500);
+  };
+
+  const validateField = (name, val, allData = formData) => {
+    const value = val !== undefined && val !== null ? val : '';
+    const strVal = typeof value === 'string' ? value.trim() : value;
+
+    switch (name) {
+      case 'businessName':
+        if (!strVal) return 'Business name is required';
+        if (strVal.length > 100) return 'Business name must not exceed 100 characters';
+        return '';
+
+      case 'category':
+        if (!strVal) return 'Product/service category is required';
+        return '';
+
+      case 'mobile':
+        if (!strVal) return 'Business phone number is required';
+        if (!phoneOk(String(value))) return 'Must be 10 digits starting with 6-9';
+        return '';
+
+      case 'email':
+        if (!strVal) return 'Email address is required';
+        if (strVal.length > 100) return 'Email must not exceed 100 characters';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(strVal)) return 'Invalid email format (e.g. vendor@business.com)';
+        return '';
+
+      case 'address':
+        if (!strVal) return 'Business address is required';
+        if (strVal.length > 250) return 'Business address must not exceed 250 characters';
+        return '';
+
+      case 'website':
+        if (strVal) {
+          try {
+            const testUrl = strVal.startsWith('http://') || strVal.startsWith('https://') ? strVal : 'https://' + strVal;
+            new URL(testUrl);
+          } catch (e) {
+            return 'Invalid website URL format (e.g. https://yourbusiness.com)';
+          }
+        }
+        return '';
+
+      case 'districtId':
+        if (!isDistrictLocked && !value) return 'Please select a district within your state';
+        return '';
+
+      case 'divisionId':
+        if (!isDivisionLocked && !value) return 'Please select a division within your district';
+        return '';
+
+      case 'pincodeId':
+        if (!isPincodeLocked && !value) return 'Please select a pincode within your scope';
+        if (isPincodeLocked && !userPincodeId && !userPincodeCode) return 'Assigned pincode is missing on manager account';
+        return '';
+
+      case 'name':
+        if (!strVal) return 'Owner / contact person name is required';
+        if (strVal.length > 50) return 'Owner name must not exceed 50 characters';
+        if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(strVal)) return 'Owner name must contain only letters and spaces';
+        return '';
+
+      case 'alternatePhone':
+        if (strVal && !phoneOk(String(value))) return 'Must be 10 digits starting with 6-9';
+        return '';
+
+      case 'password':
+        if (!isEditing) {
+          if (!value) return 'Account password is required';
+          if (String(value).length < 8) return 'Password must be at least 8 characters';
+        }
+        return '';
+
+      case 'confirmPassword':
+        if (!isEditing) {
+          if (!value) return 'Please confirm password';
+          if (value !== allData.password) return 'Passwords do not match';
+        }
+        return '';
+
+      case 'panNumber':
+        if (strVal && !panOk(strVal)) return 'Invalid PAN format (e.g. ABCDE1234F)';
+        return '';
+
+      case 'aadhaarNumber':
+        if (strVal && !aadhaarOk(String(value))) return 'Aadhaar must be 12 digits';
+        return '';
+
+      case 'gstNumber':
+        if (allData.gstStatus === 'Registered') {
+          if (!strVal) return 'GST number is required when GST status is Registered';
+          if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(strVal.toUpperCase())) {
+            return 'Invalid 15-character GSTIN format (e.g. 29ABCDE1234F1Z5)';
+          }
+        } else if (strVal) {
+          if (!/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(strVal.toUpperCase())) {
+            return 'Invalid 15-character GSTIN format (e.g. 29ABCDE1234F1Z5)';
+          }
+        }
+        return '';
+
+      case 'accountNumber':
+        if (strVal) {
+          const digits = String(value).replace(/\D/g, '');
+          if (digits.length < 9 || digits.length > 18) return 'Account number must be 9-18 digits';
+        }
+        return '';
+
+      case 'ifsc':
+        if (strVal && !ifscOk(strVal)) return 'Invalid IFSC code (e.g. HDFC0001234)';
+        return '';
+
+      case 'declaration':
+        if (!value) return 'Please accept the declaration to proceed';
+        return '';
+
+      default:
+        return '';
+    }
+  };
+
+  const handleBlur = (e) => {
+    const { name, value, type, checked } = e.target;
+    const val = type === 'checkbox' ? checked : value;
+    setTouched(p => ({ ...p, [name]: true }));
+    const err = validateField(name, val, formData);
+    if (err) {
+      setErrors(p => ({ ...p, [name]: err }));
+    } else {
+      setErrors(p => {
+        const next = { ...p };
+        delete next[name];
+        return next;
+      });
+    }
+  };
+
+  const getStepFields = (s) => {
+    switch (s) {
+      case 1:
+        return [
+          'businessName', 'category', 'mobile', 'email', 'address', 'website',
+          ...(!isDistrictLocked ? ['districtId'] : []),
+          ...(!isDivisionLocked ? ['divisionId'] : []),
+          ...(!isPincodeLocked ? ['pincodeId'] : [])
+        ];
+      case 2:
+        return [
+          'name', 'alternatePhone',
+          ...(!isEditing ? ['password', 'confirmPassword'] : [])
+        ];
+      case 3:
+        return ['panNumber', 'aadhaarNumber', 'gstNumber'];
+      case 4:
+        return ['accountNumber', 'ifsc'];
+      case 5:
+        return ['declaration'];
+      default:
+        return [];
+    }
+  };
+
+  const validateStep = (s) => {
+    const fields = getStepFields(s);
+    const newErrors = {};
+    if (s === 1 && territoryConfigError) {
+      newErrors.territory = territoryConfigError;
+    }
+    fields.forEach(f => {
+      const err = validateField(f, formData[f], formData);
+      if (err) newErrors[f] = err;
+    });
+    return newErrors;
   };
 
   const next = () => {
-    const e = validate(step);
-    if (Object.keys(e).length) {
-      setErrors(e);
-      if (e.territory) setGlobalError(e.territory);
+    const errs = validateStep(step);
+    const touchedStep = {};
+    getStepFields(step).forEach(f => { touchedStep[f] = true; });
+    setTouched(p => ({ ...p, ...touchedStep }));
+
+    if (Object.keys(errs).length > 0) {
+      setErrors(prev => ({ ...prev, ...errs }));
+      if (errs.territory) setGlobalError(errs.territory);
+      const firstField = Object.keys(errs)[0];
+      setTimeout(() => {
+        const el = document.querySelector(`[name="${firstField}"]`);
+        if (el) {
+          el.focus();
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 50);
       return;
     }
     setErrors({});
+    setGlobalError('');
     setStep(s => s + 1);
   };
-  const prev = () => { setErrors({}); setStep(s => s - 1); };
+
+  const prev = () => {
+    setErrors({});
+    setGlobalError('');
+    setStep(s => s - 1);
+  };
 
   const handleSubmit = async () => {
-    const e = validate(5);
-    const step1Errors = validate(1);
-    const combinedErrors = { ...step1Errors, ...e };
+    let firstFailingStep = null;
+    let allErrors = {};
 
-    if (Object.keys(combinedErrors).length) {
-      setErrors(combinedErrors);
-      setGlobalError(step1Errors.territory || step1Errors.districtId || step1Errors.divisionId || step1Errors.pincodeId || 'Please fix all required fields before submitting.');
+    for (let s = 1; s <= 5; s++) {
+      const stepErrs = validateStep(s);
+      if (Object.keys(stepErrs).length > 0) {
+        if (!firstFailingStep) firstFailingStep = s;
+        allErrors = { ...allErrors, ...stepErrs };
+      }
+    }
+
+    if (firstFailingStep) {
+      setErrors(allErrors);
+      const allTouched = {};
+      for (let s = 1; s <= 5; s++) {
+        getStepFields(s).forEach(f => { allTouched[f] = true; });
+      }
+      setTouched(allTouched);
+      setStep(firstFailingStep);
+      setGlobalError('Please fix the highlighted required fields before submitting.');
+
+      const firstField = Object.keys(allErrors)[0];
+      setTimeout(() => {
+        const el = document.querySelector(`[name="${firstField}"]`);
+        if (el) {
+          el.focus();
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
       return;
     }
 
@@ -551,20 +834,55 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const hb={onMouseEnter:e=>e.currentTarget.style.borderColor='var(--primary)',onMouseLeave:e=>e.currentTarget.style.borderColor='var(--border)'};
   const step1=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Business / Shop Name" required error={errors.businessName}><input type="text" name="businessName" maxLength={100} value={formData.businessName} onChange={onChange} placeholder="e.g. Spice Route Bistro" className="form-input" style={inp(!!errors.businessName)}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Business / Shop Name" required error={errors.businessName}><input type="text" name="businessName" maxLength={100} value={formData.businessName} onChange={onChange} onBlur={handleBlur} placeholder="e.g. Spice Route Bistro" className="form-input" style={inp(!!errors.businessName)}/></Field></div>
       <div style={{gridColumn:'1/-1'}}>
-        <label className="form-label">Shop / Brand Logo</label>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <label className="form-label" style={{ margin: 0 }}>Shop / Brand Logo</label>
+          {(formData.logo || formData.logoPreview) && (
+            <button
+              type="button"
+              onClick={handleRemoveLogo}
+              title="Remove shop logo"
+              style={{
+                background: '#fee2e2',
+                border: '1px solid #fecaca',
+                color: '#dc2626',
+                borderRadius: '6px',
+                padding: '3px 8px',
+                fontSize: 11,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+            >
+              <Trash2 size={12} /> Remove
+            </button>
+          )}
+        </div>
         <div onClick={()=>logoRef.current?.click()} style={dashedBox} {...hb}>
-          {formData.logoPreview?<img src={formData.logoPreview} alt="logo" style={{width:40,height:40,borderRadius:8,objectFit:'cover',border:'1px solid var(--border)',flexShrink:0}}/>:<div style={{width:40,height:40,borderRadius:8,background:'var(--surface)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}><Camera size={18} color="var(--text-muted)"/></div>}
-          <div><div style={{fontSize:12,fontWeight:600,color:'var(--primary)'}}>{formData.logo?formData.logo.name:'Click to upload logo'}</div><div style={{fontSize:11,color:'var(--text-muted)'}}>PNG, JPG up to 2MB</div></div>
+          {formData.logoPreview ? (
+            <img src={formData.logoPreview} alt="logo" style={{width:40,height:40,borderRadius:8,objectFit:'cover',border:'1px solid var(--border)',flexShrink:0}}/>
+          ) : (
+            <div style={{width:40,height:40,borderRadius:8,background:'var(--surface)',border:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+              <Camera size={18} color="var(--text-muted)"/>
+            </div>
+          )}
+          <div style={{ flex: 1 }}>
+            <div style={{fontSize:12,fontWeight:600,color:'var(--primary)'}}>
+              {formData.logo ? (formData.logo.name || 'Logo attached') : 'Click to upload logo'}
+            </div>
+            <div style={{fontSize:11,color:'var(--text-muted)'}}>PNG, JPG up to 2MB</div>
+          </div>
           <input ref={logoRef} type="file" accept="image/*" style={{display:'none'}} onChange={onLogo}/>
         </div>
       </div>
-      <Field label="Product / Service Category" required><select name="category" value={formData.category} onChange={onChange} className="form-select" style={inp()}>{(CATEGORIES || []).map(c=><option key={c}>{c}</option>)}</select></Field>
-      <Field label="Business Phone" required error={errors.mobile}><input type="tel" name="mobile" value={formData.mobile} maxLength={10} onChange={e=>upd('mobile',e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="10-digit mobile number" className="form-input" style={inp(!!errors.mobile)}/></Field>
-      <Field label="Email Address" required error={errors.email}><input type="email" name="email" maxLength={100} value={formData.email} onChange={onChange} placeholder="vendor@business.com" className="form-input" style={inp(!!errors.email)}/></Field>
-      <Field label="Business Website (Optional)"><input type="url" name="website" value={formData.website} onChange={onChange} placeholder="https://yourwebsite.com" className="form-input" style={inp()}/></Field>
-      <div style={{gridColumn:'1/-1'}}><Field label="Business Address" required error={errors.address}><input type="text" name="address" maxLength={250} value={formData.address} onChange={onChange} placeholder="Street, Area, City" className="form-input" style={inp(!!errors.address)}/></Field></div>
+      <Field label="Product / Service Category" required error={errors.category}><select name="category" value={formData.category} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp(!!errors.category)}>{(CATEGORIES || []).map(c=><option key={c}>{c}</option>)}</select></Field>
+      <Field label="Business Phone" required error={errors.mobile}><input type="tel" name="mobile" value={formData.mobile} maxLength={10} onChange={e=>upd('mobile',e.target.value.replace(/\D/g,'').slice(0,10))} onBlur={handleBlur} placeholder="10-digit mobile number" className="form-input" style={inp(!!errors.mobile)}/></Field>
+      <Field label="Email Address" required error={errors.email}><input type="email" name="email" maxLength={100} value={formData.email} onChange={onChange} onBlur={handleBlur} placeholder="vendor@business.com" className="form-input" style={inp(!!errors.email)}/></Field>
+      <Field label="Business Website (Optional)" error={errors.website}><input type="url" name="website" value={formData.website} onChange={onChange} onBlur={handleBlur} placeholder="https://yourwebsite.com" className="form-input" style={inp(!!errors.website)}/></Field>
+      <div style={{gridColumn:'1/-1'}}><Field label="Business Address" required error={errors.address}><input type="text" name="address" maxLength={250} value={formData.address} onChange={onChange} onBlur={handleBlur} placeholder="Street, Area, City" className="form-input" style={inp(!!errors.address)}/></Field></div>
             {/* Business Operating Hours - Set Time Slot Method */}
       <div style={{ gridColumn: '1 / -1', marginTop: 6, marginBottom: 6 }}>
         <div style={{
@@ -942,30 +1260,70 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   );
   const step2=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Owner / Contact Person Name" required error={errors.name}><input type="text" name="name" maxLength={50} value={formData.name} onChange={handleNameChange} placeholder="Full legal name" className="form-input" style={inp(!!errors.name)}/></Field></div>
-      <Field label="Alternate Phone (Optional)" error={errors.alternatePhone}><input type="tel" name="alternatePhone" value={formData.alternatePhone||''} maxLength={10} onChange={e=>upd('alternatePhone',e.target.value.replace(/\D/g,'').slice(0,10))} placeholder="Alternate number" className="form-input" style={inp(!!errors.alternatePhone)}/></Field>
-      <Field label="Agent Name (Optional)"><input type="text" name="agentName" value={formData.agentName||''} onChange={onChange} placeholder="Agent name" className="form-input" style={inp()}/></Field>
-      <div style={{gridColumn:'1/-1'}}><Field label="Co-partner Name (Optional)"><input type="text" name="coPartnerName" value={formData.coPartnerName||''} onChange={onChange} placeholder="Co-partner name" className="form-input" style={inp()}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Owner / Contact Person Name" required error={errors.name}><input type="text" name="name" maxLength={50} value={formData.name} onChange={handleNameChange} onBlur={handleBlur} placeholder="Full legal name" className="form-input" style={inp(!!errors.name)}/></Field></div>
+      <Field label="Alternate Phone (Optional)" error={errors.alternatePhone}><input type="tel" name="alternatePhone" value={formData.alternatePhone||''} maxLength={10} onChange={e=>upd('alternatePhone',e.target.value.replace(/\D/g,'').slice(0,10))} onBlur={handleBlur} placeholder="Alternate number" className="form-input" style={inp(!!errors.alternatePhone)}/></Field>
+      <Field label="Agent Name (Optional)"><input type="text" name="agentName" value={formData.agentName||''} onChange={onChange} onBlur={handleBlur} placeholder="Agent name" className="form-input" style={inp()}/></Field>
+      <div style={{gridColumn:'1/-1'}}><Field label="Co-partner Name (Optional)"><input type="text" name="coPartnerName" value={formData.coPartnerName||''} onChange={onChange} onBlur={handleBlur} placeholder="Co-partner name" className="form-input" style={inp()}/></Field></div>
       {!isEditing&&(<>
-        <Field label="Account Password" required error={errors.password}><div style={{position:'relative'}}><input type={showPw?'text':'password'} name="password" value={formData.password} onChange={onChange} placeholder="Min. 8 characters" className="form-input" style={{...inp(!!errors.password),paddingRight:36}}/><button type="button" onClick={()=>setShowPw(p=>!p)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',display:'flex'}}>{showPw?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></Field>
-        <Field label="Confirm Password" required error={errors.confirmPassword}><div style={{position:'relative'}}><input type={showCPw?'text':'password'} name="confirmPassword" value={formData.confirmPassword} onChange={onChange} placeholder="Re-enter password" className="form-input" style={{...inp(!!errors.confirmPassword),paddingRight:36}}/><button type="button" onClick={()=>setShowCPw(p=>!p)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',display:'flex'}}>{showCPw?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></Field>
+        <Field label="Account Password" required error={errors.password}><div style={{position:'relative'}}><input type={showPw?'text':'password'} name="password" value={formData.password} onChange={onChange} onBlur={handleBlur} placeholder="Min. 8 characters" className="form-input" style={{...inp(!!errors.password),paddingRight:36}}/><button type="button" onClick={()=>setShowPw(p=>!p)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',display:'flex'}}>{showPw?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></Field>
+        <Field label="Confirm Password" required error={errors.confirmPassword}><div style={{position:'relative'}}><input type={showCPw?'text':'password'} name="confirmPassword" value={formData.confirmPassword} onChange={onChange} onBlur={handleBlur} placeholder="Re-enter password" className="form-input" style={{...inp(!!errors.confirmPassword),paddingRight:36}}/><button type="button" onClick={()=>setShowCPw(p=>!p)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',display:'flex'}}>{showCPw?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></Field>
       </>)}
     </div>
   );
 
   const step3=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10))} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
-      <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',e.target.value.replace(/\D/g,'').slice(0,12))} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
-      <Field label="GST Number"><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} placeholder="e.g. 29ABCDE1234F1Z5" className="form-input" style={{...inp(),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
-      <div style={{gridColumn:'1/-1'}}><Field label="Company Registration Number (Optional)"><input type="text" name="companyRegNumber" value={formData.companyRegNumber||''} onChange={onChange} placeholder="Optional" className="form-input" style={inp()}/></Field></div>
-      <Field label="GST Status"><select name="gstStatus" value={formData.gstStatus||'Registered'} onChange={onChange} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
-      <Field label="MSME Status"><select name="msmeStatus" value={formData.msmeStatus||'Not Registered'} onChange={onChange} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
+      <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10))} onBlur={handleBlur} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
+      <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',e.target.value.replace(/\D/g,'').slice(0,12))} onBlur={handleBlur} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
+      <Field label="GST Number" error={errors.gstNumber}><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} onBlur={handleBlur} placeholder="e.g. 29ABCDE1234F1Z5" className="form-input" style={{...inp(!!errors.gstNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <div style={{gridColumn:'1/-1'}}><Field label="Company Registration Number (Optional)"><input type="text" name="companyRegNumber" value={formData.companyRegNumber||''} onChange={onChange} onBlur={handleBlur} placeholder="Optional" className="form-input" style={inp()}/></Field></div>
+      <Field label="GST Status"><select name="gstStatus" value={formData.gstStatus||'Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
+      <Field label="MSME Status"><select name="msmeStatus" value={formData.msmeStatus||'Not Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
       <div style={{gridColumn:'1/-1'}}>
-        <label className="form-label">Business License / Document</label>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <label className="form-label" style={{ margin: 0 }}>Business License / Document</label>
+          {formData.businessLicense && (
+            <button
+              type="button"
+              onClick={handleRemoveLicense}
+              title="Remove business license"
+              style={{
+                background: '#fee2e2',
+                border: '1px solid #fecaca',
+                color: '#dc2626',
+                borderRadius: '6px',
+                padding: '3px 8px',
+                fontSize: 11,
+                fontWeight: 700,
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 4,
+                cursor: 'pointer'
+              }}
+            >
+              <Trash2 size={12} /> Remove
+            </button>
+          )}
+        </div>
         <div onClick={()=>licenseRef.current?.click()} style={dashedBox} {...hb}>
-          <div style={{width:36,height:36,borderRadius:8,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:formData.businessLicense?'#d1fae5':'var(--surface)',border:'1px solid var(--border)'}}>{formData.businessLicense?<CheckCircle2 size={18} color="#10b981"/>:<Upload size={18} color="var(--text-muted)"/>}</div>
-          <div>{formData.businessLicense?<><div style={{fontSize:12,fontWeight:600,color:'#10b981'}}>File uploaded</div><div style={{fontSize:11,color:'var(--text-muted)',maxWidth:260,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>{formData.businessLicense.name}</div></>:<><div style={{fontSize:12,fontWeight:600,color:'var(--primary)'}}>Click to upload business document</div><div style={{fontSize:11,color:'var(--text-muted)'}}>PDF, JPG, PNG up to 5MB</div></>}</div>
+          <div style={{width:36,height:36,borderRadius:8,flexShrink:0,display:'flex',alignItems:'center',justifyContent:'center',background:formData.businessLicense?'#d1fae5':'var(--surface)',border:'1px solid var(--border)'}}>
+            {formData.businessLicense ? <CheckCircle2 size={18} color="#10b981"/> : <Upload size={18} color="var(--text-muted)"/>}
+          </div>
+          <div style={{ flex: 1 }}>
+            {formData.businessLicense ? (
+              <>
+                <div style={{fontSize:12,fontWeight:600,color:'#10b981'}}>File attached</div>
+                <div style={{fontSize:11,color:'var(--text-muted)',maxWidth:260,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>
+                  {formData.businessLicense.name || (typeof formData.businessLicense === 'string' ? formData.businessLicense.split('/').pop() : 'Business Document')}
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{fontSize:12,fontWeight:600,color:'var(--primary)'}}>Click to upload business document</div>
+                <div style={{fontSize:11,color:'var(--text-muted)'}}>PDF, JPG, PNG up to 5MB</div>
+              </>
+            )}
+          </div>
           <input ref={licenseRef} type="file" accept=".pdf,image/*" style={{display:'none'}} onChange={onLicense}/>
         </div>
       </div>
@@ -977,20 +1335,58 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} disabled={uploadingDoc} style={{fontSize:'0.83rem'}}/>
           {uploadingDoc&&<span style={{fontSize:'0.8rem',color:'var(--primary)'}}> Uploading...</span>}
         </div>
-        {formData.documents?.length>0&&<div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>{(formData.documents || []).map((doc,idx)=>(<div key={idx} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'7px 12px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:6,fontSize:12}}><span style={{display:'flex',alignItems:'center',gap:6}}><CheckCircle2 size={13} color="#10b981"/><strong>{doc.name}</strong></span><a href={doc.url} target="_blank" rel="noreferrer" style={{color:'var(--primary)',fontWeight:600}}>View</a></div>))}</div>}
+        {formData.documents?.length > 0 && (
+          <div style={{marginTop:10,display:'flex',flexDirection:'column',gap:6}}>
+            {(formData.documents || []).map((doc,idx)=>(
+              <div key={idx} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:6,fontSize:12}}>
+                <span style={{display:'flex',alignItems:'center',gap:8,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',maxWidth:'70%'}}>
+                  <CheckCircle2 size={15} color="#10b981" style={{ flexShrink: 0 }}/>
+                  <strong style={{ fontWeight: 600, color: '#334155' }}>{doc.name || 'KYC Document'}</strong>
+                </span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+                  {doc.url && (
+                    <a href={doc.url} target="_blank" rel="noreferrer" style={{color:'var(--primary)',fontWeight:700,textDecoration:'none',fontSize:12}}>
+                      View
+                    </a>
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveDocument(idx, doc)}
+                    title={`Remove ${doc.name || 'document'}`}
+                    style={{
+                      background: '#fee2e2',
+                      border: '1px solid #fecaca',
+                      color: '#dc2626',
+                      borderRadius: '5px',
+                      padding: '3px 8px',
+                      fontSize: 11,
+                      fontWeight: 700,
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <Trash2 size={12} /> Remove
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
 
   const step4=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={onChange} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
-      <Field label="Bank Name" error={errors.bankName}><input type="text" name="bankName" value={formData.bankName} onChange={onChange} placeholder="e.g. HDFC Bank" className="form-input" style={inp(!!errors.bankName)}/></Field>
-      <Field label="Bank Branch" error={errors.bankBranch}><input type="text" name="bankBranch" value={formData.bankBranch||''} onChange={onChange} placeholder="Branch name" className="form-input" style={inp(!!errors.bankBranch)}/></Field>
-      <Field label="Bank Street (Optional)"><input type="text" name="bankStreet" value={formData.bankStreet||''} onChange={onChange} placeholder="Street address" className="form-input" style={inp()}/></Field>
-      <Field label="Bank City (Optional)"><input type="text" name="bankCity" value={formData.bankCity||''} onChange={onChange} placeholder="City" className="form-input" style={inp()}/></Field>
-      <Field label="Account Number" error={errors.accountNumber}><input type="text" name="accountNumber" value={formData.accountNumber} maxLength={18} onChange={e=>upd('accountNumber',e.target.value.replace(/\D/g,'').slice(0,18))} placeholder="Bank Account Number" className="form-input" style={{...inp(!!errors.accountNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
-      <Field label="IFSC Code" error={errors.ifsc}><input type="text" name="ifsc" value={formData.ifsc} maxLength={11} onChange={e=>upd('ifsc',e.target.value.toUpperCase().slice(0,11))} placeholder="e.g. HDFC0001234" className="form-input" style={{...inp(!!errors.ifsc),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={onChange} onBlur={handleBlur} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
+      <Field label="Bank Name" error={errors.bankName}><input type="text" name="bankName" value={formData.bankName} onChange={onChange} onBlur={handleBlur} placeholder="e.g. HDFC Bank" className="form-input" style={inp(!!errors.bankName)}/></Field>
+      <Field label="Bank Branch" error={errors.bankBranch}><input type="text" name="bankBranch" value={formData.bankBranch||''} onChange={onChange} onBlur={handleBlur} placeholder="Branch name" className="form-input" style={inp(!!errors.bankBranch)}/></Field>
+      <Field label="Bank Street (Optional)"><input type="text" name="bankStreet" value={formData.bankStreet||''} onChange={onChange} onBlur={handleBlur} placeholder="Street address" className="form-input" style={inp()}/></Field>
+      <Field label="Bank City (Optional)"><input type="text" name="bankCity" value={formData.bankCity||''} onChange={onChange} onBlur={handleBlur} placeholder="City" className="form-input" style={inp()}/></Field>
+      <Field label="Account Number" error={errors.accountNumber}><input type="text" name="accountNumber" value={formData.accountNumber} maxLength={18} onChange={e=>upd('accountNumber',e.target.value.replace(/\D/g,'').slice(0,18))} onBlur={handleBlur} placeholder="Bank Account Number" className="form-input" style={{...inp(!!errors.accountNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <Field label="IFSC Code" error={errors.ifsc}><input type="text" name="ifsc" value={formData.ifsc} maxLength={11} onChange={e=>upd('ifsc',e.target.value.toUpperCase().slice(0,11))} onBlur={handleBlur} placeholder="e.g. HDFC0001234" className="form-input" style={{...inp(!!errors.ifsc),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
     </div>
   );
 
@@ -1015,6 +1411,24 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   return (
     <div>
       <StepBar current={step}/>
+      {fileFeedback && (
+        <div style={{
+          padding: '8px 14px',
+          background: '#ecfdf5',
+          border: '1px solid #a7f3d0',
+          borderRadius: 8,
+          color: '#065f46',
+          marginBottom: 14,
+          fontSize: 12,
+          fontWeight: 600,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6
+        }}>
+          <CheckCircle2 size={14} color="#059669" />
+          <span>{fileFeedback.message}</span>
+        </div>
+      )}
       {globalError&&<div style={{padding:'10px 14px',background:'#fee2e2',border:'1px solid #fca5a5',borderRadius:8,color:'#b91c1c',marginBottom:18,display:'flex',alignItems:'center',gap:8,fontSize:13}}><AlertCircle size={16}/><span>{globalError}</span></div>}
       <div className="card" style={{marginBottom:20}}>
         <div className="card-header"><h3 style={{fontSize:'1rem',fontWeight:700,margin:0}}>Step {step} of {STEPS.length} — {STEPS[step-1].label}</h3></div>
