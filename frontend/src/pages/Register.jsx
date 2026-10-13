@@ -110,8 +110,22 @@ export default function Register({
   const [email, setEmail] = useState(initialUser?.email || '');
   const [mobile, setMobile] = useState(initialUser?.mobile || '');
   const [dob, setDob] = useState(initialUser?.dob || '');
-  const [gender, setGender] = useState(initialUser?.gender || 'male');
-  const [address, setAddress] = useState(initialUser?.address || '');
+  const [addressFields, setAddressFields] = useState({
+    doorNumberStreet: initialUser?.residentialAddress?.doorNumberStreet || initialUser?.doorNumberStreet || (typeof initialUser?.address === 'string' ? initialUser.address : '') || '',
+    villageTown: initialUser?.residentialAddress?.villageTown || initialUser?.villageTown || '',
+    postOffice: initialUser?.residentialAddress?.postOffice || initialUser?.postOffice || '',
+    taluk: initialUser?.residentialAddress?.taluk || initialUser?.taluk || '',
+    district: initialUser?.residentialAddress?.district || initialUser?.district || '',
+    state: initialUser?.residentialAddress?.state || initialUser?.state || '',
+    pincode: initialUser?.residentialAddress?.pincode || initialUser?.pincode || ''
+  });
+
+  const handleAddressChange = (field, value) => {
+    setAddressFields(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -555,12 +569,33 @@ export default function Register({
       return;
     }
 
-    if (!address.trim()) {
-      setError('Please enter your residential / operational address.');
+    if (!addressFields.doorNumberStreet.trim()) {
+      setError('Please enter Door Number / Street Name.');
       return;
     }
-    if (address.trim().length > 250) {
-      setError('Residential address must not exceed 250 characters.');
+    if (!addressFields.villageTown.trim()) {
+      setError('Please enter Village / Town Name.');
+      return;
+    }
+    if (!addressFields.postOffice.trim()) {
+      setError('Please enter Post Office.');
+      return;
+    }
+    if (!addressFields.taluk.trim()) {
+      setError('Please enter Taluk.');
+      return;
+    }
+    if (!addressFields.district.trim()) {
+      setError('Please enter District for residential address.');
+      return;
+    }
+    if (!addressFields.state.trim()) {
+      setError('Please enter State for residential address.');
+      return;
+    }
+    const cleanAddressPin = addressFields.pincode.trim().replace(/\D/g, '');
+    if (!/^[1-9][0-9]{5}$/.test(cleanAddressPin)) {
+      setError('Please enter a valid 6-digit Indian PIN Code starting with 1–9.');
       return;
     }
 
@@ -734,7 +769,24 @@ export default function Register({
         mobile: mobile.trim(),
         dob,
         gender,
-        address: address.trim(),
+        address: [
+          addressFields.doorNumberStreet.trim(),
+          addressFields.villageTown.trim(),
+          addressFields.postOffice.trim() ? `PO: ${addressFields.postOffice.trim()}` : '',
+          addressFields.taluk.trim() ? `Taluk: ${addressFields.taluk.trim()}` : '',
+          addressFields.district.trim(),
+          addressFields.state.trim(),
+          `PIN: ${addressFields.pincode.trim().replace(/\D/g, '')}`
+        ].filter(Boolean).join(', '),
+        residentialAddress: {
+          doorNumberStreet: addressFields.doorNumberStreet.trim(),
+          villageTown: addressFields.villageTown.trim(),
+          postOffice: addressFields.postOffice.trim(),
+          taluk: addressFields.taluk.trim(),
+          district: addressFields.district.trim(),
+          state: addressFields.state.trim(),
+          pincode: addressFields.pincode.trim().replace(/\D/g, '')
+        },
         password,
         role,
         aadharNumber: cleanAadhar,
@@ -1280,21 +1332,145 @@ export default function Register({
                     </div>
                   </div>
 
-                  {/* Residential / Operational Address */}
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Residential / Operational Address *</label>
-                    <div style={{ position: 'relative' }}>
+                  {/* Residential / Operational Address (7 Separate Fields) */}
+                  <div style={{
+                    background: '#f8fafc',
+                    border: '1px solid #e2e8f0',
+                    borderRadius: '8px',
+                    padding: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
+                      <Home size={14} style={{ color: 'var(--primary, #0ea5e9)' }} />
+                      Residential / Operational Address *
+                    </div>
+
+                    {/* Field 1: Door Number / Street Name (Full width) */}
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                        1. Door Number / Street Name *
+                      </label>
                       <input
                         type="text"
                         required
-                        maxLength={250}
+                        autoComplete="address-line1"
                         className="form-input"
-                        style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
-                        placeholder="House/Flat No., Street, Area, City, State, PIN"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
+                        style={{ height: '36px', fontSize: '0.82rem' }}
+                        placeholder="e.g. Door No. 12/4B, North Car Street"
+                        value={addressFields.doorNumberStreet}
+                        onChange={(e) => handleAddressChange('doorNumberStreet', e.target.value)}
                       />
-                      <Home size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
+                    </div>
+
+                    {/* Row 2: Village/Town & Post Office (2 Columns) */}
+                    <div className="responsive-grid-2" style={{ gap: '10px' }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                          2. Village / Town Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          autoComplete="address-level3"
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          placeholder="e.g. Anna Nagar / Mettur"
+                          value={addressFields.villageTown}
+                          onChange={(e) => handleAddressChange('villageTown', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                          3. Post Office *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          autoComplete="off"
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          placeholder="e.g. Mettur Dam SO"
+                          value={addressFields.postOffice}
+                          onChange={(e) => handleAddressChange('postOffice', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 3: Taluk & District (2 Columns) */}
+                    <div className="responsive-grid-2" style={{ gap: '10px' }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                          4. Taluk *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          autoComplete="off"
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          placeholder="e.g. Mettur Taluk"
+                          value={addressFields.taluk}
+                          onChange={(e) => handleAddressChange('taluk', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                          5. District *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          autoComplete="address-level2"
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          placeholder="e.g. Salem"
+                          value={addressFields.district}
+                          onChange={(e) => handleAddressChange('district', e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    {/* Row 4: State & PIN Code (2 Columns) */}
+                    <div className="responsive-grid-2" style={{ gap: '10px' }}>
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                          6. State *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          autoComplete="address-level1"
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          placeholder="e.g. Tamil Nadu"
+                          value={addressFields.state}
+                          onChange={(e) => handleAddressChange('state', e.target.value)}
+                        />
+                      </div>
+
+                      <div className="form-group" style={{ margin: 0 }}>
+                        <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
+                          7. PIN Code (6 Digits) *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={6}
+                          autoComplete="postal-code"
+                          className="form-input"
+                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          placeholder="e.g. 636401"
+                          value={addressFields.pincode}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                            handleAddressChange('pincode', val);
+                          }}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -2363,10 +2539,24 @@ export default function Register({
                   </div>
                 </div>
 
-                {registeredUser.address && (
+                {(registeredUser.residentialAddress || registeredUser.address) && (
                   <div style={{ fontSize: '0.82rem', padding: '10px 12px', background: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: '#64748b', fontSize: '0.72rem', fontWeight: 700, textTransform: 'uppercase' }}>Residential Address:</span>
-                    <div style={{ color: '#334155', marginTop: '2px', fontWeight: 500 }}>{registeredUser.address}</div>
+                    <div style={{ color: '#334155', marginTop: '2px', fontWeight: 500 }}>
+                      {typeof registeredUser.residentialAddress === 'object' && registeredUser.residentialAddress
+                        ? [
+                            registeredUser.residentialAddress.doorNumberStreet,
+                            registeredUser.residentialAddress.villageTown,
+                            registeredUser.residentialAddress.postOffice ? `PO: ${registeredUser.residentialAddress.postOffice}` : '',
+                            registeredUser.residentialAddress.taluk ? `Taluk: ${registeredUser.residentialAddress.taluk}` : '',
+                            registeredUser.residentialAddress.district,
+                            registeredUser.residentialAddress.state,
+                            registeredUser.residentialAddress.pincode ? `PIN: ${registeredUser.residentialAddress.pincode}` : ''
+                          ].filter(Boolean).join(', ')
+                        : (typeof registeredUser.address === 'object' && registeredUser.address
+                            ? Object.values(registeredUser.address).filter(v => typeof v === 'string' && v.trim()).join(', ')
+                            : registeredUser.address)}
+                    </div>
                   </div>
                 )}
 

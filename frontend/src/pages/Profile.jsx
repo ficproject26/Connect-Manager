@@ -7,8 +7,40 @@ const Profile = () => {
   const { user, setSession, refreshUser } = useAuth();
 
   useEffect(() => {
-    if (refreshUser) refreshUser();
+    (async () => {
+      try {
+        const res = await authService.getMe();
+        if (res && res.success && res.user && setSession) {
+          setSession(res.user);
+        }
+      } catch (e) {
+        if (refreshUser) refreshUser();
+      }
+    })();
   }, []);
+
+  const getPasswordStrength = (pass) => {
+    if (!pass) return { score: 0, label: '', color: '', feedback: '' };
+    let score = 0;
+    if (pass.length >= 8) score += 1;
+    if (pass.length >= 10) score += 1;
+    if (/[a-z]/.test(pass) && /[A-Z]/.test(pass)) score += 1;
+    if (/\d/.test(pass)) score += 1;
+    if (/[^A-Za-z0-9]/.test(pass)) score += 1;
+
+    // Common weak patterns
+    if (/^(password|123456|12345678|admin|qwerty)/i.test(pass) || pass.length < 6) {
+      score = 1;
+    }
+
+    if (score <= 2) {
+      return { score: 1, label: 'Weak', color: '#ef4444', bg: '#fee2e2', feedback: 'Requires at least 8 chars with uppercase, lowercase, and numbers' };
+    } else if (score <= 3) {
+      return { score: 2, label: 'Medium', color: '#f59e0b', bg: '#fef3c7', feedback: 'Moderate strength. Add special characters for a strong password' };
+    } else {
+      return { score: 3, label: 'Strong', color: '#10b981', bg: '#dcfce7', feedback: 'Strong password meeting all security requirements' };
+    }
+  };
 
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
@@ -192,6 +224,12 @@ const Profile = () => {
       const res = await authService.changePassword(currentPassword, newPassword);
       if (res.success) {
         setMessage('Password updated successfully!');
+        if (res.passwordChangedAt && setSession && user) {
+          setSession({
+            ...user,
+            passwordChangedAt: res.passwordChangedAt
+          });
+        }
         setCurrentPassword('');
         setNewPassword('');
         setConfirmPassword('');
@@ -1139,6 +1177,34 @@ const Profile = () => {
               </div>
             )}
 
+            {/* Last Password Changed Information */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '10px 14px',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '8px',
+              marginBottom: '16px',
+              fontSize: '0.8rem'
+            }}>
+              <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Clock size={14} /> Last password changed:
+              </span>
+              <span style={{ fontWeight: 600, color: user?.passwordChangedAt ? '#0f172a' : '#94a3b8' }}>
+                {user?.passwordChangedAt
+                  ? new Date(user.passwordChangedAt).toLocaleDateString('en-IN', {
+                      day: 'numeric',
+                      month: 'short',
+                      year: 'numeric',
+                      hour: '2-digit',
+                      minute: '2-digit'
+                    })
+                  : 'Not recorded'}
+              </span>
+            </div>
+
             <form onSubmit={handlePasswordChange}>
               <div className="form-group" style={{ marginBottom: '16px' }}>
                 <label className="form-label" style={{ fontSize: '0.84rem', fontWeight: 600 }}>Current Password</label>
@@ -1224,7 +1290,7 @@ const Profile = () => {
                     type={showNewPassword ? 'text' : 'password'}
                     required
                     className="form-input"
-                    placeholder="Minimum 6 characters"
+                    placeholder="Minimum 8 characters"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     style={{
@@ -1262,6 +1328,36 @@ const Profile = () => {
                     {showNewPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
+
+                {/* Password Strength Indicator */}
+                {newPassword && (() => {
+                  const strength = getPasswordStrength(newPassword);
+                  return (
+                    <div style={{ marginTop: '8px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <span style={{ fontSize: '0.74rem', color: '#64748b' }}>Password Strength:</span>
+                        <span style={{
+                          fontSize: '0.74rem',
+                          fontWeight: 700,
+                          color: strength.color,
+                          background: strength.bg,
+                          padding: '1px 8px',
+                          borderRadius: '10px'
+                        }}>
+                          {strength.label}
+                        </span>
+                      </div>
+                      <div style={{ height: '4px', width: '100%', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden', display: 'flex', gap: '3px' }}>
+                        <div style={{ flex: 1, background: strength.score >= 1 ? strength.color : '#e2e8f0', borderRadius: '2px', transition: 'all 0.2s' }} />
+                        <div style={{ flex: 1, background: strength.score >= 2 ? strength.color : '#e2e8f0', borderRadius: '2px', transition: 'all 0.2s' }} />
+                        <div style={{ flex: 1, background: strength.score >= 3 ? strength.color : '#e2e8f0', borderRadius: '2px', transition: 'all 0.2s' }} />
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: strength.score < 3 ? '#94a3b8' : '#15803d', marginTop: '4px' }}>
+                        {strength.feedback}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
 
               <div className="form-group" style={{ marginBottom: '16px' }}>

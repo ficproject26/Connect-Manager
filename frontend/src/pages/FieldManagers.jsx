@@ -797,9 +797,23 @@ const FieldManagers = () => {
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        flexShrink: 0
+                        flexShrink: 0,
+                        overflow: 'hidden'
                       }}>
-                        {m.name ? m.name.slice(0, 1).toUpperCase() : 'M'}
+                        {m.avatarUrl ? (
+                          <img
+                            src={m.avatarUrl}
+                            alt={m.name}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                              if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'inline';
+                            }}
+                          />
+                        ) : null}
+                        <span style={{ display: m.avatarUrl ? 'none' : 'inline' }}>
+                          {m.name ? m.name.slice(0, 1).toUpperCase() : 'M'}
+                        </span>
                       </div>
                       <div style={{ minWidth: 0, flex: 1 }}>
                         <div style={{ fontWeight: 800, fontSize: '0.92rem', color: 'var(--text-main)', wordBreak: 'break-word', overflowWrap: 'break-word', lineHeight: 1.25 }}>
@@ -952,9 +966,23 @@ const FieldManagers = () => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  flexShrink: 0
+                  flexShrink: 0,
+                  overflow: 'hidden'
                 }}>
-                  {selectedManager.name ? selectedManager.name.slice(0, 1).toUpperCase() : 'M'}
+                  {selectedManager.avatarUrl ? (
+                    <img
+                      src={selectedManager.avatarUrl}
+                      alt={selectedManager.name}
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      onError={(e) => {
+                        e.currentTarget.style.display = 'none';
+                        if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'inline';
+                      }}
+                    />
+                  ) : null}
+                  <span style={{ display: selectedManager.avatarUrl ? 'none' : 'inline' }}>
+                    {selectedManager.name ? selectedManager.name.slice(0, 1).toUpperCase() : 'M'}
+                  </span>
                 </div>
                 <div>
                   <div style={{ fontSize: '1.05rem', fontWeight: 800, color: 'var(--text-main)' }}>
@@ -1082,14 +1110,14 @@ const FieldManagers = () => {
                 </div>
               </div>
 
-              {/* Bank Details Box (Only visible for current user's own profile) */}
-              {selectedManager.isSelf && selectedManager.bankDetails && (
-                <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Landmark size={13} color="var(--primary)" />
-                    <span>Your Bank Account Details</span>
-                  </div>
+              {/* Bank Account Details Box */}
+              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Landmark size={13} color="var(--primary)" />
+                  <span>Bank Account Details</span>
+                </div>
 
+                {selectedManager.bankDetails && selectedManager.bankDetails.accountNumber ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem' }}>
                     <div className="responsive-grid-2" style={{ gap: '10px' }}>
                       <div>
@@ -1139,13 +1167,17 @@ const FieldManagers = () => {
                       <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Account Number:</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <strong style={{ fontFamily: 'monospace', letterSpacing: '0.08em', color: '#0f172a' }}>
-                          {selectedManager.bankDetails.accountNumber ? `•••• •••• •••• ${String(selectedManager.bankDetails.accountNumber).slice(-4)}` : '-'}
+                          {selectedManager.bankDetails.accountNumber}
                         </strong>
                       </div>
                     </div>
                   </div>
-                </div>
-              )}
+                ) : (
+                  <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic', padding: '6px 0' }}>
+                    Bank details not provided
+                  </div>
+                )}
+              </div>
 
               {/* Close Action Button */}
               <div style={{ display: 'flex', justifyContent: 'flex-end' }}>

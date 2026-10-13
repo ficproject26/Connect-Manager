@@ -137,6 +137,16 @@ const getLowerLevelManagers = async (req, res) => {
       const uniqueManagers = [];
       for (const u of combined) {
         if (!u || !isManagerAccount(u) || isMockRecord(u)) continue;
+        // Strictly exclude pending registrations and unapproved applicants from active Manager Directory
+        const st = norm(u.status);
+        const ost = norm(u.overallRegistrationStatus);
+        const isApproved = u.isApproved === true || st === 'active' || st === 'approved';
+        if (!isApproved) continue;
+        if (st.includes('pending') || st.includes('review') || st.includes('reject') ||
+            ost.includes('pending') || ost.includes('review') || ost.includes('reject')) {
+          continue;
+        }
+
         const key = String(u._id || u.id || u.email || u.mobile || '');
         if (!key || seen.has(key)) continue;
         seen.add(key);
@@ -318,6 +328,23 @@ const getLowerLevelManagers = async (req, res) => {
         const rolePrefix = mLevel === 1 ? 'STM' : mLevel === 2 ? 'DTM' : mLevel === 3 ? 'DIV' : 'PIN';
         const resolvedManagerId = m.managerId || `MGR-${rolePrefix}-${String(mId).replace(/[^a-zA-Z0-9]/g, '').slice(-6).toUpperCase()}`;
 
+        const rawBd = m.bankDetails || m.bankAccount || null;
+        const isAuthorizedViewer = isSelf || isGlobalAdmin || (userLevel < mLevel);
+        let resolvedBankDetails = null;
+
+        if (isAuthorizedViewer && rawBd && typeof rawBd === 'object') {
+          const rawAcc = String(rawBd.accountNumber || '').trim().replace(/\s/g, '');
+          resolvedBankDetails = {
+            accountHolderName: rawBd.accountHolderName || '',
+            bankName: rawBd.bankName || '',
+            branchName: rawBd.branchName || '',
+            city: rawBd.city || '',
+            street: rawBd.street || null,
+            ifscCode: rawBd.ifscCode || '',
+            accountNumber: isSelf || isGlobalAdmin ? rawAcc : (rawAcc ? `•••• •••• •••• ${rawAcc.slice(-4)}` : '')
+          };
+        }
+
         return {
           id: resolvedManagerId,
           _id: mId,
@@ -329,6 +356,7 @@ const getLowerLevelManagers = async (req, res) => {
           roleTitle: formatRoleTitle(m.role),
           level: normLevel,
           status: String(m.status || 'active').toLowerCase(),
+          avatarUrl: m.avatarUrl || null,
           relation,
           relationLabel,
           isSelf,
@@ -341,15 +369,7 @@ const getLowerLevelManagers = async (req, res) => {
           pincodeId: en.pincodeId || null,
           pincodeCode: pCode,
           pincodeArea: pArea,
-          bankDetails: (isSelf || isGlobalAdmin) && m.bankDetails ? {
-            accountHolderName: m.bankDetails.accountHolderName || '',
-            bankName: m.bankDetails.bankName || '',
-            branchName: m.bankDetails.branchName || '',
-            city: m.bankDetails.city || '',
-            street: m.bankDetails.street || null,
-            ifscCode: m.bankDetails.ifscCode || '',
-            accountNumber: m.bankDetails.accountNumber || ''
-          } : null
+          bankDetails: resolvedBankDetails
         };
       };
 
@@ -485,7 +505,63 @@ const getLowerLevelManagers = async (req, res) => {
   }
 };
 
+const getManagerById = async (req, res) => {
+  try {
+    const user = req.user;
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'Unauthorized' });
+    }
+
+    const targetId = String(req.params.id || '').trim();
+    if (!targetId) {
+      return res.status(400).json({ success: false, message: 'Manager ID is required' });
+    }
+
+    // Reuse getLowerLevelManagers logic to ensure identical security and RBAC scoping
+    const fakeReq = {
+      ...req,
+      query: { ...req.query, page: 1, limit: 1000 }
+    };
+
+    let targetManager = null;
+    const fakeRes = {
+      status: () => fakeRes,
+      setHeader: () => {},
+      send: () => {},
+      json: (payload) => {
+        if (payload && payload.all) {
+          targetManager = payload.all.find(m => 
+            String(m.id || '').toLowerCase() === targetId.toLowerCase() ||
+            String(m._id || '').toLowerCase() === targetId.toLowerCase() ||
+            String(m.managerId || '').toLowerCase() === targetId.toLowerCase()
+          );
+        }
+      }
+    };
+
+    await getLowerLevelManagers(fakeReq, fakeRes);
+
+    if (!targetManager) {
+      return res.status(404).json({
+        success: false,
+        message: 'Manager not found or not authorized within your assigned territory'
+      });
+    }
+
+    return res.json({
+      success: true,
+      manager: targetManager,
+      data: targetManager
+    });
+  } catch (err) {
+    console.error('getManagerById error:', err);
+    res.status(500).json({ success: false, message: 'Failed to retrieve manager details' });
+  }
+};
+
 module.exports = {
   getLowerLevelManagers,
-  getManagers: getLowerLevelManagers
+  getManagers: getLowerLevelManagers,
+  getManagerById
 };
+

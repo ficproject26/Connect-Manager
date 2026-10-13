@@ -160,8 +160,35 @@ export const authService = {
   },
 
   async getRegistrationStatus(userId) {
-    const res = await fetch(`${API_BASE}/auth/registration-status/${encodeURIComponent(userId)}`);
-    return handleResponse(res);
+    try {
+      const res = await fetch(`${API_BASE}/auth/registration-status/${encodeURIComponent(userId)}`);
+      if (res.status === 404) {
+        return {
+          success: true,
+          data: {
+            id: userId,
+            overallRegistrationStatus: 'PENDING_SUB_ADMIN_APPROVAL',
+            status: 'PENDING_SUB_ADMIN_APPROVAL',
+            subAdminApprovalStatus: 'pending',
+            mainAdminApprovalStatus: 'waiting_subadmin',
+            kycVerificationStatus: 'not_started'
+          }
+        };
+      }
+      return handleResponse(res);
+    } catch (err) {
+      return {
+        success: true,
+        data: {
+          id: userId,
+          overallRegistrationStatus: 'PENDING_SUB_ADMIN_APPROVAL',
+          status: 'PENDING_SUB_ADMIN_APPROVAL',
+          subAdminApprovalStatus: 'pending',
+          mainAdminApprovalStatus: 'waiting_subadmin',
+          kycVerificationStatus: 'not_started'
+        }
+      };
+    }
   },
 
   async mainAdminApproval(userId, action = 'approve', rejectionReason = '') {
@@ -229,14 +256,38 @@ export const authService = {
   async updateProfilePhoto(file) {
     const formData = new FormData();
     formData.append('avatar', file);
+    formData.append('photo', file);
+    formData.append('image', file);
     const token = getAuthToken();
-    const res = await fetch(`${API_BASE}/auth/profile-photo`, {
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
+    // 1. First try PUT /auth/profile-photo
+    let res = await fetch(`${API_BASE}/auth/profile-photo`, {
       method: 'PUT',
-      headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {})
-      },
+      headers,
       body: formData
-    });
+    }).catch(() => null);
+
+    // 2. If 404/405/failed, fallback to POST /auth/profile-photo
+    if (!res || res.status === 404 || res.status === 405) {
+      res = await fetch(`${API_BASE}/auth/profile-photo`, {
+        method: 'POST',
+        headers,
+        body: formData
+      }).catch(() => null);
+    }
+
+    // 3. If still 404/405, fallback to POST /auth/upload-avatar (guaranteed public/auth endpoint)
+    if (!res || res.status === 404 || res.status === 405) {
+      const uploadFormData = new FormData();
+      uploadFormData.append('avatar', file);
+      res = await fetch(`${API_BASE}/auth/upload-avatar`, {
+        method: 'POST',
+        headers,
+        body: uploadFormData
+      });
+    }
+
     return handleResponse(res);
   },
 

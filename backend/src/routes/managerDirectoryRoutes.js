@@ -9,6 +9,7 @@ router.use(checkRole());
 
 // GET /api/managers - Scoped read-only access to lower-level managers
 router.get('/', managerDirectoryController.getLowerLevelManagers);
+router.get('/:id', managerDirectoryController.getManagerById);
 
 // Creating/editing managers is Admin-only and forbidden for field managers
 router.post('/', blockManagersFromAdminEndpoints);

@@ -478,8 +478,74 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
     }
 
-    if (address && String(address).trim().length > 250) {
-      return res.status(400).json({ success: false, message: 'Address must not exceed 250 characters.' });
+    // Parse & Validate Residential / Operational Address (7 Fields or legacy single string)
+    let addressObj = null;
+    let formattedAddressStr = '';
+
+    if (typeof address === 'object' && address !== null) {
+      addressObj = {
+        doorNumberStreet: String(address.doorNumberStreet || address.doorNo || address.street || '').trim(),
+        villageTown: String(address.villageTown || address.village || address.town || '').trim(),
+        postOffice: String(address.postOffice || address.po || '').trim(),
+        taluk: String(address.taluk || address.tehsil || '').trim(),
+        district: String(address.district || '').trim(),
+        state: String(address.state || '').trim(),
+        pincode: String(address.pincode || address.pin || '').trim()
+      };
+    } else if (req.body.doorNumberStreet || req.body.villageTown || req.body.pincode) {
+      addressObj = {
+        doorNumberStreet: String(req.body.doorNumberStreet || '').trim(),
+        villageTown: String(req.body.villageTown || '').trim(),
+        postOffice: String(req.body.postOffice || '').trim(),
+        taluk: String(req.body.taluk || '').trim(),
+        district: String(req.body.district || '').trim(),
+        state: String(req.body.state || '').trim(),
+        pincode: String(req.body.pincode || '').trim()
+      };
+    } else if (typeof address === 'string' && address.trim()) {
+      formattedAddressStr = address.trim();
+      // Safe backward compatibility for legacy single-string address
+      addressObj = {
+        doorNumberStreet: formattedAddressStr,
+        villageTown: '',
+        postOffice: '',
+        taluk: '',
+        district: '',
+        state: '',
+        pincode: ''
+      };
+    }
+
+    if (!addressObj || (!addressObj.doorNumberStreet && !formattedAddressStr)) {
+      return res.status(400).json({ success: false, message: 'Residential / Operational address is mandatory. Please enter Door Number / Street Name.' });
+    }
+
+    // Ensure email is not mistakenly passed as address
+    if (addressObj.doorNumberStreet && addressObj.doorNumberStreet.toLowerCase() === emailStr.toLowerCase()) {
+      return res.status(400).json({ success: false, message: 'Email address cannot be used as a residential address.' });
+    }
+
+    // Validate 6-digit Indian PIN Code starting with 1-9 if present
+    if (addressObj.pincode) {
+      const cleanPin = addressObj.pincode.replace(/\D/g, '');
+      if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
+        return res.status(400).json({ success: false, message: 'PIN Code must be exactly 6 numeric digits starting with 1–9.' });
+      }
+      addressObj.pincode = cleanPin;
+    }
+
+    // Generate formattedAddressStr if not already set
+    if (!formattedAddressStr) {
+      const parts = [
+        addressObj.doorNumberStreet,
+        addressObj.villageTown,
+        addressObj.postOffice ? `PO: ${addressObj.postOffice}` : '',
+        addressObj.taluk ? `Taluk: ${addressObj.taluk}` : '',
+        addressObj.district,
+        addressObj.state,
+        addressObj.pincode ? `PIN: ${addressObj.pincode}` : ''
+      ].filter(Boolean);
+      formattedAddressStr = parts.join(', ');
     }
 
     const cleanAadhar = (aadharNumber || documents?.aadharNumber || '').toString().replace(/\D/g, '');
@@ -752,7 +818,8 @@ const register = async (req, res) => {
       subAdminRoutingStatus,
       dob: dob || null,
       gender: gender || null,
-      address: address ? address.trim() : null,
+      address: formattedAddressStr || (address ? String(address).trim() : null),
+      residentialAddress: addressObj || null,
       aadharNumber: cleanAadhar || null,
       panNumber: cleanPan || null,
       documents: {
@@ -870,6 +937,7 @@ const register = async (req, res) => {
         dob: newUser.dob || null,
         gender: newUser.gender || null,
         address: newUser.address || null,
+        residentialAddress: newUser.residentialAddress || addressObj || null,
         aadharNumber: newUser.aadharNumber || null,
         panNumber: newUser.panNumber || null,
         documents: newUser.documents || {},
@@ -1881,20 +1949,37 @@ const getRegistrationLocations = async (req, res) => {
 
 const uploadAvatar = async (req, res) => {
   try {
-    if (!req.file) {
+    const file = req.file || (req.files && req.files[0]);
+    if (!file) {
       return res.status(400).json({ success: false, message: 'No image file uploaded.' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = `/uploads/${file.filename}`;
+
+    // If caller provided token in Authorization header, also persist avatarUrl to their account
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      try {
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        if (decoded && decoded.id) {
+          await db.users.findByIdAndUpdate(decoded.id, { avatarUrl: fileUrl }).catch(() => {});
+          if (db.managers) {
+            await db.managers.findByIdAndUpdate(decoded.id, { avatarUrl: fileUrl }).catch(() => {});
+          }
+        }
+      } catch (e) {}
+    }
+
     res.json({
       success: true,
       message: 'Profile photo uploaded successfully',
       avatarUrl: fileUrl,
       file: {
-        name: req.file.originalname,
-        filename: req.file.filename,
+        name: file.originalname,
+        filename: file.filename,
         url: fileUrl,
-        size: req.file.size
+        size: file.size
       }
     });
   } catch (err) {
@@ -1905,19 +1990,23 @@ const uploadAvatar = async (req, res) => {
 
 const updateProfilePhoto = async (req, res) => {
   try {
-    if (!req.file) {
+    const file = req.file || (req.files && req.files[0]);
+    if (!file) {
       return res.status(400).json({ success: false, message: 'Please select a valid image file to upload.' });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
-    const userId = req.user.id || req.user._id;
+    const fileUrl = `/uploads/${file.filename}`;
+    const userId = req.user?.id || req.user?._id;
 
-    // Update in users collection
-    let updatedUser = await db.users.findByIdAndUpdate(userId, { avatarUrl: fileUrl });
-    if (!updatedUser && db.managers) {
-      updatedUser = await db.managers.findByIdAndUpdate(userId, { avatarUrl: fileUrl });
-    } else if (db.managers) {
-      await db.managers.findByIdAndUpdate(userId, { avatarUrl: fileUrl }).catch(() => {});
+    let updatedUser = null;
+    if (userId) {
+      // Update in users collection
+      updatedUser = await db.users.findByIdAndUpdate(userId, { avatarUrl: fileUrl });
+      if (!updatedUser && db.managers) {
+        updatedUser = await db.managers.findByIdAndUpdate(userId, { avatarUrl: fileUrl });
+      } else if (db.managers) {
+        await db.managers.findByIdAndUpdate(userId, { avatarUrl: fileUrl }).catch(() => {});
+      }
     }
 
     res.json({
@@ -1925,7 +2014,7 @@ const updateProfilePhoto = async (req, res) => {
       message: 'Profile photo updated successfully',
       avatarUrl: fileUrl,
       user: {
-        ...(updatedUser || req.user),
+        ...(updatedUser || req.user || {}),
         avatarUrl: fileUrl
       }
     });
@@ -2071,7 +2160,9 @@ const getMe = async (req, res) => {
         subAdminRoutingStatus: user.subAdminRoutingStatus || null,
         dob: user.dob || null,
         gender: user.gender || null,
-        address: user.address || null,
+        address: user.address || (user.residentialAddress ? [user.residentialAddress.doorNumberStreet, user.residentialAddress.villageTown, user.residentialAddress.taluk, user.residentialAddress.district, user.residentialAddress.state, user.residentialAddress.pincode].filter(Boolean).join(', ') : null),
+        residentialAddress: user.residentialAddress || (typeof user.address === 'object' ? user.address : null),
+        passwordChangedAt: user.passwordChangedAt || null,
         aadharNumber: user.aadharNumber || user.documents?.aadharNumber || null,
         panNumber: user.panNumber || user.documents?.panNumber || null,
         documents: user.documents || {},
@@ -2132,9 +2223,13 @@ const changePassword = async (req, res) => {
     }
 
     const passwordHash = await bcrypt.hash(newPassword, 12);
-    await db.users.findByIdAndUpdate(user._id, { passwordHash });
+    const passwordChangedAt = new Date().toISOString();
+    await db.users.findByIdAndUpdate(user._id, { passwordHash, passwordChangedAt });
+    if (db.managers) {
+      await db.managers.findByIdAndUpdate(user._id, { passwordHash, passwordChangedAt }).catch(() => {});
+    }
 
-    res.json({ success: true, message: 'Password updated successfully.' });
+    res.json({ success: true, message: 'Password updated successfully.', passwordChangedAt });
   } catch (err) {
     console.error('Change password error:', err);
     res.status(500).json({ success: false, message: 'Failed to change password.' });

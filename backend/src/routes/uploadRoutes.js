@@ -54,4 +54,44 @@ router.post('/document', (req, res) => {
   });
 });
 
+// POST /api/uploads/avatar, /api/uploads/photo, /api/uploads/profile-photo
+const handleAvatarUpload = (req, res) => {
+  upload.any()(req, res, (err) => {
+    if (err) {
+      return res.status(400).json({
+        success: false,
+        message: err.message || 'Avatar upload rejected due to validation failure.'
+      });
+    }
+
+    try {
+      const file = req.file || (req.files && req.files[0]);
+      if (!file) {
+        return res.status(400).json({ success: false, message: 'No image file uploaded.' });
+      }
+
+      const fileUrl = `/uploads/${file.filename}`;
+      res.json({
+        success: true,
+        message: 'Profile photo uploaded successfully',
+        avatarUrl: fileUrl,
+        file: {
+          name: file.originalname,
+          filename: file.filename,
+          url: fileUrl,
+          size: file.size,
+          type: file.mimetype
+        }
+      });
+    } catch (routeErr) {
+      console.error('Avatar upload route error:', routeErr);
+      res.status(500).json({ success: false, message: 'Avatar upload processing failed.' });
+    }
+  });
+};
+
+router.post('/avatar', handleAvatarUpload);
+router.post('/photo', handleAvatarUpload);
+router.post('/profile-photo', handleAvatarUpload);
+
 module.exports = router;

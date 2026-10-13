@@ -60,23 +60,129 @@ async function runTestSuite() {
     await db.initDatabase();
   }
 
-  // Find existing territory fixtures from DB
-  const tnState = await db.states.findOne({ name: 'Tamil Nadu' });
-  const pondicherryState = await db.states.findOne({ name: 'Pondicherry' });
-  const krishnagiriDist = await db.districts.findById('6aa10f71ca0932e6eaec1f5d');
-  const dharmapuriDist = await db.districts.findById('6aa10fa8ca0932e6eaec1f5f');
-  const salemDist = await db.districts.findById('6ab9f3e9bec0ef28c6e81405');
-  const thalaivasalDiv = await db.divisions.findById('6aba302aaf9e0372e50b72b8');
-  const hosurDiv = await db.divisions.findById('6aa10f71ca0932e6eaec1f5e');
-  const hosurPin = await db.pincodes.findById('6aba0f82af9e0372e50b70d5');
+  // Create dynamic isolated territory fixtures for this test run to prevent capacity limit conflicts
+  const testRunId = Date.now();
+  const testStateId = `test_st_${testRunId}`;
+  const testDist1Id = `test_dt1_${testRunId}`;
+  const testDist2Id = `test_dt2_${testRunId}`;
+  const testDiv1Id = `test_dv1_${testRunId}`;
+  const testDiv2Id = `test_dv2_${testRunId}`;
+  const testDiv3Id = `test_dv3_${testRunId}`;
+  const testDiv4Id = `test_dv4_${testRunId}`;
+  const testDiv5Id = `test_dv5_${testRunId}`;
+  const testPin1Id = `test_pn1_${testRunId}`;
+  const testPinCode = '' + Math.floor(610000 + (Math.random() * 80000));
 
-  console.log(`📍 Territory Fixtures loaded:`);
+  const createdTerritories = {
+    states: [testStateId],
+    districts: [testDist1Id, testDist2Id],
+    divisions: [testDiv1Id, testDiv2Id, testDiv3Id, testDiv4Id, testDiv5Id],
+    pincodes: [testPin1Id]
+  };
+
+  const tnState = await db.states.insertOne({
+    _id: testStateId,
+    id: testStateId,
+    stateId: testStateId,
+    name: `Test State ${testRunId}`,
+    code: `T${String(testRunId).slice(-2)}`,
+    status: 'Active'
+  });
+
+  const krishnagiriDist = await db.districts.insertOne({
+    _id: testDist1Id,
+    id: testDist1Id,
+    districtId: testDist1Id,
+    name: `Test Dist 1 ${testRunId}`,
+    stateId: tnState._id,
+    state: tnState.name,
+    status: 'Active'
+  });
+
+  const dharmapuriDist = await db.districts.insertOne({
+    _id: testDist2Id,
+    id: testDist2Id,
+    districtId: testDist2Id,
+    name: `Test Dist 2 ${testRunId}`,
+    stateId: tnState._id,
+    state: tnState.name,
+    status: 'Active'
+  });
+
+  const salemDist = dharmapuriDist;
+
+  const thalaivasalDiv = await db.divisions.insertOne({
+    _id: testDiv1Id,
+    id: testDiv1Id,
+    divisionId: testDiv1Id,
+    name: `Test Div 1 ${testRunId}`,
+    districtId: salemDist._id,
+    stateId: tnState._id,
+    status: 'Active'
+  });
+
+  const divScen7 = await db.divisions.insertOne({
+    _id: testDiv2Id,
+    id: testDiv2Id,
+    divisionId: testDiv2Id,
+    name: `Test Div 2 ${testRunId}`,
+    districtId: salemDist._id,
+    stateId: tnState._id,
+    status: 'Active'
+  });
+
+  const divScen8 = await db.divisions.insertOne({
+    _id: testDiv3Id,
+    id: testDiv3Id,
+    divisionId: testDiv3Id,
+    name: `Test Div 3 ${testRunId}`,
+    districtId: salemDist._id,
+    stateId: tnState._id,
+    status: 'Active'
+  });
+
+  const divScen9 = await db.divisions.insertOne({
+    _id: testDiv4Id,
+    id: testDiv4Id,
+    divisionId: testDiv4Id,
+    name: `Test Div 4 ${testRunId}`,
+    districtId: salemDist._id,
+    stateId: tnState._id,
+    status: 'Active'
+  });
+
+  const hosurDiv = await db.divisions.insertOne({
+    _id: testDiv5Id,
+    id: testDiv5Id,
+    divisionId: testDiv5Id,
+    name: `Test Div Hosur ${testRunId}`,
+    districtId: krishnagiriDist._id,
+    stateId: tnState._id,
+    status: 'Active'
+  });
+
+  const hosurPin = await db.pincodes.insertOne({
+    _id: testPin1Id,
+    id: testPin1Id,
+    pincodeId: testPin1Id,
+    code: testPinCode,
+    areaName: `Test Area ${testRunId}`,
+    divisionId: hosurDiv._id,
+    districtId: krishnagiriDist._id,
+    stateId: tnState._id,
+    status: 'Active'
+  });
+
+  console.log(`📍 Test Territory Fixtures loaded:`);
   console.log(`   - State: ${tnState?.name} (${tnState?._id})`);
-  console.log(`   - Krishnagiri District: ${krishnagiriDist?.name} (${krishnagiriDist?._id})`);
-  console.log(`   - Dharmapuri District: ${dharmapuriDist?.name} (${dharmapuriDist?._id})`);
-  console.log(`   - Thalaivasal Division: ${thalaivasalDiv?.name} (${thalaivasalDiv?._id})`);
-  console.log(`   - Hosur PIN: ${hosurPin?.code} (${hosurPin?._id})`);
-  console.log(`   - Pondicherry State: ${pondicherryState?.name} (${pondicherryState?._id})`);
+  console.log(`   - District 1: ${krishnagiriDist?.name} (${krishnagiriDist?._id})`);
+  console.log(`   - District 2: ${dharmapuriDist?.name} (${dharmapuriDist?._id})`);
+  console.log(`   - Division: ${thalaivasalDiv?.name} (${thalaivasalDiv?._id})`);
+  console.log(`   - PIN: ${hosurPin?.code} (${hosurPin?._id})`);
+
+  function generateUniqueMobile() {
+    return '9' + Math.floor(100000000 + Math.random() * 900000000);
+  }
 
   // Existing valid document files from uploads directory
   const validDocs = {
@@ -95,6 +201,16 @@ async function runTestSuite() {
     ifscCode: 'SBIN0001234'
   };
 
+  const validAddress = {
+    doorNumberStreet: '12 Gandhi Road',
+    villageTown: 'Krishnagiri Town',
+    postOffice: 'Krishnagiri SO',
+    taluk: 'Krishnagiri',
+    district: 'Krishnagiri',
+    state: 'Tamil Nadu',
+    pincode: '635001'
+  };
+
   const createdTestUserIds = [];
 
   const server = http.createServer(app);
@@ -108,7 +224,7 @@ async function runTestSuite() {
     console.log('\n--- [SCENARIO 1] Newly Registered Manager Login Before Sub-Admin Approval ---');
     const regTimestamp = Date.now();
     const testEmail1 = `manager.e2e.test1_${regTimestamp}@example.com`;
-    const testMobile1 = `98765${String(regTimestamp).slice(-5)}`;
+    const testMobile1 = generateUniqueMobile();
 
     const regRes1 = await request('POST', '/api/auth/register', {
       name: 'Kavitha Ramasamy',
@@ -287,7 +403,7 @@ async function runTestSuite() {
     // -------------------------------------------------------------------------
     console.log('\n--- [SCENARIO 6] Sub-admin Rejection ---');
     const testEmail2 = `manager.rejected.sub_${regTimestamp}@example.com`;
-    const testMobile2 = `98764${String(regTimestamp).slice(-5)}`;
+    const testMobile2 = generateUniqueMobile();
 
     const regRes2 = await request('POST', '/api/auth/register', {
       name: 'Vijay Chandran',
@@ -300,6 +416,8 @@ async function runTestSuite() {
       divisionId: thalaivasalDiv?._id,
       documents: validDocs,
       bankDetails: validBank,
+      residentialAddress: validAddress,
+      address: '12 Gandhi Road, Krishnagiri',
       declarationAccepted: true
     });
     const manager2Id = regRes2.data?.user?.id;
@@ -338,7 +456,7 @@ async function runTestSuite() {
     // -------------------------------------------------------------------------
     console.log('\n--- [SCENARIO 7] Main Admin Rejection ---');
     const testEmail3 = `manager.rejected.main_${regTimestamp}@example.com`;
-    const testMobile3 = `98763${String(regTimestamp).slice(-5)}`;
+    const testMobile3 = generateUniqueMobile();
 
     const regRes3 = await request('POST', '/api/auth/register', {
       name: 'Ramesh Sundaram',
@@ -348,9 +466,11 @@ async function runTestSuite() {
       role: 'division_manager',
       stateId: tnState?._id,
       districtId: salemDist?._id,
-      divisionId: thalaivasalDiv?._id,
+      divisionId: divScen7?._id,
       documents: validDocs,
       bankDetails: validBank,
+      residentialAddress: validAddress,
+      address: '12 Gandhi Road, Krishnagiri',
       declarationAccepted: true
     });
     const manager3Id = regRes3.data?.user?.id;
@@ -382,7 +502,7 @@ async function runTestSuite() {
     // -------------------------------------------------------------------------
     console.log('\n--- [SCENARIO 8] KYC Rejection ---');
     const testEmail4 = `manager.rejected.kyc_${regTimestamp}@example.com`;
-    const testMobile4 = `98762${String(regTimestamp).slice(-5)}`;
+    const testMobile4 = generateUniqueMobile();
 
     const regRes4 = await request('POST', '/api/auth/register', {
       name: 'Anitha Selvam',
@@ -392,9 +512,11 @@ async function runTestSuite() {
       role: 'division_manager',
       stateId: tnState?._id,
       districtId: salemDist?._id,
-      divisionId: thalaivasalDiv?._id,
+      divisionId: divScen8?._id,
       documents: validDocs,
       bankDetails: validBank,
+      residentialAddress: validAddress,
+      address: '12 Gandhi Road, Krishnagiri',
       declarationAccepted: true
     });
     const manager4Id = regRes4.data?.user?.id;
@@ -441,7 +563,7 @@ async function runTestSuite() {
       {
         role: 'division_manager',
         label: 'Division Manager',
-        payload: { stateId: tnState?._id, districtId: salemDist?._id, divisionId: thalaivasalDiv?._id }
+        payload: { stateId: tnState?._id, districtId: salemDist?._id, divisionId: divScen9?._id }
       },
       {
         role: 'pincode_manager',
@@ -453,7 +575,7 @@ async function runTestSuite() {
     for (const lvl of levels) {
       const ts = Date.now() + Math.floor(Math.random() * 1000);
       const email = `mgr.full.${lvl.role}_${ts}@example.com`;
-      const mobile = `9811${String(ts).slice(-6)}`;
+      const mobile = generateUniqueMobile();
 
       // 1. Registration
       const reg = await request('POST', '/api/auth/register', {
@@ -464,6 +586,8 @@ async function runTestSuite() {
         role: lvl.role,
         documents: validDocs,
         bankDetails: validBank,
+        residentialAddress: validAddress,
+        address: '12 Gandhi Road, Krishnagiri',
         declarationAccepted: true,
         ...lvl.payload
       });
@@ -497,6 +621,18 @@ async function runTestSuite() {
         await db.users.deleteOne({ _id: uid });
         await db.managers.deleteOne({ _id: uid });
       } catch (e) {}
+    }
+    for (const sId of createdTerritories.states) {
+      try { await db.states.deleteOne({ _id: sId }); } catch (e) {}
+    }
+    for (const dId of createdTerritories.districts) {
+      try { await db.districts.deleteOne({ _id: dId }); } catch (e) {}
+    }
+    for (const dvId of createdTerritories.divisions) {
+      try { await db.divisions.deleteOne({ _id: dvId }); } catch (e) {}
+    }
+    for (const pId of createdTerritories.pincodes) {
+      try { await db.pincodes.deleteOne({ _id: pId }); } catch (e) {}
     }
     server.close();
   }

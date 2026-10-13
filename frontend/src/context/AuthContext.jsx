@@ -75,30 +75,55 @@ const isTokenExpired = (tokenStr) => {
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('agent_mgr_token');
-    if (saved && !isTokenExpired(saved)) {
+    const savedToken = localStorage.getItem('agent_mgr_token');
+    if (!savedToken || isTokenExpired(savedToken)) {
+      if (savedToken) localStorage.removeItem('agent_mgr_token');
+      localStorage.removeItem('agent_mgr_user');
+      return null;
+    }
+    const savedUser = localStorage.getItem('agent_mgr_user');
+    if (savedUser) {
       try {
-        const parts = saved.split('.');
-        const base64Url = parts[1];
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-        const jsonPayload = decodeURIComponent(
-          atob(base64)
-            .split('')
-            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
-            .join('')
-        );
-        const parsed = JSON.parse(jsonPayload);
-        const st = String(parsed.status || '').toLowerCase().trim();
+        const parsed = JSON.parse(savedUser);
+        const st = String(parsed?.status || '').toLowerCase().trim();
         if (st === 'active' || st === 'approved') {
           return normalizeUser(parsed);
         }
-        return null;
-      } catch (e) {
-        return null;
-      }
+      } catch (e) {}
     }
-    return null;
+    try {
+      const parts = savedToken.split('.');
+      const base64Url = parts[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+          .join('')
+      );
+      const parsed = JSON.parse(jsonPayload);
+      const st = String(parsed.status || '').toLowerCase().trim();
+      if (st === 'active' || st === 'approved') {
+        return normalizeUser(parsed);
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
   });
+
+  const updateActiveUser = (u) => {
+    const normalized = normalizeUser(u);
+    setUser(normalized);
+    if (normalized) {
+      try {
+        localStorage.setItem('agent_mgr_user', JSON.stringify(normalized));
+      } catch (e) {}
+    } else {
+      localStorage.removeItem('agent_mgr_user');
+    }
+    return normalized;
+  };
   const [pendingUser, setPendingUser] = useState(null);
   const [token, setToken] = useState(() => {
     const saved = localStorage.getItem('agent_mgr_token');
@@ -113,6 +138,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     localStorage.removeItem('agent_mgr_token');
+    localStorage.removeItem('agent_mgr_user');
     cacheClient.clear();
     dataPrefetcher.reset();
     setToken(null);
@@ -140,7 +166,7 @@ export const AuthProvider = ({ children }) => {
       if (res && res.success && res.user) {
         const userStatus = String(res.user.status || '').toLowerCase().trim();
         if (userStatus === 'active' || userStatus === 'approved') {
-          setUser(normalizeUser(res.user));
+          updateActiveUser(res.user);
           setPendingUser(null);
         } else {
           // Manager registration is not fully approved - lock dashboard access
@@ -206,7 +232,7 @@ export const AuthProvider = ({ children }) => {
         if (userStatus === 'active' || userStatus === 'approved') {
           localStorage.setItem('agent_mgr_token', token);
           setToken(token);
-          setUser(normalized);
+          updateActiveUser(normalized);
           setPendingUser(null);
           return { success: true, isApproved: true, token, user: normalized };
         } else {
@@ -259,7 +285,7 @@ export const AuthProvider = ({ children }) => {
         if (userStatus === 'active' || userStatus === 'approved') {
           localStorage.setItem('agent_mgr_token', token);
           setToken(token);
-          setUser(normalized);
+          updateActiveUser(normalized);
           setPendingUser(null);
           return { success: true, isApproved: true, token, user: normalized };
         } else {
@@ -307,7 +333,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('agent_mgr_token', tokenString);
         setToken(tokenString);
       }
-      setUser(normalized);
+      updateActiveUser(normalized);
       setPendingUser(null);
     } else {
       logout();
@@ -321,7 +347,7 @@ export const AuthProvider = ({ children }) => {
       if (res.success && res.user) {
         const userStatus = String(res.user.status || '').toLowerCase().trim();
         if (userStatus === 'active' || userStatus === 'approved') {
-          setUser(normalizeUser(res.user));
+          updateActiveUser(res.user);
         } else {
           logout();
           setPendingUser(normalizeUser(res.user));

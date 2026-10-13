@@ -450,7 +450,7 @@ const AgentDirectory = ({ onNavigate }) => {
         flexWrap: 'wrap'
       }}>
         <div style={{ position: 'relative', flex: '1 1 260px' }}>
-          <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+          <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', pointerEvents: 'none' }} />
           <input
             type="text"
             placeholder="Search agent by name, email, phone, PIN, area..."
@@ -458,7 +458,7 @@ const AgentDirectory = ({ onNavigate }) => {
             onChange={(e) => setSearch(e.target.value)}
             style={{
               width: '100%',
-              padding: '9px 12px 9px 36px',
+              padding: search ? '9px 36px 9px 36px' : '9px 12px 9px 36px',
               fontSize: '0.84rem',
               borderRadius: '8px',
               border: '1px solid var(--border)',
@@ -467,6 +467,33 @@ const AgentDirectory = ({ onNavigate }) => {
               boxSizing: 'border-box'
             }}
           />
+          {search && (
+            <button
+              type="button"
+              onClick={() => setSearch('')}
+              title="Clear search"
+              aria-label="Clear agent search"
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: 'var(--text-muted)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+                borderRadius: '50%'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
 
         {!isPincodeManager && (

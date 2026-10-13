@@ -28,7 +28,8 @@ router.get('/me', authMiddleware, authController.getMe);
 router.post('/refresh', authMiddleware, authController.refreshToken);
 router.put('/change-password', authMiddleware, authController.changePassword);
 router.put('/bank-details', authMiddleware, authController.updateBankDetails);
-router.put('/profile-photo', authMiddleware, uploadLimiter, upload.single('avatar'), authController.updateProfilePhoto);
+router.put('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
+router.post('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
 router.delete('/profile-photo', authMiddleware, authController.removeProfilePhoto);
 
 module.exports = router;

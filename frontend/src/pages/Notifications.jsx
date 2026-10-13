@@ -9,7 +9,8 @@ import {
   Trash2,
   Search,
   ArrowRight,
-  RefreshCw
+  RefreshCw,
+  X
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { API_BASE } from '../services/api';
@@ -148,52 +149,89 @@ const Notifications = ({ onNavigate }) => {
   return (
     <div style={{ width: '100%', minHeight: 'calc(100vh - 120px)', display: 'flex', flexDirection: 'column' }}>
       {/* Header */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '22px' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '22px',
+        flexWrap: 'wrap',
+        gap: '16px'
+      }}>
         <div>
-          <h2 style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Bell size={22} color="var(--forge-gold-vibrant)" />
+          <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '10px', margin: 0 }}>
+            <Bell size={24} color="var(--forge-gold-vibrant)" />
             Notifications & Alerts
           </h2>
-          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
+          <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
             Real-time feed of merchant onboardings, compliance status updates, and field task assignments
           </p>
         </div>
 
-        <div style={{ display: 'flex', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
           <button
+            type="button"
             onClick={fetchNotifications}
-            className="nav-icon-btn"
-            title="Refresh"
-            style={{ borderRadius: '8px', padding: '8px 12px', background: 'white', border: '1px solid var(--border-normal)' }}
+            disabled={loading}
+            title="Reload latest notifications"
+            style={{
+              height: '40px',
+              padding: '0 16px',
+              background: '#ffffff',
+              border: '1px solid var(--border-normal)',
+              borderRadius: '8px',
+              fontWeight: 600,
+              fontSize: '0.84rem',
+              color: 'var(--text-main)',
+              cursor: loading ? 'not-allowed' : 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+              transition: 'all 0.15s ease'
+            }}
           >
-            <RefreshCw size={15} />
+            <RefreshCw size={16} className={loading ? 'animate-spin' : ''} style={{ color: 'var(--primary)' }} />
+            <span>{loading ? 'Refreshing...' : 'Refresh'}</span>
           </button>
+
           {unreadTotal > 0 && (
             <button
+              type="button"
               onClick={markAllAsRead}
               style={{
-                padding: '8px 14px',
+                height: '40px',
+                padding: '0 16px',
                 background: 'var(--forge-gold-vibrant)',
                 color: '#713f12',
                 border: 'none',
                 borderRadius: '8px',
                 fontWeight: 700,
-                fontSize: '0.8rem',
+                fontSize: '0.84rem',
                 cursor: 'pointer',
-                display: 'flex',
+                display: 'inline-flex',
                 alignItems: 'center',
-                gap: '6px'
+                gap: '7px',
+                boxShadow: '0 1px 3px rgba(245, 158, 11, 0.2)',
+                transition: 'all 0.15s ease'
               }}
             >
-              <Check size={15} /> Mark All as Read ({unreadTotal})
+              <Check size={16} /> Mark All as Read ({unreadTotal})
             </button>
           )}
         </div>
       </div>
 
-      {/* Filter Tabs & Search */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', marginBottom: '18px', width: '100%', flexWrap: 'wrap' }}>
-        <div style={{ display: 'flex', gap: '8px' }}>
+      {/* Filter Tabs & Search Bar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        gap: '14px',
+        marginBottom: '20px',
+        width: '100%',
+        flexWrap: 'wrap'
+      }}>
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           {[
             { id: 'all', label: 'All' },
             { id: 'unread', label: `Unread (${unreadTotal})` },
@@ -204,14 +242,19 @@ const Notifications = ({ onNavigate }) => {
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               style={{
-                padding: '6px 14px',
+                height: '38px',
+                padding: '0 16px',
                 borderRadius: '20px',
-                fontSize: '0.8rem',
+                fontSize: '0.82rem',
                 fontWeight: 600,
                 cursor: 'pointer',
-                border: activeTab === t.id ? '1px solid var(--forge-gold-vibrant)' : '1px solid var(--border-normal)',
-                background: activeTab === t.id ? '#fffbeb' : 'white',
-                color: activeTab === t.id ? '#713f12' : '#64748b'
+                border: activeTab === t.id ? '1.5px solid var(--forge-gold-vibrant)' : '1px solid var(--border-normal)',
+                background: activeTab === t.id ? '#fffbeb' : '#ffffff',
+                color: activeTab === t.id ? '#713f12' : '#64748b',
+                display: 'inline-flex',
+                alignItems: 'center',
+                boxShadow: activeTab === t.id ? '0 1px 3px rgba(245, 158, 11, 0.15)' : 'none',
+                transition: 'all 0.15s ease'
               }}
             >
               {t.label}
@@ -219,23 +262,73 @@ const Notifications = ({ onNavigate }) => {
           ))}
         </div>
 
-        <div style={{ position: 'relative', width: '220px' }}>
-          <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+        {/* Enhanced Search Bar */}
+        <div style={{ position: 'relative', width: '100%', maxWidth: '340px', minWidth: '240px' }}>
+          <Search
+            size={16}
+            style={{
+              position: 'absolute',
+              left: '12px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              color: '#94a3b8',
+              pointerEvents: 'none'
+            }}
+          />
           <input
             type="text"
-            placeholder="Search alerts..."
+            placeholder="Search alerts by merchant, task or text..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              padding: '6px 10px 6px 30px',
-              fontSize: '0.78rem',
-              borderRadius: '16px',
+              height: '40px',
+              padding: '0 36px 0 38px',
+              fontSize: '0.86rem',
+              borderRadius: '8px',
               border: '1px solid var(--border-normal)',
               outline: 'none',
-              background: 'white'
+              background: '#ffffff',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
+              boxSizing: 'border-box',
+              transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
+            }}
+            onFocus={(e) => {
+              e.target.style.borderColor = 'var(--forge-gold-vibrant)';
+              e.target.style.boxShadow = '0 0 0 3px rgba(245, 158, 11, 0.15)';
+            }}
+            onBlur={(e) => {
+              e.target.style.borderColor = 'var(--border-normal)';
+              e.target.style.boxShadow = '0 1px 2px rgba(0,0,0,0.04)';
             }}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => setSearchQuery('')}
+              title="Clear search"
+              aria-label="Clear alert search"
+              style={{
+                position: 'absolute',
+                right: '10px',
+                top: '50%',
+                transform: 'translateY(-50%)',
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                color: '#94a3b8',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '4px',
+                borderRadius: '50%'
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
+              onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+            >
+              <X size={14} />
+            </button>
+          )}
         </div>
       </div>
 
