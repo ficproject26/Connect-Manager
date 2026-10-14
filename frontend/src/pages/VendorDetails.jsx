@@ -171,6 +171,30 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
     return d.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   };
 
+  // Merchant physical address safe formatter
+  const formatMerchantAddress = (v) => {
+    if (!v) return 'Address not provided';
+    if (typeof v.address === 'string' && v.address.trim()) {
+      return v.address.trim();
+    }
+    if (typeof v.location?.address === 'string' && v.location.address.trim()) {
+      return v.location.address.trim();
+    }
+    if (typeof v.businessAddress === 'string' && v.businessAddress.trim()) {
+      return v.businessAddress.trim();
+    }
+    const parts = [
+      v.street || v.doorNo || v.building,
+      v.area || v.pincodeArea,
+      v.city || v.division || v.divisionName,
+      v.district || v.districtName,
+      v.state || v.stateName,
+      (v.pincode || v.pincodeCode) ? `PIN: ${v.pincode || v.pincodeCode}` : null
+    ].filter(Boolean);
+    if (parts.length > 0) return parts.join(', ');
+    return 'Address not provided';
+  };
+
   return (
     <div style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}>
       {/* ─── 1. Top Header & Action Toolbar ─── */}
@@ -536,20 +560,20 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Division:</span>
-                  <strong>{vendor.division || vendor.divisionName || 'Attur'}</strong>
+                  <strong>{vendor.division || vendor.divisionName || '—'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>District:</span>
-                  <strong>{vendor.district || vendor.districtName || 'Salem'}</strong>
+                  <strong>{vendor.district || vendor.districtName || '—'}</strong>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>State:</span>
-                  <strong>{vendor.state || vendor.stateName || 'Tamil Nadu'}</strong>
+                  <strong>{vendor.state || vendor.stateName || '—'}</strong>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Physical Merchant Address:</span>
                   <div style={{ marginTop: '4px', color: '#334155', fontSize: '0.84rem', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                    {vendor.address || 'Attur Main Bazaar Street, Salem - 636114'}
+                    {formatMerchantAddress(vendor)}
                   </div>
                 </div>
               </div>

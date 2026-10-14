@@ -189,8 +189,14 @@ const Profile = () => {
       if (res && res.success) {
         setSession({
           ...user,
-          avatarUrl: null
+          avatarUrl: null,
+          avatar: null,
+          profilePhoto: null,
+          image: null
         });
+        setPhotoPreview(null);
+        setPhotoFile(null);
+        if (fileInputRef.current) fileInputRef.current.value = '';
         setConfirmRemove(false);
         setPhotoSuccess('Profile photo removed successfully.');
         setTimeout(() => setPhotoSuccess(''), 4000);
@@ -331,9 +337,9 @@ const Profile = () => {
                   }}>
                     {photoPreview ? (
                       <img src={photoPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    ) : user?.avatarUrl ? (
+                    ) : (user?.avatarUrl || user?.avatar || user?.profilePhoto || user?.image) ? (
                       <img
-                        src={user.avatarUrl}
+                        src={user?.avatarUrl || user?.avatar || user?.profilePhoto || user?.image}
                         alt={user.name}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}
                         onError={(e) => {
@@ -470,10 +476,10 @@ const Profile = () => {
                         }}
                       >
                         <Camera size={12} color="var(--forge-gold, #f59e0b)" />
-                        <span>{user?.avatarUrl ? 'Change Photo' : 'Upload Photo'}</span>
+                        <span>{(user?.avatarUrl || user?.avatar || user?.profilePhoto || user?.image) ? 'Change Photo' : 'Upload Photo'}</span>
                       </button>
 
-                      {user?.avatarUrl && !confirmRemove && (
+                      {(user?.avatarUrl || user?.avatar || user?.profilePhoto || user?.image) && !confirmRemove && (
                         <button
                           type="button"
                           onClick={() => setConfirmRemove(true)}

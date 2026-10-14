@@ -70,13 +70,77 @@ const fileFilter = (req, file, cb) => {
   cb(null, true);
 };
 
+const imageExtensions = ['.jpg', '.jpeg', '.png', '.webp'];
+
+const logoFileFilter = (req, file, cb) => {
+  const rawName = file.originalname || '';
+  if (rawName.includes('\0') || rawName.includes('..') || rawName.includes('/') || rawName.includes('\\')) {
+    return cb(new Error('Invalid filename. Path traversal characters detected.'));
+  }
+  const ext = path.extname(rawName).toLowerCase();
+  if (BLOCKED_EXTENSIONS.has(ext)) {
+    return cb(new Error(`Security Violation: File extension '${ext}' is not permitted.`));
+  }
+  if (!imageExtensions.includes(ext)) {
+    return cb(new Error('Invalid logo file type. Only JPG, PNG, and WEBP image files are accepted.'));
+  }
+  const validMimes = ALLOWED_EXTENSIONS_MAP[ext];
+  const mime = (file.mimetype || '').toLowerCase();
+  if (!validMimes || !validMimes.includes(mime)) {
+    return cb(new Error(`MIME type mismatch: Content-Type '${mime}' does not match extension '${ext}'.`));
+  }
+  cb(null, true);
+};
+
+const documentFileFilter = (req, file, cb) => {
+  const rawName = file.originalname || '';
+  if (rawName.includes('\0') || rawName.includes('..') || rawName.includes('/') || rawName.includes('\\')) {
+    return cb(new Error('Invalid filename. Path traversal characters detected.'));
+  }
+  const ext = path.extname(rawName).toLowerCase();
+  if (BLOCKED_EXTENSIONS.has(ext)) {
+    return cb(new Error(`Security Violation: File extension '${ext}' is not permitted.`));
+  }
+  const validDocs = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+  if (!validDocs.includes(ext)) {
+    return cb(new Error('Invalid document file type. Only PDF, JPG, PNG, and WEBP documents are accepted.'));
+  }
+  const validMimes = ALLOWED_EXTENSIONS_MAP[ext];
+  const mime = (file.mimetype || '').toLowerCase();
+  if (!validMimes || !validMimes.includes(mime)) {
+    return cb(new Error(`MIME type mismatch: Content-Type '${mime}' does not match extension '${ext}'.`));
+  }
+  cb(null, true);
+};
+
 const upload = multer({
   storage,
   limits: {
-    fileSize: 15 * 1024 * 1024, // 15MB limit per file
+    fileSize: 5 * 1024 * 1024, // 5MB default limit
     files: 1
   },
   fileFilter
 });
 
+const logoUpload = multer({
+  storage,
+  limits: {
+    fileSize: 2 * 1024 * 1024, // 2MB limit for shop/brand logos and profile photos
+    files: 1
+  },
+  fileFilter: logoFileFilter
+});
+
+const documentUpload = multer({
+  storage,
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB limit for business licenses, KYC documents
+    files: 1
+  },
+  fileFilter: documentFileFilter
+});
+
 module.exports = upload;
+module.exports.upload = upload;
+module.exports.logoUpload = logoUpload;
+module.exports.documentUpload = documentUpload;

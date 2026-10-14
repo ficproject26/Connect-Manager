@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { locationService, uploadService } from '../services/api';
+import { locationService, uploadService, vendorService } from '../services/api';
 import {
   Lock, Upload, CheckCircle2, AlertCircle, Store, User,
   FileText, CreditCard, CheckCircle,
   ChevronRight, ChevronLeft, Eye, EyeOff, X,
-  Camera, BadgeCheck, Image as ImageIcon, Clock, Sparkles, Trash2
+  Camera, BadgeCheck, Image as ImageIcon, Clock, Sparkles, Trash2,
+  ShieldCheck, Smartphone, Send, RefreshCw
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -283,6 +284,98 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const [touched, setTouched] = useState({});
   const [fileFeedback, setFileFeedback] = useState(null);
 
+  // Business Phone OTP Verification State
+  const [phoneVerified, setPhoneVerified] = useState(() => {
+    if (isEditing) return true;
+    if (initialData?.mobile && (initialData?.status === 'Approved' || initialData?.status === 'Active')) return true;
+    return false;
+  });
+  const [verifiedPhone, setVerifiedPhone] = useState(() => {
+    if (isEditing) return initialData?.mobile || '';
+    return '';
+  });
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpVerifying, setOtpVerifying] = useState(false);
+  const [otpError, setOtpError] = useState('');
+  const [otpSuccess, setOtpSuccess] = useState('');
+  const [resendCooldown, setResendCooldown] = useState(0);
+
+  // Resend cooldown timer effect
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCooldown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [resendCooldown]);
+
+  const handleSendOtp = async () => {
+    const clean = String(formData.mobile || '').trim().replace(/\D/g, '').slice(-10);
+    if (!clean || !phoneOk(clean)) {
+      setErrors(p => ({ ...p, mobile: 'Enter a valid 10-digit Indian phone number starting with 6-9.' }));
+      return;
+    }
+    setOtpSending(true);
+    setOtpError('');
+    setOtpSuccess('');
+    try {
+      const res = await vendorService.sendVendorPhoneOtp(clean);
+      if (res && res.success) {
+        setOtpSent(true);
+        setResendCooldown(res.cooldownSeconds || 30);
+        setOtpSuccess(res.message || `OTP sent to +91 ${clean}. Valid for 5 minutes.`);
+        if (res.otp) {
+          setOtpCode(res.otp);
+        }
+      } else {
+        setOtpError(res.message || 'Failed to send OTP.');
+      }
+    } catch (err) {
+      setOtpError(err.message || 'Failed to send OTP to business phone.');
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    const clean = String(formData.mobile || '').trim().replace(/\D/g, '').slice(-10);
+    const code = String(otpCode || '').trim();
+    if (!clean || !code) {
+      setOtpError('Please enter the 6-digit OTP code.');
+      return;
+    }
+    setOtpVerifying(true);
+    setOtpError('');
+    try {
+      const res = await vendorService.verifyVendorPhoneOtp(clean, code);
+      if (res && res.success && res.verified) {
+        setPhoneVerified(true);
+        setVerifiedPhone(clean);
+        setOtpSuccess('Business phone verified successfully.');
+        setOtpError('');
+        setErrors(p => {
+          const next = { ...p };
+          delete next.mobile;
+          return next;
+        });
+      } else {
+        setOtpError(res.message || 'Incorrect OTP code.');
+      }
+    } catch (err) {
+      setOtpError(err.message || 'OTP verification failed.');
+    } finally {
+      setOtpVerifying(false);
+    }
+  };
+
   useEffect(() => {
     setFormData(getBlank());
   }, [initialData, prefill]);
@@ -468,10 +561,25 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const onLogo = e => {
     const f = e.target.files[0];
-    if (f) {
-      upd('logo', f);
-      upd('logoPreview', URL.createObjectURL(f));
+    if (!f) return;
+    if (f.size > 2 * 1024 * 1024) {
+      setErrors(p => ({ ...p, logo: 'Shop logo must not exceed 2MB.' }));
+      setGlobalError('Shop logo must not exceed 2MB.');
+      if (logoRef.current) logoRef.current.value = '';
+      if (e.target) e.target.value = '';
+      return;
     }
+    const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
+    const validExts = ['.jpg', '.jpeg', '.png', '.webp'];
+    if (!validExts.includes(ext) || !f.type.startsWith('image/')) {
+      setErrors(p => ({ ...p, logo: 'Invalid file type. Only JPG, PNG, and WEBP image files are accepted.' }));
+      if (logoRef.current) logoRef.current.value = '';
+      if (e.target) e.target.value = '';
+      return;
+    }
+    setErrors(p => { const next = { ...p }; delete next.logo; return next; });
+    upd('logo', f);
+    upd('logoPreview', URL.createObjectURL(f));
   };
 
   const handleRemoveLogo = async (e) => {
@@ -491,6 +599,14 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const onImgs = e => {
     const files = Array.from(e.target.files);
+    const oversized = files.find(f => f.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setErrors(p => ({ ...p, businessImages: 'Each additional KYC document must not exceed 5MB.' }));
+      setGlobalError('Each additional KYC document must not exceed 5MB.');
+      if (e.target) e.target.value = '';
+      return;
+    }
+    setErrors(p => { const next = { ...p }; delete next.businessImages; return next; });
     const all = [...formData.businessImages, ...files].slice(0, 5);
     const prev = [...formData.businessImagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5);
     upd('businessImages', all);
@@ -511,7 +627,25 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   };
 
   const onLicense = e => {
-    if (e.target.files[0]) upd('businessLicense', e.target.files[0]);
+    const f = e.target.files[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) {
+      setErrors(p => ({ ...p, businessLicense: 'Business document must not exceed 5MB.' }));
+      setGlobalError('Business document must not exceed 5MB.');
+      if (licenseRef.current) licenseRef.current.value = '';
+      if (e.target) e.target.value = '';
+      return;
+    }
+    const ext = f.name.slice(f.name.lastIndexOf('.')).toLowerCase();
+    const validExts = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+    if (!validExts.includes(ext)) {
+      setErrors(p => ({ ...p, businessLicense: 'Invalid document type. Only PDF, JPG, PNG, and WEBP documents are accepted.' }));
+      if (licenseRef.current) licenseRef.current.value = '';
+      if (e.target) e.target.value = '';
+      return;
+    }
+    setErrors(p => { const next = { ...p }; delete next.businessLicense; return next; });
+    upd('businessLicense', f);
   };
 
   const handleRemoveLicense = async (e) => {
@@ -535,6 +669,11 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setGlobalError('Each additional KYC document must not exceed 5MB.');
+      if (e.target) e.target.value = '';
+      return;
+    }
     setUploadingDoc(true);
     try {
       const r = await uploadService.uploadDocument(file);
@@ -589,6 +728,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       case 'mobile':
         if (!strVal) return 'Business phone number is required';
         if (!phoneOk(String(value))) return 'Must be 10 digits starting with 6-9';
+        if (!phoneVerified && !isEditing) return 'Business phone must be verified via OTP';
         return '';
 
       case 'email':
@@ -738,6 +878,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     if (s === 1 && territoryConfigError) {
       newErrors.territory = territoryConfigError;
     }
+    if (s === 1 && !phoneVerified && !isEditing) {
+      newErrors.mobile = 'Business phone must be verified via OTP before proceeding';
+    }
     fields.forEach(f => {
       const err = validateField(f, formData[f], formData);
       if (err) newErrors[f] = err;
@@ -879,7 +1022,161 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         </div>
       </div>
       <Field label="Product / Service Category" required error={errors.category}><select name="category" value={formData.category} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp(!!errors.category)}>{(CATEGORIES || []).map(c=><option key={c}>{c}</option>)}</select></Field>
-      <Field label="Business Phone" required error={errors.mobile}><input type="tel" name="mobile" value={formData.mobile} maxLength={10} onChange={e=>upd('mobile',e.target.value.replace(/\D/g,'').slice(0,10))} onBlur={handleBlur} placeholder="10-digit mobile number" className="form-input" style={inp(!!errors.mobile)}/></Field>
+      <div style={{ gridColumn: '1 / -1' }}>
+        <Field label="Business Phone" required error={errors.mobile}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <div style={{ position: 'relative', flex: 1 }}>
+              <input
+                type="tel"
+                name="mobile"
+                value={formData.mobile}
+                maxLength={10}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  upd('mobile', val);
+                  if (val !== verifiedPhone) {
+                    setPhoneVerified(false);
+                    setOtpSent(false);
+                    setOtpCode('');
+                    setOtpError('');
+                    setOtpSuccess('');
+                  }
+                }}
+                onBlur={handleBlur}
+                placeholder="10-digit mobile number starting with 6-9"
+                className="form-input"
+                style={{ ...inp(!!errors.mobile), paddingRight: phoneVerified ? 120 : 12 }}
+              />
+              {phoneVerified && (
+                <div style={{
+                  position: 'absolute',
+                  right: 8,
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: '#ecfdf5',
+                  color: '#059669',
+                  border: '1px solid #a7f3d0',
+                  borderRadius: 6,
+                  padding: '2px 8px',
+                  fontSize: 11,
+                  fontWeight: 700,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 4
+                }}>
+                  <ShieldCheck size={13} /> Verified
+                </div>
+              )}
+            </div>
+
+            {!phoneVerified && (
+              <button
+                type="button"
+                onClick={handleSendOtp}
+                disabled={otpSending || resendCooldown > 0 || !formData.mobile || formData.mobile.length !== 10}
+                style={{
+                  background: resendCooldown > 0 ? '#f1f5f9' : '#0284c7',
+                  color: resendCooldown > 0 ? '#94a3b8' : '#ffffff',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '8px 14px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: (resendCooldown > 0 || !formData.mobile || formData.mobile.length !== 10) ? 'not-allowed' : 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  whiteSpace: 'nowrap',
+                  height: 38
+                }}
+              >
+                {otpSending ? 'Sending...' : otpSent ? (resendCooldown > 0 ? `Resend in ${resendCooldown}s` : 'Resend OTP') : 'Send OTP'}
+              </button>
+            )}
+          </div>
+        </Field>
+
+        {/* Inline OTP Verification Box */}
+        {otpSent && !phoneVerified && (
+          <div style={{
+            marginTop: 8,
+            padding: '12px 14px',
+            background: '#f8fafc',
+            border: '1.5px solid #cbd5e1',
+            borderRadius: 10,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: 8
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                <Smartphone size={14} color="#0284c7" /> Verify 6-digit Business Phone OTP
+              </span>
+              <span style={{ fontSize: 11, color: '#64748b' }}>
+                Sent to +91 {formData.mobile}
+              </span>
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input
+                type="text"
+                maxLength={6}
+                value={otpCode}
+                onChange={e => {
+                  setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
+                  if (otpError) setOtpError('');
+                }}
+                placeholder="Enter 6-digit OTP"
+                style={{
+                  ...inp(!!otpError),
+                  width: 160,
+                  letterSpacing: '0.2em',
+                  fontFamily: 'monospace',
+                  fontSize: 14,
+                  fontWeight: 800,
+                  textAlign: 'center'
+                }}
+              />
+              <button
+                type="button"
+                onClick={handleVerifyOtp}
+                disabled={otpVerifying || otpCode.length !== 6}
+                style={{
+                  background: otpCode.length === 6 ? '#16a34a' : '#cbd5e1',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: 'var(--radius-sm)',
+                  padding: '8px 16px',
+                  fontSize: 12,
+                  fontWeight: 700,
+                  cursor: otpCode.length === 6 ? 'pointer' : 'not-allowed',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                {otpVerifying ? 'Verifying...' : 'Verify OTP'}
+              </button>
+              {resendCooldown > 0 && (
+                <span style={{ fontSize: 11, color: '#64748b' }}>
+                  Wait {resendCooldown}s to resend
+                </span>
+              )}
+            </div>
+
+            {otpError && (
+              <div style={{ fontSize: 11, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <AlertCircle size={12} /> {otpError}
+              </div>
+            )}
+            {otpSuccess && (
+              <div style={{ fontSize: 11, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <CheckCircle size={12} /> {otpSuccess}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
       <Field label="Email Address" required error={errors.email}><input type="email" name="email" maxLength={100} value={formData.email} onChange={onChange} onBlur={handleBlur} placeholder="vendor@business.com" className="form-input" style={inp(!!errors.email)}/></Field>
       <Field label="Business Website (Optional)" error={errors.website}><input type="url" name="website" value={formData.website} onChange={onChange} onBlur={handleBlur} placeholder="https://yourwebsite.com" className="form-input" style={inp(!!errors.website)}/></Field>
       <div style={{gridColumn:'1/-1'}}><Field label="Business Address" required error={errors.address}><input type="text" name="address" maxLength={250} value={formData.address} onChange={onChange} onBlur={handleBlur} placeholder="Street, Area, City" className="form-input" style={inp(!!errors.address)}/></Field></div>
@@ -1275,9 +1572,8 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     <div className="responsive-grid-2" style={{ gap: 16 }}>
       <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10))} onBlur={handleBlur} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
       <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',e.target.value.replace(/\D/g,'').slice(0,12))} onBlur={handleBlur} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
-      <Field label="GST Number" error={errors.gstNumber}><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} onBlur={handleBlur} placeholder="e.g. 29ABCDE1234F1Z5" className="form-input" style={{...inp(!!errors.gstNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
-      <div style={{gridColumn:'1/-1'}}><Field label="Company Registration Number (Optional)"><input type="text" name="companyRegNumber" value={formData.companyRegNumber||''} onChange={onChange} onBlur={handleBlur} placeholder="Optional" className="form-input" style={inp()}/></Field></div>
       <Field label="GST Status"><select name="gstStatus" value={formData.gstStatus||'Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
+      <Field label="GST Number" error={errors.gstNumber}><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} onBlur={handleBlur} placeholder={formData.gstStatus === 'Registered' ? "e.g. 29ABCDE1234F1Z5 (Required)" : "e.g. 29ABCDE1234F1Z5 (Optional)"} className="form-input" style={{...inp(!!errors.gstNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
       <Field label="MSME Status"><select name="msmeStatus" value={formData.msmeStatus||'Not Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
       <div style={{gridColumn:'1/-1'}}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>

@@ -1029,9 +1029,9 @@ const checkCapacity = async (req, res) => {
 // Step 1B: Get live registration status for applicant review tracking
 const getRegistrationStatus = async (req, res) => {
   try {
-    const { userId } = req.params;
+    const userId = req.params?.userId || req.query?.userId || req.query?.email || req.body?.userId || req.body?.email;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID is required.' });
+      return res.status(400).json({ success: false, message: 'User ID or email is required.' });
     }
 
     let user = (await db.users.findById(userId)) || (await db.managers.findById(userId));
@@ -1056,14 +1056,24 @@ const getRegistrationStatus = async (req, res) => {
     const resolvedDivision = user.division || user.assignedDivision || divisionObj?.name || null;
     const resolvedPincode = user.pincode || user.assignedPincode || pincodeObj?.code || null;
 
-    const subAdminApprovalStatus = user.subAdminApprovalStatus || (user.adminApprovalStatus === 'approved' ? 'approved' : 'pending');
-    const mainAdminApprovalStatus = user.mainAdminApprovalStatus || 
-      (user.status === 'PENDING_KYC_VERIFICATION' || user.status === 'active' ? 'approved' : 
-       subAdminApprovalStatus === 'approved' ? 'pending' : 'waiting_subadmin');
-    const kycVerificationStatus = user.kycVerificationStatus || 
-      (user.status === 'active' ? 'approved' : user.status === 'KYC_REJECTED' ? 'rejected' : 
-       mainAdminApprovalStatus === 'approved' ? 'pending' : 'not_started');
-    const overallRegistrationStatus = user.overallRegistrationStatus || user.status || 'PENDING_SUB_ADMIN_APPROVAL';
+    const stUpper = String(user.status || user.overallRegistrationStatus || '').toUpperCase();
+    const isSubAdminApproved = user.subAdminApprovalStatus === 'approved' || 
+      user.adminApprovalStatus === 'approved' ||
+      ['PENDING_MAIN_ADMIN_APPROVAL', 'PENDING_KYC_VERIFICATION', 'PENDING_KYC_APPROVAL', 'KYC_PENDING', 'ACTIVE', 'APPROVED'].includes(stUpper);
+    const subAdminApprovalStatus = isSubAdminApproved ? 'approved' : (user.subAdminApprovalStatus || 'pending');
+
+    const isMainAdminApproved = user.mainAdminApprovalStatus === 'approved' ||
+      ['PENDING_KYC_VERIFICATION', 'PENDING_KYC_APPROVAL', 'KYC_PENDING', 'ACTIVE', 'APPROVED'].includes(stUpper);
+    const mainAdminApprovalStatus = isMainAdminApproved
+      ? 'approved'
+      : (subAdminApprovalStatus === 'approved' ? (user.mainAdminApprovalStatus || 'pending') : 'waiting_subadmin');
+
+    const isKycApproved = user.kycVerificationStatus === 'approved' || user.kycStatus === 'verified' || ['ACTIVE', 'APPROVED'].includes(stUpper);
+    const kycVerificationStatus = isKycApproved 
+      ? 'approved' 
+      : (user.status === 'KYC_REJECTED' ? 'rejected' : (mainAdminApprovalStatus === 'approved' ? 'pending' : 'not_started'));
+
+    const overallRegistrationStatus = user.overallRegistrationStatus || user.status || (isSubAdminApproved ? 'PENDING_MAIN_ADMIN_APPROVAL' : 'PENDING_SUB_ADMIN_APPROVAL');
 
     const statusPayload = {
       id: user._id || user.id,
@@ -1075,6 +1085,9 @@ const getRegistrationStatus = async (req, res) => {
       level: user.level,
       status: user.status,
       overallRegistrationStatus,
+      isSubAdminApproved,
+      isMainAdminApproved,
+      isKycApproved,
       subAdminApprovalStatus,
       mainAdminApprovalStatus,
       kycVerificationStatus,
@@ -1290,6 +1303,25 @@ const subAdminApproval = async (req, res) => {
       isApproved: false,
       isActive: false
     });
+    if (db.managers) {
+      await db.managers.findByIdAndUpdate(user._id, {
+        status: 'PENDING_MAIN_ADMIN_APPROVAL',
+        overallRegistrationStatus: 'PENDING_MAIN_ADMIN_APPROVAL',
+        subAdminApprovalStatus: 'approved',
+        mainAdminApprovalStatus: 'pending',
+        kycVerificationStatus: 'not_started',
+        adminApprovalStatus: 'approved',
+        approvalStage: 'mainadmin_review',
+        subadminApprovedBy: reviewerId,
+        subadminApprovedByName: reviewerName,
+        subadminApprovedByRole: reviewerRole,
+        subadminApprovedAt: now,
+        adminApprovedAt: now,
+        routingQueue: 'MAIN_ADMIN_APPROVAL_QUEUE',
+        isApproved: false,
+        isActive: false
+      }).catch(() => {});
+    }
     const updatedUser = await db.users.findById(user._id);
 
     // Sync to managerrequests collection for Main Admin portal
@@ -2069,12 +2101,43 @@ const updateProfilePhoto = async (req, res) => {
 const removeProfilePhoto = async (req, res) => {
   try {
     const userId = req.user.id || req.user._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
 
-    let updatedUser = await db.users.findByIdAndUpdate(userId, { avatarUrl: null });
+    let existingUser = await db.users.findById(userId);
+    if (!existingUser && db.managers) {
+      existingUser = await db.managers.findById(userId);
+    }
+
+    const currentPhoto = existingUser?.avatarUrl || existingUser?.avatar || existingUser?.profilePhoto || existingUser?.image || null;
+
+    // Safely remove the physical file from uploads folder if it's a locally stored upload
+    if (currentPhoto && typeof currentPhoto === 'string' && currentPhoto.startsWith('/uploads/')) {
+      try {
+        const filename = path.basename(currentPhoto);
+        const uploadsDir = path.resolve(__dirname, '..', '..', 'uploads');
+        const filePath = path.join(uploadsDir, filename);
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath);
+        }
+      } catch (fileErr) {
+        console.warn('Could not delete old profile photo file:', fileErr.message);
+      }
+    }
+
+    const clearPhotoUpdate = {
+      avatarUrl: null,
+      avatar: null,
+      profilePhoto: null,
+      image: null
+    };
+
+    let updatedUser = await db.users.findByIdAndUpdate(userId, clearPhotoUpdate);
     if (!updatedUser && db.managers) {
-      updatedUser = await db.managers.findByIdAndUpdate(userId, { avatarUrl: null });
+      updatedUser = await db.managers.findByIdAndUpdate(userId, clearPhotoUpdate);
     } else if (db.managers) {
-      await db.managers.findByIdAndUpdate(userId, { avatarUrl: null }).catch(() => {});
+      await db.managers.findByIdAndUpdate(userId, clearPhotoUpdate).catch(() => {});
     }
 
     res.json({
@@ -2083,7 +2146,10 @@ const removeProfilePhoto = async (req, res) => {
       avatarUrl: null,
       user: {
         ...(updatedUser || req.user),
-        avatarUrl: null
+        avatarUrl: null,
+        avatar: null,
+        profilePhoto: null,
+        image: null
       }
     });
   } catch (err) {

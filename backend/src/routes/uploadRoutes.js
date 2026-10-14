@@ -19,13 +19,18 @@ const optionalAuth = (req, res, next) => {
 router.use(optionalAuth);
 router.use(uploadLimiter);
 
+const { upload, logoUpload, documentUpload } = require('../middleware/uploadMiddleware');
+
 // POST /api/uploads/document
 router.post('/document', (req, res) => {
-  upload.single('document')(req, res, (err) => {
+  documentUpload.single('document')(req, res, (err) => {
     if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'Business document / KYC document must not exceed 5MB.'
+        : (err.message || 'File upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
-        message: err.message || 'File upload rejected due to validation failure.'
+        message
       });
     }
 
@@ -54,13 +59,16 @@ router.post('/document', (req, res) => {
   });
 });
 
-// POST /api/uploads/avatar, /api/uploads/photo, /api/uploads/profile-photo
+// POST /api/uploads/avatar, /api/uploads/photo, /api/uploads/profile-photo, /api/uploads/logo
 const handleAvatarUpload = (req, res) => {
-  upload.any()(req, res, (err) => {
+  logoUpload.any()(req, res, (err) => {
     if (err) {
+      const message = err.code === 'LIMIT_FILE_SIZE'
+        ? 'Shop logo must not exceed 2MB.'
+        : (err.message || 'Avatar upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
-        message: err.message || 'Avatar upload rejected due to validation failure.'
+        message
       });
     }
 
@@ -93,6 +101,8 @@ const handleAvatarUpload = (req, res) => {
 router.post('/avatar', handleAvatarUpload);
 router.post('/photo', handleAvatarUpload);
 router.post('/profile-photo', handleAvatarUpload);
+router.post('/logo', handleAvatarUpload);
+router.post('/shop-logo', handleAvatarUpload);
 
 const fs = require('fs');
 const db = require('../config/db');
@@ -167,5 +177,10 @@ const handleFileDelete = async (req, res) => {
 router.delete('/file', handleFileDelete);
 router.delete('/document', handleFileDelete);
 
+const authController = require('../controllers/authController');
+router.delete('/profile-photo', authMiddleware, authController.removeProfilePhoto);
+router.delete('/avatar', authMiddleware, authController.removeProfilePhoto);
+
 module.exports = router;
+
 

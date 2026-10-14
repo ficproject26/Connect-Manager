@@ -229,6 +229,28 @@ export default function Register({
     }
   }, [initialUser, initialFlowState, initialToken, initialRejectionReason]);
 
+  // Auto-refresh status on mount if arriving in review flow
+  useEffect(() => {
+    const targetUser = registeredUser || initialUser;
+    const targetId = targetUser?.id || targetUser?._id || targetUser?.managerId || targetUser?.email;
+    if (targetId && (flowState === 'under_review' || flowState === 'kyc_pending' || initialFlowState === 'under_review')) {
+      authService.getRegistrationStatus(targetId).then(res => {
+        if (res?.success && res?.data) {
+          const updated = {
+            ...(targetUser || {}),
+            ...res.data,
+            status: res.data.overallRegistrationStatus || res.data.status,
+            subAdminApprovalStatus: res.data.subAdminApprovalStatus,
+            mainAdminApprovalStatus: res.data.mainAdminApprovalStatus,
+            kycVerificationStatus: res.data.kycVerificationStatus
+          };
+          setRegisteredUser(updated);
+          setFlowState(getInitialFlowState(updated));
+        }
+      }).catch(() => {});
+    }
+  }, []);
+
   // Messages & Loading
   const [loading, setLoading] = useState(false);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
@@ -843,17 +865,21 @@ export default function Register({
 
   // Live Registration Status Polling / Refresh
   const handleRefreshStatus = async () => {
-    if (!registeredUser?.id) return;
+    const targetId = registeredUser?.id || registeredUser?._id || registeredUser?.managerId || registeredUser?.email;
+    if (!targetId) return;
     setRefreshingStatus(true);
     setError('');
 
     try {
-      const res = await authService.getRegistrationStatus(registeredUser.id);
+      const res = await authService.getRegistrationStatus(targetId);
       if (res.success && res.data) {
         const updated = {
           ...registeredUser,
           ...res.data,
-          status: res.data.overallRegistrationStatus || res.data.status
+          status: res.data.overallRegistrationStatus || res.data.status,
+          subAdminApprovalStatus: res.data.subAdminApprovalStatus,
+          mainAdminApprovalStatus: res.data.mainAdminApprovalStatus,
+          kycVerificationStatus: res.data.kycVerificationStatus
         };
         setRegisteredUser(updated);
         setFlowState(getInitialFlowState(updated));
@@ -867,6 +893,17 @@ export default function Register({
       setRefreshingStatus(false);
     }
   };
+
+  const regStatusLower = String(registeredUser?.status || registeredUser?.overallRegistrationStatus || '').toLowerCase();
+  const isSubAdminApproved = registeredUser?.subAdminApprovalStatus === 'approved' ||
+    registeredUser?.adminApprovalStatus === 'approved' ||
+    ['pending_main_admin_approval', 'pending_kyc_verification', 'pending_kyc_approval', 'kyc_pending', 'active', 'approved'].includes(regStatusLower);
+
+  const isMainAdminApproved = registeredUser?.mainAdminApprovalStatus === 'approved' ||
+    ['pending_kyc_verification', 'pending_kyc_approval', 'kyc_pending', 'active', 'approved'].includes(regStatusLower);
+
+  const isKycApproved = registeredUser?.kycVerificationStatus === 'approved' ||
+    ['active', 'approved'].includes(regStatusLower);
 
   return (
     <div style={{
@@ -2637,11 +2674,11 @@ export default function Register({
                   borderRadius: 'var(--radius-full)',
                   fontSize: '0.7rem',
                   fontWeight: 700,
-                  background: '#fef3c7',
-                  color: '#b45309',
-                  border: '1px solid #fde68a'
+                  background: isMainAdminApproved ? '#dcfce7' : isSubAdminApproved ? '#dbeafe' : '#fef3c7',
+                  color: isMainAdminApproved ? '#15803d' : isSubAdminApproved ? '#1e40af' : '#b45309',
+                  border: isMainAdminApproved ? '1px solid #bbf7d0' : isSubAdminApproved ? '1px solid #bfdbfe' : '1px solid #fde68a'
                 }}>
-                  Pending Sub-Admin Approval
+                  {isMainAdminApproved ? 'Main Admin Approved • KYC Pending' : isSubAdminApproved ? 'Sub-Admin Approved • Waiting Main Admin' : 'Pending Sub-Admin Approval'}
                 </span>
               </div>
 
@@ -2664,20 +2701,20 @@ export default function Register({
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><CheckCircle2 size={14} /> 1. Registration Submitted</span>
                       <span style={{ fontSize: '0.7rem', background: '#dcfce7', padding: '1px 6px', borderRadius: '4px' }}>Done</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: registeredUser.subAdminApprovalStatus === 'approved' ? '#15803d' : '#b45309', fontWeight: 700 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: isSubAdminApproved ? '#15803d' : '#b45309', fontWeight: 700 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {registeredUser.subAdminApprovalStatus === 'approved' ? <CheckCircle2 size={14} /> : <Clock size={14} />} 2. Territorial Sub-admin Review
+                        {isSubAdminApproved ? <CheckCircle2 size={14} /> : <Clock size={14} />} 2. Territorial Sub-admin Review
                       </span>
-                      <span style={{ fontSize: '0.7rem', background: registeredUser.subAdminApprovalStatus === 'approved' ? '#dcfce7' : '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>
-                        {registeredUser.subAdminApprovalStatus === 'approved' ? 'Approved' : 'Pending'}
+                      <span style={{ fontSize: '0.7rem', background: isSubAdminApproved ? '#dcfce7' : '#fef3c7', padding: '1px 6px', borderRadius: '4px' }}>
+                        {isSubAdminApproved ? 'Approved' : 'Pending'}
                       </span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: registeredUser.mainAdminApprovalStatus === 'approved' ? '#15803d' : registeredUser.subAdminApprovalStatus === 'approved' ? '#b45309' : '#94a3b8', fontWeight: registeredUser.subAdminApprovalStatus === 'approved' ? 700 : 500 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: isMainAdminApproved ? '#15803d' : isSubAdminApproved ? '#b45309' : '#94a3b8', fontWeight: isSubAdminApproved ? 700 : 500 }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        {registeredUser.mainAdminApprovalStatus === 'approved' ? <CheckCircle2 size={14} /> : registeredUser.subAdminApprovalStatus === 'approved' ? <Clock size={14} /> : <Lock size={14} />} 3. Main Admin Approval
+                        {isMainAdminApproved ? <CheckCircle2 size={14} /> : isSubAdminApproved ? <Clock size={14} /> : <Lock size={14} />} 3. Main Admin Approval
                       </span>
-                      <span style={{ fontSize: '0.7rem', background: registeredUser.mainAdminApprovalStatus === 'approved' ? '#dcfce7' : registeredUser.subAdminApprovalStatus === 'approved' ? '#fef3c7' : '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
-                        {registeredUser.mainAdminApprovalStatus === 'approved' ? 'Approved' : registeredUser.subAdminApprovalStatus === 'approved' ? 'Pending' : 'Waiting Sub-admin'}
+                      <span style={{ fontSize: '0.7rem', background: isMainAdminApproved ? '#dcfce7' : isSubAdminApproved ? '#fef3c7' : '#f1f5f9', padding: '1px 6px', borderRadius: '4px' }}>
+                        {isMainAdminApproved ? 'Approved' : isSubAdminApproved ? 'Pending' : 'Waiting Sub-admin'}
                       </span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', color: '#94a3b8' }}>
@@ -2693,8 +2730,8 @@ export default function Register({
 
                 <div style={{
                   padding: '14px',
-                  background: '#fffbeb',
-                  border: '1px solid #fde68a',
+                  background: isSubAdminApproved ? '#eff6ff' : '#fffbeb',
+                  border: isSubAdminApproved ? '1px solid #bfdbfe' : '1px solid #fde68a',
                   borderRadius: 'var(--radius-md)',
                   textAlign: 'center'
                 }}>
@@ -2702,24 +2739,26 @@ export default function Register({
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    background: '#f59e0b',
+                    background: isSubAdminApproved ? '#3b82f6' : '#f59e0b',
                     color: 'white',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     margin: '0 auto 8px'
                   }}>
-                    <Clock size={20} />
+                    {isSubAdminApproved ? <CheckCircle2 size={20} /> : <Clock size={20} />}
                   </div>
-                  <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: '#92400e', margin: '0 0 4px 0' }}>
-                    {registeredUser.subAdminApprovalStatus === 'approved' ? 'Awaiting Main Admin Authorization' : 'Awaiting Sub-Admin Approval'}
+                  <h4 style={{ fontSize: '0.98rem', fontWeight: 800, color: isSubAdminApproved ? '#1e40af' : '#92400e', margin: '0 0 4px 0' }}>
+                    {isMainAdminApproved ? 'Awaiting KYC Verification' : isSubAdminApproved ? 'Awaiting Main Admin Authorization' : 'Awaiting Sub-Admin Approval'}
                   </h4>
-                  <p style={{ fontSize: '0.76rem', color: '#b45309', margin: 0, lineHeight: 1.45 }}>
-                    {registeredUser.subAdminApprovalStatus === 'approved'
-                      ? 'Territorial Sub-admin review is approved! Your application is now in the Main Admin authorization queue.'
-                      : (registeredUser.assignedSubAdminName 
-                          ? `Your registration is queued with Sub-admin (${registeredUser.assignedSubAdminName}) for territorial approval.`
-                          : 'Your registration is queued in the Sub-admin approval queue awaiting territorial assignment.')}
+                  <p style={{ fontSize: '0.76rem', color: isSubAdminApproved ? '#1e3a8a' : '#b45309', margin: 0, lineHeight: 1.45 }}>
+                    {isMainAdminApproved
+                      ? 'Main Admin authorization granted! Your application is now in the KYC document clearance queue.'
+                      : isSubAdminApproved
+                        ? 'Territorial Sub-admin review is approved! Your application is now in the Main Admin authorization queue.'
+                        : (registeredUser.assignedSubAdminName 
+                            ? `Your registration is queued with Sub-admin (${registeredUser.assignedSubAdminName}) for territorial approval.`
+                            : 'Your registration is queued in the Sub-admin approval queue awaiting territorial assignment.')}
                     {' '}Dashboard access is strictly locked until all approvals and KYC verification are completed.
                   </p>
                 </div>

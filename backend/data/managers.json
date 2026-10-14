@@ -51,7 +51,11 @@
     "targetAdminName": "Dhanu",
     "targetAdminRole": "State Admin",
     "targetJurisdiction": "PIN: 635126",
-    "updatedAt": "2026-10-13T10:12:03.476Z"
+    "updatedAt": "2026-10-14T09:49:52.169Z",
+    "avatarUrl": null,
+    "avatar": null,
+    "profilePhoto": null,
+    "image": null
   },
   {
     "_id": "usr_mgr_1790588690346_2iph",

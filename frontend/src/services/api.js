@@ -308,10 +308,32 @@ export const authService = {
   },
 
   async removeProfilePhoto() {
-    const res = await fetch(`${API_BASE}/auth/profile-photo`, {
+    let res = await fetch(`${API_BASE}/auth/profile-photo`, {
       method: 'DELETE',
       headers: getAuthHeaders()
     });
+
+    if (!res.ok && (res.status === 404 || res.status === 405)) {
+      res = await fetch(`${API_BASE}/auth/profile-image`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+    }
+
+    if (!res.ok && (res.status === 404 || res.status === 405)) {
+      res = await fetch(`${API_BASE}/auth/remove-profile-photo`, {
+        method: 'POST',
+        headers: getAuthHeaders()
+      });
+    }
+
+    if (!res.ok && (res.status === 404 || res.status === 405)) {
+      res = await fetch(`${API_BASE}/uploads/profile-photo`, {
+        method: 'DELETE',
+        headers: getAuthHeaders()
+      });
+    }
+
     return handleResponse(res);
   }
 };
@@ -729,6 +751,24 @@ export const vendorService = {
       method: 'PATCH',
       headers: getAuthHeaders(),
       body: JSON.stringify({ status, notes })
+    });
+    return handleResponse(res);
+  },
+
+  async sendVendorPhoneOtp(phone) {
+    const res = await fetch(`${API_BASE}/vendors/otp/send`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ phone })
+    });
+    return handleResponse(res);
+  },
+
+  async verifyVendorPhoneOtp(phone, otp) {
+    const res = await fetch(`${API_BASE}/vendors/otp/verify`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ phone, otp })
     });
     return handleResponse(res);
   }

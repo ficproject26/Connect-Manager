@@ -653,33 +653,49 @@ const getLeaderboardData = async (req, res) => {
           : 30 * 24 * 60 * 60 * 1000);
       const periodStart = new Date(now.getTime() - periodMs);
 
-      const rankedList = candidateManagers.map((m, idx) => {
+      // Deduplicate vendors consistently with Dashboard
+      const seenVendors = new Set();
+      const uniqueVendors = [];
+      for (const v of (allVendors || [])) {
+        if (!v) continue;
+        const key = String(v.registrationId || v._id || v.id || `${v.phone || v.mobile}_${v.businessName}`);
+        if (!seenVendors.has(key)) {
+          seenVendors.add(key);
+          uniqueVendors.push(v);
+        }
+      }
+
+      const rankedList = await Promise.all(candidateManagers.map(async (m, idx) => {
         const state = m.stateId ? stateMap.get(String(m.stateId)) : null;
         const district = m.districtId ? districtMap.get(String(m.districtId)) : null;
         const division = m.divisionId ? divisionMap.get(String(m.divisionId)) : null;
         const pincode = m.pincodeId ? pincodeMap.get(String(m.pincodeId)) : null;
 
-        // Calculate real vendors added by this respective manager
-        const mId = String(m._id || m.id || '');
-        const managerVendors = (allVendors || []).filter(v => 
-          String(v.createdBy || '') === mId
-        );
+        // Calculate real vendors in this respective manager's scope or direct attribution
+        const mId = String(m._id || m.id || m.managerId || '');
+        const managerVendors = [];
+        for (const v of uniqueVendors) {
+          const isDirect = String(v.createdBy || v.managerId || v.userId || v.recordedById || v.agentId || v.onboardedBy || v.registeredById || '') === mId;
+          if (isDirect) {
+            managerVendors.push(v);
+          } else {
+            const inScope = await territoryScopeService.isRecordInScope(v, m);
+            if (inScope) {
+              managerVendors.push(v);
+            }
+          }
+        }
 
-        // Filter by selected time period
+        // Filter by selected time period (when period is 'all', all-time vendors are evaluated)
         const periodVendors = managerVendors.filter(v => {
+          if (!period || period === 'all') return true;
           if (!v.createdAt) return true;
           return new Date(v.createdAt) >= periodStart;
         });
 
         const totalVendors = periodVendors.length;
-        const activeVendors = periodVendors.filter(v => {
-          const st = String(v.status || '').toLowerCase();
-          return st === 'active' || st === 'approved';
-        }).length;
-        const pendingVendors = periodVendors.filter(v => {
-          const st = String(v.status || '').toLowerCase();
-          return st === 'pending' || st.includes('review');
-        }).length;
+        const activeVendors = periodVendors.filter(v => isVendorActive(v.status)).length;
+        const pendingVendors = periodVendors.filter(v => isVendorPending(v.status)).length;
 
         const basePoints = (activeVendors * 250) + (totalVendors * 80);
         const target = Math.max(totalVendors + 2, 5);
@@ -723,7 +739,7 @@ const getLeaderboardData = async (req, res) => {
           rating: activeVendors > 0 ? 'Excellent' : totalVendors > 0 ? 'Good' : 'Steady',
           avatarBg: colorPalette[idx % colorPalette.length]
         };
-      });
+      }));
 
       // Sort by points descending, then by active vendors
       rankedList.sort((a, b) => b.points - a.points || b.activeVendors - a.activeVendors || b.vendorsOnboarded - a.vendorsOnboarded);

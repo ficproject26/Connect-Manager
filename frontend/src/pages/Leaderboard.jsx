@@ -353,6 +353,22 @@ const Leaderboard = ({ onNavigate }) => {
           >
             Full Year
           </button>
+          <button
+            onClick={() => setPeriod('all')}
+            style={{
+              background: period === 'all' ? 'white' : 'transparent',
+              color: period === 'all' ? 'var(--text-main)' : '#64748b',
+              border: 'none',
+              borderRadius: '6px',
+              padding: '6px 12px',
+              fontSize: '0.78rem',
+              fontWeight: period === 'all' ? 700 : 500,
+              cursor: 'pointer',
+              boxShadow: period === 'all' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none'
+            }}
+          >
+            All Time
+          </button>
         </div>
       </div>
 

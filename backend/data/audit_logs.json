@@ -22188,5 +22188,106 @@
     "userId": "b4677612-7b51-4696-badd-45305a812229",
     "userName": "Dinesh Kathiravan",
     "userRole": "division_manager"
+  },
+  {
+    "_id": "a4277107-b9fb-4b2f-b6de-33ac1bcb86a5",
+    "id": "a4277107-b9fb-4b2f-b6de-33ac1bcb86a5",
+    "action": "SUB_ADMIN_APPROVAL_GRANTED",
+    "userId": "6b1eb3d0-902c-4fb9-b811-3ce1e9bc7183",
+    "userName": "Pipeline Test Manager",
+    "userRole": "pincode_manager",
+    "details": "Sub-admin (Sub-Admin Reviewer, super_admin) approved registration for Pipeline Test Manager (pincode_manager). Status transitioned to PENDING_MAIN_ADMIN_APPROVAL.",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-10-14T09:46:59.203Z",
+    "createdAt": "2026-10-14T09:46:59.208Z",
+    "updatedAt": "2026-10-14T09:46:59.208Z"
+  },
+  {
+    "_id": "fb9db184-2873-4b3d-9423-cc2b573fa400",
+    "id": "fb9db184-2873-4b3d-9423-cc2b573fa400",
+    "action": "SUB_ADMIN_APPROVAL_GRANTED",
+    "userId": "876a1261-754a-4ddc-8218-aea16e1031b0",
+    "userName": "Pipeline Test Manager",
+    "userRole": "pincode_manager",
+    "details": "Sub-admin (Sub-Admin Reviewer, super_admin) approved registration for Pipeline Test Manager (pincode_manager). Status transitioned to PENDING_MAIN_ADMIN_APPROVAL.",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-10-14T09:47:21.568Z",
+    "createdAt": "2026-10-14T09:47:21.573Z",
+    "updatedAt": "2026-10-14T09:47:21.573Z"
+  },
+  {
+    "_id": "4e818c9b-b675-49f8-9457-8d438d831690",
+    "id": "4e818c9b-b675-49f8-9457-8d438d831690",
+    "action": "SUB_ADMIN_APPROVAL_GRANTED",
+    "userId": "5812bc7e-9cf5-4f62-935d-95e542036966",
+    "userName": "Pipeline Test Manager",
+    "userRole": "pincode_manager",
+    "details": "Sub-admin (Sub-Admin Reviewer, super_admin) approved registration for Pipeline Test Manager (pincode_manager). Status transitioned to PENDING_MAIN_ADMIN_APPROVAL.",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-10-14T09:47:51.160Z",
+    "createdAt": "2026-10-14T09:47:51.165Z",
+    "updatedAt": "2026-10-14T09:47:51.165Z"
+  },
+  {
+    "_id": "e4ace498-9a99-4cdf-935d-0b1231a7d7dc",
+    "id": "e4ace498-9a99-4cdf-935d-0b1231a7d7dc",
+    "action": "SUB_ADMIN_APPROVAL_GRANTED",
+    "userId": "49ebd342-61cd-4c5c-9de4-8c92db956c7e",
+    "userName": "Pipeline Test Manager",
+    "userRole": "pincode_manager",
+    "details": "Sub-admin (Sub-Admin Reviewer, super_admin) approved registration for Pipeline Test Manager (pincode_manager). Status transitioned to PENDING_MAIN_ADMIN_APPROVAL.",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-10-14T09:49:05.585Z",
+    "createdAt": "2026-10-14T09:49:05.589Z",
+    "updatedAt": "2026-10-14T09:49:05.589Z"
+  },
+  {
+    "_id": "56f2902c-cfe8-47e1-9d44-2bbb0c24fbb4",
+    "id": "56f2902c-cfe8-47e1-9d44-2bbb0c24fbb4",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager",
+    "action": "Vendor Created",
+    "module": "Vendors",
+    "recordId": "cd1eb7af-1af4-4c90-8944-5e7ce31a5243",
+    "previousValue": null,
+    "newValue": {
+      "businessName": "Brand New Co 1791971347024",
+      "status": "Pending"
+    },
+    "timestamp": "2026-10-14T09:49:07.026Z",
+    "createdAt": "2026-10-14T09:49:07.026Z",
+    "updatedAt": "2026-10-14T09:49:07.026Z"
+  },
+  {
+    "_id": "85c7c413-f366-40ae-8293-27c473fd2fc3",
+    "id": "85c7c413-f366-40ae-8293-27c473fd2fc3",
+    "action": "SUB_ADMIN_APPROVAL_GRANTED",
+    "userId": "bdf907d6-160b-4304-b305-21e35369919e",
+    "userName": "Pipeline Test Manager",
+    "userRole": "pincode_manager",
+    "details": "Sub-admin (Sub-Admin Reviewer, super_admin) approved registration for Pipeline Test Manager (pincode_manager). Status transitioned to PENDING_MAIN_ADMIN_APPROVAL.",
+    "ip": "127.0.0.1",
+    "timestamp": "2026-10-14T09:49:52.172Z",
+    "createdAt": "2026-10-14T09:49:52.176Z",
+    "updatedAt": "2026-10-14T09:49:52.176Z"
+  },
+  {
+    "_id": "f5c2f40c-313a-4631-85a7-e66d60f69347",
+    "id": "f5c2f40c-313a-4631-85a7-e66d60f69347",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager",
+    "action": "Vendor Created",
+    "module": "Vendors",
+    "recordId": "160f8b89-4a63-4de8-8f18-ed09f72691c4",
+    "previousValue": null,
+    "newValue": {
+      "businessName": "Brand New Co 1791971393541",
+      "status": "Pending"
+    },
+    "timestamp": "2026-10-14T09:49:53.542Z",
+    "createdAt": "2026-10-14T09:49:53.542Z",
+    "updatedAt": "2026-10-14T09:49:53.542Z"
   }
 ]

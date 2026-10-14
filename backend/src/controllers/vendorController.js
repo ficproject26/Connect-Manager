@@ -99,10 +99,14 @@ const populateVendorLocations = async (vendor) => {
   const canonicalPincode = pincode?.code || vendor.pincode || '';
   const canonicalArea = pincode?.areaName || vendor.area || vendor.pincodeArea || '';
 
+  const canonicalAddress = vendor.address || vendor.location?.address || vendor.businessAddress || '';
+
   return {
     ...vendor,
     mobile: cleanMobile || vendor.mobile || '',
     phone: cleanMobile || vendor.phone || '',
+    address: canonicalAddress,
+    businessAddress: canonicalAddress,
     state: canonicalState,
     stateName: canonicalState,
     district: canonicalDistrict,
@@ -440,17 +444,57 @@ const createVendor = async (req, res) => {
 
     const fieldVisitId = req.body.fieldVisitId || null;
 
-    // Duplicate Prevention: Check if vendor is already onboarded or active
-    const existingVendors = await db.vendors.find();
-    const cleanPhone = String(mobile).trim().replace(/\D/g, '');
+    const cleanPhone = String(mobile).trim().replace(/\D/g, '').slice(-10);
     const cleanBusiness = String(businessName).trim().toLowerCase();
 
+    // 1. Phone OTP Verification Enforcement
+    const phoneRecord = vendorPhoneOtpStore.get(cleanPhone);
+    const isPhoneVerified = phoneRecord && phoneRecord.verified && (Date.now() - phoneRecord.verifiedAt < 30 * 60 * 1000);
+    if (!isPhoneVerified && process.env.NODE_ENV === 'production') {
+      return res.status(400).json({
+        success: false,
+        message: 'Business phone number must be verified via OTP before completing onboarding.'
+      });
+    }
+
+    // 2. Separate GST Validation: Format check and Duplicate GSTIN prevention
+    const rawGst = String(gstNumber || req.body.gst || '').trim().toUpperCase();
+    if (rawGst) {
+      const gstRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/;
+      if (!gstRegex.test(rawGst)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid 15-character GSTIN format (e.g. 29ABCDE1234F1Z5).'
+        });
+      }
+    }
+
+    const existingVendors = await db.vendors.find();
+
+    // Prevent duplicate GST registration across active/pending vendors
+    if (rawGst) {
+      const duplicateGst = existingVendors.find(v => {
+        const vg = String(v.gstNumber || v.gst || '').trim().toUpperCase();
+        return vg && vg === rawGst && ['Approved', 'Active', 'Completed', 'Pending'].includes(v.status);
+      });
+      if (duplicateGst) {
+        return res.status(409).json({
+          success: false,
+          duplicate: true,
+          message: `A vendor record with GSTIN "${rawGst}" is already registered (${duplicateGst.businessName || duplicateGst.name}). Duplicate GST registrations are not permitted.`,
+          vendor: duplicateGst
+        });
+      }
+    }
+
+    // Duplicate Prevention:
+    // Allow the same business phone to be used for separate company registrations.
+    // Only block if the exact same business name AND phone is already onboarded.
     const existingMatch = existingVendors.find(v => {
       if (fieldVisitId && String(v.fieldVisitId) === String(fieldVisitId)) return true;
-      const vp = String(v.phone || v.mobile || '').trim().replace(/\D/g, '');
-      if (cleanPhone.length >= 10 && vp.length >= 10 && vp.slice(-10) === cleanPhone.slice(-10)) return true;
+      const vp = String(v.phone || v.mobile || '').trim().replace(/\D/g, '').slice(-10);
       const vn = String(v.businessName || v.name || '').trim().toLowerCase();
-      if (vn && vn === cleanBusiness) return true;
+      if (vn === cleanBusiness && vp === cleanPhone) return true;
       return false;
     });
 
@@ -460,27 +504,38 @@ const createVendor = async (req, res) => {
         return res.status(409).json({
           success: false,
           duplicate: true,
-          message: `Vendor "${existingMatch.businessName || existingMatch.name}" is already successfully onboarded (${existingMatch.status}).`,
+          message: `Vendor "${existingMatch.businessName || existingMatch.name}" with this phone number is already onboarded (${existingMatch.status}).`,
           vendor: existingMatch
         });
       }
     }
 
+    const merchantAddress = String(req.body.address || req.body.businessAddress || '').trim();
+
     const newVendor = await db.vendors.insertOne({
       name,
-      mobile,
+      mobile: cleanPhone || mobile,
+      phone: cleanPhone || mobile,
       email: email || '',
       businessName,
       category,
       subCategory: subCategory || '',
       description: description || '',
+      address: merchantAddress,
+      businessAddress: merchantAddress,
+      location: {
+        address: merchantAddress,
+        latitude: req.body.latitude || 12.9716,
+        longitude: req.body.longitude || 77.5946
+      },
       stateId,
       districtId,
       divisionId,
       pincodeId,
       fieldVisitId,
       panNumber: panNumber ? panNumber.toUpperCase() : '',
-      gstNumber: gstNumber ? gstNumber.toUpperCase() : '',
+      gstNumber: rawGst || '',
+      gst: rawGst || '',
       documents: Array.isArray(documents) ? documents : [],
       accountHolderName: accountHolderName || '',
       accountNumber: accountNumber || '',
@@ -497,6 +552,9 @@ const createVendor = async (req, res) => {
       assignedManagerRole: user.role || null,
       assignedAt: new Date().toISOString()
     });
+
+    // Invalidate aggregated dashboard and leaderboard cache so metrics reflect immediately
+    await cacheManager.invalidateEntity('vendor', newVendor._id);
 
     // If originated from a field shop visit, link it immediately
     if (fieldVisitId) {
@@ -765,6 +823,128 @@ const updateVendorStatus = async (req, res) => {
   }
 };
 
+// Secure In-Memory Store for Vendor Phone Verification OTPs
+const vendorPhoneOtpStore = new Map();
+const VENDOR_OTP_EXPIRY_MS = 5 * 60 * 1000; // 5 minutes
+const VENDOR_OTP_RESEND_COOLDOWN_MS = 30 * 1000; // 30 seconds cooldown
+
+// POST /api/vendors/otp/send - Send OTP to business phone
+const sendVendorPhoneOtp = async (req, res) => {
+  try {
+    const rawPhone = (req.body.phone || req.body.mobile || '').toString().trim();
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+
+    if (!cleanPhone || !/^[6-9][0-9]{9}$/.test(cleanPhone)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid 10-digit Indian business phone number starting with 6-9.'
+      });
+    }
+
+    const existing = vendorPhoneOtpStore.get(cleanPhone);
+    if (existing && existing.createdAt) {
+      const elapsed = Date.now() - existing.createdAt;
+      if (elapsed < VENDOR_OTP_RESEND_COOLDOWN_MS) {
+        const remainingSeconds = Math.ceil((VENDOR_OTP_RESEND_COOLDOWN_MS - elapsed) / 1000);
+        return res.status(429).json({
+          success: false,
+          cooldown: true,
+          remainingSeconds,
+          message: `Please wait ${remainingSeconds} second(s) before requesting a new OTP.`
+        });
+      }
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    vendorPhoneOtpStore.set(cleanPhone, {
+      otp,
+      attempts: 0,
+      createdAt: Date.now(),
+      expiresAt: Date.now() + VENDOR_OTP_EXPIRY_MS,
+      verified: false
+    });
+
+    const responsePayload = {
+      success: true,
+      cooldownSeconds: 30,
+      message: `OTP sent successfully to +91 ${cleanPhone}. Valid for 5 minutes.`
+    };
+
+    // In dev/test environments, provide OTP for verification tests
+    if (process.env.NODE_ENV !== 'production') {
+      responsePayload.otp = otp;
+    }
+
+    return res.json(responsePayload);
+  } catch (err) {
+    console.error('Send vendor phone OTP error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to send OTP to business phone.' });
+  }
+};
+
+// POST /api/vendors/otp/verify - Verify OTP for business phone
+const verifyVendorPhoneOtp = async (req, res) => {
+  try {
+    const rawPhone = (req.body.phone || req.body.mobile || '').toString().trim();
+    const cleanPhone = rawPhone.replace(/\D/g, '').slice(-10);
+    const code = (req.body.otp || req.body.code || '').toString().trim();
+
+    if (!cleanPhone || !code) {
+      return res.status(400).json({ success: false, message: 'Business phone number and 6-digit OTP are required.' });
+    }
+
+    const record = vendorPhoneOtpStore.get(cleanPhone);
+    if (!record) {
+      return res.status(400).json({
+        success: false,
+        message: 'No OTP requested for this phone number or session expired. Please request OTP again.'
+      });
+    }
+
+    if (Date.now() > record.expiresAt) {
+      vendorPhoneOtpStore.delete(cleanPhone);
+      return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new OTP.' });
+    }
+
+    if (record.attempts >= 3) {
+      vendorPhoneOtpStore.delete(cleanPhone);
+      return res.status(400).json({
+        success: false,
+        message: 'Maximum verification attempts exceeded. Please request a new OTP.'
+      });
+    }
+
+    if (record.otp !== code) {
+      record.attempts += 1;
+      const remaining = 3 - record.attempts;
+      return res.status(400).json({
+        success: false,
+        message: `Incorrect OTP. ${remaining} attempt(s) remaining.`
+      });
+    }
+
+    const crypto = require('crypto');
+    const verificationToken = crypto.randomBytes(24).toString('hex');
+    vendorPhoneOtpStore.set(cleanPhone, {
+      ...record,
+      verified: true,
+      verifiedAt: Date.now(),
+      verificationToken
+    });
+
+    return res.json({
+      success: true,
+      verified: true,
+      verificationToken,
+      phone: cleanPhone,
+      message: 'Business phone verified successfully.'
+    });
+  } catch (err) {
+    console.error('Verify vendor phone OTP error:', err);
+    return res.status(500).json({ success: false, message: 'Failed to verify OTP.' });
+  }
+};
+
 module.exports = {
   getVendors,
   getVendorById,
@@ -773,5 +953,8 @@ module.exports = {
   updateVendorStatus,
   resolveVendorBankDetails,
   populateVendorLocations,
-  isVendorIncompleteDraft
+  isVendorIncompleteDraft,
+  sendVendorPhoneOtp,
+  verifyVendorPhoneOtp,
+  vendorPhoneOtpStore
 };

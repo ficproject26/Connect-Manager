@@ -32,5 +32,10 @@ router.put('/bank-details', authMiddleware, authController.updateBankDetails);
 router.put('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
 router.post('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
 router.delete('/profile-photo', authMiddleware, authController.removeProfilePhoto);
+router.delete('/profile-image', authMiddleware, authController.removeProfilePhoto);
+router.delete('/avatar', authMiddleware, authController.removeProfilePhoto);
+router.post('/remove-profile-photo', authMiddleware, authController.removeProfilePhoto);
+router.post('/profile-photo/remove', authMiddleware, authController.removeProfilePhoto);
 
 module.exports = router;
+
