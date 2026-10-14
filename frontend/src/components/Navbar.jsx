@@ -216,8 +216,9 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
   useEffect(() => {
     fetchCount();
     const handleUpdate = (e) => {
-      if (e?.detail && typeof e.detail.unreadCount === 'number') {
-        setUnreadCount(e.detail.unreadCount);
+      const count = e?.detail?.unreadCount ?? e?.detail?.safeCount ?? e?.detail?.count;
+      if (typeof count === 'number') {
+        setUnreadCount(count);
       } else {
         fetchCount();
       }

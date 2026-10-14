@@ -44,6 +44,93 @@ const AuditLogs = ({ onNavigate }) => {
     }
   };
 
+  const formatSafeTimestamp = (timestamp) => {
+    if (!timestamp) return '—';
+    const d = new Date(timestamp);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: true
+    });
+  };
+
+  const renderTargetRecord = (log) => {
+    const rawId = log.recordId || log.targetId || log.metadata?.vendorId || '';
+    const name = log.targetName || log.metadata?.vendorName || log.targetRecordName || null;
+
+    if (!rawId && !name) {
+      return <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Record unavailable</span>;
+    }
+
+    const shortId = rawId && rawId.length > 14 ? `${rawId.slice(0, 8)}...${rawId.slice(-4)}` : rawId;
+
+    return (
+      <div>
+        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.84rem' }}>
+          {name || 'Record unavailable'}
+        </div>
+        {rawId && (
+          <code style={{ fontSize: '0.72rem', color: '#64748b', background: '#f1f5f9', padding: '1px 5px', borderRadius: 4 }}>
+            {shortId}
+          </code>
+        )}
+      </div>
+    );
+  };
+
+  const renderStateFields = (val, isPrevious = false, action = '') => {
+    if (!val) {
+      const isCreate = String(action).toLowerCase().includes('create');
+      if (isPrevious && isCreate) {
+        return <span style={{ color: '#94a3b8', fontSize: '0.76rem' }}>None (Initial)</span>;
+      }
+      return <span style={{ color: '#94a3b8', fontSize: '0.76rem', fontStyle: 'italic' }}>Not available</span>;
+    }
+
+    let parsed = val;
+    if (typeof parsed === 'string') {
+      try {
+        parsed = JSON.parse(parsed);
+      } catch (e) {
+        return <span style={{ color: '#475569', fontSize: '0.78rem' }}>{String(val)}</span>;
+      }
+    }
+
+    if (typeof parsed !== 'object' || parsed === null) {
+      return <span style={{ color: '#475569', fontSize: '0.78rem' }}>{String(parsed)}</span>;
+    }
+
+    const entries = Object.entries(parsed).filter(([k]) => !k.startsWith('_') && k !== '__v');
+    if (entries.length === 0) {
+      return <span style={{ color: '#94a3b8', fontSize: '0.76rem', fontStyle: 'italic' }}>Not available</span>;
+    }
+
+    const formatKey = (k) => k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 3, maxWidth: '280px' }}>
+        {entries.slice(0, 4).map(([k, v]) => {
+          let strVal = typeof v === 'object' && v !== null ? JSON.stringify(v) : String(v);
+          if (strVal.length > 28) strVal = strVal.slice(0, 25) + '...';
+          return (
+            <div key={k} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'baseline', gap: 5 }}>
+              <span style={{ color: '#64748b', fontWeight: 600 }}>{formatKey(k)}:</span>
+              <strong style={{ color: isPrevious ? '#475569' : '#0f172a' }}>{strVal}</strong>
+            </div>
+          );
+        })}
+        {entries.length > 4 && (
+          <span style={{ fontSize: '0.7rem', color: '#94a3b8' }}>+{entries.length - 4} more fields</span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div>
       {onNavigate && (
@@ -103,12 +190,7 @@ const AuditLogs = ({ onNavigate }) => {
                 return (
                   <tr key={log._id}>
                     <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
-                      {(() => {
-                        const raw = log.timestamp || log.createdAt || log.updatedAt;
-                        if (!raw) return '—';
-                        const d = new Date(raw);
-                        return isNaN(d.getTime()) ? '—' : d.toLocaleString();
-                      })()}
+                      {formatSafeTimestamp(log.timestamp || log.createdAt || log.updatedAt)}
                     </td>
                     <td>
                       <span style={{
@@ -123,27 +205,19 @@ const AuditLogs = ({ onNavigate }) => {
                       </span>
                     </td>
                     <td>
-                      <div style={{ fontWeight: 600 }}>{log.userName || 'System'}</div>
+                      <div style={{ fontWeight: 600 }}>{log.userName || log.userEmail?.split('@')[0] || 'System'}</div>
                       <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'capitalize' }}>
                         {log.userRole?.replace('_', ' ') || 'Manager'}
                       </div>
                     </td>
                     <td>
-                      <code>{log.recordId}</code>
+                      {renderTargetRecord(log)}
                     </td>
                     <td style={{ fontSize: '0.8rem' }}>
-                      {log.previousValue ? (
-                        <pre style={{ margin: 0, fontSize: '0.75rem', color: '#64748b' }}>
-                          {JSON.stringify(log.previousValue, null, 1)}
-                        </pre>
-                      ) : (
-                        <span style={{ color: '#94a3b8' }}>None (Initial)</span>
-                      )}
+                      {renderStateFields(log.previousValue, true, log.action)}
                     </td>
                     <td style={{ fontSize: '0.8rem' }}>
-                      <pre style={{ margin: 0, fontSize: '0.75rem', color: '#0f172a', fontWeight: 600 }}>
-                        {JSON.stringify(log.newValue, null, 1)}
-                      </pre>
+                      {renderStateFields(log.newValue, false, log.action)}
                     </td>
                   </tr>
                 );

@@ -1,6 +1,7 @@
 const db = require('../config/db');
 
 const norm = (s) => (s !== undefined && s !== null ? String(s).trim().toLowerCase() : '');
+const normClean = (s) => (s !== undefined && s !== null ? String(s).trim().toLowerCase().replace(/\s+(division|taluk|sub-division|circle)$/i, '').trim() : '');
 
 /**
  * Centralized Territory Hierarchy & Authorization Service
@@ -53,6 +54,8 @@ class TerritoryScopeService {
 
   /**
    * Resolve any record's full territorial hierarchy from IDs or Names.
+   * Explicit assigned fields (state, district, division) take precedence
+   * so that a manager's personal address pincode does not override their assigned jurisdiction.
    */
   async resolveTerritory(record) {
     if (!record) return {};
@@ -66,6 +69,7 @@ class TerritoryScopeService {
 
     const divById = new Map(this._divisions.map(d => [String(d._id || d.id), d]));
     const divByName = new Map(this._divisions.map(d => [norm(d.name), d]));
+    const divByCleanName = new Map(this._divisions.map(d => [normClean(d.name), d]));
 
     const pinById = new Map(this._pincodes.map(p => [String(p._id || p.id), p]));
     const pinByCode = new Map(this._pincodes.map(p => [norm(p.code || p.pincode), p]));
@@ -75,72 +79,114 @@ class TerritoryScopeService {
     let distDoc = null;
     let stateDoc = null;
 
-    // 1. Try Pincode
+    // 1. Direct Resolution of Explicit Fields First
+    // State
+    if (record.stateId && stateById.has(String(record.stateId))) {
+      stateDoc = stateById.get(String(record.stateId));
+    }
+    if (!stateDoc && (record.state || record.stateName || record.assignedState)) {
+      const st = norm(record.state || record.stateName || record.assignedState);
+      if (stateByName.has(st)) stateDoc = stateByName.get(st);
+    }
+
+    // District
+    if (record.districtId && distById.has(String(record.districtId))) {
+      distDoc = distById.get(String(record.districtId));
+    }
+    if (!distDoc && (record.district || record.districtName || record.assignedDistrict)) {
+      const dt = norm(record.district || record.districtName || record.assignedDistrict);
+      if (distByName.has(dt)) distDoc = distByName.get(dt);
+    }
+
+    // Division
+    if (record.divisionId && divById.has(String(record.divisionId))) {
+      divDoc = divById.get(String(record.divisionId));
+    }
+    if (!divDoc && (record.division || record.divisionName || record.assignedDivision)) {
+      const rawDiv = record.division || record.divisionName || record.assignedDivision;
+      const d = norm(rawDiv);
+      const cleanD = normClean(rawDiv);
+      if (divByName.has(d)) {
+        divDoc = divByName.get(d);
+      } else if (divByCleanName.has(cleanD)) {
+        divDoc = divByCleanName.get(cleanD);
+      }
+    }
+
+    // Pincode
     if (record.pincodeId && pinById.has(String(record.pincodeId))) {
       pinDoc = pinById.get(String(record.pincodeId));
     }
-    if (!pinDoc && (record.pincode || record.pincodeCode)) {
-      const code = norm(record.pincode || record.pincodeCode);
+    if (!pinDoc && (record.pincode || record.pincodeCode || record.assignedPincode)) {
+      const code = norm(record.pincode || record.pincodeCode || record.assignedPincode);
       if (pinByCode.has(code)) pinDoc = pinByCode.get(code);
     }
 
-    if (pinDoc) {
-      if (pinDoc.divisionId && divById.has(String(pinDoc.divisionId))) {
-        divDoc = divById.get(String(pinDoc.divisionId));
-      }
-      if (!divDoc && pinDoc.division && divByName.has(norm(pinDoc.division))) {
-        divDoc = divByName.get(norm(pinDoc.division));
-      }
-    }
-
-    // 2. Try Division
-    if (!divDoc) {
-      if (record.divisionId && divById.has(String(record.divisionId))) {
-        divDoc = divById.get(String(record.divisionId));
-      }
-      if (!divDoc && (record.division || record.divisionName)) {
-        const d = norm(record.division || record.divisionName);
-        if (divByName.has(d)) divDoc = divByName.get(d);
-      }
-    }
-
-    if (divDoc) {
-      if (divDoc.districtId && distById.has(String(divDoc.districtId))) {
-        distDoc = distById.get(String(divDoc.districtId));
-      }
-      if (!distDoc && divDoc.district && distByName.has(norm(divDoc.district))) {
-        distDoc = distByName.get(norm(divDoc.district));
-      }
-    }
-
-    // 3. Try District
-    if (!distDoc) {
-      if (record.districtId && distById.has(String(record.districtId))) {
-        distDoc = distById.get(String(record.districtId));
-      }
-      if (!distDoc && (record.district || record.districtName)) {
-        const dt = norm(record.district || record.districtName);
-        if (distByName.has(dt)) distDoc = distByName.get(dt);
-      }
-    }
-
-    if (distDoc) {
+    // 2. Hierarchical Inference for Missing Levels (Bottom-up fallback)
+    // If District exists but State is missing, infer State from District
+    if (distDoc && !stateDoc) {
       if (distDoc.stateId && stateById.has(String(distDoc.stateId))) {
         stateDoc = stateById.get(String(distDoc.stateId));
-      }
-      if (!stateDoc && distDoc.state && stateByName.has(norm(distDoc.state))) {
+      } else if (distDoc.state && stateByName.has(norm(distDoc.state))) {
         stateDoc = stateByName.get(norm(distDoc.state));
       }
     }
 
-    // 4. Try State
-    if (!stateDoc) {
-      if (record.stateId && stateById.has(String(record.stateId))) {
-        stateDoc = stateById.get(String(record.stateId));
+    // If Division exists, infer District and State if missing
+    if (divDoc) {
+      if (!distDoc) {
+        if (divDoc.districtId && distById.has(String(divDoc.districtId))) {
+          distDoc = distById.get(String(divDoc.districtId));
+        } else if (divDoc.district && distByName.has(norm(divDoc.district))) {
+          distDoc = distByName.get(norm(divDoc.district));
+        }
       }
-      if (!stateDoc && (record.state || record.stateName)) {
-        const st = norm(record.state || record.stateName);
-        if (stateByName.has(st)) stateDoc = stateByName.get(st);
+      if (!stateDoc) {
+        if (divDoc.stateId && stateById.has(String(divDoc.stateId))) {
+          stateDoc = stateById.get(String(divDoc.stateId));
+        } else if (distDoc) {
+          if (distDoc.stateId && stateById.has(String(distDoc.stateId))) {
+            stateDoc = stateById.get(String(distDoc.stateId));
+          } else if (distDoc.state && stateByName.has(norm(distDoc.state))) {
+            stateDoc = stateByName.get(norm(distDoc.state));
+          }
+        }
+      }
+    }
+
+    // If Pincode exists, infer missing Division, District, State
+    if (pinDoc) {
+      if (!divDoc) {
+        if (pinDoc.divisionId && divById.has(String(pinDoc.divisionId))) {
+          divDoc = divById.get(String(pinDoc.divisionId));
+        } else if (pinDoc.division) {
+          const d = norm(pinDoc.division);
+          const cd = normClean(pinDoc.division);
+          if (divByName.has(d)) divDoc = divByName.get(d);
+          else if (divByCleanName.has(cd)) divDoc = divByCleanName.get(cd);
+        }
+      }
+      if (!distDoc) {
+        if (pinDoc.districtId && distById.has(String(pinDoc.districtId))) {
+          distDoc = distById.get(String(pinDoc.districtId));
+        } else if (pinDoc.district && distByName.has(norm(pinDoc.district))) {
+          distDoc = distByName.get(norm(pinDoc.district));
+        } else if (divDoc) {
+          if (divDoc.districtId && distById.has(String(divDoc.districtId))) {
+            distDoc = distById.get(String(divDoc.districtId));
+          } else if (divDoc.district && distByName.has(norm(divDoc.district))) {
+            distDoc = distByName.get(norm(divDoc.district));
+          }
+        }
+      }
+      if (!stateDoc) {
+        if (pinDoc.stateId && stateById.has(String(pinDoc.stateId))) {
+          stateDoc = stateById.get(String(pinDoc.stateId));
+        } else if (pinDoc.state && stateByName.has(norm(pinDoc.state))) {
+          stateDoc = stateByName.get(norm(pinDoc.state));
+        } else if (distDoc && distDoc.stateId && stateById.has(String(distDoc.stateId))) {
+          stateDoc = stateById.get(String(distDoc.stateId));
+        }
       }
     }
 
@@ -159,18 +205,19 @@ class TerritoryScopeService {
 
   /**
    * Normalize user role level:
-   * 1: state_manager
-   * 2: district_manager
-   * 3: division_manager
-   * 4: pincode_manager
+   * 1: state_manager / state_admin
+   * 2: district_manager / district_admin
+   * 3: division_manager / division_admin
+   * 4: pincode_manager / pincode_admin
+   * 0: super_admin / global system admin
    */
   getRoleLevel(role) {
     const r = norm(role);
-    if (r.includes('admin') || r === 'super_admin' || r === 'super-admin') return 0; // Global admin
-    if (r.includes('state')) return 1;
-    if (r.includes('district')) return 2;
-    if (r.includes('division') || r.includes('divisional')) return 3;
     if (r.includes('pincode') || r.includes('pin_')) return 4;
+    if (r.includes('division') || r.includes('divisional')) return 3;
+    if (r.includes('district')) return 2;
+    if (r.includes('state')) return 1;
+    if (r.includes('super_admin') || r.includes('super-admin') || r === 'admin' || r === 'system_admin') return 0;
     return 99;
   }
 
@@ -195,15 +242,15 @@ class TerritoryScopeService {
 
     // 1. PINCODE MANAGER (Level 4): Strictly restricted to assigned pincode
     if (userRoleLevel === 4) {
-      if (resUser.pincodeId && resRecord.pincodeId && resUser.pincodeId === resRecord.pincodeId) return true;
-      if (resUser.pincodeCode && resRecord.pincodeCode && resUser.pincodeCode === resRecord.pincodeCode) return true;
+      if (resUser.pincodeId && resRecord.pincodeId && String(resUser.pincodeId) === String(resRecord.pincodeId)) return true;
+      if (resUser.pincodeCode && resRecord.pincodeCode && norm(resUser.pincodeCode) === norm(resRecord.pincodeCode)) return true;
       return false;
     }
 
     // Check State Match (Mandatory for Level 1, 2, 3)
     const matchState = () => {
       if (resUser.stateId && resRecord.stateId) {
-        if (resUser.stateId === resRecord.stateId) return true;
+        if (String(resUser.stateId) === String(resRecord.stateId)) return true;
       }
       if (resUser.stateName && resRecord.stateName) {
         if (norm(resUser.stateName) === norm(resRecord.stateName)) return true;
@@ -221,10 +268,10 @@ class TerritoryScopeService {
     // Check District Match
     const matchDistrict = () => {
       if (resUser.districtId && resRecord.districtId) {
-        if (resUser.districtId === resRecord.districtId) return true;
+        if (String(resUser.districtId) === String(resRecord.districtId)) return true;
       }
       if (resUser.districtName && resRecord.districtName) {
-        if (norm(resUser.districtName) === norm(resRecord.districtName)) return true;
+        if (normClean(resUser.districtName) === normClean(resRecord.districtName)) return true;
       }
       return false;
     };
@@ -239,10 +286,10 @@ class TerritoryScopeService {
     // Check Division Match
     const matchDivision = () => {
       if (resUser.divisionId && resRecord.divisionId) {
-        if (resUser.divisionId === resRecord.divisionId) return true;
+        if (String(resUser.divisionId) === String(resRecord.divisionId)) return true;
       }
       if (resUser.divisionName && resRecord.divisionName) {
-        if (norm(resUser.divisionName) === norm(resRecord.divisionName)) return true;
+        if (normClean(resUser.divisionName) === normClean(resRecord.divisionName)) return true;
       }
       return false;
     };
@@ -377,6 +424,59 @@ class TerritoryScopeService {
       const st = norm(s);
       return st === 'active' || st === 'approved' || st === 'completed';
     };
+
+    if (filter === 'state') {
+      const stateMap = new Map();
+      let candidateStates = this._states;
+      if (userLevel >= 1 && resUser.stateId) {
+        candidateStates = candidateStates.filter(s => String(s._id || s.id) === String(resUser.stateId));
+      }
+
+      candidateStates.forEach(s => {
+        const key = String(s._id || s.id);
+        stateMap.set(key, {
+          stateId: key,
+          stateName: s.name,
+          totalVendors: 0,
+          activeVendors: 0,
+          tieUps: 0,
+          shopVisits: 0
+        });
+      });
+
+      scopedVendors.forEach(v => {
+        const sId = v._resolved.stateId;
+        const sName = v._resolved.stateName;
+        if (!sId && !sName) return;
+
+        let rec = stateMap.get(sId);
+        if (!rec && sName) {
+          rec = Array.from(stateMap.values()).find(r => norm(r.stateName) === norm(sName));
+        }
+        if (!rec) {
+          rec = { stateId: sId || sName, stateName: sName || 'State', totalVendors: 0, activeVendors: 0, tieUps: 0, shopVisits: 0 };
+          stateMap.set(sId || sName, rec);
+        }
+        rec.totalVendors++;
+        if (isVendorActive(v.status)) { rec.activeVendors++; rec.tieUps++; }
+      });
+
+      scopedVisits.forEach(vis => {
+        const sId = vis._resolved.stateId;
+        const sName = vis._resolved.stateName;
+        if (!sId && !sName) return;
+
+        let rec = stateMap.get(sId);
+        if (!rec && sName) {
+          rec = Array.from(stateMap.values()).find(r => norm(r.stateName) === norm(sName));
+        }
+        if (rec) rec.shopVisits++;
+      });
+
+      return Array.from(stateMap.values())
+        .filter(s => s.totalVendors > 0 || s.shopVisits > 0 || userLevel >= 1)
+        .sort((a, b) => (b.totalVendors + b.shopVisits) - (a.totalVendors + a.shopVisits));
+    }
 
     if (filter === 'dist') {
       // Aggregate by District

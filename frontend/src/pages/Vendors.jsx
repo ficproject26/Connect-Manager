@@ -27,7 +27,31 @@ const CATEGORIES = [
   'Jobs'
 ];
 
-const STATUSES = ['All', 'Active', 'Pending', 'Under Review', 'Rejected', 'Inactive'];
+const STATUSES = ['All', 'Active', 'Approved', 'Pending', 'Under Review', 'Rejected', 'Inactive'];
+
+const isVendorDraftIncomplete = (v) => {
+  if (!v) return false;
+  if (typeof v.isEligibleForResume === 'boolean') return v.isEligibleForResume;
+  if (typeof v.hasIncompleteDraft === 'boolean') return v.hasIncompleteDraft;
+
+  const status = String(v.status || '').toLowerCase().trim();
+  const approval = String(v.approvalStatus || '').toLowerCase().trim();
+  const onboardingStatus = String(v.onboardingStatus || '').toLowerCase().trim();
+
+  // If completed, approved, active, or rejected -> never an incomplete draft
+  if (['approved', 'active', 'rejected', 'inactive'].includes(status)) return false;
+  if (approval.includes('approved') || approval.includes('rejected')) return false;
+  if (v.isCompleted === true || v.isOnboardingCompleted === true || onboardingStatus === 'completed') return false;
+
+  // Incomplete draft flags
+  if (v.isDraft === true || onboardingStatus === 'draft' || onboardingStatus === 'incomplete' || onboardingStatus === 'in_progress') {
+    return true;
+  }
+  if (v.currentStep && Number(v.currentStep) < 5) return true;
+  if (v.step && Number(v.step) < 5) return true;
+
+  return false;
+};
 
 const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   const { user } = useAuth();
@@ -450,7 +474,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                       >
                         <Eye size={13} /> View
                       </button>
-                      {(v.status === 'Pending' || v.status === 'Under Review') && (
+                      {isVendorDraftIncomplete(v) && (
                         <button
                           className="btn btn-sm"
                           title="Resume Incomplete Onboarding"

@@ -35,6 +35,30 @@ import { useRealtime } from '../realtime';
 
 const FALLBACK_STOREFRONT_IMAGE = '/uploads/1791261240106_storefront_proof.jpg';
 
+const isVendorDraftIncomplete = (v) => {
+  if (!v) return false;
+  if (typeof v.isEligibleForResume === 'boolean') return v.isEligibleForResume;
+  if (typeof v.hasIncompleteDraft === 'boolean') return v.hasIncompleteDraft;
+
+  const status = String(v.status || '').toLowerCase().trim();
+  const approval = String(v.approvalStatus || '').toLowerCase().trim();
+  const onboardingStatus = String(v.onboardingStatus || '').toLowerCase().trim();
+
+  // If completed, approved, active, or rejected -> never an incomplete draft
+  if (['approved', 'active', 'rejected', 'inactive'].includes(status)) return false;
+  if (approval.includes('approved') || approval.includes('rejected')) return false;
+  if (v.isCompleted === true || v.isOnboardingCompleted === true || onboardingStatus === 'completed') return false;
+
+  // Incomplete draft flags
+  if (v.isDraft === true || onboardingStatus === 'draft' || onboardingStatus === 'incomplete' || onboardingStatus === 'in_progress') {
+    return true;
+  }
+  if (v.currentStep && Number(v.currentStep) < 5) return true;
+  if (v.step && Number(v.step) < 5) return true;
+
+  return false;
+};
+
 const resolveMediaUrl = (url) => {
   if (!url) return '';
   if (url.startsWith('data:') || url.startsWith('blob:')) return url;
@@ -218,7 +242,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
           {/* Right: Quick Action Buttons */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            {(vendor.status === 'Pending' || vendor.status === 'Under Review') && (
+            {isVendorDraftIncomplete(vendor) && (
               <button
                 className="btn btn-sm"
                 onClick={() => {

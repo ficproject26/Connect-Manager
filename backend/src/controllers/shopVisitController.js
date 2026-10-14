@@ -122,7 +122,18 @@ const getShopVisits = async (req, res) => {
       db.managerOnboardings.find()
     ]);
 
-    const enrichedVisits = allVisits.map(v => resolveVisitOnboarding(v, allVendors, allOnboardings));
+    const enrichedVisits = allVisits.map(v => {
+      const enriched = resolveVisitOnboarding(v, allVendors, allOnboardings);
+      const mRole = enriched.managerRole || enriched.recordedByRole || enriched.role || '';
+      const mName = enriched.managerName || enriched.recordedByName || '';
+      return {
+        ...enriched,
+        managerRole: mRole,
+        recordedByRole: mRole,
+        managerName: mName,
+        recordedByName: mName
+      };
+    });
 
     // Filter using territoryScopeService for strict role and territory isolation
     const scopedVisits = [];

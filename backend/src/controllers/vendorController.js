@@ -183,6 +183,28 @@ const populateVendorManagers = async (vendor) => {
   };
 };
 
+// Helper: Determine whether a vendor has a genuine incomplete draft
+const isVendorIncompleteDraft = (v) => {
+  if (!v) return false;
+  const status = String(v.status || '').toLowerCase().trim();
+  const approval = String(v.approvalStatus || '').toLowerCase().trim();
+  const onboardingStatus = String(v.onboardingStatus || '').toLowerCase().trim();
+
+  // If vendor is completed, active, approved, or rejected -> never an incomplete draft
+  if (['approved', 'active', 'rejected', 'inactive'].includes(status)) return false;
+  if (approval.includes('approved') || approval.includes('rejected')) return false;
+  if (v.isCompleted === true || v.isOnboardingCompleted === true || onboardingStatus === 'completed') return false;
+
+  // Genuine incomplete draft: explicitly flagged as draft, incomplete onboarding status, or partial step
+  if (v.isDraft === true || onboardingStatus === 'draft' || onboardingStatus === 'incomplete' || onboardingStatus === 'in_progress') {
+    return true;
+  }
+  if (v.currentStep && Number(v.currentStep) < 5) return true;
+  if (v.step && Number(v.step) < 5) return true;
+
+  return false;
+};
+
 // GET /api/vendors - Paginated, filtered, strictly scope-enforced
 const getVendors = async (req, res) => {
   try {
@@ -238,8 +260,29 @@ const getVendors = async (req, res) => {
       if (category && category !== 'All' && (v.category || '').toLowerCase() !== category.toLowerCase()) return false;
       if (subCategory && subCategory !== 'All' && (v.subCategory || '').toLowerCase() !== subCategory.toLowerCase()) return false;
 
-      // 3. Status filter
-      if (status && status !== 'All' && (v.status || '').toLowerCase() !== status.toLowerCase()) return false;
+      // 3. Status filter (distinguish approval status vs operational status)
+      if (status && status !== 'All') {
+        const sQuery = status.toLowerCase();
+        const vStatus = (v.status || '').toLowerCase();
+        const vApproval = (v.approvalStatus || '').toLowerCase();
+        const vOp = (v.operationalStatus || '').toLowerCase();
+
+        if (sQuery === 'approved') {
+          if (vStatus !== 'approved' && !vApproval.includes('approved')) return false;
+        } else if (sQuery === 'active') {
+          if (vStatus !== 'active' && vOp !== 'active') return false;
+        } else if (sQuery === 'pending') {
+          if (vStatus !== 'pending' && !vApproval.includes('pending')) return false;
+        } else if (sQuery === 'under review') {
+          if (vStatus !== 'under review' && vStatus !== 'under_review' && !vApproval.includes('review')) return false;
+        } else if (sQuery === 'rejected') {
+          if (vStatus !== 'rejected' && !vApproval.includes('rejected')) return false;
+        } else if (sQuery === 'inactive') {
+          if (vStatus !== 'inactive' && vOp !== 'inactive') return false;
+        } else {
+          if (vStatus !== sQuery && vApproval !== sQuery) return false;
+        }
+      }
 
       // 4. Sub-location filters (bounded by scope) - match by ID or Name
       if (districtId) {
@@ -285,8 +328,11 @@ const getVendors = async (req, res) => {
       const enriched = await resolveVendorBankDetails(v);
       const populatedVendor = await populateVendorLocations(enriched);
       const withManagers = await populateVendorManagers(populatedVendor);
+      const isDraftIncomplete = isVendorIncompleteDraft(withManagers);
       return {
         ...withManagers,
+        isEligibleForResume: isDraftIncomplete,
+        hasIncompleteDraft: isDraftIncomplete,
         panNumber: maskPan(withManagers.panNumber),
         accountNumber: maskAccount(withManagers.accountNumber),
         gstNumber: maskGst(withManagers.gstNumber)
@@ -322,10 +368,12 @@ const getVendorById = async (req, res) => {
     const withManagers = await populateVendorManagers(populated);
 
     // Check if client requested unmasked view (detail view permission)
-    const showFull = req.query.unmask === 'true';
-
+    const showFull = req.query?.unmask === 'true' || req.query?.showFull === 'true';
+    const isDraftIncomplete = isVendorIncompleteDraft(withManagers);
     const responseData = {
       ...withManagers,
+      isEligibleForResume: isDraftIncomplete,
+      hasIncompleteDraft: isDraftIncomplete,
       panNumber: showFull ? withManagers.panNumber : maskPan(withManagers.panNumber),
       accountNumber: showFull ? withManagers.accountNumber : maskAccount(withManagers.accountNumber),
       gstNumber: showFull ? withManagers.gstNumber : maskGst(withManagers.gstNumber),
@@ -724,5 +772,6 @@ module.exports = {
   updateVendor,
   updateVendorStatus,
   resolveVendorBankDetails,
-  populateVendorLocations
+  populateVendorLocations,
+  isVendorIncompleteDraft
 };

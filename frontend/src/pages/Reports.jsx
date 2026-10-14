@@ -135,6 +135,12 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   const [hierarchyOptions, setHierarchyOptions] = useState({ districts: [], divisions: [], pincodes: [] });
   const [kpiStats, setKpiStats] = useState({ total: 0, interested: 0, notInterested: 0 });
 
+  // CSV Date Range Export State
+  const [isDateRangeExportModalOpen, setIsDateRangeExportModalOpen] = useState(false);
+  const [exportStartDate, setExportStartDate] = useState('');
+  const [exportEndDate, setExportEndDate] = useState('');
+  const [exportDateError, setExportDateError] = useState('');
+
   // Debounce visit search input to eliminate spammy keystroke requests
   const [debouncedSearchVisit, setDebouncedSearchVisit] = useState(searchVisit);
   useEffect(() => {
@@ -261,8 +267,45 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
 
   const safeVisits = Array.isArray(visits) ? visits : [];
   const eligibleVisits = useMemo(() => {
-    return safeVisits.filter(isEligibleRecord);
-  }, [safeVisits, isEligibleRecord]);
+    return safeVisits.filter(v => {
+      if (!isEligibleRecord(v)) return false;
+
+      const vRole = String(v.managerRole || v.recordedByRole || v.role || '').toLowerCase();
+      const isOwner = String(v.recordedById || v.managerId) === String(user?.id || user?._id);
+
+      // 1. Hierarchy access rule: lower-level managers can NEVER see reports above their level
+      if (!isOwner) {
+        if (isDistrictManager && (vRole.includes('state') || vRole.includes('admin'))) {
+          return false;
+        }
+        if (isDivisionManager && (vRole.includes('state') || vRole.includes('district') || vRole.includes('admin'))) {
+          return false;
+        }
+        if (isPincodeManager && (vRole.includes('state') || vRole.includes('district') || vRole.includes('division') || vRole.includes('admin'))) {
+          return false;
+        }
+      }
+
+      // 2. View Scope Tab enforcement
+      if (viewScope === 'self') {
+        return isOwner;
+      }
+      if (viewScope === 'state_managers') {
+        return vRole.includes('state');
+      }
+      if (viewScope === 'district_managers') {
+        return vRole.includes('district');
+      }
+      if (viewScope === 'division_managers') {
+        return vRole.includes('division');
+      }
+      if (viewScope === 'pincode_managers') {
+        return vRole.includes('pincode') || vRole.includes('pin_');
+      }
+
+      return true;
+    });
+  }, [safeVisits, isEligibleRecord, isDistrictManager, isDivisionManager, isPincodeManager, viewScope, user]);
 
   // Resume Onboarding Action with Live Backend Revalidation
   const handleResumeOnboarding = async (e, v) => {
@@ -308,28 +351,80 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     }
   };
 
-  // CSV Export for Visits
+  // CSV Export for Visits: Open date-range selection modal first
   const exportShopVisitsCSV = () => {
-    if (!eligibleVisits.length) return;
-    const headers = ['Date & Time', 'Shop Name', 'Category', 'Manager Name', 'Manager Level', 'Scope Territory', 'Voice Note URL', 'Interest Status', 'Onboarding Status'];
-    const rows = eligibleVisits.map(v => [
-      v && v.createdAt ? `"${new Date(v.createdAt).toLocaleString()}"` : '""',
-      `"${(v && v.shopName) || ''}"`,
-      `"${(v && v.category) || 'Products'}"`,
-      `"${(v && v.managerName) || ''}"`,
-      `"${formatRoleLabel(v && v.managerRole)}"`,
-      `"${(v && (v.pincodeCode || v.division || v.district || v.state)) || 'Assigned Territory'}"`,
-      `"${(v && v.voiceNote) || ''}"`,
-      (v && (v.interestedStatus || v.interestStatus)) || 'YES',
-      `"${(v && v.onboardingStatus) || 'Pending'}"`
+    setExportStartDate('');
+    setExportEndDate('');
+    setExportDateError('');
+    setIsDateRangeExportModalOpen(true);
+  };
+
+  const handleConfirmExportCSV = () => {
+    if (!exportStartDate || !exportEndDate) {
+      setExportDateError('Both Start Date and End Date are required.');
+      return;
+    }
+    const start = new Date(exportStartDate + 'T00:00:00');
+    const end = new Date(exportEndDate + 'T23:59:59.999');
+    if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+      setExportDateError('Please select valid start and end dates.');
+      return;
+    }
+    if (start > end) {
+      setExportDateError('Start Date cannot be later than End Date.');
+      return;
+    }
+
+    const dateFiltered = eligibleVisits.filter(v => {
+      if (!v || !v.createdAt) return false;
+      const d = new Date(v.createdAt);
+      return !isNaN(d.getTime()) && d >= start && d <= end;
+    });
+
+    if (dateFiltered.length === 0) {
+      setExportDateError(`No shop visit records found between ${exportStartDate} and ${exportEndDate} matching your current filters.`);
+      return;
+    }
+
+    const escapeCsv = (val) => {
+      if (val === null || val === undefined) return '""';
+      const clean = String(val).replace(/"/g, '""').replace(/\r?\n/g, ' ');
+      return `"${clean}"`;
+    };
+
+    const headers = [
+      'Date & Time',
+      'Shop Name',
+      'Category',
+      'Manager Name',
+      'Manager Level',
+      'Scope Territory',
+      'Voice Note URL',
+      'Interest Status',
+      'Onboarding Status'
+    ];
+
+    const rows = dateFiltered.map(v => [
+      escapeCsv(v.createdAt ? new Date(v.createdAt).toLocaleString() : ''),
+      escapeCsv(v.shopName || ''),
+      escapeCsv(v.category || 'Products'),
+      escapeCsv(v.managerName || ''),
+      escapeCsv(formatRoleLabel(v.managerRole)),
+      escapeCsv(v.pincodeCode ? `PIN: ${v.pincodeCode}` : (v.division || v.district || v.state || 'Assigned Territory')),
+      escapeCsv(v.voiceNote || ''),
+      escapeCsv(v.interestedStatus || v.interestStatus || 'YES'),
+      escapeCsv(v.onboardingStatus || 'Pending')
     ]);
+
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
     const link = document.createElement('a');
     link.setAttribute('href', encodeURI(csvContent));
-    link.setAttribute('download', `shop_visits_${viewScope}_report_${Date.now()}.csv`);
+    link.setAttribute('download', `shop_visits_${exportStartDate}_to_${exportEndDate}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+
+    setIsDateRangeExportModalOpen(false);
   };
 
   // Print / PDF Export for Complete Submitted Report
@@ -2231,37 +2326,45 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 </div>
               )}
 
-              {/* Voice Note Recording Section */}
-              <div style={{
-                padding: '16px',
-                background: '#f8fafc',
-                borderRadius: '14px',
-                border: '1px solid #e2e8f0',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 10
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                    <Mic size={15} style={{ color: '#d97706' }} /> Voice Note Recording &amp; Verbal Audit
-                  </div>
-                  {selectedVisit.voiceNote && (
-                    <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', background: '#d1fae5', padding: '2px 7px', borderRadius: 4 }}>
-                      Audio Log Attached
-                    </span>
-                  )}
-                </div>
+              {/* Voice Note Recording Section - Completely hidden for Interested Candidates */}
+              {(() => {
+                const rawInt = String(selectedVisit.interestedStatus || selectedVisit.interestStatus || '').toUpperCase().trim();
+                const isCandidateInterested = rawInt === 'YES' || rawInt === 'INTERESTED' || rawInt === 'MERCHANT_INTERESTED';
+                if (isCandidateInterested) return null;
 
-                {selectedVisit.voiceNote ? (
-                  <div style={{ padding: '12px', background: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1' }}>
-                    <audio controls src={selectedVisit.voiceNote} style={{ width: '100%', height: '36px', outline: 'none' }} />
+                return (
+                  <div style={{
+                    padding: '16px',
+                    background: '#f8fafc',
+                    borderRadius: '14px',
+                    border: '1px solid #e2e8f0',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 10
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ fontSize: '0.78rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <Mic size={15} style={{ color: '#d97706' }} /> Voice Note Recording &amp; Verbal Audit
+                      </div>
+                      {selectedVisit.voiceNote && (
+                        <span style={{ fontSize: '0.72rem', fontWeight: 700, color: '#059669', background: '#d1fae5', padding: '2px 7px', borderRadius: 4 }}>
+                          Audio Log Attached
+                        </span>
+                      )}
+                    </div>
+
+                    {selectedVisit.voiceNote ? (
+                      <div style={{ padding: '12px', background: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1' }}>
+                        <audio controls src={selectedVisit.voiceNote} style={{ width: '100%', height: '36px', outline: 'none' }} />
+                      </div>
+                    ) : (
+                      <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic', padding: '8px 0' }}>
+                        No audio voice note recorded for this visit.
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div style={{ fontSize: '0.82rem', color: '#94a3b8', fontStyle: 'italic', padding: '8px 0' }}>
-                    No audio voice note recorded for this visit.
-                  </div>
-                )}
-              </div>
+                );
+              })()}
 
               {/* Not Interested Reason */}
               {selectedVisit.interestedStatus === 'NO' && (
@@ -2361,6 +2464,161 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
         </div>
       )}
 
+      {/* Date Range Selection Modal Before CSV Export */}
+      {isDateRangeExportModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(15, 23, 42, 0.65)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '16px',
+            width: '100%',
+            maxWidth: '460px',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.2), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            overflow: 'hidden'
+          }}>
+            <div style={{
+              padding: '18px 24px',
+              borderBottom: '1px solid #f1f5f9',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Calendar size={18} style={{ color: '#f59e0b' }} />
+                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 800, color: '#0f172a' }}>
+                  Select Date Range for CSV Export
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsDateRangeExportModalOpen(false)}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  cursor: 'pointer',
+                  color: '#94a3b8',
+                  padding: 4
+                }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <p style={{ fontSize: '0.84rem', color: '#64748b', margin: 0, lineHeight: 1.45 }}>
+                Specify the date range for shop visits you wish to export. Active filters (hierarchy, territory, interest status, category) are automatically preserved.
+              </p>
+
+              {exportDateError && (
+                <div style={{
+                  padding: '10px 14px',
+                  background: '#fef2f2',
+                  border: '1px solid #fecaca',
+                  borderRadius: 8,
+                  color: '#b91c1c',
+                  fontSize: '0.82rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}>
+                  <AlertCircle size={15} style={{ flexShrink: 0 }} />
+                  <span>{exportDateError}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                    Start Date <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={exportStartDate}
+                    onChange={(e) => {
+                      setExportStartDate(e.target.value);
+                      setExportDateError('');
+                    }}
+                    style={{ width: '100%', padding: '9px 12px', fontSize: '0.84rem', borderRadius: 8 }}
+                  />
+                </div>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                    End Date <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <input
+                    type="date"
+                    className="form-input"
+                    value={exportEndDate}
+                    onChange={(e) => {
+                      setExportEndDate(e.target.value);
+                      setExportDateError('');
+                    }}
+                    style={{ width: '100%', padding: '9px 12px', fontSize: '0.84rem', borderRadius: 8 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div style={{
+              padding: '14px 24px',
+              borderTop: '1px solid #f1f5f9',
+              background: '#f8fafc',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'flex-end',
+              gap: 10
+            }}>
+              <button
+                type="button"
+                onClick={() => setIsDateRangeExportModalOpen(false)}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: 8,
+                  border: '1px solid #cbd5e1',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmExportCSV}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: 8,
+                  border: 'none',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  fontSize: '0.82rem',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: 6
+                }}
+              >
+                <Download size={14} /> Confirm &amp; Export CSV
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Generate Report Modal (Period Selector, Live Ingestion, Preview & Confirm) */}
       {isGenerateModalOpen && (

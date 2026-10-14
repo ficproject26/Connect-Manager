@@ -21616,5 +21616,311 @@
     "userId": "usr_mgr_1790580930154_8uge",
     "userName": "Surya",
     "userRole": "state_manager"
+  },
+  {
+    "_id": "59456a3b-7958-47c6-bb0c-92cf7796c69d",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-13T13:12:07.659Z",
+    "details": "Logged visit for dinesh 23 - Interested: YES",
+    "id": "59456a3b-7958-47c6-bb0c-92cf7796c69d",
+    "recordId": "d8552fe5-2052-41d1-a6af-a2290f609f8e",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-13T13:12:07.659Z",
+    "updatedAt": "2026-10-13T13:12:07.659Z",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager"
+  },
+  {
+    "_id": "6ace2e4914371f1f2178a48b",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "login_success",
+    "ipAddress": "106.51.198.7, 52.66.154.250",
+    "userAgent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Successful user authentication",
+    "timestamp": "2026-10-13T13:12:41.389Z",
+    "__v": 0
+  },
+  {
+    "_id": "7a6fe18a-ec8d-4890-9f0c-482ba2117ebb",
+    "action": "MANAGER_REGISTERED_UNDER_REVIEW",
+    "createdAt": "2026-10-13T13:28:36.715Z",
+    "details": "New division manager registration submitted for approval with KYC documents. Status: under_review.",
+    "id": "7a6fe18a-ec8d-4890-9f0c-482ba2117ebb",
+    "ip": "106.51.198.7",
+    "updatedAt": "2026-10-13T13:28:36.715Z",
+    "userId": "53126a02-95b5-4c68-924c-48a52837f0a6",
+    "userName": "Hemanth",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "7211c4bf-b45e-4e07-bb77-a0d41554142d",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T04:14:30.263Z",
+    "details": "Logged visit for shop13 - Interested: YES",
+    "id": "7211c4bf-b45e-4e07-bb77-a0d41554142d",
+    "recordId": "1d172ba2-66f9-4e60-9ada-e145a87a9650",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T04:14:30.263Z",
+    "updatedAt": "2026-10-14T04:14:30.263Z",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager"
+  },
+  {
+    "_id": "6531a788-9f79-4003-b802-84b2d150bdf0",
+    "action": "MANAGER_TERRITORY_APPROVED_FORWARDED_TO_KYC",
+    "adminId": "634dc62a-76a0-497f-9ff6-234267f0c6ec",
+    "adminName": "Balamurugan",
+    "adminRole": "Division Admin",
+    "createdAt": "2026-10-14T04:19:08.658Z",
+    "details": "division manager \"Dinesh Kathiravan\" territory registration approved by Division Admin \"Balamurugan\". Forwarded to KYC Team queue. Account restricted pending KYC verification.",
+    "id": "6531a788-9f79-4003-b802-84b2d150bdf0",
+    "ip": "127.0.0.1",
+    "targetUserId": "b4677612-7b51-4696-badd-45305a812229",
+    "targetUserName": "Dinesh Kathiravan",
+    "targetUserRole": "division_manager",
+    "timestamp": "2026-10-14T04:19:08.502Z",
+    "updatedAt": "2026-10-14T04:19:08.658Z"
+  },
+  {
+    "_id": "14be8d14-1d78-43c3-bbad-4e6a199df7df",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T04:33:16.274Z",
+    "details": "Logged visit for sabari - Interested: YES",
+    "id": "14be8d14-1d78-43c3-bbad-4e6a199df7df",
+    "recordId": "1a31b3df-8ac9-4896-afce-f854a699a66d",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T04:33:16.274Z",
+    "updatedAt": "2026-10-14T04:33:16.274Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "dc22d6be-1682-40a4-95ec-162c8f1c8297",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T04:38:03.155Z",
+    "id": "dc22d6be-1682-40a4-95ec-162c8f1c8297",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "sabari",
+      "status": "Pending",
+      "pincodeId": "6abbb1377ff2862ecee7b91d"
+    },
+    "previousValue": null,
+    "recordId": "4bbb4f7f-776f-4467-84d6-0dd00b3aba60",
+    "timestamp": "2026-10-14T04:38:03.155Z",
+    "updatedAt": "2026-10-14T04:38:03.155Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "3ea05663-7b26-4905-b440-0bcddbd59572",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T04:39:24.544Z",
+    "id": "3ea05663-7b26-4905-b440-0bcddbd59572",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "sabari",
+      "status": "Pending",
+      "pincodeId": "6abbb1377ff2862ecee7b91d"
+    },
+    "previousValue": null,
+    "recordId": "08bd2603-f629-4c3e-a49f-1db140e31aaf",
+    "timestamp": "2026-10-14T04:39:24.544Z",
+    "updatedAt": "2026-10-14T04:39:24.544Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "da7624bd-b82e-4e23-ac65-7f232ecf0e9f",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T04:40:27.585Z",
+    "details": "Logged visit for Store14 - Interested: YES",
+    "id": "da7624bd-b82e-4e23-ac65-7f232ecf0e9f",
+    "recordId": "4c90f4cd-399d-412d-8f11-58fa7eed6833",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T04:40:27.585Z",
+    "updatedAt": "2026-10-14T04:40:27.585Z",
+    "userId": "usr_mgr_1790592319962_fx3y",
+    "userName": "iniya",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "aaec8bb6-9f18-4595-aabf-7d24a4ae9f32",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T04:42:46.229Z",
+    "details": "Logged visit for sharukhan - Interested: YES",
+    "id": "aaec8bb6-9f18-4595-aabf-7d24a4ae9f32",
+    "recordId": "d49fbc15-4e27-4725-8979-ce19afe578cd",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T04:42:46.229Z",
+    "updatedAt": "2026-10-14T04:42:46.229Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "f76ff0f8-17a1-4097-b73a-704366c50e1b",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T04:47:42.296Z",
+    "id": "f76ff0f8-17a1-4097-b73a-704366c50e1b",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "sharukhan",
+      "status": "Pending",
+      "pincodeId": "6abbacd17ff2862ecee7b8e3"
+    },
+    "previousValue": null,
+    "recordId": "76135c17-a326-449a-b363-6d50f9346a18",
+    "timestamp": "2026-10-14T04:47:42.296Z",
+    "updatedAt": "2026-10-14T04:47:42.296Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "7be25317-082b-43c1-a6fb-19de74dbb182",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T04:50:41.282Z",
+    "id": "7be25317-082b-43c1-a6fb-19de74dbb182",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "sharukhan",
+      "status": "Pending",
+      "pincodeId": "6abbacd17ff2862ecee7b8e3"
+    },
+    "previousValue": null,
+    "recordId": "b306caa4-e50e-4614-94cf-f548c474a37a",
+    "timestamp": "2026-10-14T04:50:41.282Z",
+    "updatedAt": "2026-10-14T04:50:41.282Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "6acf0d388740f32c10fd0b0e",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "65.2.144.101",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"Kani\" (kani@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "6acf0b439fcfe74ca0b45c80",
+      "vendorName": "Kani",
+      "oldStatus": "Pending",
+      "newStatus": "Active",
+      "reason": "Vendor onboarding approved by Administrator",
+      "timestamp": "2026-10-14T05:03:52.493Z"
+    },
+    "timestamp": "2026-10-14T05:03:52.494Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acf0d428740f32c10fd0b0f",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "52.66.154.250",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"Soniya\" (soniya@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "6acf027a9fcfe74ca0b44859",
+      "vendorName": "Soniya",
+      "oldStatus": "Pending",
+      "newStatus": "Active",
+      "reason": "Vendor onboarding approved by Administrator",
+      "timestamp": "2026-10-14T05:04:02.724Z"
+    },
+    "timestamp": "2026-10-14T05:04:02.724Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acf1020b9e2448b3a866f62",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "65.1.132.133",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"gayu\" (gayu@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "6acf0fef9fcfe74ca0b45d13",
+      "vendorName": "gayu",
+      "oldStatus": "Pending",
+      "newStatus": "Active",
+      "reason": "Vendor onboarding approved by Administrator",
+      "timestamp": "2026-10-14T05:16:16.454Z"
+    },
+    "timestamp": "2026-10-14T05:16:16.465Z",
+    "__v": 0
+  },
+  {
+    "_id": "6197e390-5b32-4463-b298-f1f785d1f9de",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T05:18:25.095Z",
+    "details": "Logged visit for store15 - Interested: NO",
+    "id": "6197e390-5b32-4463-b298-f1f785d1f9de",
+    "recordId": "8f866370-a3d5-4fa6-b06b-5092e927ac46",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T05:18:25.095Z",
+    "updatedAt": "2026-10-14T05:18:25.095Z",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager"
   }
 ]

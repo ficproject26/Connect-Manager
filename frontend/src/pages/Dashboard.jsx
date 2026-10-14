@@ -229,7 +229,12 @@ const Dashboard = ({ onNavigate }) => {
   const territoryList = React.useMemo(() => {
     const roleData = dashboardData?.roleSpecificData;
     let list = [];
-    if (territoryFilter === 'dist') {
+    if (territoryFilter === 'state') {
+      list = (roleData?.stateBreakdown || []).map(s => ({
+        name: s.stateName,
+        value: (s.totalVendors || 0) > 0 ? s.totalVendors : (s.shopVisits || s.tieUps || 0)
+      }));
+    } else if (territoryFilter === 'dist') {
       list = (roleData?.districtBreakdown || []).map(d => ({
         name: d.districtName,
         value: (d.totalVendors || 0) > 0 ? d.totalVendors : (d.shopVisits || d.tieUps || 0)
@@ -647,6 +652,9 @@ const Dashboard = ({ onNavigate }) => {
               value={territoryFilter}
               onChange={(e) => setTerritoryFilter(e.target.value)}
             >
+              {(isStateManager || (user?.role || '').toLowerCase().includes('admin')) && (
+                <option value="state">States</option>
+              )}
               <option value="dist">Districts</option>
               <option value="div">Divisions</option>
               <option value="pin">Pincodes</option>
@@ -900,7 +908,7 @@ const Dashboard = ({ onNavigate }) => {
                     {currentIssueStats.slaRate}% SLA Met
                   </strong>
                 ) : (
-                  <strong style={{ color: '#94a3b8' }}>Unavailable (No resolved issues)</strong>
+                  <strong style={{ color: '#94a3b8' }}>Unavailable (No resolved tasks)</strong>
                 )}
               </div>
               <div className="issue-health-bar">

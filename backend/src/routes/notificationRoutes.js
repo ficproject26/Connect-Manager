@@ -77,7 +77,7 @@ router.use(authMiddleware);
 router.get('/unread-count', async (req, res) => {
   try {
     const allNotifs = await db.notifications.find();
-    const unreadCount = allNotifs.filter(n => !n.isRead && (n.userId === req.user.id || !n.userId)).length;
+    const unreadCount = allNotifs.filter(n => !n.isRead && (!n.userId || String(n.userId) === String(req.user.id))).length;
     res.json({ success: true, unreadCount });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to count notifications' });
@@ -89,7 +89,7 @@ router.get('/', async (req, res) => {
   try {
     const allNotifs = await db.notifications.find();
     const userNotifications = allNotifs
-      .filter(n => n.userId === req.user.id || !n.userId)
+      .filter(n => !n.userId || String(n.userId) === String(req.user.id))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json({ success: true, notifications: userNotifications });
   } catch (err) {
@@ -119,7 +119,7 @@ router.post('/mark-all-read', async (req, res) => {
   try {
     const allNotifs = await db.notifications.find();
     for (const n of allNotifs) {
-      if ((n.userId === req.user.id || !n.userId) && !n.isRead) {
+      if ((!n.userId || String(n.userId) === String(req.user.id)) && !n.isRead) {
         await db.notifications.findByIdAndUpdate(n._id, { $set: { isRead: true } });
       }
     }

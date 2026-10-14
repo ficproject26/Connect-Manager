@@ -3640,12 +3640,13 @@
     "districtId": "6ab9fa4daf9e0372e50b705b",
     "divisionId": "DIV-TPT-TPT-TP",
     "divisionType": "Administrative",
-    "name": "Tirupatturr",
+    "name": "Tirupattur",
     "notes": "",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Active",
-    "talukInfo": "Tirupatturr",
-    "updatedAt": "2026-10-13T12:46:29.542Z"
+    "talukInfo": "Tirupattur",
+    "updatedAt": "2026-10-14T03:59:57.722Z",
+    "updatedBy": "6abc986678d7803cf6a444d9"
   },
   {
     "_id": "6aba1c8eaf9e0372e50b7246",

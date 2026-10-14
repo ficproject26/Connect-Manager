@@ -28,8 +28,8 @@ const Notifications = ({ onNavigate }) => {
 
   const broadcastUnreadCount = (count) => {
     const safeCount = Math.max(0, count);
-    window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { unreadCount: safeCount } }));
-    window.dispatchEvent(new CustomEvent('unread-count-updated', { detail: { safeCount } }));
+    window.dispatchEvent(new CustomEvent('notifications-updated', { detail: { unreadCount: safeCount, safeCount, count: safeCount } }));
+    window.dispatchEvent(new CustomEvent('unread-count-updated', { detail: { unreadCount: safeCount, safeCount, count: safeCount } }));
   };
 
   const fetchNotifications = async () => {

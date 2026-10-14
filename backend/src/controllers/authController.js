@@ -62,6 +62,48 @@ const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }
   return { count: 0, limit, isFull: false, remaining: limit };
 };
 
+// Helper: Safely resolve and populate saved manager bank details from users, managers, or top-level fields
+const resolveUserBankDetails = async (user) => {
+  if (!user) return null;
+  let bd = user.bankDetails || user.bankAccount || null;
+  let mgrDoc = null;
+  if (!bd || !bd.accountNumber) {
+    mgrDoc = await db.managers.findOne({
+      $or: [
+        ...(user._id ? [{ _id: user._id }] : []),
+        ...(user.id ? [{ id: user.id }] : []),
+        ...(user.email ? [{ email: user.email }] : []),
+        ...(user.mobile ? [{ mobile: user.mobile }, { phone: user.mobile }] : []),
+        ...(user.phone ? [{ phone: user.phone }, { mobile: user.phone }] : [])
+      ]
+    }).catch(() => null);
+    if (mgrDoc?.bankDetails) {
+      bd = { ...(bd || {}), ...mgrDoc.bankDetails };
+    }
+  }
+
+  const accountHolderName = bd?.accountHolderName || bd?.accountHolder || user.accountHolderName || mgrDoc?.accountHolderName || user.name || '';
+  const bankName = bd?.bankName || bd?.bank || user.bankName || mgrDoc?.bankName || '';
+  const branchName = bd?.branchName || bd?.branch || user.branchName || user.bankBranch || mgrDoc?.branchName || '';
+  const city = bd?.city || bd?.bankCity || user.city || user.bankCity || mgrDoc?.city || '';
+  const street = bd?.street || bd?.bankStreet || user.street || user.bankStreet || mgrDoc?.street || null;
+  const accountNumber = bd?.accountNumber || bd?.accountNo || bd?.bankAccount || user.accountNumber || user.accountNo || mgrDoc?.accountNumber || mgrDoc?.accountNo || '';
+  const ifscCode = bd?.ifscCode || bd?.ifsc || user.ifscCode || user.ifsc || mgrDoc?.ifscCode || mgrDoc?.ifsc || '';
+
+  if (accountNumber || bankName || ifscCode) {
+    return {
+      accountHolderName: accountHolderName || user.name || '',
+      bankName: bankName || '',
+      branchName: branchName || '',
+      city: city || '',
+      street: street || null,
+      accountNumber: accountNumber || '',
+      ifscCode: ifscCode || ''
+    };
+  }
+  return bd || null;
+};
+
 // Helper: Identify responsible Sub-admin according to hierarchy level and assigned territory
 const findTerritorySubAdmin = async ({ role, stateId, stateName, districtId, districtName, divisionId, divisionName, pincodeId, pincodeCode }) => {
   let resolvedStateName = stateName;
@@ -337,7 +379,7 @@ const login = async (req, res) => {
       panNumber: user.panNumber || user.documents?.panNumber || null,
       documents: user.documents || {},
       avatarUrl: user.avatarUrl || null,
-      bankDetails: user.bankDetails || user.bankAccount || null,
+      bankDetails: await resolveUserBankDetails(user),
       scope: {
         regionId: user.stateId || null,
         regionName: resolvedState,
@@ -1055,7 +1097,7 @@ const getRegistrationStatus = async (req, res) => {
         bankUrl: user.documents?.bankUrl || user.documents?.bankPassbook || null,
         signatureUrl: user.documents?.signatureUrl || user.documents?.digitalSignature || null
       },
-      bankDetails: user.bankDetails || null,
+      bankDetails: await resolveUserBankDetails(user),
       scope: {
         stateName: resolvedState,
         districtName: resolvedDistrict,
@@ -2167,7 +2209,7 @@ const getMe = async (req, res) => {
         panNumber: user.panNumber || user.documents?.panNumber || null,
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
-        bankDetails: user.bankDetails || user.bankAccount || null,
+        bankDetails: await resolveUserBankDetails(user),
         territory: {
           state: stateName,
           stateId: stateId,
@@ -2501,7 +2543,7 @@ const verifyOtp = async (req, res) => {
       address: user.address || null,
       documents: user.documents || {},
       avatarUrl: user.avatarUrl || null,
-      bankDetails: user.bankDetails || null,
+      bankDetails: await resolveUserBankDetails(user),
       regionId: user.regionId || user.stateId,
       scope: {
         regionId: user.regionId || user.stateId,
@@ -2733,5 +2775,6 @@ module.exports = {
   refreshToken,
   updateBankDetails,
   findTerritorySubAdmin,
+  resolveUserBankDetails,
   ROLE_LIMITS
 };

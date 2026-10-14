@@ -130,46 +130,6 @@
     "updatedAt": "2026-10-13T09:56:57.667Z"
   },
   {
-    "_id": "6ab4f6df1311030bfd3447a2",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-24T10:09:35.811Z",
-    "id": "6ab4f6df1311030bfd3447a2",
-    "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "priority": "high",
-    "read": false,
-    "receiver": "6a926325caf3cb00e6b9a590",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:14.991Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab4f6c91311030bfd34477c",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-24T10:09:13.315Z",
-    "id": "6ab4f6c91311030bfd34477c",
-    "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "priority": "high",
-    "read": false,
-    "receiver": "6a926325caf3cb00e6b9a590",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.022Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
     "_id": "6ab6178d2555c67bd9bc7198",
     "__v": 0,
     "category": "target_assigned",
@@ -5093,28 +5053,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:09:07.660Z",
     "id": "57e5e52b-4df2-464c-9aec-5d48fd063d40",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "690ce211-a9ee-49c0-8e10-d375b92d191b",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:09:08.049Z"
+    "updatedAt": "2026-10-13T13:08:42.893Z"
   },
   {
     "_id": "7b8328e8-c986-4a45-b04d-4d7ad0f4250b",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:09:10.916Z",
     "id": "7b8328e8-c986-4a45-b04d-4d7ad0f4250b",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "690ce211-a9ee-49c0-8e10-d375b92d191b",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:09:11.346Z"
+    "updatedAt": "2026-10-13T13:08:42.947Z"
   },
   {
     "_id": "bf35f310-7b29-4be3-83bb-81b4a4d8c0ff",
@@ -5136,28 +5096,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:11:23.652Z",
     "id": "5bb0bba6-bf8f-40f7-8e5c-63392a4eb6d7",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "71512b2f-5b33-4477-ab22-42d7543a4545",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:11:24.026Z"
+    "updatedAt": "2026-10-13T13:08:42.981Z"
   },
   {
     "_id": "51d7b988-3698-4976-93dc-f05c913e5dbd",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:11:26.311Z",
     "id": "51d7b988-3698-4976-93dc-f05c913e5dbd",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "71512b2f-5b33-4477-ab22-42d7543a4545",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:11:26.857Z"
+    "updatedAt": "2026-10-13T13:08:43.013Z"
   },
   {
     "_id": "70a5e1fe-02d0-490b-91b5-5db02b6b56d0",
@@ -5179,70 +5139,70 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:12:13.698Z",
     "id": "89682d6a-a6e4-4c30-ba9e-572d874aa566",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Ramesh Sundaram (division_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "4934d852-916d-47ee-8d63-6833071f8490",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:12:13.937Z"
+    "updatedAt": "2026-10-13T13:08:43.057Z"
   },
   {
     "_id": "92fad0ce-739e-48f0-aa5e-506d06321219",
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:12:28.998Z",
     "id": "92fad0ce-739e-48f0-aa5e-506d06321219",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Anitha Selvam (division_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "80237293-9212-461a-890f-38ba99746af9",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:12:29.371Z"
+    "updatedAt": "2026-10-13T13:08:43.091Z"
   },
   {
     "_id": "fdd944c5-a512-4ad3-a3b9-2716ce36d7fb",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:12:29.824Z",
     "id": "fdd944c5-a512-4ad3-a3b9-2716ce36d7fb",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "80237293-9212-461a-890f-38ba99746af9",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:12:30.181Z"
+    "updatedAt": "2026-10-13T13:08:43.125Z"
   },
   {
     "_id": "13e4f157-1523-4a39-9528-933d798524a9",
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:12:44.878Z",
     "id": "13e4f157-1523-4a39-9528-933d798524a9",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Statemanager (state_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "62845798-b37f-4265-8788-b233dabf3630",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:12:45.253Z"
+    "updatedAt": "2026-10-13T13:08:43.159Z"
   },
   {
     "_id": "c004300a-646d-4e0c-a352-2b01a50dc539",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:12:45.723Z",
     "id": "c004300a-646d-4e0c-a352-2b01a50dc539",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Statemanager (state_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "62845798-b37f-4265-8788-b233dabf3630",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:12:46.177Z"
+    "updatedAt": "2026-10-13T13:08:43.206Z"
   },
   {
     "_id": "df958f99-d82f-4693-9c6a-ca43bde29c4b",
@@ -5264,28 +5224,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:13:00.510Z",
     "id": "ecc3d462-ae40-4eb6-ac76-09e03e70b47d",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Districtmanager (district_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "65db1e2a-5690-47c8-9496-022847ddba9c",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:13:00.751Z"
+    "updatedAt": "2026-10-13T13:08:43.239Z"
   },
   {
     "_id": "8c7693cb-0cba-43b8-8c63-133830537585",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:13:00.956Z",
     "id": "8c7693cb-0cba-43b8-8c63-133830537585",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "65db1e2a-5690-47c8-9496-022847ddba9c",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:13:01.209Z"
+    "updatedAt": "2026-10-13T13:08:43.276Z"
   },
   {
     "_id": "a6bdb7fb-a8fa-40e5-9081-512157a02774",
@@ -5307,28 +5267,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:13:21.544Z",
     "id": "b98ad3ff-cde5-44e1-81d0-df5a8e4d15ce",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Divisionmanager (division_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "cbb50bd6-08b2-4c24-b437-0cab65b2df7b",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:13:21.921Z"
+    "updatedAt": "2026-10-13T13:08:43.309Z"
   },
   {
     "_id": "67a6495b-2f42-4e83-8db1-66535d547e91",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:13:24.822Z",
     "id": "67a6495b-2f42-4e83-8db1-66535d547e91",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "cbb50bd6-08b2-4c24-b437-0cab65b2df7b",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:13:25.306Z"
+    "updatedAt": "2026-10-13T13:08:43.342Z"
   },
   {
     "_id": "586fc9a9-973c-406a-9b2c-e758cc67468e",
@@ -5350,28 +5310,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:13:46.195Z",
     "id": "65291af8-2fcf-4854-b0a9-65aa85b2e51e",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Pincodemanager (pincode_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "40150c49-d50b-4256-9c99-a0040c7763b9",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:13:46.688Z"
+    "updatedAt": "2026-10-13T13:08:43.379Z"
   },
   {
     "_id": "00ba5a5c-0c82-4f40-8959-fffa2f009535",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:13:47.722Z",
     "id": "00ba5a5c-0c82-4f40-8959-fffa2f009535",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "40150c49-d50b-4256-9c99-a0040c7763b9",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:13:48.230Z"
+    "updatedAt": "2026-10-13T13:08:43.414Z"
   },
   {
     "_id": "cb53391f-e063-4f4d-97f9-5f187789b831",
@@ -5393,28 +5353,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:39:55.092Z",
     "id": "20b19468-4f6b-4e93-ac30-5226401c3dd5",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "0b9995c7-7f5f-4104-9e8f-8dfe8496351c",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:39:55.323Z"
+    "updatedAt": "2026-10-13T13:08:43.447Z"
   },
   {
     "_id": "ef66f97a-a0dc-4c76-ac11-fffb683937e3",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:39:56.038Z",
     "id": "ef66f97a-a0dc-4c76-ac11-fffb683937e3",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "0b9995c7-7f5f-4104-9e8f-8dfe8496351c",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:39:56.260Z"
+    "updatedAt": "2026-10-13T13:08:43.482Z"
   },
   {
     "_id": "f7532dc1-4877-4d23-a792-b3400232a703",
@@ -5436,70 +5396,70 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:40:35.664Z",
     "id": "dcc67682-3bb7-4785-87e3-62bbab679c1d",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Ramesh Sundaram (division_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "055940f0-9e82-468a-aa6c-4c8a4b76431d",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:40:35.892Z"
+    "updatedAt": "2026-10-13T13:08:43.517Z"
   },
   {
     "_id": "c64cca59-6ea2-4d71-ad0d-f883600b2bbd",
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:40:48.621Z",
     "id": "c64cca59-6ea2-4d71-ad0d-f883600b2bbd",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Anitha Selvam (division_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "259a44f5-aae7-49fc-8dae-39200f2ec7fb",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:40:48.851Z"
+    "updatedAt": "2026-10-13T13:08:43.551Z"
   },
   {
     "_id": "ba99cf76-6513-4d5e-99c9-a476e46dd22d",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:40:49.015Z",
     "id": "ba99cf76-6513-4d5e-99c9-a476e46dd22d",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "259a44f5-aae7-49fc-8dae-39200f2ec7fb",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:40:49.236Z"
+    "updatedAt": "2026-10-13T13:08:43.596Z"
   },
   {
     "_id": "08dee728-090a-4bf4-a2d4-5a4c95a4ae5a",
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:41:01.789Z",
     "id": "08dee728-090a-4bf4-a2d4-5a4c95a4ae5a",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Statemanager (state_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "d02cb5ae-3fe7-4416-8556-331136adab0f",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:41:02.016Z"
+    "updatedAt": "2026-10-13T13:08:43.629Z"
   },
   {
     "_id": "00b254bd-81fc-47af-baf3-afd6e41c70a7",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:41:02.177Z",
     "id": "00b254bd-81fc-47af-baf3-afd6e41c70a7",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Statemanager (state_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "d02cb5ae-3fe7-4416-8556-331136adab0f",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:41:02.404Z"
+    "updatedAt": "2026-10-13T13:08:43.663Z"
   },
   {
     "_id": "133facb3-d64c-4fe4-b3e2-176f93ada376",
@@ -5521,28 +5481,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:41:15.124Z",
     "id": "4c7d3545-ae2f-465f-a05e-d90a3dbd2815",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Districtmanager (district_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "91818e9e-0b4a-4753-b0b9-3b8474e8b107",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:41:15.346Z"
+    "updatedAt": "2026-10-13T13:08:43.696Z"
   },
   {
     "_id": "0abd43a0-43d7-4eab-a97e-2b13cec11c5e",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:41:15.508Z",
     "id": "0abd43a0-43d7-4eab-a97e-2b13cec11c5e",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "91818e9e-0b4a-4753-b0b9-3b8474e8b107",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:41:15.737Z"
+    "updatedAt": "2026-10-13T13:08:43.730Z"
   },
   {
     "_id": "e7ac96fa-b52d-4175-bd66-84e004602e84",
@@ -5564,28 +5524,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:41:28.654Z",
     "id": "5df21871-fcdc-4d0e-b70b-8a87c5476b50",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Divisionmanager (division_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "843d9a14-33d0-4eb8-9f49-8865b0f54f2c",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:41:28.886Z"
+    "updatedAt": "2026-10-13T13:08:43.764Z"
   },
   {
     "_id": "140c1598-fa17-44ea-a474-b6d7f9eaa1fb",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:41:29.050Z",
     "id": "140c1598-fa17-44ea-a474-b6d7f9eaa1fb",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "843d9a14-33d0-4eb8-9f49-8865b0f54f2c",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:41:29.284Z"
+    "updatedAt": "2026-10-13T13:08:43.798Z"
   },
   {
     "_id": "b8ed5d4f-44bb-46c3-a998-04ea5bc668d5",
@@ -5607,28 +5567,28 @@
     "category": "main_admin_approval",
     "createdAt": "2026-10-13T12:41:50.333Z",
     "id": "bde68f8b-dafe-4ae0-b0e2-d48789e4917d",
-    "isRead": false,
+    "isRead": true,
     "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Pincodemanager (pincode_manager). Pending Main Admin review.",
     "priority": "high",
     "read": false,
     "recordId": "c260e10e-9b88-4b3a-9529-a039ae5977a9",
     "title": "Manager Registration Ready for Main Admin Clearance",
     "type": "main_admin_request",
-    "updatedAt": "2026-10-13T12:41:50.569Z"
+    "updatedAt": "2026-10-13T13:08:43.832Z"
   },
   {
     "_id": "cfa92c7f-f94e-4a69-971e-a0e17ecb5ce2",
     "category": "kyc_approval",
     "createdAt": "2026-10-13T12:41:50.732Z",
     "id": "cfa92c7f-f94e-4a69-971e-a0e17ecb5ce2",
-    "isRead": false,
+    "isRead": true,
     "message": "Both Sub-admin and Main Admin approvals granted for Multistage Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
     "priority": "high",
     "read": false,
     "recordId": "c260e10e-9b88-4b3a-9529-a039ae5977a9",
     "title": "Manager Registration Ready for KYC Clearance",
     "type": "kyc_request",
-    "updatedAt": "2026-10-13T12:41:50.958Z"
+    "updatedAt": "2026-10-13T13:08:34.354Z"
   },
   {
     "_id": "c4abec39-6ee1-4cc1-bdd2-16c441294239",
@@ -5644,5 +5604,99 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T12:41:51.453Z",
     "userId": "c260e10e-9b88-4b3a-9529-a039ae5977a9"
+  },
+  {
+    "_id": "cd60e574-bb20-476e-81c6-bd8079f2e967",
+    "createdAt": "2026-10-13T13:12:07.695Z",
+    "id": "cd60e574-bb20-476e-81c6-bd8079f2e967",
+    "isRead": true,
+    "message": "Surya logged field visit for dinesh 23 (Interested).",
+    "recordId": "d8552fe5-2052-41d1-a6af-a2290f609f8e",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-13T13:18:58.767Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "fbdcf1d1-035e-4dc3-a635-853d6fb73a74",
+    "createdAt": "2026-10-14T04:14:30.303Z",
+    "id": "fbdcf1d1-035e-4dc3-a635-853d6fb73a74",
+    "isRead": true,
+    "message": "Surya logged field visit for shop13 (Interested).",
+    "recordId": "1d172ba2-66f9-4e60-9ada-e145a87a9650",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T04:24:04.912Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "b714d314-47ad-4175-9ef3-a8795c78c8a2",
+    "createdAt": "2026-10-14T04:33:16.311Z",
+    "id": "b714d314-47ad-4175-9ef3-a8795c78c8a2",
+    "isRead": false,
+    "message": "Ironman logged field visit for sabari (Interested).",
+    "recordId": "1a31b3df-8ac9-4896-afce-f854a699a66d",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T04:33:16.311Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
+  },
+  {
+    "_id": "fc1a5ea1-6e54-4185-9e99-1e67f0f556ca",
+    "createdAt": "2026-10-14T04:40:27.614Z",
+    "id": "fc1a5ea1-6e54-4185-9e99-1e67f0f556ca",
+    "isRead": false,
+    "message": "iniya logged field visit for Store14 (Interested).",
+    "recordId": "4c90f4cd-399d-412d-8f11-58fa7eed6833",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T04:40:27.614Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "c0f8c313-7046-4a76-81e3-2d7cb750f1aa",
+    "createdAt": "2026-10-14T04:42:46.258Z",
+    "id": "c0f8c313-7046-4a76-81e3-2d7cb750f1aa",
+    "isRead": false,
+    "message": "Ironman logged field visit for sharukhan (Interested).",
+    "recordId": "d49fbc15-4e27-4725-8979-ce19afe578cd",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T04:42:46.258Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
+  },
+  {
+    "_id": "6acf0a4f1b214fe0fa181de1",
+    "receiver": "6acdc6a7cd3c3b1568359c71",
+    "title": "New Target Assigned",
+    "message": "You have been assigned a target of 2 visits: Today target",
+    "read": false,
+    "priority": "high",
+    "category": "target_assigned",
+    "createdAt": "2026-10-14T04:51:27.727Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acf0ebe1b214fe0fa181f29",
+    "receiver": "6acdc6a7cd3c3b1568359c71",
+    "title": "New Target Assigned",
+    "message": "You have been assigned a target of 1 visits: today task",
+    "read": false,
+    "priority": "high",
+    "category": "target_assigned",
+    "createdAt": "2026-10-14T05:10:22.572Z",
+    "__v": 0
+  },
+  {
+    "_id": "84b2f590-a433-48c7-aa4c-8a771d00efeb",
+    "createdAt": "2026-10-14T05:18:25.132Z",
+    "id": "84b2f590-a433-48c7-aa4c-8a771d00efeb",
+    "isRead": false,
+    "message": "Surya logged field visit for store15 (Not Interested).",
+    "recordId": "8f866370-a3d5-4fa6-b06b-5092e927ac46",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T05:18:25.132Z",
+    "userId": "usr_mgr_1790580930154_8uge"
   }
 ]

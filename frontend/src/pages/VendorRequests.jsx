@@ -4,6 +4,30 @@ import { UserCheck, Search, Filter, CheckCircle2, Clock, XCircle, ArrowRight, Sp
 import StatusBadge from '../components/StatusBadge';
 import { useRealtime } from '../realtime';
 
+const isVendorDraftIncomplete = (v) => {
+  if (!v) return false;
+  if (typeof v.isEligibleForResume === 'boolean') return v.isEligibleForResume;
+  if (typeof v.hasIncompleteDraft === 'boolean') return v.hasIncompleteDraft;
+
+  const status = String(v.status || '').toLowerCase().trim();
+  const approval = String(v.approvalStatus || '').toLowerCase().trim();
+  const onboardingStatus = String(v.onboardingStatus || '').toLowerCase().trim();
+
+  // If completed, approved, active, or rejected -> never an incomplete draft
+  if (['approved', 'active', 'rejected', 'inactive'].includes(status)) return false;
+  if (approval.includes('approved') || approval.includes('rejected')) return false;
+  if (v.isCompleted === true || v.isOnboardingCompleted === true || onboardingStatus === 'completed') return false;
+
+  // Incomplete draft flags
+  if (v.isDraft === true || onboardingStatus === 'draft' || onboardingStatus === 'incomplete' || onboardingStatus === 'in_progress') {
+    return true;
+  }
+  if (v.currentStep && Number(v.currentStep) < 5) return true;
+  if (v.step && Number(v.step) < 5) return true;
+
+  return false;
+};
+
 const VendorRequests = ({ onNavigate }) => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -118,35 +142,37 @@ const VendorRequests = ({ onNavigate }) => {
                       >
                         Review KYC <ArrowRight size={13} />
                       </button>
-                      <button
-                        className="btn btn-sm"
-                        title="Resume Incomplete Onboarding"
-                        onClick={() => onNavigate('resume-onboarding', {
-                          fieldVisitId: v.fieldVisitId || v._id,
-                          prefillData: {
-                            ...v,
-                            shopName: v.businessName || v.name,
-                            businessName: v.businessName || v.name,
-                            category: v.category || 'Products',
-                            mobile: v.mobile || v.phone || ''
-                          }
-                        })}
-                        style={{
-                          padding: '5px 10px',
-                          fontSize: '0.76rem',
-                          fontWeight: 700,
-                          background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                          color: '#ffffff',
-                          border: 'none',
-                          borderRadius: '6px',
-                          cursor: 'pointer',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: 3
-                        }}
-                      >
-                        <Sparkles size={12} /> Resume
-                      </button>
+                      {isVendorDraftIncomplete(v) && (
+                        <button
+                          className="btn btn-sm"
+                          title="Resume Incomplete Onboarding"
+                          onClick={() => onNavigate('resume-onboarding', {
+                            fieldVisitId: v.fieldVisitId || v._id,
+                            prefillData: {
+                              ...v,
+                              shopName: v.businessName || v.name,
+                              businessName: v.businessName || v.name,
+                              category: v.category || 'Products',
+                              mobile: v.mobile || v.phone || ''
+                            }
+                          })}
+                          style={{
+                            padding: '5px 10px',
+                            fontSize: '0.76rem',
+                            fontWeight: 700,
+                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                            color: '#ffffff',
+                            border: 'none',
+                            borderRadius: '6px',
+                            cursor: 'pointer',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 3
+                          }}
+                        >
+                          <Sparkles size={12} /> Resume
+                        </button>
+                      )}
                     </div>
                   </td>
                 </tr>

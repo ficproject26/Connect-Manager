@@ -61,13 +61,15 @@ const getDashboardStats = async (req, res) => {
       });
 
       // Compute comprehensive territory breakdowns strictly from scoped database records (vendors + visits)
-      const [districtBreakdown, divisionBreakdown, pincodeBreakdown] = await Promise.all([
+      const [stateBreakdown, districtBreakdown, divisionBreakdown, pincodeBreakdown] = await Promise.all([
+        territoryScopeService.getTerritoryPerformance(user, 'state'),
         territoryScopeService.getTerritoryPerformance(user, 'dist'),
         territoryScopeService.getTerritoryPerformance(user, 'div'),
         territoryScopeService.getTerritoryPerformance(user, 'pin')
       ]);
 
       let roleSpecificData = {
+        stateBreakdown,
         districtBreakdown,
         divisionBreakdown,
         pincodeBreakdown
@@ -98,6 +100,7 @@ const getDashboardStats = async (req, res) => {
         totalDistricts: districts.length,
         totalDivisions: divisions.length,
         totalPincodes: pincodes.length,
+        stateBreakdown,
         districtBreakdown,
         divisionBreakdown,
         pincodeBreakdown
@@ -125,6 +128,7 @@ const getDashboardStats = async (req, res) => {
         totalLowerManagers: lowerManagers.length,
         totalDivisions: divisions.length,
         totalPincodes: pincodes.length,
+        stateBreakdown,
         districtBreakdown,
         divisionBreakdown,
         pincodeBreakdown
@@ -150,6 +154,7 @@ const getDashboardStats = async (req, res) => {
         coManager: coManager ? { name: coManager.name, email: coManager.email, mobile: coManager.mobile } : null,
         totalLowerManagers: lowerManagers.length,
         totalPincodes: pincodes.length,
+        stateBreakdown,
         districtBreakdown,
         divisionBreakdown,
         pincodeBreakdown
@@ -188,12 +193,14 @@ const getDashboardStats = async (req, res) => {
         pincodeArea: pincode?.areaName || user.assignedArea || 'Assigned Area',
         coManager: coManager ? { name: coManager.name, email: coManager.email, mobile: coManager.mobile } : null,
         subCategoryCounts,
+        stateBreakdown,
         districtBreakdown,
         divisionBreakdown,
         pincodeBreakdown
       };
     } else {
       roleSpecificData = {
+        stateBreakdown,
         districtBreakdown,
         divisionBreakdown,
         pincodeBreakdown
@@ -281,7 +288,7 @@ const getDashboardStats = async (req, res) => {
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
       .slice(0, 5);
 
-    // Dynamic Monthly Trends (Merchants vs Tie-ups)
+    // Dynamic Monthly Trends (Merchants vs Tie-ups) strictly from scoped database vendors
     const monthlyTrends = [];
     for (let i = 11; i >= 0; i--) {
       const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
@@ -290,8 +297,10 @@ const getDashboardStats = async (req, res) => {
       const mMonth = d.getMonth();
 
       const vInMonth = vendors.filter(v => {
-        if (!v.createdAt) return false;
-        const vd = new Date(v.createdAt);
+        const rawDate = v.createdAt || v.registrationDate || v.onboardingDate || v.date;
+        if (!rawDate) return false;
+        const vd = new Date(rawDate);
+        if (isNaN(vd.getTime())) return false;
         return vd.getFullYear() === mYear && vd.getMonth() === mMonth;
       });
 
@@ -312,67 +321,100 @@ const getDashboardStats = async (req, res) => {
       '1y': monthlyTrends.slice(-12)
     };
 
-    // Real Issues & Tickets Aggregation strictly scoped to caller's territory
-    const allTickets = (db.tickets && db.tickets.cache && db.tickets.cache.length > 0)
-      ? db.tickets.cache
-      : (db.tickets ? await db.tickets.find({}) : []);
+    // Real Operational & QC Tasks Aggregation strictly scoped to caller's territory
+    const allTasks = await db.tasks.find({});
     const taskProfile = await getManagerTerritoryProfile(user);
-    const scopedTickets = allTickets.filter(t => isTaskInManagerTerritory(t, taskProfile));
+    const scopedTasks = allTasks.filter(t => isTaskInManagerTerritory(t, taskProfile));
 
-    const getTicketCategory = (t) => {
+    const getTaskCategory = (t) => {
       const status = (t.status || '').toLowerCase().trim();
       const priority = (t.priority || '').toLowerCase().trim();
       if (['resolved', 'closed', 'completed'].includes(status)) return 'resolved';
       if (['escalated'].includes(status) || priority === 'urgent') return 'escalated';
-      if (['in progress', 'in_progress', 'progress'].includes(status)) return 'inProgress';
-      return 'open';
+      if (['in progress', 'in_progress', 'progress', 'accepted'].includes(status)) return 'inProgress';
+      return 'open'; // 'pending', 'pending acceptance', 'assigned', 'open', etc.
     };
 
-    const calcIssueStats = (ticketList) => {
+    const calcIssueStats = (taskList) => {
       let open = 0, inProgress = 0, escalated = 0, resolved = 0;
-      ticketList.forEach(t => {
-        const cat = getTicketCategory(t);
+      let pending = 0, accepted = 0, completed = 0;
+
+      taskList.forEach(t => {
+        const cat = getTaskCategory(t);
         if (cat === 'resolved') resolved++;
         else if (cat === 'escalated') escalated++;
         else if (cat === 'inProgress') inProgress++;
         else open++;
+
+        const st = (t.status || '').toLowerCase().trim();
+        if (st.includes('pending') || st === 'assigned') pending++;
+        else if (st === 'accepted') accepted++;
+        else if (['completed', 'resolved', 'closed'].includes(st)) completed++;
       });
       const total = open + inProgress + escalated + resolved;
 
-      // SLA Rate calculation
-      const resolvedTickets = ticketList.filter(t => 
-        ['resolved', 'closed', 'completed'].includes((t.status || '').toLowerCase())
+      // Calculate resolution SLA rate and average turnaround only when the necessary data exists
+      const resolvedTasks = taskList.filter(t => 
+        ['completed', 'resolved', 'closed'].includes((t.status || '').toLowerCase().trim())
       );
+
       let slaRate = null;
-      if (resolvedTickets.length > 0) {
-        slaRate = 85;
-      }
-
-      // Turnaround time calculation
       let avgTurnaroundHrs = null;
-      if (resolvedTickets.length > 0) {
-        avgTurnaroundHrs = 4.2;
+
+      if (resolvedTasks.length > 0) {
+        let metSlaCount = 0;
+        let totalTurnaroundMs = 0;
+        let validTurnaroundCount = 0;
+
+        resolvedTasks.forEach(t => {
+          const completedAt = t.completionDetails?.completedAt
+            ? new Date(t.completionDetails.completedAt)
+            : (t.updatedAt ? new Date(t.updatedAt) : null);
+          const createdAt = t.createdAt ? new Date(t.createdAt) : null;
+          const dueDate = t.dueDate ? new Date(t.dueDate) : null;
+
+          if (completedAt && dueDate && !isNaN(completedAt.getTime()) && !isNaN(dueDate.getTime())) {
+            if (completedAt.getTime() <= dueDate.getTime()) {
+              metSlaCount++;
+            }
+          } else if (completedAt && !isNaN(completedAt.getTime())) {
+            metSlaCount++;
+          }
+
+          if (createdAt && completedAt && !isNaN(createdAt.getTime()) && !isNaN(completedAt.getTime()) && completedAt.getTime() >= createdAt.getTime()) {
+            totalTurnaroundMs += (completedAt.getTime() - createdAt.getTime());
+            validTurnaroundCount++;
+          }
+        });
+
+        slaRate = Math.round((metSlaCount / resolvedTasks.length) * 100);
+        if (validTurnaroundCount > 0) {
+          avgTurnaroundHrs = Number(((totalTurnaroundMs / validTurnaroundCount) / (1000 * 60 * 60)).toFixed(1));
+        }
       }
 
-      return { total, open, inProgress, escalated, resolved, slaRate, avgTurnaroundHrs };
+      return { total, open, inProgress, escalated, resolved, slaRate, avgTurnaroundHrs, pending, accepted, completed };
     };
 
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
     const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
 
-    const monthTickets = scopedTickets.filter(t => new Date(t.createdAt || now) >= thirtyDaysAgo);
-    const weekTickets = scopedTickets.filter(t => new Date(t.createdAt || now) >= sevenDaysAgo);
-    const yearTickets = scopedTickets.filter(t => new Date(t.createdAt || now) >= oneYearAgo);
+    const monthTasks = scopedTasks.filter(t => new Date(t.createdAt || now) >= thirtyDaysAgo);
+    const weekTasks = scopedTasks.filter(t => new Date(t.createdAt || now) >= sevenDaysAgo);
+    const yearTasks = scopedTasks.filter(t => new Date(t.createdAt || now) >= oneYearAgo);
 
     const issueStatsByPeriod = {
-      month: calcIssueStats(monthTickets),
-      week: calcIssueStats(weekTickets),
-      year: calcIssueStats(yearTickets),
-      all: calcIssueStats(scopedTickets)
+      month: calcIssueStats(monthTasks),
+      week: calcIssueStats(weekTasks),
+      year: calcIssueStats(yearTasks),
+      all: calcIssueStats(scopedTasks)
     };
 
     const issueCounts = issueStatsByPeriod.month;
+    const activeTasksCount = (issueCounts?.open || 0) + (issueCounts?.inProgress || 0) + (issueCounts?.escalated || 0);
+    kpiMetrics.openIssues = activeTasksCount;
+    kpiMetrics.activeTasks = activeTasksCount;
 
     // Recent activities from auditLogs
     const allLogs = (db.auditLogs.cache && db.auditLogs.cache.length > 0)
@@ -474,7 +516,8 @@ const getLeaderboardData = async (req, res) => {
   try {
     const user = req.user;
     const period = String(req.query.period || 'month').toLowerCase();
-    const cacheKey = `reports:leaderboard:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}:${period}`;
+    const requestedTier = String(req.query.role || req.query.tier || '').trim().toLowerCase();
+    const cacheKey = `reports:leaderboard:${user?.id || user?._id || 'mgr'}:${user?.role || 'mgr'}:${period}:${requestedTier || 'all'}`;
 
     const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
       const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
@@ -494,8 +537,59 @@ const getLeaderboardData = async (req, res) => {
       const divisionMap = new Map((divisions || []).map(d => [String(d._id || d.id), d]));
       const pincodeMap = new Map((pincodes || []).map(p => [String(p._id || p.id), p]));
 
-      const combined = [...(allUsers || []), ...(allManagers || [])];
-      const seen = new Set();
+      const resolveStateName = (entity) => {
+        if (!entity) return '';
+        const rawName = entity.state || entity.stateName || entity.scope?.stateName;
+        if (rawName && typeof rawName === 'string') return rawName.trim().toLowerCase();
+        const sId = String(entity.stateId || '');
+        if (sId && stateMap.has(sId)) {
+          return String(stateMap.get(sId)?.name || '').trim().toLowerCase();
+        }
+        return '';
+      };
+      const callerState = resolveStateName(user) || 'tamil nadu';
+
+      const mgrMap = new Map();
+      (allManagers || []).forEach(m => {
+        if (!m) return;
+        const id = String(m._id || m.id || m.managerId || '');
+        if (id) mgrMap.set(id, m);
+        if (m.email) mgrMap.set(String(m.email).toLowerCase(), m);
+        if (m.mobile) mgrMap.set(String(m.mobile).trim(), m);
+      });
+
+      const combined = [];
+      const seenIds = new Set();
+
+      (allUsers || []).forEach(u => {
+        if (!u) return;
+        const id = String(u._id || u.id || u.managerId || '');
+        const email = String(u.email || '').toLowerCase();
+        const mobile = String(u.mobile || u.phone || '').trim();
+        const mgr = mgrMap.get(id) || (email && mgrMap.get(email)) || (mobile && mgrMap.get(mobile));
+
+        let effectiveRole = u.role;
+        if (mgr?.role && ['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(mgr.role)) {
+          effectiveRole = mgr.role;
+        }
+
+        const merged = { ...mgr, ...u, role: effectiveRole };
+        const key = id || email || mobile;
+        if (key && !seenIds.has(key)) {
+          seenIds.add(key);
+          combined.push(merged);
+        }
+      });
+
+      (allManagers || []).forEach(m => {
+        if (!m) return;
+        const key = String(m._id || m.id || m.managerId || m.email || m.mobile || '');
+        if (key && !seenIds.has(key)) {
+          seenIds.add(key);
+          combined.push(m);
+        }
+      });
+
       const candidateManagers = [];
 
       for (const m of combined) {
@@ -504,14 +598,10 @@ const getLeaderboardData = async (req, res) => {
         const mIdStr = String(m._id || m.id || '');
         const mMobile = String(m.mobile || m.phone || '').trim();
         const mName = String(m.name || '');
-        if (mEmail.endsWith('@example.com') || mEmail.includes('example.com') || mEmail.includes('@sample.com')) continue;
+        if (mEmail.endsWith('@sample.com') || mEmail.includes('sample.com')) continue;
         if (mIdStr === 'user_state_ka' || mIdStr === 'user_state_1' || mIdStr === 'user_dist_1' || mIdStr === 'user_div_1' || mIdStr === 'user_pin_1' || mIdStr === 'user_admin') continue;
         if (mMobile.startsWith('988880000') || mMobile === '9999999999') continue;
         if (mName.includes('(Karnataka State Manager)') || mName.includes('(TN State Manager)')) continue;
-
-        const key = String(m._id || m.id || m.email || m.mobile || '');
-        if (!key || seen.has(key)) continue;
-        seen.add(key);
 
         const r = String(m.role || '').toLowerCase();
         if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(r)) {
@@ -525,10 +615,9 @@ const getLeaderboardData = async (req, res) => {
 
         // Territory scope enforcement: Managers compete within their assigned state jurisdiction
         if (!isGlobalAdmin) {
-          const uState = String(user?.stateId || user?.state || user?.stateName || user?.scope?.stateName || 'Tamil Nadu').trim().toLowerCase();
-          const mState = String(m.stateId || m.state || m.stateName || stateMap.get(String(m.stateId))?.name || '').trim().toLowerCase();
-          if (uState && mState) {
-            const match = uState === mState || uState.includes(mState) || mState.includes(uState);
+          const mState = resolveStateName(m);
+          if (callerState && mState) {
+            const match = callerState === mState || callerState.includes(mState) || mState.includes(callerState);
             if (!match) continue;
           }
         }

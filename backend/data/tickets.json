@@ -20,9 +20,9 @@
     "priority": "medium",
     "status": "resolved",
     "createdAt": "2026-09-16T09:29:54.485Z",
-    "updatedAt": "2026-10-13T09:10:30.991Z",
+    "updatedAt": "2026-10-14T04:20:15.518Z",
     "__v": 0,
-    "resolutionDetails": "Escalated to System SuperAdmin by State Desk | Resolved by State Agent Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Escalated to System SuperAdmin by State Desk | Resolved by State Agent Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | [State Response 13/10/2026]: qwertyuio | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk"
+    "resolutionDetails": "Escalated to System SuperAdmin by State Desk | Resolved by State Agent Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Escalated to System SuperAdmin by State Desk | Resolved by State Agent Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | [State Response 13/10/2026]: qwertyuio | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk | Reopened for re-investigation by State Desk | Resolved by State Agent Desk"
   },
   {
     "_id": "6ab4c3767ee04aa0f05808fe",
@@ -134,9 +134,10 @@
     "category": "Payment Issue",
     "description": "visit today and send report imediatelly",
     "priority": "low",
-    "status": "open",
+    "status": "Open",
     "createdAt": "2026-10-13T12:37:19.560Z",
-    "updatedAt": "2026-10-13T12:37:19.560Z",
-    "__v": 0
+    "updatedAt": "2026-10-14T05:55:31.157Z",
+    "__v": 0,
+    "resolutionNotes": "Manager reviewing field inspection"
   }
 ]

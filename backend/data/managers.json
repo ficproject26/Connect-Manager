@@ -51,7 +51,8 @@
     "targetAdminName": "Dhanu",
     "targetAdminRole": "State Admin",
     "targetJurisdiction": "PIN: 635126",
-    "updatedAt": "2026-10-13T10:12:03.476Z"
+    "updatedAt": "2026-10-14T05:55:31.176Z",
+    "avatarUrl": null
   },
   {
     "_id": "usr_mgr_1790588690346_2iph",
@@ -146,7 +147,7 @@
     "mobile": "6789034567",
     "name": "iniya",
     "panNumber": "ABCDE2345R",
-    "passwordHash": "$2a$10$/wPbEWl4qMAD.RuSIBFU..B53h5BMaPuhXf0aoAs1J2DRqA5S6NMG",
+    "passwordHash": "$2a$12$eEydZ.5TQVAM/bgnJIQiKOhNwKVuJVnP.nVuwPEQd4t6KDx2tVIqK",
     "phone": "6789034567",
     "pincode": "560105",
     "pincodeId": "pin_560105",
@@ -159,7 +160,7 @@
     "targetAdminName": "Ananya",
     "targetAdminRole": "District Admin",
     "targetJurisdiction": "PIN: 560105",
-    "updatedAt": "2026-10-10T10:56:46.530Z",
+    "updatedAt": "2026-10-14T04:37:18.443Z",
     "resetPasswordExpires": "2026-10-10T11:56:46.487Z",
     "resetPasswordToken": "49c4986e5c5f87653058674cf1c9624271549fb70b82e3ef617d9452de968015"
   },
@@ -1026,6 +1027,29 @@
     "notes": "Synced from Manager registration application",
     "createdAt": "2026-10-13T07:50:36.658Z",
     "updatedAt": "2026-10-13T07:50:36.658Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acf0ea9b9e2448b3a866f5e",
+    "managerId": "MGR-DIV-20261014-3226",
+    "name": "Dinesh Kathiravan",
+    "email": "dineshkathiravan@gmail.com",
+    "phone": "9787678922",
+    "altPhone": "",
+    "level": "division",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "Dharmapuri",
+    "assignedDivision": "Harur",
+    "assignedPincode": "",
+    "address": "usfougvyfere,afvhuerbyerg",
+    "parentAdminId": "6abc986678d7803cf6a444d9",
+    "requestedBy": null,
+    "approvedBy": "6abc986678d7803cf6a444d9",
+    "status": "Active",
+    "notes": "Synced from Manager registration application",
+    "bankDetails": null,
+    "createdAt": "2026-10-14T05:10:01.447Z",
+    "updatedAt": "2026-10-14T05:10:01.447Z",
     "__v": 0
   }
 ]
