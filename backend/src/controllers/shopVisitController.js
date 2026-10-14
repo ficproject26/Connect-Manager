@@ -2,12 +2,37 @@ const db = require('../config/db');
 const territoryScopeService = require('../services/territoryScopeService');
 const { broadcastNotification } = require('../routes/notificationRoutes');
 
+// Normalizers for interest status values across schema variations
+function isNotInterestedStatus(val) {
+  if (val === false) return true;
+  if (!val) return false;
+  const s = String(val).toLowerCase().trim().replace(/[\s_-]+/g, '');
+  return s === 'no' || s === 'notinterested' || s === 'false';
+}
+
+function isInterestedStatus(val) {
+  if (val === true) return true;
+  if (!val) return false;
+  const s = String(val).toLowerCase().trim().replace(/[\s_-]+/g, '');
+  return s === 'yes' || s === 'interested' || s === 'true' || s === 'merchantinterested';
+}
+
+function isVisitNotInterested(v) {
+  if (!v) return false;
+  return isNotInterestedStatus(v.interestedStatus) || isNotInterestedStatus(v.interestStatus);
+}
+
+function isVisitInterested(v) {
+  if (!v) return false;
+  if (isVisitNotInterested(v)) return false;
+  return isInterestedStatus(v.interestedStatus) || isInterestedStatus(v.interestStatus);
+}
+
 // Helper: Resolve precise onboarding status and resume eligibility for a shop visit
 function resolveVisitOnboarding(visit, vendors = [], onboardings = []) {
   const vId = String(visit._id || visit.id || '');
-  const rawInterest = String(visit.interestedStatus || visit.interestStatus || '').toUpperCase().trim();
-  const isInterested = rawInterest === 'YES' || rawInterest === 'INTERESTED' || rawInterest === 'MERCHANT_INTERESTED';
-  const isNotInterested = rawInterest === 'NO' || rawInterest === 'NOT_INTERESTED';
+  const isInterested = isVisitInterested(visit);
+  const isNotInterested = isVisitNotInterested(visit);
 
   // 1. Direct status flags on visit record
   const rawStatus = String(visit.onboardingStatus || visit.status || '').toLowerCase().trim();
@@ -144,37 +169,36 @@ const getShopVisits = async (req, res) => {
       }
     }
 
-    // Compute scoped KPI totals strictly within user's assigned jurisdiction
+    // Compute scoped KPI totals strictly within user's assigned jurisdiction for the active viewScope tab
     const allAuthorizedForKpi = [];
     for (const v of enrichedVisits) {
-      if (await territoryScopeService.isReportVisible(v, user, scope === 'self' ? 'self' : 'all')) {
+      if (await territoryScopeService.isReportVisible(v, user, scope || 'all')) {
         allAuthorizedForKpi.push(v);
       }
     }
 
     const kpi = {
       total: allAuthorizedForKpi.length,
-      interested: allAuthorizedForKpi.filter(v => v.interestedStatus === 'YES' || v.interestStatus === 'YES').length,
-      notInterested: allAuthorizedForKpi.filter(v => v.interestedStatus === 'NO' || v.interestStatus === 'NO').length,
+      interested: allAuthorizedForKpi.filter(isVisitInterested).length,
+      notInterested: allAuthorizedForKpi.filter(isVisitNotInterested).length,
       pendingOnboarding: allAuthorizedForKpi.filter(v => v.isEligibleForResume).length,
       completedOnboarding: allAuthorizedForKpi.filter(v => v.isOnboardingCompleted).length
     };
 
     let filtered = scopedVisits.filter(v => {
-      // Pending Onboarding Eligibility Filter:
-      // When pendingOnboardingOnly or eligibleOnly is true, return ONLY records satisfying ALL conditions:
-      // 1. Visit recorded
-      // 2. Interest status is Interested
-      // 3. Onboarding is pending or incomplete
-      // 4. Onboarding has not completed successfully
-      if (pendingOnboardingOnly === 'true' || eligibleOnly === 'true') {
-        if (!v.isEligibleForResume || v.isOnboardingCompleted) return false;
+      const isNotInterestedVisit = isVisitNotInterested(v);
+      const isInterestedVisit = isVisitInterested(v);
+
+      // Status filter ('YES', 'NO', 'Converted', 'Not Interested', 'Interested', etc.)
+      if (status && status !== 'All') {
+        if (isNotInterestedStatus(status) && !isNotInterestedVisit) return false;
+        if (isInterestedStatus(status) && !isInterestedVisit) return false;
       }
 
-      // Status filter ('YES', 'NO', 'Converted')
-      if (status && status !== 'All') {
-        if (status === 'YES' && (!v.interestedStatus || v.interestedStatus !== 'YES') && (!v.interestStatus || v.interestStatus !== 'YES')) return false;
-        if (status === 'NO' && v.interestedStatus !== 'NO' && v.interestStatus !== 'NO') return false;
+      // Pending Onboarding Eligibility Filter:
+      // Applies when pendingOnboardingOnly or eligibleOnly is true, unless explicitly filtering for Not Interested records
+      if ((pendingOnboardingOnly === 'true' || eligibleOnly === 'true') && !isNotInterestedStatus(status)) {
+        if (!v.isEligibleForResume || v.isOnboardingCompleted) return false;
       }
 
       // Category filter

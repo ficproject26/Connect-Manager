@@ -37,7 +37,7 @@
     "statusChangeAlerts": true,
     "territoryAlertRadiusKm": 15,
     "theme": "light",
-    "updatedAt": "2026-10-12T07:14:44.706Z",
+    "updatedAt": "2026-10-14T06:29:01.172Z",
     "userId": "usr_mgr_1790592319962_fx3y"
   },
   {
@@ -277,5 +277,19 @@
     "theme": "light",
     "updatedAt": "2026-10-13T07:51:55.438Z",
     "userId": "4ca09d12-835c-4034-a1c6-a2964ba719cd"
+  },
+  {
+    "_id": "ea1b5c40-c228-42c2-8fb5-c46655424472",
+    "autoAssignTasks": true,
+    "createdAt": "2026-10-14T06:51:57.360Z",
+    "dailyDigest": true,
+    "emailAlerts": true,
+    "id": "ea1b5c40-c228-42c2-8fb5-c46655424472",
+    "kycAlerts": true,
+    "statusChangeAlerts": true,
+    "territoryAlertRadiusKm": 15,
+    "theme": "light",
+    "updatedAt": "2026-10-14T06:51:57.360Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
   }
 ]

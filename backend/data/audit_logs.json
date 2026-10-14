@@ -21922,5 +21922,224 @@
     "userId": "usr_mgr_1790580930154_8uge",
     "userName": "Surya",
     "userRole": "state_manager"
+  },
+  {
+    "_id": "e1cec5af-4508-4dc8-bfde-6d32a4247d35",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T05:55:35.949Z",
+    "details": "Logged visit for store16 - Interested: YES",
+    "id": "e1cec5af-4508-4dc8-bfde-6d32a4247d35",
+    "recordId": "217fc0c4-2a05-4b44-a581-3a35e86c0ce6",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T05:55:35.949Z",
+    "updatedAt": "2026-10-14T05:55:35.949Z",
+    "userId": "usr_mgr_1790592319962_fx3y",
+    "userName": "iniya",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "acd8791a-d084-4a84-9416-c4efc5678302",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T06:19:03.167Z",
+    "details": "Logged visit for Sri Krishna Sweets & Bakery , canteen and resort ,hotel,and whather - Interested: YES",
+    "id": "acd8791a-d084-4a84-9416-c4efc5678302",
+    "recordId": "e5bda45b-031d-41b9-8d9d-9cdedf23b252",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T06:19:03.167Z",
+    "updatedAt": "2026-10-14T06:19:03.167Z",
+    "userId": "usr_mgr_1790580930154_8uge",
+    "userName": "Surya",
+    "userRole": "state_manager"
+  },
+  {
+    "_id": "1712b3f6-ce8e-48ce-b9b2-10e1ad10a16b",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T06:24:43.738Z",
+    "details": "Logged visit for Sri Krishna Sweets & Bakery , canteen and resort ,hotel,and whether - Interested: YES",
+    "id": "1712b3f6-ce8e-48ce-b9b2-10e1ad10a16b",
+    "recordId": "1f9bdd8c-6b1b-45bf-a9f6-4ecc60dc4b7d",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T06:24:43.738Z",
+    "updatedAt": "2026-10-14T06:24:43.738Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "81f42bfc-b04e-48c5-be02-08edec8eaa8f",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T06:26:08.287Z",
+    "id": "81f42bfc-b04e-48c5-be02-08edec8eaa8f",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "Sri Krishna Sweets & Bakery , canteen and resort ,hotel,and whether ",
+      "status": "Pending",
+      "pincodeId": "6abbae027ff2862ecee7b8f5"
+    },
+    "previousValue": null,
+    "recordId": "40efaac6-eeb9-401c-881a-5d47a9e71b40",
+    "timestamp": "2026-10-14T06:26:08.287Z",
+    "updatedAt": "2026-10-14T06:26:08.287Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
+  },
+  {
+    "_id": "bc6919af-3471-4abf-9bc1-abf92bbbe7e2",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T06:53:35.986Z",
+    "details": "Logged visit for store16 - Interested: NO",
+    "id": "bc6919af-3471-4abf-9bc1-abf92bbbe7e2",
+    "recordId": "10f75f5a-e066-4a28-977f-ba662921c922",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T06:53:35.986Z",
+    "updatedAt": "2026-10-14T06:53:35.986Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "b6040807-59dc-4410-980d-9e342705f57b",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T06:59:17.103Z",
+    "details": "Logged visit for store17 - Interested: YES",
+    "id": "b6040807-59dc-4410-980d-9e342705f57b",
+    "recordId": "ac98a181-fbad-499c-b955-c123a4173229",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T06:59:17.103Z",
+    "updatedAt": "2026-10-14T06:59:17.103Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "6acf2872bb85a3400c195f3e",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "65.1.132.133",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"kumar\" (kumar@gmail.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "6ab646cd457d2cf75d467a84",
+      "vendorName": "kumar",
+      "oldStatus": "Pending",
+      "newStatus": "Active",
+      "reason": "Vendor onboarding approved by Administrator",
+      "timestamp": "2026-10-14T07:00:02.216Z"
+    },
+    "timestamp": "2026-10-14T07:00:02.219Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acf2872bb85a3400c195f3f",
+    "userId": "6abc986678d7803cf6a444d9",
+    "userEmail": "admin@example.com",
+    "userRole": "admin",
+    "action": "vendor_activated",
+    "ipAddress": "52.66.154.250",
+    "userAgent": "",
+    "deviceInfo": {
+      "browser": "Unknown Browser",
+      "os": "Unknown OS",
+      "deviceType": "Desktop"
+    },
+    "location": {
+      "city": "Local",
+      "country": "India"
+    },
+    "status": "success",
+    "details": "Admin approved vendor \"dpistore\" (dpistore@gmial.com)",
+    "metadata": {
+      "adminId": "6abc986678d7803cf6a444d9",
+      "adminName": "Super Admin",
+      "vendorId": "91600148-afd2-4818-a465-830252b01e34",
+      "vendorName": "dpistore",
+      "oldStatus": "Pending",
+      "newStatus": "Active",
+      "reason": "Vendor onboarding approved by Administrator",
+      "timestamp": "2026-10-14T07:00:02.729Z"
+    },
+    "timestamp": "2026-10-14T07:00:02.729Z",
+    "__v": 0
+  },
+  {
+    "_id": "d3515572-bd8f-4614-84d1-9755b475842e",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T07:00:35.318Z",
+    "id": "d3515572-bd8f-4614-84d1-9755b475842e",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "store17",
+      "status": "Pending",
+      "pincodeId": "6abe12a93c4400f34fa480d0"
+    },
+    "previousValue": null,
+    "recordId": "5f959e7a-1701-4e71-8fdb-99b5d3e25fc8",
+    "timestamp": "2026-10-14T07:00:35.318Z",
+    "updatedAt": "2026-10-14T07:00:35.318Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "86feba34-fc13-47a5-b5a9-da60fe967692",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T07:12:08.871Z",
+    "details": "Logged visit for store18 - Interested: YES",
+    "id": "86feba34-fc13-47a5-b5a9-da60fe967692",
+    "recordId": "2334adab-5f37-4601-b420-2b4e16482edd",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T07:12:08.871Z",
+    "updatedAt": "2026-10-14T07:12:08.871Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "cdbff757-32bd-4e5d-87b2-5b05988994f1",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T07:16:45.437Z",
+    "id": "cdbff757-32bd-4e5d-87b2-5b05988994f1",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "store18",
+      "status": "Pending",
+      "pincodeId": "6aba0afdaf9e0372e50b7087"
+    },
+    "previousValue": null,
+    "recordId": "337e7b3d-a2f2-42ef-899f-f4c296f207b3",
+    "timestamp": "2026-10-14T07:16:45.437Z",
+    "updatedAt": "2026-10-14T07:16:45.437Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "3eb7195d-4914-4a46-9c70-f68eb58ed5ac",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T07:16:47.528Z",
+    "details": "Logged visit for New user - Interested: NO",
+    "id": "3eb7195d-4914-4a46-9c70-f68eb58ed5ac",
+    "recordId": "86b2542f-3bec-4cec-9613-ebdbf63d4cba",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T07:16:47.528Z",
+    "updatedAt": "2026-10-14T07:16:47.528Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "userName": "Ironman",
+    "userRole": "district_manager"
   }
 ]

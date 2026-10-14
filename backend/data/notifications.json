@@ -381,7 +381,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
@@ -400,7 +400,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "NOTIF-1790414127807-0AM4",
@@ -461,7 +461,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
@@ -480,7 +480,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "c18ae4c9-52d8-453e-a61a-0fc0fda780ca",
@@ -499,7 +499,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "b76e5ac2-5091-441c-adde-2071678ae90c",
@@ -518,7 +518,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "f75e5b76-0878-48b2-900f-4f8061b89721",
@@ -537,7 +537,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "4e15b71f-49c7-4bbd-8ed9-aba6bd7f67f5",
@@ -556,7 +556,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "NOTIF-1790580241699-1RHE",
@@ -736,7 +736,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "8d06aca6-eafd-4785-86c4-d15682dbc907",
@@ -754,7 +754,7 @@
       "usr_mgr_1790666281762_1jqk"
     ],
     "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "NOTIF-1790852939641-FS2Y",
@@ -2170,7 +2170,9 @@
     "userId": "usr_mgr_1790592319962_fx3y",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
-    ]
+    ],
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "8a87b4c5-81ac-49bb-9cbe-dfddd230105b",
@@ -2823,7 +2825,9 @@
     "userId": "7483036c-eea5-40b6-b325-82c06c116ab9",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
-    ]
+    ],
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "d21af480-a4c7-496f-be5a-46c7c3b275ee",
@@ -2868,7 +2872,9 @@
     "userId": "34ae555f-38ee-4755-8207-13c90d03ce3f",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
-    ]
+    ],
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T07:00:02.352Z"
   },
   {
     "_id": "78b07de8-6829-4e39-bb9c-5b89a9d89b2b",
@@ -4910,12 +4916,12 @@
     "_id": "f494865a-8b78-4c84-92de-73faeda5495e",
     "createdAt": "2026-10-13T09:26:42.740Z",
     "id": "f494865a-8b78-4c84-92de-73faeda5495e",
-    "isRead": false,
+    "isRead": true,
     "message": "Ironman logged field visit for Harshath (Interested).",
     "recordId": "7c959305-5618-4cd3-b15a-21b53b2a63ea",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-13T09:26:42.740Z",
+    "updatedAt": "2026-10-14T06:28:30.037Z",
     "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
   },
   {
@@ -5633,36 +5639,36 @@
     "_id": "b714d314-47ad-4175-9ef3-a8795c78c8a2",
     "createdAt": "2026-10-14T04:33:16.311Z",
     "id": "b714d314-47ad-4175-9ef3-a8795c78c8a2",
-    "isRead": false,
+    "isRead": true,
     "message": "Ironman logged field visit for sabari (Interested).",
     "recordId": "1a31b3df-8ac9-4896-afce-f854a699a66d",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T04:33:16.311Z",
+    "updatedAt": "2026-10-14T06:28:30.070Z",
     "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
   },
   {
     "_id": "fc1a5ea1-6e54-4185-9e99-1e67f0f556ca",
     "createdAt": "2026-10-14T04:40:27.614Z",
     "id": "fc1a5ea1-6e54-4185-9e99-1e67f0f556ca",
-    "isRead": false,
+    "isRead": true,
     "message": "iniya logged field visit for Store14 (Interested).",
     "recordId": "4c90f4cd-399d-412d-8f11-58fa7eed6833",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T04:40:27.614Z",
+    "updatedAt": "2026-10-14T06:30:57.103Z",
     "userId": "usr_mgr_1790592319962_fx3y"
   },
   {
     "_id": "c0f8c313-7046-4a76-81e3-2d7cb750f1aa",
     "createdAt": "2026-10-14T04:42:46.258Z",
     "id": "c0f8c313-7046-4a76-81e3-2d7cb750f1aa",
-    "isRead": false,
+    "isRead": true,
     "message": "Ironman logged field visit for sharukhan (Interested).",
     "recordId": "d49fbc15-4e27-4725-8979-ce19afe578cd",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T04:42:46.258Z",
+    "updatedAt": "2026-10-14T06:28:30.102Z",
     "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
   },
   {
@@ -5674,7 +5680,9 @@
     "priority": "high",
     "category": "target_assigned",
     "createdAt": "2026-10-14T04:51:27.727Z",
-    "__v": 0
+    "__v": 0,
+    "isRead": true,
+    "updatedAt": "2026-10-14T05:30:24.687Z"
   },
   {
     "_id": "6acf0ebe1b214fe0fa181f29",
@@ -5685,18 +5693,80 @@
     "priority": "high",
     "category": "target_assigned",
     "createdAt": "2026-10-14T05:10:22.572Z",
-    "__v": 0
+    "__v": 0,
+    "isRead": true,
+    "updatedAt": "2026-10-14T05:30:24.740Z"
   },
   {
-    "_id": "84b2f590-a433-48c7-aa4c-8a771d00efeb",
-    "createdAt": "2026-10-14T05:18:25.132Z",
-    "id": "84b2f590-a433-48c7-aa4c-8a771d00efeb",
-    "isRead": false,
-    "message": "Surya logged field visit for store15 (Not Interested).",
-    "recordId": "8f866370-a3d5-4fa6-b06b-5092e927ac46",
+    "_id": "047d288a-9298-4178-8ed7-a740aea14d88",
+    "createdAt": "2026-10-14T05:55:35.984Z",
+    "id": "047d288a-9298-4178-8ed7-a740aea14d88",
+    "isRead": true,
+    "message": "iniya logged field visit for store16 (Interested).",
+    "recordId": "217fc0c4-2a05-4b44-a581-3a35e86c0ce6",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T05:18:25.132Z",
-    "userId": "usr_mgr_1790580930154_8uge"
+    "updatedAt": "2026-10-14T06:30:57.137Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "820ee135-1dbe-4bcf-b2ff-4e57e180e2cc",
+    "createdAt": "2026-10-14T06:24:43.769Z",
+    "id": "820ee135-1dbe-4bcf-b2ff-4e57e180e2cc",
+    "isRead": true,
+    "message": "Ironman logged field visit for Sri Krishna Sweets & Bakery , canteen and resort ,hotel,and whether (Interested).",
+    "recordId": "1f9bdd8c-6b1b-45bf-a9f6-4ecc60dc4b7d",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T06:28:30.135Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
+  },
+  {
+    "_id": "8979b18b-0a09-4bec-a232-ec7b74cec6f3",
+    "createdAt": "2026-10-14T06:53:36.024Z",
+    "id": "8979b18b-0a09-4bec-a232-ec7b74cec6f3",
+    "isRead": false,
+    "message": "Dinesh Kathiravan logged field visit for store16 (Not Interested).",
+    "recordId": "10f75f5a-e066-4a28-977f-ba662921c922",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T06:53:36.024Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
+  },
+  {
+    "_id": "282c0f22-8435-4d75-a03a-2117b5f7369e",
+    "createdAt": "2026-10-14T06:59:17.141Z",
+    "id": "282c0f22-8435-4d75-a03a-2117b5f7369e",
+    "isRead": false,
+    "message": "Dinesh Kathiravan logged field visit for store17 (Interested).",
+    "recordId": "ac98a181-fbad-499c-b955-c123a4173229",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T06:59:17.141Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
+  },
+  {
+    "_id": "1151e17c-1a68-4e49-9152-003c913544d9",
+    "createdAt": "2026-10-14T07:12:08.914Z",
+    "id": "1151e17c-1a68-4e49-9152-003c913544d9",
+    "isRead": false,
+    "message": "Dinesh Kathiravan logged field visit for store18 (Interested).",
+    "recordId": "2334adab-5f37-4601-b420-2b4e16482edd",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T07:12:08.914Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
+  },
+  {
+    "_id": "349e8a17-b7a6-4e1a-af7e-306c666fc139",
+    "createdAt": "2026-10-14T07:16:47.561Z",
+    "id": "349e8a17-b7a6-4e1a-af7e-306c666fc139",
+    "isRead": false,
+    "message": "Ironman logged field visit for New user (Not Interested).",
+    "recordId": "86b2542f-3bec-4cec-9613-ebdbf63d4cba",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T07:16:47.561Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
   }
 ]

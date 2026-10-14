@@ -157,11 +157,11 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     }
   }, [isPincodeManager, viewScope]);
 
-  // Load Shop Visits (Pending Onboarding Eligibility Filtered)
+  // Load Shop Visits (Scoped & Filtered by Hierarchy & Status)
   const loadVisits = useCallback(async (page = 1) => {
     setLoadingVisits(true);
     try {
-      const params = { page, limit: 15, pendingOnboardingOnly: true };
+      const params = { page, limit: 15 };
       if (isPincodeManager) {
         params.scope = 'self';
       } else if (viewScope !== 'all') {
@@ -266,12 +266,23 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   }, [isPincodeManager, user]);
 
   const safeVisits = Array.isArray(visits) ? visits : [];
-  const eligibleVisits = useMemo(() => {
+  const displayedVisits = useMemo(() => {
     return safeVisits.filter(v => {
-      if (!isEligibleRecord(v)) return false;
-
       const vRole = String(v.managerRole || v.recordedByRole || v.role || '').toLowerCase();
       const isOwner = String(v.recordedById || v.managerId) === String(user?.id || user?._id);
+
+      // Strict Pincode Manager Scope Guard: Never show district or state manager works
+      if (isPincodeManager) {
+        const userPinId = user?.pincodeId || user?.scope?.pincodeId;
+        const userPinCode = user?.pincode || user?.pincodeCode || user?.scope?.pincodeCode;
+        const visitPinId = v.pincodeId;
+        const visitPinCode = v.pincode || v.pincodeCode;
+
+        const matchesPin = (userPinId && visitPinId && String(userPinId) === String(visitPinId)) ||
+          (userPinCode && visitPinCode && String(userPinCode) === String(visitPinCode));
+
+        if (!isOwner && !matchesPin) return false;
+      }
 
       // 1. Hierarchy access rule: lower-level managers can NEVER see reports above their level
       if (!isOwner) {
@@ -305,7 +316,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
 
       return true;
     });
-  }, [safeVisits, isEligibleRecord, isDistrictManager, isDivisionManager, isPincodeManager, viewScope, user]);
+  }, [safeVisits, isDistrictManager, isDivisionManager, isPincodeManager, viewScope, user]);
+
+  const eligibleVisits = displayedVisits;
 
   // Resume Onboarding Action with Live Backend Revalidation
   const handleResumeOnboarding = async (e, v) => {
@@ -432,15 +445,20 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     window.print();
   };
 
-  const totalVisitCount = kpiStats.total !== undefined && kpiStats.total > 0
+  const totalVisitCount = typeof kpiStats.total === 'number' && kpiStats.total >= 0
     ? kpiStats.total
-    : (pagination && pagination.total !== undefined ? pagination.total : safeVisits.length);
-  const interestedCount = kpiStats.interested !== undefined && kpiStats.total > 0
+    : (pagination && typeof pagination.total === 'number' ? pagination.total : safeVisits.length);
+  const interestedCount = typeof kpiStats.interested === 'number' && kpiStats.interested >= 0
     ? kpiStats.interested
     : safeVisits.filter(v => v && (v.interestedStatus === 'YES' || v.interestStatus === 'YES')).length;
-  const notInterestedCount = kpiStats.notInterested !== undefined && kpiStats.total > 0
+  const notInterestedCount = typeof kpiStats.notInterested === 'number' && kpiStats.notInterested >= 0
     ? kpiStats.notInterested
     : safeVisits.filter(v => v && (v.interestedStatus === 'NO' || v.interestStatus === 'NO')).length;
+
+  const isVisitsFiltered = (statusFilter && statusFilter !== 'All') ||
+    (categoryFilter && categoryFilter !== 'All') ||
+    (debouncedSearchVisit && debouncedSearchVisit.trim().length > 0);
+  const matchingVisitsCount = pagination && typeof pagination.total === 'number' ? pagination.total : displayedVisits.length;
 
   return (
     <div style={{ width: '100%' }}>
@@ -467,7 +485,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
               borderRadius: '20px',
               border: '1px solid #fde68a'
             }}>
-              {activeTab === 'visits' ? `${totalVisitCount} Total Visits` : `${submittedReports.length} Submitted Reports`}
+              {activeTab === 'visits'
+                ? (isVisitsFiltered ? `${matchingVisitsCount} Filtered Visits` : `${totalVisitCount} Total Visits`)
+                : `${submittedReports.length} Submitted Reports`}
             </span>
           </div>
           <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: 4, margin: 0 }}>
@@ -888,18 +908,22 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                         </div>
                       </td>
                     </tr>
-                  ) : eligibleVisits.length === 0 ? (
+                  ) : displayedVisits.length === 0 ? (
                     <tr>
                       <td colSpan="4" style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b' }}>
                         <Store size={36} style={{ margin: '0 auto 10px', color: '#cbd5e1' }} />
-                        <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>No Pending Onboarding Visits Found</div>
+                        <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>No Shop Visit Reports Found</div>
                         <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: '4px 0 14px' }}>
-                          No eligible interested visits pending onboarding under this view scope.
+                          {statusFilter === 'NO'
+                            ? 'No not interested shop visits recorded under this view scope.'
+                            : statusFilter === 'YES'
+                              ? 'No interested shop visits recorded under this view scope.'
+                              : 'No shop visits recorded under this view scope.'}
                         </p>
                       </td>
                     </tr>
                   ) : (
-                    eligibleVisits.map((v, idx) => {
+                    displayedVisits.map((v, idx) => {
                       const roleLabel = formatRoleLabel(v.managerRole);
                       const badgeStyle = getLevelBadgeStyle(v.managerRole);
                       const catStyle = getCategoryBadgeStyle(v.category || 'Products');
@@ -989,51 +1013,88 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                             </div>
                           </td>
 
-                          {/* Interest Status & Resume Onboarding */}
+                          {/* Interest Status & Actions */}
                           <td style={{ padding: '16px 20px', textAlign: 'center', verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6 }}>
-                              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 20, background: '#d1fae5', color: '#047857', fontSize: '0.78rem', fontWeight: 800, border: '1px solid #a7f3d0' }}>
-                                <CheckCircle2 size={13} /> Interested
-                              </span>
-                              {v.isOnboardingCompleted ? (
-                                <span style={{
-                                  padding: '3px 8px',
-                                  borderRadius: 6,
-                                  background: '#dcfce7',
-                                  color: '#15803d',
-                                  fontSize: '0.72rem',
-                                  fontWeight: 700,
-                                  border: '1px solid #bbf7d0',
-                                  display: 'inline-flex',
-                                  alignItems: 'center',
-                                  gap: 3
-                                }}>
-                                  <CheckCircle2 size={11} /> {v.vendorStatus ? `Onboarded • ${v.vendorStatus}` : 'Onboarded'}
-                                </span>
-                              ) : v.isEligibleForResume ? (
-                                <button
-                                  type="button"
-                                  onClick={(e) => handleResumeOnboarding(e, v)}
-                                  style={{
-                                    padding: '4px 10px',
-                                    borderRadius: 6,
-                                    border: '1px solid #f59e0b',
-                                    background: '#fffbeb',
-                                    color: '#b45309',
-                                    fontSize: '0.74rem',
-                                    fontWeight: 700,
-                                    cursor: 'pointer',
+                              {(v.interestedStatus === 'NO' || v.interestStatus === 'NO') ? (
+                                <>
+                                  <span style={{
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: 4,
-                                    boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)',
-                                    transition: 'all 0.15s'
-                                  }}
-                                  title="Resume onboarding for this interested merchant"
-                                >
-                                  <Sparkles size={11} /> Resume Onboarding
-                                </button>
-                              ) : null}
+                                    padding: '4px 10px',
+                                    borderRadius: 20,
+                                    background: '#fee2e2',
+                                    color: '#b91c1c',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 800,
+                                    border: '1px solid #fecaca'
+                                  }}>
+                                    <XCircle size={13} /> Not Interested
+                                  </span>
+                                  {v.notInterestedReason && (
+                                    <span style={{ fontSize: '0.73rem', color: '#64748b', maxWidth: 170, textAlign: 'center', lineHeight: 1.25 }}>
+                                      {v.notInterestedReason}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  <span style={{
+                                    display: 'inline-flex',
+                                    alignItems: 'center',
+                                    gap: 4,
+                                    padding: '4px 10px',
+                                    borderRadius: 20,
+                                    background: '#d1fae5',
+                                    color: '#047857',
+                                    fontSize: '0.78rem',
+                                    fontWeight: 800,
+                                    border: '1px solid #a7f3d0'
+                                  }}>
+                                    <CheckCircle2 size={13} /> Interested
+                                  </span>
+                                  {v.isOnboardingCompleted ? (
+                                    <span style={{
+                                      padding: '3px 8px',
+                                      borderRadius: 6,
+                                      background: '#dcfce7',
+                                      color: '#15803d',
+                                      fontSize: '0.72rem',
+                                      fontWeight: 700,
+                                      border: '1px solid #bbf7d0',
+                                      display: 'inline-flex',
+                                      alignItems: 'center',
+                                      gap: 3
+                                    }}>
+                                      <CheckCircle2 size={11} /> {v.vendorStatus ? `Onboarded • ${v.vendorStatus}` : 'Onboarded'}
+                                    </span>
+                                  ) : v.isEligibleForResume ? (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => handleResumeOnboarding(e, v)}
+                                      style={{
+                                        padding: '4px 10px',
+                                        borderRadius: 6,
+                                        border: '1px solid #f59e0b',
+                                        background: '#fffbeb',
+                                        color: '#b45309',
+                                        fontSize: '0.74rem',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: 4,
+                                        boxShadow: '0 1px 3px rgba(245, 158, 11, 0.15)',
+                                        transition: 'all 0.15s'
+                                      }}
+                                      title="Resume onboarding for this interested merchant"
+                                    >
+                                      <Sparkles size={11} /> Resume Onboarding
+                                    </button>
+                                  ) : null}
+                                </>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -1043,6 +1104,63 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 </tbody>
               </table>
             </div>
+
+            {/* Pagination Controls */}
+            {pagination && pagination.totalPages > 1 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 20px',
+                borderTop: '1px solid #f1f5f9',
+                background: '#f8fafc',
+                fontSize: '0.82rem',
+                color: '#64748b'
+              }}>
+                <div>
+                  Showing {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} reports
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <button
+                    type="button"
+                    disabled={pagination.page <= 1 || loadingVisits}
+                    onClick={() => loadVisits(pagination.page - 1)}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #cbd5e1',
+                      background: pagination.page <= 1 ? '#f1f5f9' : '#ffffff',
+                      color: pagination.page <= 1 ? '#94a3b8' : '#0f172a',
+                      cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.78rem'
+                    }}
+                  >
+                    Previous
+                  </button>
+                  <span style={{ fontWeight: 700, color: '#0f172a', padding: '0 4px' }}>
+                    Page {pagination.page} of {pagination.totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={pagination.page >= pagination.totalPages || loadingVisits}
+                    onClick={() => loadVisits(pagination.page + 1)}
+                    style={{
+                      padding: '5px 12px',
+                      borderRadius: 6,
+                      border: '1px solid #cbd5e1',
+                      background: pagination.page >= pagination.totalPages ? '#f1f5f9' : '#ffffff',
+                      color: pagination.page >= pagination.totalPages ? '#94a3b8' : '#0f172a',
+                      cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer',
+                      fontWeight: 600,
+                      fontSize: '0.78rem'
+                    }}
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </>
       )}
@@ -2367,7 +2485,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
               })()}
 
               {/* Not Interested Reason */}
-              {selectedVisit.interestedStatus === 'NO' && (
+              {(selectedVisit.interestedStatus === 'NO' || selectedVisit.interestStatus === 'NO') && (
                 <div style={{
                   padding: '16px',
                   background: '#fef2f2',

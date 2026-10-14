@@ -1627,10 +1627,13 @@
     "panNumber": "",
     "pincodeId": "6abe0df53c4400f34fa48083",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Pending",
+    "status": "Active",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-13T05:12:55.457Z"
+    "updatedAt": "2026-10-13T05:12:55.457Z",
+    "approvalStatus": "Approved",
+    "isActive": true,
+    "isApproved": true
   },
   {
     "_id": "9ab540a7-3610-4cb9-a63a-741bf2cdf5b4",
@@ -1660,10 +1663,13 @@
     "panNumber": "",
     "pincodeId": "6abbacd17ff2862ecee7b8e3",
     "stateId": "6aa10f70ca0932e6eaec1f5c",
-    "status": "Pending",
+    "status": "Active",
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
-    "updatedAt": "2026-10-13T09:45:16.728Z"
+    "updatedAt": "2026-10-13T09:45:16.728Z",
+    "approvalStatus": "Approved",
+    "isActive": true,
+    "isApproved": true
   },
   {
     "_id": "6acf027a1b214fe0fa181b8b",
@@ -1951,13 +1957,164 @@
     "isApproved": true
   },
   {
-    "_id": "vendor_test_1791957348107",
-    "id": "vendor_test_1791957348107",
-    "businessName": "Superman Grocery Store",
-    "name": "Kumar Owner",
-    "assignedManagerId": "mgr_test_1791957348105",
+    "_id": "6acf1383b9f8a42f87dc9020",
+    "id": "TEST-VEN-1791955843091",
+    "vendorId": "TEST-VEN-1791955843091",
+    "name": "Sri Krishna Sweets & Bakery",
+    "ownerName": "Krishna Kumar",
+    "contactPerson": "Krishna Kumar",
+    "phone": "9876501234",
+    "email": "krishna_1791955843092@example.com",
+    "category": "Food",
+    "address": "12, Gandhi Road, Hosur Market Area",
+    "state": "Tamil Nadu",
+    "district": "Krishnagiri",
+    "division": "Hosur",
+    "pincode": "635126",
+    "status": "PENDING_PINCODE_APPROVAL",
+    "kycStatus": "Pending Pincode Admin Approval",
+    "onboardingAgent": {
+      "id": "AGT-TN-1002",
+      "name": "Pravin Agent",
+      "phone": "9123456780",
+      "role": "Pincode Agent",
+      "tier": "Pincode Agent",
+      "submittedAt": "2026-10-14T05:30:43.092Z"
+    },
+    "responsibleAdmin": {
+      "id": "ADM-PIN-557374",
+      "name": "Ragul",
+      "phone": "6789876543",
+      "role": "Pincode Admin",
+      "state": "Tamil Nadu",
+      "district": "Krishnagiri",
+      "division": "Hosur",
+      "pincode": "635126",
+      "assignedLevel": "PINCODE"
+    },
+    "responsibleAdminAssignment": {
+      "status": "ASSIGNED",
+      "assignedLevel": "PINCODE",
+      "matchedPincode": "635126"
+    },
+    "pincodeAdminApproval": {
+      "status": "Pending",
+      "decidedBy": null,
+      "decidedAt": null,
+      "rejectionReason": null
+    },
+    "kycTeamApproval": {
+      "status": "Pending",
+      "decidedBy": null,
+      "decidedAt": null,
+      "rejectionReason": null
+    },
+    "createdAt": "2026-10-14T05:30:43.097Z"
+  },
+  {
+    "_id": "40efaac6-eeb9-401c-881a-5d47a9e71b40",
+    "accountHolderName": "",
+    "accountNumber": "",
+    "bankName": "",
+    "businessName": "Sri Krishna Sweets & Bakery , canteen and resort ,hotel,and whether ",
+    "category": "Daily Needs",
+    "createdAt": "2026-10-14T06:26:08.234Z",
+    "createdBy": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "description": "",
+    "districtId": "6ab9f393bec0ef28c6e813ff",
+    "divisionId": "6aba0f80af9e0372e50b70d3",
+    "documents": [
+      {
+        "url": "/uploads/1791959080514_1c5bd317687b2b392fde072b11aa444d.jpg",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "Krishna@gmail.com",
+    "gstNumber": "",
+    "id": "40efaac6-eeb9-401c-881a-5d47a9e71b40",
+    "ifsc": "",
+    "mobile": "9876543211",
+    "name": "Krishna",
+    "panNumber": "",
+    "pincodeId": "6abbae027ff2862ecee7b8f5",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
     "status": "Pending",
-    "createdAt": "2026-10-14T05:55:48.107Z",
-    "updatedAt": "2026-10-14T05:55:48.107Z"
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-14T06:26:08.234Z"
+  },
+  {
+    "_id": "5f959e7a-1701-4e71-8fdb-99b5d3e25fc8",
+    "accountHolderName": "",
+    "accountNumber": "",
+    "bankName": "",
+    "businessName": "store17",
+    "category": "Products",
+    "createdAt": "2026-10-14T07:00:35.279Z",
+    "createdBy": "b4677612-7b51-4696-badd-45305a812229",
+    "description": "",
+    "districtId": "6aa10fa8ca0932e6eaec1f5f",
+    "divisionId": "6aa122cfca0932e6eaec1f61",
+    "documents": [
+      {
+        "url": "/uploads/1791961145633_9de1aa198602360e852af71c9255731d.png",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "store17@gmail.com",
+    "gstNumber": "",
+    "id": "5f959e7a-1701-4e71-8fdb-99b5d3e25fc8",
+    "ifsc": "",
+    "mobile": "8875687656",
+    "name": "Dinesh Kathiravan",
+    "panNumber": "",
+    "pincodeId": "6abe12a93c4400f34fa480d0",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-14T07:00:35.279Z"
+  },
+  {
+    "_id": "337e7b3d-a2f2-42ef-899f-f4c296f207b3",
+    "accountHolderName": "",
+    "accountNumber": "",
+    "bankName": "",
+    "businessName": "store18",
+    "category": "Products",
+    "createdAt": "2026-10-14T07:16:45.369Z",
+    "createdBy": "b4677612-7b51-4696-badd-45305a812229",
+    "description": "",
+    "districtId": "6aa10fa8ca0932e6eaec1f5f",
+    "divisionId": "6aa122cfca0932e6eaec1f61",
+    "documents": [
+      {
+        "url": "/uploads/1791961926881_20fc20e531f4f48f5357fdd41c93383c.png",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      },
+      {
+        "name": "IMG_1822.JPG",
+        "filename": "1791962190130_a4b2c5c6dc3695c3dc1f1ea64345fc6a.jpg",
+        "url": "/uploads/1791962190130_a4b2c5c6dc3695c3dc1f1ea64345fc6a.jpg",
+        "size": 210430,
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "store18@gmail.com",
+    "gstNumber": "",
+    "id": "337e7b3d-a2f2-42ef-899f-f4c296f207b3",
+    "ifsc": "",
+    "mobile": "9876545687",
+    "name": "Storeeighteen",
+    "panNumber": "",
+    "pincodeId": "6aba0afdaf9e0372e50b7087",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-14T07:16:45.369Z"
   }
 ]

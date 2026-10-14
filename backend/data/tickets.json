@@ -134,10 +134,9 @@
     "category": "Payment Issue",
     "description": "visit today and send report imediatelly",
     "priority": "low",
-    "status": "Open",
+    "status": "open",
     "createdAt": "2026-10-13T12:37:19.560Z",
-    "updatedAt": "2026-10-14T05:55:31.157Z",
-    "__v": 0,
-    "resolutionNotes": "Manager reviewing field inspection"
+    "updatedAt": "2026-10-13T12:37:19.560Z",
+    "__v": 0
   }
 ]
