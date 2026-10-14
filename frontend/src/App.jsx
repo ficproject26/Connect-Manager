@@ -184,6 +184,34 @@ function AppInner() {
     setAuthPage(page);
   };
 
+  // Loading State: Prevent flicker of login or protected screens while verifying session
+  if (loading) {
+    return (
+      <div style={{
+        minHeight: '100vh',
+        backgroundColor: '#0f172a',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        color: '#94a3b8',
+        fontFamily: 'Inter, system-ui, sans-serif'
+      }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{
+            width: 44,
+            height: 44,
+            margin: '0 auto 16px',
+            border: '3px solid rgba(255,255,255,0.1)',
+            borderTopColor: '#3b82f6',
+            borderRadius: '50%',
+            animation: 'spin 1s linear infinite'
+          }} />
+          <p style={{ fontSize: '0.875rem', fontWeight: 600, color: '#cbd5e1' }}>Verifying manager authorization...</p>
+        </div>
+      </div>
+    );
+  }
+
   // Unauthenticated Flow
   if (!isAuthenticated) {
     if (authPage === 'register') {

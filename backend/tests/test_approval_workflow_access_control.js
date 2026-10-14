@@ -213,6 +213,19 @@ async function runTestSuite() {
 
   const createdTestUserIds = [];
 
+  const adminReviewerId = `test_admin_reviewer_${testRunId}`;
+  await db.users.insertOne({
+    _id: adminReviewerId,
+    id: adminReviewerId,
+    name: 'Central Admin Reviewer',
+    email: `admin.reviewer.${testRunId}@example.com`,
+    role: 'admin',
+    status: 'active',
+    isActive: true
+  });
+  createdTestUserIds.push(adminReviewerId);
+  const adminToken = jwt.sign({ id: adminReviewerId, role: 'admin' }, JWT_SECRET, { expiresIn: '1h' });
+
   const server = http.createServer(app);
   await new Promise((resolve) => server.listen(TEST_PORT, resolve));
   console.log(`🚀 Test server listening on http://127.0.0.1:${TEST_PORT}\n`);
@@ -282,7 +295,7 @@ async function runTestSuite() {
     const prematureMainRes = await request('POST', '/api/auth/mainadmin-approval', {
       userId: manager1Id,
       action: 'approve'
-    });
+    }, adminToken);
     assert(prematureMainRes.status === 400, `Premature Main Admin approval rejected with HTTP 400 (Got: ${prematureMainRes.status})`);
     assert(prematureMainRes.data?.code === 'SUBADMIN_APPROVAL_REQUIRED', `Premature Main Admin code is SUBADMIN_APPROVAL_REQUIRED`);
 
@@ -290,7 +303,7 @@ async function runTestSuite() {
     const prematureKycRes = await request('POST', '/api/auth/kyc-approval', {
       userId: manager1Id,
       action: 'approve'
-    });
+    }, adminToken);
     assert(prematureKycRes.status === 400, `Premature KYC approval rejected with HTTP 400 (Got: ${prematureKycRes.status})`);
 
     // Simulation routes are permanently blocked / removed (HTTP 404)
@@ -306,7 +319,7 @@ async function runTestSuite() {
     const subAdminApprovalRes = await request('POST', '/api/auth/subadmin-approval', {
       userId: manager1Id,
       action: 'approve'
-    });
+    }, adminToken);
 
     assert(subAdminApprovalRes.status === 200, `Sub-admin approval succeeded (HTTP 200). Got: ${subAdminApprovalRes.status}`);
     assert(subAdminApprovalRes.data?.status === 'PENDING_MAIN_ADMIN_APPROVAL', `Status transitioned to PENDING_MAIN_ADMIN_APPROVAL (Got: ${subAdminApprovalRes.data?.status})`);
@@ -333,7 +346,7 @@ async function runTestSuite() {
     const prematureKycRes2 = await request('POST', '/api/auth/kyc-approval', {
       userId: manager1Id,
       action: 'approve'
-    });
+    }, adminToken);
     assert(prematureKycRes2.status === 400, `KYC approval rejected while Main Admin approval is pending (HTTP 400). Got: ${prematureKycRes2.status}`);
 
     // -------------------------------------------------------------------------
@@ -343,7 +356,7 @@ async function runTestSuite() {
     const mainAdminApprovalRes = await request('POST', '/api/auth/mainadmin-approval', {
       userId: manager1Id,
       action: 'approve'
-    });
+    }, adminToken);
 
     assert(mainAdminApprovalRes.status === 200, `Main Admin approval succeeded (HTTP 200). Got: ${mainAdminApprovalRes.status}`);
     assert(mainAdminApprovalRes.data?.status === 'PENDING_KYC_VERIFICATION', `Status transitioned to PENDING_KYC_VERIFICATION (Got: ${mainAdminApprovalRes.data?.status})`);
@@ -366,7 +379,7 @@ async function runTestSuite() {
     const kycApprovalRes = await request('POST', '/api/auth/kyc-approval', {
       userId: manager1Id,
       action: 'approve'
-    });
+    }, adminToken);
 
     assert(kycApprovalRes.status === 200, `KYC clearance succeeded (HTTP 200). Got: ${kycApprovalRes.status}`);
     assert(kycApprovalRes.data?.status === 'active', `Status transitioned to active (Got: ${kycApprovalRes.data?.status})`);
@@ -428,7 +441,7 @@ async function runTestSuite() {
       userId: manager2Id,
       action: 'reject',
       rejectionReason: ''
-    });
+    }, adminToken);
     assert(noReasonSubReject.status === 400, `Sub-admin reject without reason rejected (HTTP 400)`);
 
     // Reject with reason succeeds
@@ -436,7 +449,7 @@ async function runTestSuite() {
       userId: manager2Id,
       action: 'reject',
       rejectionReason: 'Jurisdiction quota exceeded for this division.'
-    });
+    }, adminToken);
 
     assert(subAdminRejectRes.status === 200, `Sub-admin reject processed (HTTP 200). Got: ${subAdminRejectRes.status}`);
     assert(subAdminRejectRes.data?.status === 'REJECTED_BY_SUB_ADMIN', `Status is REJECTED_BY_SUB_ADMIN (Got: ${subAdminRejectRes.data?.status})`);
@@ -477,14 +490,14 @@ async function runTestSuite() {
     if (manager3Id) createdTestUserIds.push(manager3Id);
 
     // Sub-admin approves
-    await request('POST', '/api/auth/subadmin-approval', { userId: manager3Id, action: 'approve' });
+    await request('POST', '/api/auth/subadmin-approval', { userId: manager3Id, action: 'approve' }, adminToken);
 
     // Main Admin rejects
     const mainAdminRejectRes = await request('POST', '/api/auth/mainadmin-approval', {
       userId: manager3Id,
       action: 'reject',
       rejectionReason: 'Background check discrepancies noted by executive panel.'
-    });
+    }, adminToken);
 
     assert(mainAdminRejectRes.status === 200, `Main Admin reject processed (HTTP 200). Got: ${mainAdminRejectRes.status}`);
     assert(mainAdminRejectRes.data?.status === 'REJECTED_BY_MAIN_ADMIN', `Status is REJECTED_BY_MAIN_ADMIN (Got: ${mainAdminRejectRes.data?.status})`);
@@ -523,16 +536,16 @@ async function runTestSuite() {
     if (manager4Id) createdTestUserIds.push(manager4Id);
 
     // Sub-admin approves
-    await request('POST', '/api/auth/subadmin-approval', { userId: manager4Id, action: 'approve' });
+    await request('POST', '/api/auth/subadmin-approval', { userId: manager4Id, action: 'approve' }, adminToken);
     // Main Admin approves
-    await request('POST', '/api/auth/mainadmin-approval', { userId: manager4Id, action: 'approve' });
+    await request('POST', '/api/auth/mainadmin-approval', { userId: manager4Id, action: 'approve' }, adminToken);
 
     // KYC rejects
     const kycRejectRes = await request('POST', '/api/auth/kyc-approval', {
       userId: manager4Id,
       action: 'reject',
       rejectionReason: 'Aadhaar document image is blurred and unreadable.'
-    });
+    }, adminToken);
 
     assert(kycRejectRes.status === 200, `KYC reject processed (HTTP 200). Got: ${kycRejectRes.status}`);
     assert(kycRejectRes.data?.status === 'KYC_REJECTED', `Status is KYC_REJECTED (Got: ${kycRejectRes.data?.status})`);
@@ -597,15 +610,15 @@ async function runTestSuite() {
       if (uid) createdTestUserIds.push(uid);
 
       // 2. Sub-admin Approval
-      const subRes = await request('POST', '/api/auth/subadmin-approval', { userId: uid, action: 'approve' });
+      const subRes = await request('POST', '/api/auth/subadmin-approval', { userId: uid, action: 'approve' }, adminToken);
       assert(subRes.status === 200 && subRes.data?.status === 'PENDING_MAIN_ADMIN_APPROVAL', `${lvl.label} Sub-admin approved -> PENDING_MAIN_ADMIN_APPROVAL`);
 
       // 3. Main Admin Approval
-      const mainRes = await request('POST', '/api/auth/mainadmin-approval', { userId: uid, action: 'approve' });
+      const mainRes = await request('POST', '/api/auth/mainadmin-approval', { userId: uid, action: 'approve' }, adminToken);
       assert(mainRes.status === 200 && mainRes.data?.status === 'PENDING_KYC_VERIFICATION', `${lvl.label} Main Admin approved -> PENDING_KYC_VERIFICATION`);
 
       // 4. KYC Clearance
-      const kycRes = await request('POST', '/api/auth/kyc-approval', { userId: uid, action: 'approve' });
+      const kycRes = await request('POST', '/api/auth/kyc-approval', { userId: uid, action: 'approve' }, adminToken);
       assert(kycRes.status === 200 && kycRes.data?.status === 'active', `${lvl.label} KYC approved -> active`);
 
       // 5. Final Login

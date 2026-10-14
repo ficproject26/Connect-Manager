@@ -1,8 +1,14 @@
 const express = require('express');
 const router = express.Router();
 const jwt = require('jsonwebtoken');
+const db = require('../config/db');
 const { getRealtimeMetrics, eventSubscriber } = require('../realtime');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
+const {
+  isAllowedManagerRole,
+  isAdminRole,
+  isApprovedStatus
+} = require('../middleware/roleMiddleware');
 
 router.get('/health', (req, res) => {
   res.json({
@@ -12,7 +18,7 @@ router.get('/health', (req, res) => {
 });
 
 // GET /api/realtime/events - HTTP polling fallback for environments without WebSocket support (e.g. Vercel)
-router.get('/events', (req, res) => {
+router.get('/events', async (req, res) => {
   try {
     const since = parseInt(req.query.since || '0', 10);
     const token = req.query.token || (req.headers.authorization ? req.headers.authorization.replace('Bearer ', '') : null);
@@ -21,24 +27,57 @@ router.get('/events', (req, res) => {
       return res.status(401).json({ success: false, message: 'Authentication required to receive realtime events' });
     }
 
-    let user = null;
+    let decoded = null;
     try {
-      user = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+      decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
     } catch (e) {
       return res.status(401).json({ success: false, message: 'Invalid or expired authentication token' });
     }
 
+    let user = await db.users.findById(decoded.id);
+    if (!user) {
+      user = await db.managers.findById(decoded.id);
+    }
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User account not found.' });
+    }
+
+    const userRole = String(user.role || '').toLowerCase();
+    const isManager = isAllowedManagerRole(userRole);
+    const isAdmin = isAdminRole(userRole) || user.email === 'admin@example.com' || user.id === 'user_admin' || user._id === 'user_admin';
+
+    if (!isManager && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        code: 'ROLE_NOT_AUTHORIZED',
+        message: `Forbidden: Role '${user.role}' is not authorized for manager realtime events`
+      });
+    }
+
+    const isApproved = isApprovedStatus(user.status);
+    if (!isAdmin && (!isApproved || user.isActive === false)) {
+      return res.status(403).json({
+        success: false,
+        code: 'APPROVAL_REQUIRED',
+        message: 'Access denied: Manager approval is required to receive realtime events'
+      });
+    }
+
     const events = eventSubscriber.getRecentEvents(since);
 
-    // Strict territory filtering according to authenticated manager identity
+    // Strict territory filtering according to authoritative authenticated manager identity
     const filteredEvents = events.filter(ev => {
-      const role = user.role || '';
-      if (['admin', 'super-admin', 'super_admin'].includes(role) || user.email === 'admin@example.com') return true;
+      if (isAdmin) return true;
       if (!ev.scope) return true;
-      if (user.stateId && ev.scope.stateId && String(user.stateId) !== String(ev.scope.stateId)) return false;
-      if (user.districtId && ev.scope.districtId && String(user.districtId) !== String(ev.scope.districtId)) return false;
-      if (user.divisionId && ev.scope.divisionId && String(user.divisionId) !== String(ev.scope.divisionId)) return false;
-      if (user.pincodeId && ev.scope.pincodeId && String(user.pincodeId) !== String(ev.scope.pincodeId)) return false;
+      const stateId = user.stateId || decoded.stateId;
+      const districtId = user.districtId || decoded.districtId;
+      const divisionId = user.divisionId || decoded.divisionId;
+      const pincodeId = user.pincodeId || decoded.pincodeId;
+
+      if (stateId && ev.scope.stateId && String(stateId) !== String(ev.scope.stateId)) return false;
+      if (districtId && ev.scope.districtId && String(districtId) !== String(ev.scope.districtId)) return false;
+      if (divisionId && ev.scope.divisionId && String(divisionId) !== String(ev.scope.divisionId)) return false;
+      if (pincodeId && ev.scope.pincodeId && String(pincodeId) !== String(ev.scope.pincodeId)) return false;
       return true;
     });
 

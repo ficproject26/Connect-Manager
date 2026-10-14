@@ -3,6 +3,14 @@ const router = express.Router();
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
 const { authMiddleware, JWT_SECRET } = require('../middleware/authMiddleware');
+const {
+  ALLOWED_MANAGER_ROLES,
+  ADMIN_ROLES,
+  isAllowedManagerRole,
+  isAdminRole,
+  isApprovedStatus,
+  checkRole
+} = require('../middleware/roleMiddleware');
 
 // SSE Clients set
 const clients = new Set();
@@ -39,7 +47,7 @@ const broadcastNotification = async (notification) => {
 };
 
 // SSE stream (accepts token via query param as EventSource cannot send headers)
-router.get('/stream', (req, res) => {
+router.get('/stream', async (req, res) => {
   const token = req.query.token;
   if (!token) {
     return res.status(401).json({ success: false, message: 'Authentication required' });
@@ -47,6 +55,28 @@ router.get('/stream', (req, res) => {
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET, { algorithms: ['HS256'] });
+
+    let user = await db.users.findById(decoded.id);
+    if (!user) {
+      user = await db.managers.findById(decoded.id);
+    }
+    if (!user) {
+      return res.status(401).json({ success: false, message: 'User account not found.' });
+    }
+
+    const userRole = String(user.role || '').toLowerCase();
+    const isManager = isAllowedManagerRole(userRole);
+    const isAdmin = isAdminRole(userRole) || user.email === 'admin@example.com' || user.id === 'user_admin' || user._id === 'user_admin';
+
+    if (!isManager && !isAdmin) {
+      return res.status(403).json({ success: false, message: 'Forbidden: Role is not authorized for manager notifications' });
+    }
+
+    const isApproved = isApprovedStatus(user.status);
+    if (!isAdmin && (!isApproved || user.isActive === false)) {
+      return res.status(403).json({ success: false, message: 'Access denied: Manager approval is required to access notification stream' });
+    }
+
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
@@ -70,8 +100,9 @@ router.get('/stream', (req, res) => {
   }
 });
 
-// Require JWT for all other notification operations
+// Require JWT and approved manager role for all operational notification endpoints
 router.use(authMiddleware);
+router.use(checkRole());
 
 // GET /api/notifications/unread-count - Unread count from database
 router.get('/unread-count', async (req, res) => {

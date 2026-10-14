@@ -179,12 +179,12 @@ const handleFileDelete = async (req, res) => {
   }
 };
 
-router.delete('/file', handleFileDelete);
-router.delete('/document', handleFileDelete);
+router.delete('/file', authMiddleware, checkRole(), handleFileDelete);
+router.delete('/document', authMiddleware, checkRole(), handleFileDelete);
 
 const authController = require('../controllers/authController');
-router.delete('/profile-photo', authMiddleware, authController.removeProfilePhoto);
-router.delete('/avatar', authMiddleware, authController.removeProfilePhoto);
+router.delete('/profile-photo', authMiddleware, checkRole(), authController.removeProfilePhoto);
+router.delete('/avatar', authMiddleware, checkRole(), authController.removeProfilePhoto);
 
 module.exports = router;
 

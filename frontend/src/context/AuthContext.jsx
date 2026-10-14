@@ -6,6 +6,20 @@ import { dataPrefetcher } from '../services/dataPrefetcher';
 
 const AuthContext = createContext(null);
 
+export const ALLOWED_MANAGER_ROLES = [
+  'state_manager',
+  'district_manager',
+  'division_manager',
+  'pincode_manager',
+  'admin',
+  'super_admin',
+  'super-admin'
+];
+
+export const isAuthorizedRole = (role) => {
+  if (!role) return false;
+  return ALLOWED_MANAGER_ROLES.includes(String(role).toLowerCase().trim());
+};
 
 const normalizeUser = (u) => {
   if (!u) return null;
@@ -107,7 +121,8 @@ export const AuthProvider = ({ children }) => {
       try {
         const parsed = JSON.parse(savedUser);
         const st = String(parsed?.status || '').toLowerCase().trim();
-        if (st === 'active' || st === 'approved') {
+        const role = String(parsed?.role || '').toLowerCase().trim();
+        if ((st === 'active' || st === 'approved') && isAuthorizedRole(role)) {
           return normalizeUser(parsed);
         }
       } catch (e) {}
@@ -124,7 +139,8 @@ export const AuthProvider = ({ children }) => {
       );
       const parsed = JSON.parse(jsonPayload);
       const st = String(parsed.status || '').toLowerCase().trim();
-      if (st === 'active' || st === 'approved') {
+      const role = String(parsed.role || '').toLowerCase().trim();
+      if ((st === 'active' || st === 'approved') && isAuthorizedRole(role)) {
         return normalizeUser(parsed);
       }
       return null;
@@ -186,13 +202,16 @@ export const AuthProvider = ({ children }) => {
       const res = await authService.getMe();
       if (res && res.success && res.user) {
         const userStatus = String(res.user.status || '').toLowerCase().trim();
-        if (userStatus === 'active' || userStatus === 'approved') {
+        const userRole = String(res.user.role || '').toLowerCase().trim();
+        if ((userStatus === 'active' || userStatus === 'approved') && isAuthorizedRole(userRole)) {
           updateActiveUser(res.user);
           setPendingUser(null);
         } else {
-          // Manager registration is not fully approved - lock dashboard access
+          // Manager registration is not fully approved or role unauthorized - lock dashboard access
           logout();
-          setPendingUser(normalizeUser(res.user));
+          if (isAuthorizedRole(userRole)) {
+            setPendingUser(normalizeUser(res.user));
+          }
         }
       } else if (res && (res.status === 401 || res.status === 403 || res.message?.includes('Unauthorized') || res.message?.includes('Invalid token'))) {
         logout();
@@ -250,23 +269,30 @@ export const AuthProvider = ({ children }) => {
         const normalized = normalizeUser(rawUser);
         const userStatus = String(normalized?.status || '').toLowerCase().trim();
 
-        if (userStatus === 'active' || userStatus === 'approved') {
+        const isApproved = userStatus === 'active' || userStatus === 'approved';
+        const isRoleValid = isAuthorizedRole(normalized?.role);
+
+        if (isApproved && isRoleValid) {
           localStorage.setItem('agent_mgr_token', token);
           setToken(token);
           updateActiveUser(normalized);
           setPendingUser(null);
           return { success: true, isApproved: true, token, user: normalized };
         } else {
-          // Unapproved user: strictly never grant dashboard session
+          // Unapproved user or unauthorized role: strictly never grant dashboard session
           logout();
-          setPendingUser(normalized);
+          if (isRoleValid) {
+            setPendingUser(normalized);
+          }
           return {
             success: false,
             isApproved: false,
-            isPendingApproval: true,
-            approvalStatus: normalized.status,
+            isPendingApproval: isRoleValid && !isApproved,
+            approvalStatus: normalized?.status,
             user: normalized,
-            message: 'Manager registration approval is pending. Dashboard access is locked.'
+            message: !isRoleValid
+              ? `Access denied. Role '${normalized?.role}' is not authorized for the Connect Manager portal.`
+              : 'Manager registration approval is pending. Dashboard access is locked.'
           };
         }
       }
@@ -275,7 +301,7 @@ export const AuthProvider = ({ children }) => {
       if (err.data && (err.data.code === 'APPROVAL_REQUIRED' || err.data.code === 'REGISTRATION_REJECTED')) {
         logout();
         const pending = normalizeUser(err.data.user);
-        if (pending) setPendingUser(pending);
+        if (pending && isAuthorizedRole(pending.role)) setPendingUser(pending);
         return {
           success: false,
           isApproved: false,
@@ -302,8 +328,10 @@ export const AuthProvider = ({ children }) => {
         const rawUser = res.user || res.data?.user || res.data;
         const normalized = normalizeUser(rawUser);
         const userStatus = String(normalized?.status || '').toLowerCase().trim();
+        const isApproved = userStatus === 'active' || userStatus === 'approved';
+        const isRoleValid = isAuthorizedRole(normalized?.role);
 
-        if (userStatus === 'active' || userStatus === 'approved') {
+        if (isApproved && isRoleValid) {
           localStorage.setItem('agent_mgr_token', token);
           setToken(token);
           updateActiveUser(normalized);
@@ -311,14 +339,18 @@ export const AuthProvider = ({ children }) => {
           return { success: true, isApproved: true, token, user: normalized };
         } else {
           logout();
-          setPendingUser(normalized);
+          if (isRoleValid) {
+            setPendingUser(normalized);
+          }
           return {
             success: false,
             isApproved: false,
-            isPendingApproval: true,
-            approvalStatus: normalized.status,
+            isPendingApproval: isRoleValid && !isApproved,
+            approvalStatus: normalized?.status,
             user: normalized,
-            message: 'Manager registration approval is pending. Dashboard access is locked.'
+            message: !isRoleValid
+              ? `Access denied. Role '${normalized?.role}' is not authorized for the Connect Manager portal.`
+              : 'Manager registration approval is pending. Dashboard access is locked.'
           };
         }
       }
@@ -327,7 +359,7 @@ export const AuthProvider = ({ children }) => {
       if (err.data && (err.data.code === 'APPROVAL_REQUIRED' || err.data.code === 'REGISTRATION_REJECTED')) {
         logout();
         const pending = normalizeUser(err.data.user);
-        if (pending) setPendingUser(pending);
+        if (pending && isAuthorizedRole(pending.role)) setPendingUser(pending);
         return {
           success: false,
           isApproved: false,
@@ -349,7 +381,8 @@ export const AuthProvider = ({ children }) => {
   const setSession = (userData, tokenString) => {
     const normalized = normalizeUser(userData);
     const userStatus = String(normalized?.status || '').toLowerCase().trim();
-    if (userStatus === 'active' || userStatus === 'approved') {
+    const isRoleValid = isAuthorizedRole(normalized?.role);
+    if ((userStatus === 'active' || userStatus === 'approved') && isRoleValid) {
       if (tokenString) {
         localStorage.setItem('agent_mgr_token', tokenString);
         setToken(tokenString);
@@ -358,7 +391,9 @@ export const AuthProvider = ({ children }) => {
       setPendingUser(null);
     } else {
       logout();
-      setPendingUser(normalized);
+      if (isRoleValid) {
+        setPendingUser(normalized);
+      }
     }
   };
 
@@ -367,11 +402,14 @@ export const AuthProvider = ({ children }) => {
       const res = await authService.getMe();
       if (res.success && res.user) {
         const userStatus = String(res.user.status || '').toLowerCase().trim();
-        if (userStatus === 'active' || userStatus === 'approved') {
+        const userRole = String(res.user.role || '').toLowerCase().trim();
+        if ((userStatus === 'active' || userStatus === 'approved') && isAuthorizedRole(userRole)) {
           updateActiveUser(res.user);
         } else {
           logout();
-          setPendingUser(normalizeUser(res.user));
+          if (isAuthorizedRole(userRole)) {
+            setPendingUser(normalizeUser(res.user));
+          }
         }
       }
     } catch (err) {
@@ -380,7 +418,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const isAuthenticated = Boolean(
-    user && (String(user.status || '').toLowerCase() === 'active' || String(user.status || '').toLowerCase() === 'approved')
+    user && 
+    (String(user.status || '').toLowerCase() === 'active' || String(user.status || '').toLowerCase() === 'approved') &&
+    isAuthorizedRole(user.role)
   );
 
   return (

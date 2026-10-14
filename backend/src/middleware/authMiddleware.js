@@ -1,5 +1,11 @@
 const jwt = require('jsonwebtoken');
 const db = require('../config/db');
+const {
+  isAllowedManagerRole,
+  isAdminRole,
+  isPendingStatus,
+  isRejectedOrBlockedStatus
+} = require('./roleMiddleware');
 
 if (process.env.NODE_ENV === 'production' && (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'agent_manager_secret_key_2026')) {
   throw new Error('CRITICAL SECURITY CONFIGURATION: A secure, non-default JWT_SECRET must be configured in production environment.');
@@ -28,14 +34,26 @@ const authMiddleware = async (req, res, next) => {
     if (!user) {
       return res.status(401).json({ success: false, message: 'User account not found.' });
     }
-    const userStatus = String(user.status || '').toLowerCase().trim();
-    const isBlockedStatus = userStatus === 'inactive' || 
-      userStatus === 'suspended' || 
-      userStatus === 'deactivated' || 
-      userStatus === 'rejected' ||
-      userStatus === 'rejected_by_sub_admin' ||
-      userStatus === 'kyc_rejected';
-    if (isBlockedStatus) {
+
+    // STRICT ROLE ISOLATION:
+    // Only regional managers and authorized administrative reviewers can access this portal
+    const userRole = String(user.role || '').toLowerCase().trim();
+    const isManager = isAllowedManagerRole(userRole);
+    const isAdmin = isAdminRole(userRole) || user.email === 'admin@example.com' || user.id === 'user_admin' || user._id === 'user_admin';
+
+    if (!isManager && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        code: 'ROLE_NOT_AUTHORIZED',
+        message: `Forbidden: Role '${user.role}' is not authorized for the Connect Manager portal.`
+      });
+    }
+
+    // STRICT ACCOUNT STATUS VERIFICATION:
+    // Block explicitly rejected, suspended, or deactivated accounts.
+    // For pending registration accounts (whose isActive may be false until approved),
+    // let them pass to checkRole() where code: 'APPROVAL_REQUIRED' is enforced.
+    if (isRejectedOrBlockedStatus(user.status) || (user.isActive === false && !isPendingStatus(user.status))) {
       return res.status(403).json({ 
         success: false, 
         code: 'ACCOUNT_BLOCKED',

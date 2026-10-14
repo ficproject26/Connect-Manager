@@ -5,6 +5,14 @@ const fs = require('fs');
 const path = require('path');
 const db = require('../config/db');
 const { JWT_SECRET } = require('../middleware/authMiddleware');
+const {
+  ALLOWED_MANAGER_ROLES,
+  ADMIN_ROLES,
+  isAllowedManagerRole,
+  isAdminRole,
+  isApprovedStatus,
+  isRejectedOrBlockedStatus
+} = require('../middleware/roleMiddleware');
 
 const ROLE_LIMITS = {
   state_manager: 8,      // 8 managers per State
@@ -229,29 +237,73 @@ const login = async (req, res) => {
     const cleanMobile = digitsOnly.length >= 10 ? digitsOnly.slice(-10) : digitsOnly;
 
     // Live MongoDB lookup for manager by email, mobile, phone, loginId, or managerId
+    // Multi-Website Cross-Role Isolation:
+    // First, search for an explicitly authorized regional Manager account
     let user = null;
+    let crossRoleMatch = null;
+
     if (normalizedEmail) {
       const safeEmail = normalizedEmail.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-      user = (await db.users.findOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } })) ||
-             (await db.managers.findOne({ email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } }));
+      const emailFilter = { email: { $regex: new RegExp(`^${safeEmail}$`, 'i') } };
+      
+      user = (await db.users.findOne({ ...emailFilter, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.managers.findOne({ ...emailFilter, role: { $in: ALLOWED_MANAGER_ROLES } }));
+
+      if (!user) {
+        // Check if an account exists under another role in the shared ecosystem
+        crossRoleMatch = (await db.users.findOne(emailFilter)) || (await db.managers.findOne(emailFilter));
+      }
     }
+
     if (!user && cleanMobile) {
-      user = (await db.users.findOne({ mobile: cleanMobile })) ||
-             (await db.users.findOne({ phone: cleanMobile })) ||
-             (await db.users.findOne({ mobile: rawIdentifier })) ||
-             (await db.users.findOne({ phone: rawIdentifier })) ||
-             (await db.managers.findOne({ mobile: cleanMobile })) ||
-             (await db.managers.findOne({ phone: cleanMobile }));
+      const mobileFilter = {
+        $or: [
+          { mobile: cleanMobile },
+          { phone: cleanMobile },
+          { mobile: rawIdentifier },
+          { phone: rawIdentifier }
+        ]
+      };
+      
+      user = (await db.users.findOne({ ...mobileFilter, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.managers.findOne({ ...mobileFilter, role: { $in: ALLOWED_MANAGER_ROLES } }));
+
+      if (!user && !crossRoleMatch) {
+        crossRoleMatch = (await db.users.findOne(mobileFilter)) || (await db.managers.findOne(mobileFilter));
+      }
     }
+
     if (!user) {
-      user = (await db.users.findOne({ loginId: rawIdentifier.toLowerCase() })) ||
-             (await db.users.findOne({ managerId: rawIdentifier })) ||
-             (await db.users.findOne({ _id: rawIdentifier })) ||
-             (await db.users.findOne({ id: rawIdentifier })) ||
-             (await db.managers.findOne({ loginId: rawIdentifier.toLowerCase() })) ||
-             (await db.managers.findOne({ managerId: rawIdentifier })) ||
-             (await db.managers.findOne({ _id: rawIdentifier })) ||
-             (await db.managers.findOne({ id: rawIdentifier }));
+      const idFilter = {
+        $or: [
+          { loginId: rawIdentifier.toLowerCase() },
+          { managerId: rawIdentifier },
+          { _id: rawIdentifier },
+          { id: rawIdentifier }
+        ]
+      };
+      
+      user = (await db.users.findOne({ ...idFilter, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.managers.findOne({ ...idFilter, role: { $in: ALLOWED_MANAGER_ROLES } }));
+
+      if (!user && !crossRoleMatch) {
+        crossRoleMatch = (await db.users.findOne(idFilter)) || (await db.managers.findOne(idFilter));
+      }
+    }
+
+    // Role verification: If an account was found under another non-manager role, reject with explicit role isolation error
+    if (!user && crossRoleMatch) {
+      const crossRole = String(crossRoleMatch.role || '').toLowerCase().trim();
+      const isCrossAdmin = isAdminRole(crossRole) || crossRoleMatch.email === 'admin@example.com' || crossRoleMatch._id === 'user_admin' || crossRoleMatch.id === 'user_admin';
+      if (isCrossAdmin) {
+        user = crossRoleMatch;
+      } else {
+        return res.status(403).json({
+          success: false,
+          code: 'ROLE_NOT_AUTHORIZED',
+          message: `Access denied. The account associated with '${rawIdentifier}' has the role '${crossRoleMatch.role}', which is not authorized for the Connect Manager portal. Please sign in to your dedicated application.`
+        });
+      }
     }
 
     if (!user) {
@@ -269,10 +321,16 @@ const login = async (req, res) => {
     }
 
     // Role check: Only regional Managers are authorized
-    const userRole = String(user.role || '').toLowerCase();
-    const isManagerRole = userRole.includes('manager') || ['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(userRole);
-    if (!isManagerRole) {
-      return res.status(403).json({ success: false, message: 'Access denied. This portal is exclusively for regional Managers.' });
+    const userRole = String(user.role || '').toLowerCase().trim();
+    const isManagerRole = isAllowedManagerRole(userRole);
+    const isGlobalAdmin = isAdminRole(userRole) || user.email === 'admin@example.com' || user._id === 'user_admin' || user.id === 'user_admin';
+
+    if (!isManagerRole && !isGlobalAdmin) {
+      return res.status(403).json({
+        success: false,
+        code: 'ROLE_NOT_AUTHORIZED',
+        message: `Access denied. Role '${user.role}' is not authorized for the Connect Manager portal.`
+      });
     }
 
     // Password comparison
@@ -309,10 +367,10 @@ const login = async (req, res) => {
     const statusLower = rawStatus.toLowerCase();
 
     if (statusLower === 'suspended') {
-      return res.status(403).json({ success: false, message: 'Account is suspended. Please contact your administrator.' });
+      return res.status(403).json({ success: false, code: 'ACCOUNT_BLOCKED', message: 'Account is suspended. Please contact your administrator.' });
     }
     if (statusLower === 'inactive' || statusLower === 'deactivated') {
-      return res.status(403).json({ success: false, message: 'Account is inactive. Please contact your administrator.' });
+      return res.status(403).json({ success: false, code: 'ACCOUNT_BLOCKED', message: 'Account is inactive. Please contact your administrator.' });
     }
 
     // Populate geographic and regional scope for response
@@ -1034,15 +1092,23 @@ const getRegistrationStatus = async (req, res) => {
       return res.status(400).json({ success: false, message: 'User ID or email is required.' });
     }
 
-    let user = (await db.users.findById(userId)) || (await db.managers.findById(userId));
+    let user = (await db.users.findOne({ _id: userId, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+               (await db.managers.findOne({ _id: userId, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+               (await db.users.findById(userId)) ||
+               (await db.managers.findById(userId));
     if (!user) {
-      user = (await db.users.findOne({ managerId: userId })) ||
-             (await db.users.findOne({ email: userId.toLowerCase().trim() })) ||
+      const emailTrim = String(userId).toLowerCase().trim();
+      user = (await db.users.findOne({ managerId: userId, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.users.findOne({ email: emailTrim, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.managers.findOne({ managerId: userId, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.managers.findOne({ email: emailTrim, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+             (await db.users.findOne({ managerId: userId })) ||
+             (await db.users.findOne({ email: emailTrim })) ||
              (await db.managers.findOne({ managerId: userId })) ||
-             (await db.managers.findOne({ email: userId.toLowerCase().trim() }));
+             (await db.managers.findOne({ email: emailTrim }));
     }
 
-    if (!user) {
+    if (!user || !isAllowedManagerRole(user.role)) {
       return res.status(404).json({ success: false, message: 'Manager registration not found.' });
     }
 
@@ -1121,6 +1187,7 @@ const getRegistrationStatus = async (req, res) => {
 
     res.json({
       success: true,
+      ...statusPayload,
       data: statusPayload,
       user: statusPayload
     });
@@ -1171,7 +1238,7 @@ const subAdminApproval = async (req, res) => {
     // Territorial reviewer validation if req.user context is available
     if (req.user) {
       const reviewerRole = String(req.user.role || '').toLowerCase();
-      const isSuperAdmin = ['super_admin', 'super-admin', 'superadmin', 'central_admin'].includes(reviewerRole) || req.user.email === 'admin@example.com';
+      const isSuperAdmin = ['admin', 'super_admin', 'super-admin', 'superadmin', 'central_admin'].includes(reviewerRole) || req.user.email === 'admin@example.com';
       if (!isSuperAdmin) {
         const userRole = String(user.role || '').toLowerCase();
         if (userRole === 'state_manager') {
@@ -1418,12 +1485,27 @@ const mainAdminApproval = async (req, res) => {
       return res.status(400).json({ success: false, message: "Action must be either 'approve' or 'reject'." });
     }
 
+    // Disallow applicants from self-approving their own registration
+    if (req.user && String(req.user.id || req.user._id) === String(targetId)) {
+      return res.status(403).json({ success: false, message: 'Security Violation: Applicants cannot approve or modify their own registration status.' });
+    }
+
+    // Disallow manager roles from approving registrations
+    if (req.user && ALLOWED_MANAGER_ROLES.includes(String(req.user.role).toLowerCase())) {
+      return res.status(403).json({ success: false, message: 'Security Violation: Manager accounts do not have permission to approve registrations.' });
+    }
+
     let user = (await db.users.findById(targetId)) || (await db.managers.findById(targetId));
     if (!user) {
       user = (await db.users.findOne({ managerId: targetId })) || (await db.managers.findOne({ managerId: targetId }));
     }
     if (!user) {
       return res.status(404).json({ success: false, message: 'Manager account not found.' });
+    }
+
+    // Disallow modifying administrative accounts
+    if (['admin', 'super_admin', 'super-admin'].includes(String(user.role).toLowerCase()) || user.email === 'admin@example.com') {
+      return res.status(403).json({ success: false, message: 'Administrative accounts cannot be modified via approval endpoints.' });
     }
 
     // CRITICAL PREREQUISITE: Sub-admin approval MUST be completed first!
@@ -1661,6 +1743,16 @@ const kycApproval = async (req, res) => {
     const normalizedAction = String(action || 'approve').toLowerCase().trim();
     if (!['approve', 'reject'].includes(normalizedAction)) {
       return res.status(400).json({ success: false, message: "Action must be either 'approve' or 'reject'." });
+    }
+
+    // Disallow applicants from self-approving their own registration
+    if (req.user && String(req.user.id || req.user._id) === String(targetId)) {
+      return res.status(403).json({ success: false, message: 'Security Violation: Applicants cannot approve or modify their own registration status.' });
+    }
+
+    // Disallow manager roles from approving registrations
+    if (req.user && ALLOWED_MANAGER_ROLES.includes(String(req.user.role).toLowerCase())) {
+      return res.status(403).json({ success: false, message: 'Security Violation: Manager accounts do not have permission to approve registrations.' });
     }
 
     let user = (await db.users.findById(targetId)) || (await db.managers.findById(targetId));
@@ -2479,8 +2571,18 @@ const sendOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian mobile number.' });
     }
 
-    const user = await db.users.findOne({ mobile: rawMobile });
+    let user = (await db.users.findOne({ mobile: rawMobile, role: { $in: ALLOWED_MANAGER_ROLES } })) ||
+               (await db.managers.findOne({ mobile: rawMobile, role: { $in: ALLOWED_MANAGER_ROLES } }));
+
     if (!user) {
+      const crossRoleUser = (await db.users.findOne({ mobile: rawMobile })) || (await db.managers.findOne({ mobile: rawMobile }));
+      if (crossRoleUser) {
+        return res.status(403).json({
+          success: false,
+          code: 'ROLE_NOT_AUTHORIZED',
+          message: `Access denied. The account associated with this mobile number has the role '${crossRoleUser.role}', which is not authorized for the Connect Manager portal.`
+        });
+      }
       return res.status(404).json({
         success: false,
         notRegistered: true,
@@ -2576,9 +2678,24 @@ const verifyOtp = async (req, res) => {
 
     managerOtpStore.delete(rawMobile);
 
-    const user = await db.users.findById(record.userId);
+    let user = await db.users.findById(record.userId);
+    if (!user) {
+      user = await db.managers.findById(record.userId);
+    }
     if (!user) {
       return res.status(404).json({ success: false, message: 'Manager account not found.' });
+    }
+
+    const userRole = String(user.role || '').toLowerCase().trim();
+    const isManagerRole = isAllowedManagerRole(userRole);
+    const isGlobalAdmin = isAdminRole(userRole) || user.email === 'admin@example.com' || user._id === 'user_admin' || user.id === 'user_admin';
+
+    if (!isManagerRole && !isGlobalAdmin) {
+      return res.status(403).json({
+        success: false,
+        code: 'ROLE_NOT_AUTHORIZED',
+        message: `Access denied. Role '${user.role}' is not authorized for the Connect Manager portal.`
+      });
     }
 
     const rawStatus = String(user.status || '').trim();
@@ -2690,9 +2807,41 @@ const verifyOtp = async (req, res) => {
 
 const refreshToken = async (req, res) => {
   try {
-    const user = await db.users.findById(req.user.id);
+    let user = await db.users.findById(req.user.id);
+    if (!user) {
+      user = await db.managers.findById(req.user.id);
+    }
     if (!user) {
       return res.status(401).json({ success: false, message: 'User account not found.' });
+    }
+
+    const userRole = String(user.role || '').toLowerCase().trim();
+    const isManager = isAllowedManagerRole(userRole);
+    const isAdmin = isAdminRole(userRole) || user.email === 'admin@example.com' || user.id === 'user_admin' || user._id === 'user_admin';
+
+    if (!isManager && !isAdmin) {
+      return res.status(403).json({
+        success: false,
+        code: 'ROLE_NOT_AUTHORIZED',
+        message: `Forbidden: Role '${user.role}' is not authorized for the Connect Manager portal.`
+      });
+    }
+
+    if (isRejectedOrBlockedStatus(user.status) || user.isActive === false) {
+      return res.status(403).json({
+        success: false,
+        code: 'ACCOUNT_BLOCKED',
+        message: 'Account is inactive, rejected, or suspended. Token refresh denied.'
+      });
+    }
+
+    const isApproved = isApprovedStatus(user.status);
+    if (!isAdmin && !isApproved) {
+      return res.status(403).json({
+        success: false,
+        code: 'APPROVAL_REQUIRED',
+        message: 'Manager approval is required. Token refresh denied.'
+      });
     }
 
     const tokenPayload = {
@@ -2702,6 +2851,7 @@ const refreshToken = async (req, res) => {
       mobile: user.mobile,
       role: user.role,
       level: user.level,
+      status: 'active',
       name: user.name
     };
 

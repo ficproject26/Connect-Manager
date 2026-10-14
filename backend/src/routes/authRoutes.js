@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/authMiddleware');
+const { checkRole, requireApprovalPermission } = require('../middleware/roleMiddleware');
 const { upload, documentUpload, logoUpload } = require('../middleware/uploadMiddleware');
 
 const { authLimiter, otpLimiter, uploadLimiter } = require('../middleware/rateLimitMiddleware');
@@ -14,28 +15,34 @@ router.post('/register', authLimiter, authController.register);
 router.get('/locations', authController.getRegistrationLocations);
 router.get('/check-capacity', authController.checkCapacity);
 router.get('/registration-status/:userId', authController.getRegistrationStatus);
-router.post('/subadmin-approval', authLimiter, authController.subAdminApproval);
-router.post('/mainadmin-approval', authLimiter, authController.mainAdminApproval);
-router.post('/kyc-approval', authLimiter, authController.kycApproval);
+
+// Registration KYC and Avatar upload during registration (rate limited)
 router.post('/upload-avatar', uploadLimiter, upload.single('avatar'), authController.uploadAvatar);
 router.post('/upload-document', uploadLimiter, documentUpload.any(), authController.uploadDocument);
 
+// Password recovery routes
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/reset-password', authLimiter, authController.resetPassword);
 
-// Protected auth routes
+// Strict Multi-Stage Approval Routes (Require Authenticated Reviewer with Authorized Role)
+router.post('/subadmin-approval', authLimiter, authMiddleware, requireApprovalPermission('subadmin'), authController.subAdminApproval);
+router.post('/mainadmin-approval', authLimiter, authMiddleware, requireApprovalPermission('mainadmin'), authController.mainAdminApproval);
+router.post('/kyc-approval', authLimiter, authMiddleware, requireApprovalPermission('kyc'), authController.kycApproval);
+
+// Protected session validation route (accessible to authenticated users to check approval status)
 router.get('/me', authMiddleware, authController.getMe);
-router.post('/refresh', authMiddleware, authController.refreshToken);
-router.put('/change-password', authMiddleware, authController.changePassword);
-router.get('/bank-details', authMiddleware, authController.getBankDetails);
-router.put('/bank-details', authMiddleware, authController.updateBankDetails);
-router.put('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
-router.post('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
-router.delete('/profile-photo', authMiddleware, authController.removeProfilePhoto);
-router.delete('/profile-image', authMiddleware, authController.removeProfilePhoto);
-router.delete('/avatar', authMiddleware, authController.removeProfilePhoto);
-router.post('/remove-profile-photo', authMiddleware, authController.removeProfilePhoto);
-router.post('/profile-photo/remove', authMiddleware, authController.removeProfilePhoto);
+
+// Protected operational manager routes (Require Approved Manager Role)
+router.post('/refresh', authMiddleware, checkRole(), authController.refreshToken);
+router.put('/change-password', authMiddleware, checkRole(), authController.changePassword);
+router.get('/bank-details', authMiddleware, checkRole(), authController.getBankDetails);
+router.put('/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
+router.put('/profile-photo', authMiddleware, checkRole(), uploadLimiter, upload.any(), authController.updateProfilePhoto);
+router.post('/profile-photo', authMiddleware, checkRole(), uploadLimiter, upload.any(), authController.updateProfilePhoto);
+router.delete('/profile-photo', authMiddleware, checkRole(), authController.removeProfilePhoto);
+router.delete('/profile-image', authMiddleware, checkRole(), authController.removeProfilePhoto);
+router.delete('/avatar', authMiddleware, checkRole(), authController.removeProfilePhoto);
+router.post('/remove-profile-photo', authMiddleware, checkRole(), authController.removeProfilePhoto);
+router.post('/profile-photo/remove', authMiddleware, checkRole(), authController.removeProfilePhoto);
 
 module.exports = router;
-
