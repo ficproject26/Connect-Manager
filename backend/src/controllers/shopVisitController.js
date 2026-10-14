@@ -137,8 +137,8 @@ const getShopVisits = async (req, res) => {
     const user = req.user;
     const { page = 1, limit = 15, search, status, category, scope, pendingOnboardingOnly, eligibleOnly } = req.query;
 
-    const pageNum = parseInt(page, 10) || 1;
-    const limitNum = parseInt(limit, 10) || 15;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = (limit === 'all' || parseInt(limit, 10) >= 1000) ? 1000 : (parseInt(limit, 10) || 15);
 
     // Parallel retrieval with optimized index lookups
     const [allVisits, allVendors, allOnboardings] = await Promise.all([
@@ -169,38 +169,8 @@ const getShopVisits = async (req, res) => {
       }
     }
 
-    // Compute scoped KPI totals strictly within user's assigned jurisdiction for the active viewScope tab
-    const allAuthorizedForKpi = [];
-    for (const v of enrichedVisits) {
-      if (await territoryScopeService.isReportVisible(v, user, scope || 'all')) {
-        allAuthorizedForKpi.push(v);
-      }
-    }
-
-    const kpi = {
-      total: allAuthorizedForKpi.length,
-      interested: allAuthorizedForKpi.filter(isVisitInterested).length,
-      notInterested: allAuthorizedForKpi.filter(isVisitNotInterested).length,
-      pendingOnboarding: allAuthorizedForKpi.filter(v => v.isEligibleForResume).length,
-      completedOnboarding: allAuthorizedForKpi.filter(v => v.isOnboardingCompleted).length
-    };
-
-    let filtered = scopedVisits.filter(v => {
-      const isNotInterestedVisit = isVisitNotInterested(v);
-      const isInterestedVisit = isVisitInterested(v);
-
-      // Status filter ('YES', 'NO', 'Converted', 'Not Interested', 'Interested', etc.)
-      if (status && status !== 'All') {
-        if (isNotInterestedStatus(status) && !isNotInterestedVisit) return false;
-        if (isInterestedStatus(status) && !isInterestedVisit) return false;
-      }
-
-      // Pending Onboarding Eligibility Filter:
-      // Applies when pendingOnboardingOnly or eligibleOnly is true, unless explicitly filtering for Not Interested records
-      if ((pendingOnboardingOnly === 'true' || eligibleOnly === 'true') && !isNotInterestedStatus(status)) {
-        if (!v.isEligibleForResume || v.isOnboardingCompleted) return false;
-      }
-
+    // Base filtered list matching category and search (for consistent KPI aggregation)
+    const baseFiltered = scopedVisits.filter(v => {
       // Category filter
       if (category && category !== 'All' && v.category !== category) return false;
 
@@ -217,11 +187,46 @@ const getShopVisits = async (req, res) => {
       return true;
     });
 
+    // KPI reflects the active scope + category + search dataset
+    const isStatusFiltered = Boolean(status && status !== 'All');
+    const kpi = {
+      total: isStatusFiltered
+        ? baseFiltered.filter(v => {
+            if (isNotInterestedStatus(status)) return isVisitNotInterested(v);
+            if (isInterestedStatus(status)) return isVisitInterested(v);
+            return true;
+          }).length
+        : baseFiltered.length,
+      interested: baseFiltered.filter(isVisitInterested).length,
+      notInterested: baseFiltered.filter(isVisitNotInterested).length,
+      pendingOnboarding: baseFiltered.filter(v => v.isEligibleForResume).length,
+      completedOnboarding: baseFiltered.filter(v => v.isOnboardingCompleted).length
+    };
+
+    let filtered = baseFiltered.filter(v => {
+      const isNotInterestedVisit = isVisitNotInterested(v);
+      const isInterestedVisit = isVisitInterested(v);
+
+      // Status filter ('YES', 'NO', 'Converted', 'Not Interested', 'Interested', etc.)
+      if (isStatusFiltered) {
+        if (isNotInterestedStatus(status) && !isNotInterestedVisit) return false;
+        if (isInterestedStatus(status) && !isInterestedVisit) return false;
+      }
+
+      // Pending Onboarding Eligibility Filter:
+      if ((pendingOnboardingOnly === 'true' || eligibleOnly === 'true') && !isNotInterestedStatus(status)) {
+        if (!v.isEligibleForResume || v.isOnboardingCompleted) return false;
+      }
+
+      return true;
+    });
+
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
 
     const total = filtered.length;
-    const totalPages = Math.ceil(total / limitNum) || 1;
-    const paginated = filtered.slice((pageNum - 1) * limitNum, pageNum * limitNum);
+    const totalPages = Math.max(1, Math.ceil(total / limitNum));
+    const effectivePage = Math.min(pageNum, totalPages);
+    const paginated = limitNum >= 1000 ? filtered : filtered.slice((effectivePage - 1) * limitNum, effectivePage * limitNum);
 
     res.json({
       success: true,
@@ -230,7 +235,7 @@ const getShopVisits = async (req, res) => {
       visits: paginated,
       kpi,
       pagination: {
-        page: pageNum,
+        page: effectivePage,
         limit: limitNum,
         total,
         totalPages

@@ -244,6 +244,22 @@ export const authService = {
     return handleResponse(res);
   },
 
+  async getBankDetails() {
+    try {
+      const res = await fetch(`${API_BASE}/auth/bank-details`, {
+        method: 'GET',
+        headers: getAuthHeaders()
+      });
+      if (res.status === 404) {
+        return { success: true, bankDetails: null };
+      }
+      return handleResponse(res);
+    } catch (err) {
+      console.warn('[authService] getBankDetails error:', err?.message);
+      return { success: true, bankDetails: null };
+    }
+  },
+
   async updateBankDetails(bankDetails) {
     const res = await fetch(`${API_BASE}/auth/bank-details`, {
       method: 'PUT',
@@ -1270,15 +1286,23 @@ export const managerOnboardingService = {
 
 export const issueService = {
   async getIssues(params = {}) {
-    const query = new URLSearchParams();
-    if (params.status && params.status !== 'All') query.append('status', params.status);
-    if (params.priority && params.priority !== 'All') query.append('priority', params.priority);
-    if (params.search) query.append('search', params.search);
-    const qs = query.toString();
-    const res = await fetch(`${API_BASE}/issues${qs ? `?${qs}` : ''}`, {
-      headers: getAuthHeaders()
-    });
-    return handleResponse(res);
+    try {
+      const query = new URLSearchParams();
+      if (params.status && params.status !== 'All') query.append('status', params.status);
+      if (params.priority && params.priority !== 'All') query.append('priority', params.priority);
+      if (params.search) query.append('search', params.search);
+      const qs = query.toString();
+      const res = await fetch(`${API_BASE}/issues${qs ? `?${qs}` : ''}`, {
+        headers: getAuthHeaders()
+      });
+      if (res.status === 404) {
+        return { success: true, count: 0, data: [], issues: [] };
+      }
+      return handleResponse(res);
+    } catch (err) {
+      console.warn('[issueService] getIssues graceful fallback:', err?.message);
+      return { success: true, count: 0, data: [], issues: [] };
+    }
   },
 
   async getIssueById(id) {

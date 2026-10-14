@@ -19,9 +19,27 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
   const [searching, setSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [avatarError, setAvatarError] = useState(false);
   const profileDropdownRef = useRef(null);
   const searchContainerRef = useRef(null);
   const searchInputRef = useRef(null);
+  const searchRequestIdRef = useRef(0);
+
+  const userPhoto = user?.avatarUrl || user?.avatar || user?.profilePhoto || user?.image || user?.profileImage || null;
+
+  useEffect(() => {
+    setAvatarError(false);
+  }, [userPhoto]);
+
+  // Completely reset search state and invalidate any in-flight requests
+  const closeSearch = () => {
+    searchRequestIdRef.current += 1;
+    setSearchOpen(false);
+    setSearchQuery('');
+    setSearchResults({ vendors: [], managers: [], tasks: [], shops: [] });
+    setHasSearched(false);
+    setSearching(false);
+  };
 
   // Close dropdown on outside touch or click anywhere on screen
   useEffect(() => {
@@ -50,12 +68,12 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
   useEffect(() => {
     const handleSearchOutsideClick = (e) => {
       if (searchContainerRef.current && !searchContainerRef.current.contains(e.target)) {
-        setSearchOpen(false);
+        closeSearch();
       }
     };
     const handleSearchKeyDown = (e) => {
       if (e.key === 'Escape') {
-        setSearchOpen(false);
+        closeSearch();
       }
     };
     if (searchOpen) {
@@ -73,7 +91,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
   // Debounced multi-entity search effect (Managers, Vendors, Shops, Pincodes, Tasks)
   useEffect(() => {
     const q = searchQuery.trim();
-    if (q.length < 2) {
+    if (!searchOpen || q.length < 2) {
       setSearchResults({ vendors: [], managers: [], tasks: [], shops: [] });
       setHasSearched(false);
       setSearching(false);
@@ -81,6 +99,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
     }
 
     setSearching(true);
+    const currentReqId = ++searchRequestIdRef.current;
     const timer = setTimeout(async () => {
       try {
         const qLower = q.toLowerCase();
@@ -90,6 +109,8 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
           taskService.getTasks({}, user),
           shopVisitService.getShopVisits({ search: q, limit: 6 })
         ]);
+
+        if (currentReqId !== searchRequestIdRef.current) return;
 
         const matchedVendors = (vRes.status === 'fulfilled' && vRes.value?.success && Array.isArray(vRes.value?.data))
           ? vRes.value.data.slice(0, 6)
@@ -143,36 +164,40 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
         });
         setHasSearched(true);
       } catch (err) {
-        console.warn('[GlobalSearch] search query error:', err);
-        setSearchResults({ vendors: [], managers: [], tasks: [], shops: [] });
-        setHasSearched(true);
+        if (currentReqId === searchRequestIdRef.current) {
+          console.warn('[GlobalSearch] search query error:', err);
+          setSearchResults({ vendors: [], managers: [], tasks: [], shops: [] });
+          setHasSearched(true);
+        }
       } finally {
-        setSearching(false);
+        if (currentReqId === searchRequestIdRef.current) {
+          setSearching(false);
+        }
       }
     }, 280);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, user]);
+  }, [searchQuery, searchOpen, user]);
 
   const totalResultsCount = searchResults.vendors.length + searchResults.managers.length + searchResults.tasks.length + searchResults.shops.length;
 
   const handleSelectVendor = (v) => {
-    setSearchOpen(false);
+    closeSearch();
     if (onNavigate) onNavigate('vendor-details', { vendorId: v._id || v.id });
   };
 
   const handleSelectManager = (m) => {
-    setSearchOpen(false);
+    closeSearch();
     if (onNavigate) onNavigate('field-managers', { search: m.name });
   };
 
   const handleSelectTask = (t) => {
-    setSearchOpen(false);
+    closeSearch();
     if (onNavigate) onNavigate('tasks', { search: t.title || t._id });
   };
 
   const handleSelectShop = (s) => {
-    setSearchOpen(false);
+    closeSearch();
     if (onNavigate) onNavigate('reports', { tab: 'visits', search: s.shopName });
   };
 
@@ -277,7 +302,13 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
             className="nav-icon-btn"
             title="Search"
             aria-label="Search"
-            onClick={() => setSearchOpen(prev => !prev)}
+            onClick={() => {
+              if (searchOpen) {
+                closeSearch();
+              } else {
+                setSearchOpen(true);
+              }
+            }}
             style={{
               background: searchOpen ? 'rgba(2, 132, 199, 0.1)' : undefined,
               color: searchOpen ? '#0284c7' : undefined
@@ -336,9 +367,11 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                   <button
                     type="button"
                     onClick={() => {
+                      searchRequestIdRef.current += 1;
                       setSearchQuery('');
                       setSearchResults({ vendors: [], managers: [], tasks: [], shops: [] });
                       setHasSearched(false);
+                      setSearching(false);
                     }}
                     title="Clear search query"
                     style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px', display: 'flex' }}
@@ -348,7 +381,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                 )}
                 <button
                   type="button"
-                  onClick={() => setSearchOpen(false)}
+                  onClick={closeSearch}
                   title="Close (Esc)"
                   style={{
                     background: '#f1f5f9',
@@ -678,16 +711,31 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
               setDropdownOpen(!dropdownOpen);
             }}
           >
-            <div className="user-avatar-circle">
-              <img 
-                src={user?.avatarUrl || "/assets/ramesh_kumar.jpg"} 
-                alt={displayName} 
-                className="user-avatar-img"
-                onError={(e) => {
-                  e.target.style.display = 'none';
-                  e.target.parentElement.innerText = displayName.slice(0, 2).toUpperCase();
-                }}
-              />
+            <div className="user-avatar-circle" style={{ overflow: 'hidden' }}>
+              {userPhoto && !avatarError ? (
+                <img 
+                  src={userPhoto} 
+                  alt={displayName} 
+                  className="user-avatar-img"
+                  onError={() => setAvatarError(true)}
+                />
+              ) : (
+                <div style={{
+                  width: '100%',
+                  height: '100%',
+                  borderRadius: '50%',
+                  background: '#6366f1',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: 800,
+                  fontSize: '0.8rem',
+                  letterSpacing: '0.5px'
+                }}>
+                  {(displayName || 'M').slice(0, 2).toUpperCase()}
+                </div>
+              )}
               <span className="user-online-dot"></span>
             </div>
             <div className="user-profile-info">

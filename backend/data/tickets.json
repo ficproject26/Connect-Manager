@@ -138,5 +138,47 @@
     "createdAt": "2026-10-13T12:37:19.560Z",
     "updatedAt": "2026-10-13T12:37:19.560Z",
     "__v": 0
+  },
+  {
+    "_id": "6acf30688b6d802003eb6733",
+    "ticketId": "TKT-XAYWJGJJ",
+    "creator": "6acdfd8d4c961aad7cbe4f45",
+    "creatorRole": "division",
+    "creatorName": "Maya",
+    "assignedTo": "6acdc6a7cd3c3b1568359c71",
+    "assignedAgent": "mini",
+    "assignedAgentIdStr": "REG-20261013-1903",
+    "assignedAgentRole": "pincode",
+    "assignedAgentPhone": "9876543765",
+    "assignedAgentPincode": "635126",
+    "assignedAgentDistrict": "Krishnagiri",
+    "assignedAgentDivision": "Hosur",
+    "assignedAgentState": "Tamil Nadu",
+    "assignmentStatus": "assigned",
+    "assignmentHistory": [
+      {
+        "agentId": "REG-20261013-1903",
+        "agentName": "mini",
+        "role": "pincode",
+        "assignedBy": "division",
+        "assignedAt": "2026-10-14T07:34:00.715Z",
+        "reason": "Auto-assigned by territory hierarchy upon ticket creation",
+        "_id": "6acf30688b6d802003eb6734"
+      }
+    ],
+    "vendorName": "Maya Merchant",
+    "storeName": "store",
+    "state": "Tamil Nadu",
+    "district": "Krishnagiri",
+    "division": "Hosur",
+    "pincode": "635126",
+    "territory": "Krishnagiri → Hosur → 635126",
+    "category": "Vendor Query",
+    "description": "hai,hello,hi",
+    "priority": "medium",
+    "status": "open",
+    "createdAt": "2026-10-14T07:34:00.721Z",
+    "updatedAt": "2026-10-14T07:34:00.721Z",
+    "__v": 0
   }
 ]

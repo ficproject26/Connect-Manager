@@ -806,15 +806,48 @@ const getSubmittedReports = async (req, res) => {
     const user = req.user;
     const { district, division, pincode, managerRole, search } = req.query;
 
-    const [allReports, districts, divisions, pincodes] = await Promise.all([
+    const [allReports, allUsers, districts, divisions, pincodes] = await Promise.all([
       db.submittedReports.find(),
+      db.users.find(),
       db.districts.find(user.stateId ? { stateId: user.stateId } : {}),
       db.divisions.find(user.districtId ? { districtId: user.districtId } : {}),
       db.pincodes.find(user.divisionId ? { divisionId: user.divisionId } : {})
     ]);
 
+    // Build author lookup map for authoritative role and jurisdiction resolution
+    const userMap = new Map();
+    allUsers.forEach(u => {
+      if (u.id) userMap.set(String(u.id), u);
+      if (u._id) userMap.set(String(u._id), u);
+      if (u.email) userMap.set(String(u.email).toLowerCase(), u);
+      if (u.name) userMap.set(String(u.name).toLowerCase(), u);
+    });
+
+    const enrichedReports = allReports.map(r => {
+      let mRole = r.managerRole;
+      const author = userMap.get(String(r.managerId || '')) ||
+                     userMap.get(String(r.managerEmail || '').toLowerCase()) ||
+                     userMap.get(String(r.managerName || '').toLowerCase());
+      if (author && (!mRole || mRole === 'manager' || mRole === 'Admin')) {
+        mRole = author.role || mRole;
+      }
+      return {
+        ...r,
+        managerRole: mRole || r.managerRole || (author ? author.role : ''),
+        managerName: r.managerName || (author ? author.name : ''),
+        stateId: r.stateId || (author ? author.stateId : null),
+        state: r.state || (author ? author.state : null),
+        districtId: r.districtId || (author ? author.districtId : null),
+        district: r.district || (author ? author.district : null),
+        divisionId: r.divisionId || (author ? author.divisionId : null),
+        division: r.division || (author ? author.division : null),
+        pincodeId: r.pincodeId || (author ? author.pincodeId : null),
+        pincode: r.pincode || (author ? author.pincode : null)
+      };
+    });
+
     const filtered = [];
-    for (const r of allReports) {
+    for (const r of enrichedReports) {
       const visible = await territoryScopeService.isReportVisible(r, user, req.query.scope || 'all');
       if (!visible) continue;
 
@@ -879,11 +912,37 @@ const getSubmittedReportById = async (req, res) => {
       return res.status(404).json({ success: false, message: 'Submitted report not found' });
     }
 
-    const isVisible = await territoryScopeService.isReportVisible(report, user, 'all');
+    // Resolve author user to enforce authoritative role level
+    let enrichedReport = report;
+    const author = await db.users.findOne({
+      $or: [
+        { id: report.managerId },
+        { _id: report.managerId },
+        { email: report.managerEmail },
+        { name: report.managerName }
+      ]
+    });
+    if (author) {
+      enrichedReport = {
+        ...report,
+        managerRole: author.role || report.managerRole,
+        managerName: report.managerName || author.name,
+        stateId: report.stateId || author.stateId,
+        state: report.state || author.state,
+        districtId: report.districtId || author.districtId,
+        district: report.district || author.district,
+        divisionId: report.divisionId || author.divisionId,
+        division: report.division || author.division,
+        pincodeId: report.pincodeId || author.pincodeId,
+        pincode: report.pincode || author.pincode
+      };
+    }
+
+    const isVisible = await territoryScopeService.isReportVisible(enrichedReport, user, 'all');
     if (!isVisible) {
       return res.status(403).json({
         success: false,
-        message: 'Access Denied: You do not have permission to access reports outside your assigned territory.'
+        message: 'Access Denied: You do not have permission to access reports outside your assigned territory or above your hierarchy level.'
       });
     }
 

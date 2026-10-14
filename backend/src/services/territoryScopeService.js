@@ -334,6 +334,12 @@ class TerritoryScopeService {
     const reportRole = report.managerRole || report.recordedByRole || report.role || '';
     const reportLevel = this.getRoleLevel(reportRole);
 
+    // Strict Rule: A lower-tier manager can NEVER access report history of a higher-tier manager
+    if (!isOwner && !isGlobalAdmin) {
+      if (reportLevel < userLevel) return false;
+      if (reportLevel === 99) return false; // Fail closed on unknown or invalid role
+    }
+
     // 2. Specific role tabs
     if (scope === 'state_managers') {
       if (userLevel > 1 && !isGlobalAdmin) return false; // District, Division, Pincode managers CANNOT see state managers tab
@@ -356,34 +362,28 @@ class TerritoryScopeService {
 
     // A. State Manager: self + all authorized subordinates in state
     if (userLevel === 1) {
-      // Includes State Manager records, District Manager, Division Manager, Pincode Manager records in state
-      return true;
+      return inTerritory;
     }
 
-    // B. District Manager: self + subordinate Division & Pincode managers in district
+    // B. District Manager: self + subordinate Division & Pincode managers in district (NEVER State Managers!)
     if (userLevel === 2) {
       if (isOwner) return true;
-      // MUST NOT show State Manager reports!
-      if (reportLevel === 1) return false;
-      // Must be subordinate division or pincode manager within this district
-      return reportLevel >= 2;
+      if (reportLevel < 2) return false;
+      return inTerritory;
     }
 
-    // C. Division Manager: self + subordinate Pincode managers in division
+    // C. Division Manager: self + subordinate Pincode managers in division (NEVER State or District Managers!)
     if (userLevel === 3) {
       if (isOwner) return true;
-      // MUST NOT show State Manager or District Manager reports!
-      if (reportLevel <= 2) return false;
-      // Must be Division Manager self or subordinate Pincode Manager within this division
-      return reportLevel >= 3;
+      if (reportLevel < 3) return false;
+      return inTerritory;
     }
 
     // D. Pincode Manager: only managers authorized in the same pincode
     if (userLevel === 4) {
       if (isOwner) return true;
-      // NEVER show State, District, or Division manager visits outside own pincode
-      // Only visits occurring strictly in this assigned pincode
-      return reportLevel === 4;
+      if (reportLevel < 4) return false;
+      return inTerritory;
     }
 
     return isOwner;

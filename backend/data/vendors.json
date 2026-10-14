@@ -2116,5 +2116,52 @@
     "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
     "subCategory": "",
     "updatedAt": "2026-10-14T07:16:45.369Z"
+  },
+  {
+    "_id": "ad17ca76-5df7-41b6-9c58-0227960730bc",
+    "accountHolderName": "Karthikeyan",
+    "accountNumber": "876545677654567",
+    "bankName": "State Bank of India",
+    "businessName": "Store20",
+    "category": "Services",
+    "createdAt": "2026-10-14T07:35:07.236Z",
+    "createdBy": "b4677612-7b51-4696-badd-45305a812229",
+    "description": "HI ,this shop has a variet of serivice like ac,tv repair etc.",
+    "districtId": "6aa10fa8ca0932e6eaec1f5f",
+    "divisionId": "6aa122cfca0932e6eaec1f61",
+    "documents": [
+      {
+        "url": "/uploads/1791962768409_5e95e49b61fec36f1b3164dec016a3be.png",
+        "name": "Storefront On-Ground Photo.jpg",
+        "type": "image/jpeg"
+      },
+      {
+        "name": "WhatsApp_Image_2026-10-09_at_10.54.43_AM.jpeg",
+        "filename": "1791963178920_c783b40ca941e55957633fc2ed00f9a6.jpeg",
+        "url": "/uploads/1791963178920_c783b40ca941e55957633fc2ed00f9a6.jpeg",
+        "size": 57046,
+        "type": "image/jpeg"
+      },
+      {
+        "name": "IMG_1822.JPG",
+        "filename": "1791963192390_afc8babff47ffd095c58759608cd2edd.jpg",
+        "url": "/uploads/1791963192390_afc8babff47ffd095c58759608cd2edd.jpg",
+        "size": 210430,
+        "type": "image/jpeg"
+      }
+    ],
+    "email": "store20@gmail.com",
+    "gstNumber": "29ABCDE1234F1Z5",
+    "id": "ad17ca76-5df7-41b6-9c58-0227960730bc",
+    "ifsc": "SBIN0000746",
+    "mobile": "8765457434",
+    "name": "Kathikeyan",
+    "panNumber": "ABCDE1238M",
+    "pincodeId": "6aba0afdaf9e0372e50b7087",
+    "stateId": "6aa10f70ca0932e6eaec1f5c",
+    "status": "Pending",
+    "statusNotes": "New vendor onboarding submitted. Awaiting document inspection.",
+    "subCategory": "",
+    "updatedAt": "2026-10-14T07:35:07.236Z"
   }
 ]

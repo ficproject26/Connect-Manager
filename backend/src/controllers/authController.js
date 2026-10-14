@@ -2752,6 +2752,38 @@ const updateBankDetails = async (req, res) => {
   }
 };
 
+// GET /api/auth/bank-details - Retrieve manager's bank details
+const getBankDetails = async (req, res) => {
+  try {
+    const userId = req.user?.id || req.user?._id;
+    if (!userId) {
+      return res.status(401).json({ success: false, message: 'Authentication required.' });
+    }
+
+    const user = await db.users.findById(userId);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User account not found.' });
+    }
+
+    const bankDetails = user.bankDetails || user.bankAccount || null;
+    res.json({
+      success: true,
+      bankDetails: bankDetails || {
+        accountHolderName: user.name || '',
+        bankName: '',
+        branchName: '',
+        city: '',
+        street: '',
+        accountNumber: '',
+        ifscCode: ''
+      }
+    });
+  } catch (err) {
+    console.error('Get bank details error:', err);
+    res.status(500).json({ success: false, message: 'Failed to retrieve bank details.' });
+  }
+};
+
 module.exports = {
   login,
   register,
@@ -2773,6 +2805,7 @@ module.exports = {
   forgotPassword,
   resetPassword,
   refreshToken,
+  getBankDetails,
   updateBankDetails,
   findTerritorySubAdmin,
   resolveUserBankDetails,

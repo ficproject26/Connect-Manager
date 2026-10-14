@@ -22141,5 +22141,52 @@
     "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
     "userName": "Ironman",
     "userRole": "district_manager"
+  },
+  {
+    "_id": "fe2e5e99-e79a-4f2f-93b4-e44b8b67054d",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T07:26:10.363Z",
+    "details": "Logged visit for Store20 - Interested: YES",
+    "id": "fe2e5e99-e79a-4f2f-93b4-e44b8b67054d",
+    "recordId": "3b28e7bb-9a56-42d3-9f27-d340418c4dce",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T07:26:10.363Z",
+    "updatedAt": "2026-10-14T07:26:10.363Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "786555cb-5803-49bb-8af8-2ca0a801e76c",
+    "action": "Vendor Created",
+    "createdAt": "2026-10-14T07:35:07.287Z",
+    "id": "786555cb-5803-49bb-8af8-2ca0a801e76c",
+    "module": "Vendors",
+    "newValue": {
+      "businessName": "Store20",
+      "status": "Pending",
+      "pincodeId": "6aba0afdaf9e0372e50b7087"
+    },
+    "previousValue": null,
+    "recordId": "ad17ca76-5df7-41b6-9c58-0227960730bc",
+    "timestamp": "2026-10-14T07:35:07.287Z",
+    "updatedAt": "2026-10-14T07:35:07.287Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
+  },
+  {
+    "_id": "e16768a6-3c6b-4d1a-aafa-dfc612430246",
+    "action": "Shop Visit Logged",
+    "createdAt": "2026-10-14T07:44:09.918Z",
+    "details": "Logged visit for store30 - Interested: YES",
+    "id": "e16768a6-3c6b-4d1a-aafa-dfc612430246",
+    "recordId": "6d527299-090e-4ce6-ad21-9615ec420de4",
+    "recordType": "shop_visit",
+    "timestamp": "2026-10-14T07:44:09.918Z",
+    "updatedAt": "2026-10-14T07:44:09.918Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "userName": "Dinesh Kathiravan",
+    "userRole": "division_manager"
   }
 ]

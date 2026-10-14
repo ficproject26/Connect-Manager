@@ -11,43 +11,64 @@ const normalizeUser = (u) => {
   if (!u) return null;
   const scope = u.scope || {};
   const territory = u.territory || {};
+  const role = String(u.role || '').toLowerCase();
+  const level = Number(u.level) || (role.includes('state') ? 1 : role.includes('district') ? 2 : role.includes('division') ? 3 : 4);
+
+  // Authoritative jurisdiction values
+  const stateVal = u.state || u.stateName || territory.state || scope.stateName || scope.regionName || 'Tamil Nadu';
+  const stateIdVal = u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || '6aa10f70ca0932e6eaec1f5c';
+
+  const distVal = level >= 2 ? (u.district || u.districtName || territory.district || scope.districtName || null) : null;
+  const distIdVal = level >= 2 ? (u.districtId || territory.districtId || scope.districtId || null) : null;
+
+  const divVal = level >= 3 ? (u.division || u.divisionName || territory.division || scope.divisionName || null) : null;
+  const divIdVal = level >= 3 ? (u.divisionId || territory.divisionId || scope.divisionId || null) : null;
+
+  const pinVal = level >= 4 ? (u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null) : null;
+  const pinIdVal = level >= 4 ? (u.pincodeId || territory.pincodeId || scope.pincodeId || null) : null;
+  const pinAreaVal = level >= 4 ? (u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null) : null;
+
+  const resolvedAvatar = u.avatarUrl || u.avatar || u.profilePhoto || u.image || u.profileImage || null;
+
   return {
     ...u,
     id: u.id || u._id,
     _id: u._id || u.id,
     managerId: u.managerId || u.id || u._id,
-    stateId: u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || null,
-    state: u.state || u.stateName || territory.state || scope.stateName || scope.regionName || null,
-    stateName: u.stateName || u.state || territory.state || scope.stateName || null,
-    districtId: u.districtId || territory.districtId || scope.districtId || null,
-    district: u.district || u.districtName || territory.district || scope.districtName || null,
-    districtName: u.districtName || u.district || territory.district || scope.districtName || null,
-    divisionId: u.divisionId || territory.divisionId || scope.divisionId || null,
-    division: u.division || u.divisionName || territory.division || scope.divisionName || null,
-    divisionName: u.divisionName || u.division || territory.division || scope.divisionName || null,
-    pincodeId: u.pincodeId || territory.pincodeId || scope.pincodeId || null,
-    pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
-    pincodeCode: u.pincodeCode || u.pincode || territory.pincodeCode || territory.pincode || scope.pincodeCode || null,
-    pincodeArea: u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null,
+    level,
+    avatarUrl: resolvedAvatar,
+    stateId: stateIdVal,
+    state: stateVal,
+    stateName: stateVal,
+    districtId: distIdVal,
+    district: distVal,
+    districtName: distVal,
+    divisionId: divIdVal,
+    division: divVal,
+    divisionName: divVal,
+    pincodeId: pinIdVal,
+    pincode: pinVal,
+    pincodeCode: pinVal,
+    pincodeArea: pinAreaVal,
     territory: {
       ...territory,
-      state: u.state || u.stateName || territory.state || scope.stateName || null,
-      district: u.district || u.districtName || territory.district || scope.districtName || null,
-      division: u.division || u.divisionName || territory.division || scope.divisionName || null,
-      pincode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
-      pincodeArea: u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null
+      state: stateVal,
+      district: distVal,
+      division: divVal,
+      pincode: pinVal,
+      pincodeArea: pinAreaVal
     },
     scope: {
       ...scope,
-      stateId: u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || null,
-      stateName: u.state || u.stateName || territory.state || scope.stateName || null,
-      districtId: u.districtId || territory.districtId || scope.districtId || null,
-      districtName: u.district || u.districtName || territory.district || scope.districtName || null,
-      divisionId: u.divisionId || territory.divisionId || scope.divisionId || null,
-      divisionName: u.division || u.divisionName || territory.division || scope.divisionName || null,
-      pincodeId: u.pincodeId || territory.pincodeId || scope.pincodeId || null,
-      pincodeCode: u.pincode || u.pincodeCode || territory.pincode || territory.pincodeCode || scope.pincodeCode || null,
-      pincodeArea: u.pincodeArea || territory.pincodeArea || scope.pincodeArea || u.area || null
+      stateId: stateIdVal,
+      stateName: stateVal,
+      districtId: distIdVal,
+      districtName: distVal,
+      divisionId: divIdVal,
+      divisionName: divVal,
+      pincodeId: pinIdVal,
+      pincodeCode: pinVal,
+      pincodeArea: pinAreaVal
     }
   };
 };

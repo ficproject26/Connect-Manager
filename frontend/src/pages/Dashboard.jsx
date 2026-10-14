@@ -161,13 +161,16 @@ const Dashboard = ({ onNavigate }) => {
     return `${String(hours).padStart(2, '0')}:${minutes} ${ampm}`;
   };
 
-  // Location Scope Variables derived from user session
+  // Location Scope Variables derived authoritatively from user session
   const userName = user?.name || 'Manager';
-  const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.state || 'Tamil Nadu';
-  const districtName = user?.scope?.districtName;
-  const divisionName = user?.scope?.divisionName;
-  const pincodeCode = user?.scope?.pincodeCode;
-  const isStateManager = (user?.role || '').toLowerCase().includes('state');
+  const userRole = (user?.role || '').toLowerCase();
+  const userLevel = Number(user?.level) || (userRole.includes('state') ? 1 : userRole.includes('district') ? 2 : userRole.includes('division') ? 3 : 4);
+  const isStateManager = userLevel === 1;
+
+  const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.stateName || user?.state || 'Tamil Nadu';
+  const districtName = userLevel >= 2 ? (user?.scope?.districtName || user?.districtName || user?.district || null) : null;
+  const divisionName = userLevel >= 3 ? (user?.scope?.divisionName || user?.divisionName || user?.division || null) : null;
+  const pincodeCode = userLevel >= 4 ? (user?.scope?.pincodeCode || user?.pincodeCode || user?.pincode || null) : null;
 
   // Dynamic Trend Data
   const trendData = React.useMemo(() => {
@@ -354,7 +357,7 @@ const Dashboard = ({ onNavigate }) => {
               <MapPin size={13} style={{ color: 'var(--forge-gold)' }} />
               <span>{stateName} (State)</span>
             </div>
-            {!isStateManager && districtName && (
+            {userLevel >= 2 && districtName && (
               <>
                 <span className="location-chain-sep">››</span>
                 <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
@@ -362,7 +365,7 @@ const Dashboard = ({ onNavigate }) => {
                 </div>
               </>
             )}
-            {!isStateManager && divisionName && (
+            {userLevel >= 3 && divisionName && (
               <>
                 <span className="location-chain-sep">››</span>
                 <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
@@ -370,7 +373,7 @@ const Dashboard = ({ onNavigate }) => {
                 </div>
               </>
             )}
-            {!isStateManager && pincodeCode && (
+            {userLevel >= 4 && pincodeCode && (
               <>
                 <span className="location-chain-sep">››</span>
                 <div className="location-chain-item" onClick={() => onNavigate('vendors')}>

@@ -5689,7 +5689,7 @@
     "receiver": "6acdc6a7cd3c3b1568359c71",
     "title": "New Target Assigned",
     "message": "You have been assigned a target of 1 visits: today task",
-    "read": false,
+    "read": true,
     "priority": "high",
     "category": "target_assigned",
     "createdAt": "2026-10-14T05:10:22.572Z",
@@ -5761,12 +5761,36 @@
     "_id": "349e8a17-b7a6-4e1a-af7e-306c666fc139",
     "createdAt": "2026-10-14T07:16:47.561Z",
     "id": "349e8a17-b7a6-4e1a-af7e-306c666fc139",
-    "isRead": false,
+    "isRead": true,
     "message": "Ironman logged field visit for New user (Not Interested).",
     "recordId": "86b2542f-3bec-4cec-9613-ebdbf63d4cba",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T07:16:47.561Z",
+    "updatedAt": "2026-10-14T07:27:14.995Z",
     "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
+  },
+  {
+    "_id": "b9b6de1a-c09d-4cd8-b8af-663d8d149c4e",
+    "createdAt": "2026-10-14T07:26:10.394Z",
+    "id": "b9b6de1a-c09d-4cd8-b8af-663d8d149c4e",
+    "isRead": false,
+    "message": "Dinesh Kathiravan logged field visit for Store20 (Interested).",
+    "recordId": "3b28e7bb-9a56-42d3-9f27-d340418c4dce",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T07:26:10.394Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
+  },
+  {
+    "_id": "85d6aa6d-f69f-4728-b0c0-f2cf310bfea6",
+    "createdAt": "2026-10-14T07:44:09.949Z",
+    "id": "85d6aa6d-f69f-4728-b0c0-f2cf310bfea6",
+    "isRead": false,
+    "message": "Dinesh Kathiravan logged field visit for store30 (Interested).",
+    "recordId": "6d527299-090e-4ce6-ad21-9615ec420de4",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T07:44:09.949Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
   }
 ]

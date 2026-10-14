@@ -27,6 +27,7 @@ router.post('/reset-password', authLimiter, authController.resetPassword);
 router.get('/me', authMiddleware, authController.getMe);
 router.post('/refresh', authMiddleware, authController.refreshToken);
 router.put('/change-password', authMiddleware, authController.changePassword);
+router.get('/bank-details', authMiddleware, authController.getBankDetails);
 router.put('/bank-details', authMiddleware, authController.updateBankDetails);
 router.put('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);
 router.post('/profile-photo', authMiddleware, uploadLimiter, upload.any(), authController.updateProfilePhoto);

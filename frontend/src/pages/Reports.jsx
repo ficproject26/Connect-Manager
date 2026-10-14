@@ -102,6 +102,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   // --- SHOP VISITS STATE ---
   const [viewScope, setViewScope] = useState(isPincodeManager ? 'self' : 'all');
   const [visits, setVisits] = useState([]);
+  const [pageSize, setPageSize] = useState(15);
   const [pagination, setPagination] = useState({ page: 1, limit: 15, total: 0, totalPages: 1 });
   const [loadingVisits, setLoadingVisits] = useState(false);
   const [searchVisit, setSearchVisit] = useState(filterParams?.search || '');
@@ -158,10 +159,11 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   }, [isPincodeManager, viewScope]);
 
   // Load Shop Visits (Scoped & Filtered by Hierarchy & Status)
-  const loadVisits = useCallback(async (page = 1) => {
+  const loadVisits = useCallback(async (page = 1, customLimit = pageSize) => {
     setLoadingVisits(true);
     try {
-      const params = { page, limit: 15 };
+      const limitVal = (customLimit === 'all' || customLimit >= 1000) ? 1000 : (parseInt(customLimit, 10) || 15);
+      const params = { page, limit: limitVal };
       if (isPincodeManager) {
         params.scope = 'self';
       } else if (viewScope !== 'all') {
@@ -175,7 +177,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
       if (res && res.success) {
         const visitList = Array.isArray(res.data) ? res.data : (Array.isArray(res.visits) ? res.visits : []);
         setVisits(visitList);
-        setPagination(res.pagination || { page: 1, limit: 15, total: visitList.length, totalPages: 1 });
+        setPagination(res.pagination || { page, limit: limitVal, total: visitList.length, totalPages: 1 });
         if (res.kpi) {
           setKpiStats(res.kpi);
         }
@@ -185,7 +187,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     } finally {
       setLoadingVisits(false);
     }
-  }, [isPincodeManager, viewScope, debouncedSearchVisit, statusFilter, categoryFilter]);
+  }, [isPincodeManager, viewScope, debouncedSearchVisit, statusFilter, categoryFilter, pageSize]);
 
   // Load Submitted Reports - Lazy loaded on tab activation
   const loadSubmittedReports = useCallback(async () => {
@@ -845,6 +847,34 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 </select>
               </div>
 
+              <div style={{ width: 145 }}>
+                <select
+                  className="form-select"
+                  value={pageSize}
+                  onChange={(e) => {
+                    const val = e.target.value === 'all' ? 1000 : parseInt(e.target.value, 10);
+                    setPageSize(val);
+                    loadVisits(1, val);
+                  }}
+                  style={{
+                    width: '100%',
+                    padding: '9px 12px',
+                    fontSize: '0.84rem',
+                    borderRadius: 8,
+                    border: '1px solid var(--border)',
+                    background: '#f8fafc',
+                    cursor: 'pointer',
+                    fontWeight: 600
+                  }}
+                >
+                  <option value={15}>15 per page</option>
+                  <option value={25}>25 per page</option>
+                  <option value={50}>50 per page</option>
+                  <option value={100}>100 per page</option>
+                  <option value="all">Show All ({pagination.total || safeVisits.length})</option>
+                </select>
+              </div>
+
               <button
                 type="button"
                 className="btn btn-secondary"
@@ -880,6 +910,69 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
             border: '1px solid var(--border)',
             overflow: 'hidden'
           }}>
+            {/* Top Pagination and Count Summary Header */}
+            {pagination && pagination.total > 0 && (
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '10px 20px',
+                borderBottom: '1px solid var(--border)',
+                background: '#f8fafc',
+                fontSize: '0.82rem',
+                color: '#64748b'
+              }}>
+                <div>
+                  Showing <strong style={{ color: '#0f172a' }}>
+                    {pageSize >= 1000 ? 1 : Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}
+                  </strong> to <strong style={{ color: '#0f172a' }}>
+                    {pageSize >= 1000 ? pagination.total : Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </strong> of <strong style={{ color: '#0f172a' }}>{pagination.total}</strong> reports
+                  {pageSize >= 1000 && <span style={{ marginLeft: 6, color: '#16a34a', fontWeight: 700 }}>(All records displayed)</span>}
+                </div>
+                {pagination.totalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      type="button"
+                      disabled={pagination.page <= 1 || loadingVisits}
+                      onClick={() => loadVisits(pagination.page - 1)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        border: '1px solid #cbd5e1',
+                        background: pagination.page <= 1 ? '#f1f5f9' : '#ffffff',
+                        color: pagination.page <= 1 ? '#94a3b8' : '#0f172a',
+                        cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.78rem'
+                      }}
+                    >
+                      Previous
+                    </button>
+                    <span style={{ fontWeight: 700, color: '#0f172a', padding: '0 4px', fontSize: '0.78rem' }}>
+                      Page {pagination.page} of {pagination.totalPages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={pagination.page >= pagination.totalPages || loadingVisits}
+                      onClick={() => loadVisits(pagination.page + 1)}
+                      style={{
+                        padding: '4px 10px',
+                        borderRadius: 6,
+                        border: '1px solid #cbd5e1',
+                        background: pagination.page >= pagination.totalPages ? '#f1f5f9' : '#ffffff',
+                        color: pagination.page >= pagination.totalPages ? '#94a3b8' : '#0f172a',
+                        cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.78rem'
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
@@ -1106,7 +1199,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
             </div>
 
             {/* Pagination Controls */}
-            {pagination && pagination.totalPages > 1 && (
+            {pagination && pagination.total > 0 && (
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -1118,47 +1211,75 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 color: '#64748b'
               }}>
                 <div>
-                  Showing {Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)} to {Math.min(pagination.page * pagination.limit, pagination.total)} of {pagination.total} reports
+                  Showing <strong style={{ color: '#0f172a' }}>
+                    {pageSize >= 1000 ? 1 : Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}
+                  </strong> to <strong style={{ color: '#0f172a' }}>
+                    {pageSize >= 1000 ? pagination.total : Math.min(pagination.page * pagination.limit, pagination.total)}
+                  </strong> of <strong style={{ color: '#0f172a' }}>{pagination.total}</strong> reports
+                  {pageSize >= 1000 && <span style={{ marginLeft: 6, color: '#16a34a', fontWeight: 700 }}>(All records displayed)</span>}
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                  <button
-                    type="button"
-                    disabled={pagination.page <= 1 || loadingVisits}
-                    onClick={() => loadVisits(pagination.page - 1)}
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: 6,
-                      border: '1px solid #cbd5e1',
-                      background: pagination.page <= 1 ? '#f1f5f9' : '#ffffff',
-                      color: pagination.page <= 1 ? '#94a3b8' : '#0f172a',
-                      cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.78rem'
-                    }}
-                  >
-                    Previous
-                  </button>
-                  <span style={{ fontWeight: 700, color: '#0f172a', padding: '0 4px' }}>
-                    Page {pagination.page} of {pagination.totalPages}
-                  </span>
-                  <button
-                    type="button"
-                    disabled={pagination.page >= pagination.totalPages || loadingVisits}
-                    onClick={() => loadVisits(pagination.page + 1)}
-                    style={{
-                      padding: '5px 12px',
-                      borderRadius: 6,
-                      border: '1px solid #cbd5e1',
-                      background: pagination.page >= pagination.totalPages ? '#f1f5f9' : '#ffffff',
-                      color: pagination.page >= pagination.totalPages ? '#94a3b8' : '#0f172a',
-                      cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer',
-                      fontWeight: 600,
-                      fontSize: '0.78rem'
-                    }}
-                  >
-                    Next
-                  </button>
-                </div>
+                {pagination.totalPages > 1 && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <button
+                      type="button"
+                      disabled={pagination.page <= 1 || loadingVisits}
+                      onClick={() => loadVisits(pagination.page - 1)}
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: 6,
+                        border: '1px solid #cbd5e1',
+                        background: pagination.page <= 1 ? '#f1f5f9' : '#ffffff',
+                        color: pagination.page <= 1 ? '#94a3b8' : '#0f172a',
+                        cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.78rem'
+                      }}
+                    >
+                      Previous
+                    </button>
+                    {Array.from({ length: pagination.totalPages }, (_, i) => i + 1)
+                      .filter(p => p === 1 || p === pagination.totalPages || Math.abs(p - pagination.page) <= 1)
+                      .map((p, idx, arr) => (
+                        <React.Fragment key={p}>
+                          {idx > 0 && arr[idx - 1] !== p - 1 && <span style={{ padding: '0 2px', color: '#94a3b8' }}>...</span>}
+                          <button
+                            type="button"
+                            onClick={() => loadVisits(p)}
+                            style={{
+                              padding: '4px 9px',
+                              borderRadius: 6,
+                              border: p === pagination.page ? '1px solid #2563eb' : '1px solid #cbd5e1',
+                              background: p === pagination.page ? '#2563eb' : '#ffffff',
+                              color: p === pagination.page ? '#ffffff' : '#0f172a',
+                              fontWeight: 700,
+                              fontSize: '0.78rem',
+                              cursor: 'pointer'
+                            }}
+                          >
+                            {p}
+                          </button>
+                        </React.Fragment>
+                      ))
+                    }
+                    <button
+                      type="button"
+                      disabled={pagination.page >= pagination.totalPages || loadingVisits}
+                      onClick={() => loadVisits(pagination.page + 1)}
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: 6,
+                        border: '1px solid #cbd5e1',
+                        background: pagination.page >= pagination.totalPages ? '#f1f5f9' : '#ffffff',
+                        color: pagination.page >= pagination.totalPages ? '#94a3b8' : '#0f172a',
+                        cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer',
+                        fontWeight: 600,
+                        fontSize: '0.78rem'
+                      }}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
               </div>
             )}
           </div>
