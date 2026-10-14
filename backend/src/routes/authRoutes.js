@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/authMiddleware');
-const upload = require('../middleware/uploadMiddleware');
+const { upload, documentUpload, logoUpload } = require('../middleware/uploadMiddleware');
 
 const { authLimiter, otpLimiter, uploadLimiter } = require('../middleware/rateLimitMiddleware');
 
@@ -18,7 +18,7 @@ router.post('/subadmin-approval', authLimiter, authController.subAdminApproval);
 router.post('/mainadmin-approval', authLimiter, authController.mainAdminApproval);
 router.post('/kyc-approval', authLimiter, authController.kycApproval);
 router.post('/upload-avatar', uploadLimiter, upload.single('avatar'), authController.uploadAvatar);
-router.post('/upload-document', uploadLimiter, upload.single('document'), authController.uploadDocument);
+router.post('/upload-document', uploadLimiter, documentUpload.any(), authController.uploadDocument);
 
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
 router.post('/reset-password', authLimiter, authController.resetPassword);

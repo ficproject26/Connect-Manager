@@ -78,6 +78,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
   const [error, setError] = useState('');
   const [unmasked, setUnmasked] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
+  const [previewDoc, setPreviewDoc] = useState(null);
 
 
 
@@ -583,51 +584,160 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
           {/* Card: Verification & Onboarding Audit Trail */}
           <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
             <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
-              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                <FileCheck2 size={18} color="#6366f1" /> Onboarding & Verification Audit
-              </h3>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                  <FileCheck2 size={18} color="#6366f1" /> Onboarding & Verification Audit
+                </h3>
+                <span style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  padding: '2px 8px',
+                  borderRadius: '12px',
+                  background: ['Approved', 'Active'].includes(vendor.status) ? '#ecfdf5' : (vendor.status === 'Rejected' ? '#fef2f2' : '#eff6ff'),
+                  color: ['Approved', 'Active'].includes(vendor.status) ? '#059669' : (vendor.status === 'Rejected' ? '#dc2626' : '#2563eb')
+                }}>
+                  {vendor.status || 'Pending Verification'}
+                </span>
+              </div>
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>
-                {/* Step 1 */}
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                    <Check size={14} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>Vendor Application Submitted</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                      Registered by {vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name || 'Field Manager'} on {formatDateSafe(vendor.createdAt)}
-                    </div>
-                  </div>
-                </div>
+              {(() => {
+                const isApproved = ['Approved', 'Active', 'Completed'].includes(vendor.status) ||
+                  vendor.approvalStatus === 'Approved' ||
+                  vendor.pincodeAdminApproval?.status === 'Approved' ||
+                  Boolean(vendor.pincodeApproval?.approvedBy);
+                const isRejected = vendor.status === 'Rejected' ||
+                  vendor.approvalStatus === 'Rejected' ||
+                  vendor.pincodeAdminApproval?.status === 'Rejected' ||
+                  Boolean(vendor.pincodeRejection);
+                const isPending = !isApproved && !isRejected;
 
-                {/* Step 2 */}
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                    <Check size={14} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>Pincode Admin Authorization</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                      Cleared by {vendor.pincodeAdminApproval?.decidedBy || 'Kumar (Pincode Admin)'} • Verification Approved
-                    </div>
-                  </div>
-                </div>
+                const approverName = vendor.pincodeApproval?.approvedBy ||
+                  vendor.pincodeAdminApproval?.decidedBy ||
+                  vendor.assignedPincodeAdminName ||
+                  vendor.pincodeAdminName ||
+                  (isApproved ? 'Authorized Pincode Admin' : null);
 
-                {/* Step 3 */}
-                <div style={{ display: 'flex', gap: '12px' }}>
-                  <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
-                    <Clock size={14} />
-                  </div>
-                  <div>
-                    <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#1e40af' }}>Settlement & KYC Ready</div>
-                    <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-                      PAN & Bank details validated for local commerce
+                const rejectionReason = vendor.pincodeRejection?.reason ||
+                  vendor.pincodeAdminApproval?.rejectionReason ||
+                  vendor.rejectionReason ||
+                  vendor.statusNotes ||
+                  'Verification criteria not met';
+
+                const approvalDate = vendor.pincodeApproval?.approvedAt ||
+                  vendor.pincodeAdminApproval?.decidedAt ||
+                  vendor.approvedAt ||
+                  (isApproved ? vendor.updatedAt : null);
+
+                const hasPan = Boolean(vendor.panNumber && vendor.panNumber !== 'N/A' && String(vendor.panNumber).trim() !== '');
+                const hasBank = Boolean(vendor.accountNumber && vendor.accountNumber !== 'N/A' && String(vendor.accountNumber).trim() !== '' && vendor.ifsc && String(vendor.ifsc).trim() !== '');
+                const isKycVerified = vendor.kycStatus === 'verified' ||
+                  vendor.kycStatus === 'Approved' ||
+                  vendor.isKycApproved === true ||
+                  (isApproved && hasPan && hasBank);
+
+                return (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', position: 'relative' }}>
+                    {/* Step 1: Application Submission */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: '#dcfce7', color: '#16a34a', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, marginTop: '2px' }}>
+                        <Check size={14} />
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          Vendor Application Submitted
+                          <span style={{ fontSize: '10px', fontWeight: 600, color: '#16a34a', background: '#ecfdf5', padding: '1px 6px', borderRadius: '4px' }}>Completed</span>
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          Registered by {vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name || 'Field Operations Manager'} on {formatDateSafe(vendor.createdAt)}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Pincode Admin Authorization */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: isApproved ? '#dcfce7' : (isRejected ? '#fee2e2' : '#fef3c7'),
+                        color: isApproved ? '#16a34a' : (isRejected ? '#dc2626' : '#d97706'),
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginTop: '2px'
+                      }}>
+                        {isApproved ? <Check size={14} /> : (isRejected ? <X size={14} /> : <Clock size={14} />)}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 700, color: isApproved ? 'var(--text-main)' : (isRejected ? '#dc2626' : '#b45309'), display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          Pincode Admin Authorization
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: isApproved ? '#ecfdf5' : (isRejected ? '#fef2f2' : '#fef3c7'),
+                            color: isApproved ? '#16a34a' : (isRejected ? '#dc2626' : '#b45309')
+                          }}>
+                            {isApproved ? 'Approved' : (isRejected ? 'Rejected' : 'Under Review')}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          {isApproved ? (
+                            `Cleared by ${approverName} • Verification Approved${approvalDate ? ` (${formatDateSafe(approvalDate)})` : ''}`
+                          ) : isRejected ? (
+                            `Rejected by ${approverName || 'Pincode Admin'} • Reason: ${rejectionReason}`
+                          ) : (
+                            `Assigned to ${vendor.assignedPincodeAdminName || 'Pincode Station Admin'} • Awaiting on-ground inspection & authorization`
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 3: Settlement & Statutory KYC Status */}
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        background: isKycVerified ? '#dcfce7' : '#eff6ff',
+                        color: isKycVerified ? '#16a34a' : '#2563eb',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginTop: '2px'
+                      }}>
+                        {isKycVerified ? <Check size={14} /> : <Clock size={14} />}
+                      </div>
+                      <div>
+                        <div style={{ fontSize: '0.84rem', fontWeight: 700, color: isKycVerified ? '#16a34a' : '#1e40af', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          Settlement & Statutory KYC
+                          <span style={{
+                            fontSize: '10px',
+                            fontWeight: 600,
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: isKycVerified ? '#ecfdf5' : '#eff6ff',
+                            color: isKycVerified ? '#16a34a' : '#2563eb'
+                          }}>
+                            {isKycVerified ? 'Ready' : 'Pending'}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          {isKycVerified ? (
+                            `PAN & Bank details validated for local commerce • Settlement Active (${vendor.bankName || 'Linked Bank Account'})`
+                          ) : (
+                            `PAN: ${hasPan ? 'Provided' : 'Pending'} • Bank: ${hasBank ? (vendor.bankName || 'Provided') : 'Pending'} • Documents: ${vendor.documents?.length || 0} attached`
+                          )}
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -641,9 +751,25 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
                   <ShieldCheck size={18} color="#10b981" /> KYC & Statutory Identity
                 </h3>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#059669', background: '#dcfce7', padding: '2px 8px', borderRadius: '12px' }}>
-                  Verified
-                </span>
+                {(() => {
+                  const isApproved = ['Approved', 'Active', 'Completed'].includes(vendor.status);
+                  const hasPan = Boolean(vendor.panNumber && vendor.panNumber !== 'N/A' && String(vendor.panNumber).trim() !== '');
+                  const hasBank = Boolean(vendor.accountNumber && vendor.accountNumber !== 'N/A' && String(vendor.accountNumber).trim() !== '');
+                  const isKycVerified = vendor.kycStatus === 'verified' || vendor.kycStatus === 'Approved' || (isApproved && hasPan && hasBank);
+                  const isRejected = vendor.status === 'Rejected' || vendor.kycStatus === 'rejected';
+                  return (
+                    <span style={{
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      color: isKycVerified ? '#059669' : (isRejected ? '#dc2626' : '#d97706'),
+                      background: isKycVerified ? '#dcfce7' : (isRejected ? '#fee2e2' : '#fef3c7'),
+                      padding: '2px 8px',
+                      borderRadius: '12px'
+                    }}>
+                      {isKycVerified ? 'Verified' : (isRejected ? 'Rejected' : 'Pending Verification')}
+                    </span>
+                  );
+                })()}
               </div>
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
@@ -680,232 +806,499 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
           {/* Card: Attached Documents & Storefront Visual Proofs */}
           <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
-                  {(() => {
-                    const allDocs = Array.isArray(vendor.documents) && vendor.documents.length > 0
-                      ? vendor.documents
-                      : (vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo
-                          ? [{
-                              url: vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo,
-                              name: 'Storefront On-Ground Photo.jpg',
-                              type: 'image/jpeg'
-                            }]
-                          : []);
-                    return (
-                      <>
-                        <FileText size={18} color="#f59e0b" /> Verified Storefront Proofs ({allDocs.length || 1})
-                      </>
-                    );
-                  })()}
-                </h3>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: '12px' }}>
-                  On-Ground Photo
-                </span>
-              </div>
-            </div>
-            <div className="card-body" style={{ padding: '18px' }}>
-              {(() => {
-                const allDocs = Array.isArray(vendor.documents) && vendor.documents.length > 0
-                  ? vendor.documents
-                  : (vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo
-                      ? [{
-                          url: vendor.storefrontPhoto || vendor.shopPhoto || vendor.photo,
-                          name: 'Storefront On-Ground Photo.jpg',
-                          type: 'image/jpeg'
-                        }]
-                      : []);
+            {(() => {
+              // 1. Gather all business images explicitly saved on the vendor
+              const explicitBusinessImages = (Array.isArray(vendor.businessImages) ? vendor.businessImages : [])
+                .filter(img => img && (typeof img === 'string' ? img.trim().length > 0 : Boolean(img.url || img.filename || img.path)))
+                .map((img, idx) => {
+                  if (typeof img === 'string') {
+                    const fn = img.split('/').pop() || `Business Image ${idx + 1}`;
+                    return { url: img, name: fn, filename: fn, type: 'image/jpeg' };
+                  }
+                  const url = img.url || img.path || '';
+                  const fn = img.name || img.filename || (url ? url.split('/').pop() : `Business Image ${idx + 1}`);
+                  return {
+                    url,
+                    name: fn,
+                    filename: img.filename || fn,
+                    size: img.size || 0,
+                    type: img.type || 'image/jpeg'
+                  };
+                });
 
-                return allDocs.length > 0 ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    {allDocs.map((rawDoc, idx) => {
-                      const doc = typeof rawDoc === 'string'
-                        ? { url: rawDoc, name: rawDoc.split('/').pop() || 'Document', size: 0 }
-                        : (rawDoc || {});
-                      const rawUrl = doc.url || '';
-                      const resolvedUrl = resolveMediaUrl(rawUrl);
-                      const docName = doc.name || `Document ${idx + 1}`;
-                      const isImg = doc.type?.includes('image') || rawUrl.match(/\.(jpeg|jpg|gif|png|webp)$/i);
-                      return (
-                        <div key={idx} style={{
-                          background: '#f8fafc',
-                          border: '1px solid #e2e8f0',
-                          borderRadius: '10px',
-                          overflow: 'hidden'
-                        }}>
-                          {isImg && resolvedUrl && (
-                            <div 
-                              onClick={() => setPreviewImage(resolvedUrl)}
-                              style={{
-                                position: 'relative',
-                                width: '100%',
-                                height: '140px',
-                                cursor: 'pointer',
-                                background: '#f1f5f9',
-                                overflow: 'hidden'
-                              }}
-                              title="Click to view full image"
-                            >
-                              <img
-                                src={resolvedUrl}
-                                alt={docName}
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                                onError={(e) => {
-                                  if (!e.target.dataset.triedFallback) {
-                                    e.target.dataset.triedFallback = 'true';
-                                    e.target.src = resolveMediaUrl(FALLBACK_STOREFRONT_IMAGE);
-                                  }
-                                }}
-                              />
+              // 2. Check for single storefrontPhoto or shopPhoto not already included
+              const additionalStorefronts = [];
+              if (vendor.storefrontPhoto && !explicitBusinessImages.some(i => i.url === vendor.storefrontPhoto)) {
+                additionalStorefronts.push({
+                  url: vendor.storefrontPhoto,
+                  name: 'Storefront On-Ground Photo.jpg',
+                  type: 'image/jpeg'
+                });
+              }
+              if (vendor.shopPhoto && vendor.shopPhoto !== vendor.storefrontPhoto && !explicitBusinessImages.some(i => i.url === vendor.shopPhoto)) {
+                additionalStorefronts.push({
+                  url: vendor.shopPhoto,
+                  name: 'Shop Photo.jpg',
+                  type: 'image/jpeg'
+                });
+              }
+
+              // 3. Check for storefront photos in documents
+              const docStorefrontPhotos = [];
+              if (Array.isArray(vendor.documents)) {
+                vendor.documents.forEach((d, idx) => {
+                  const rawUrl = typeof d === 'string' ? d : d?.url;
+                  const name = typeof d === 'string' ? d.split('/').pop() : (d?.name || '');
+                  if (rawUrl && (name.toLowerCase().includes('storefront') || name.toLowerCase().includes('on-ground'))) {
+                    if (!explicitBusinessImages.some(i => i.url === rawUrl) && !additionalStorefronts.some(i => i.url === rawUrl)) {
+                      docStorefrontPhotos.push(typeof d === 'string' ? { url: d, name: name || `Storefront Photo ${idx + 1}`, type: 'image/jpeg' } : d);
+                    }
+                  }
+                });
+              }
+
+              // Combined storefront proofs
+              const allStorefrontImages = [...explicitBusinessImages, ...additionalStorefronts, ...docStorefrontPhotos];
+
+              // Separate KYC / Statutory documents
+              const kycDocs = (Array.isArray(vendor.documents) ? vendor.documents : []).filter(d => {
+                const rawUrl = typeof d === 'string' ? d : d?.url;
+                if (!rawUrl) return false;
+                return !allStorefrontImages.some(i => i.url === rawUrl);
+              });
+              if (vendor.businessLicense) {
+                const licUrl = typeof vendor.businessLicense === 'string' ? vendor.businessLicense : vendor.businessLicense.url;
+                if (licUrl && !kycDocs.some(d => (typeof d === 'string' ? d : d.url) === licUrl)) {
+                  kycDocs.unshift(typeof vendor.businessLicense === 'string' ? { url: licUrl, name: 'Business License', type: 'application/pdf' } : vendor.businessLicense);
+                }
+              }
+
+              return (
+                <>
+                  <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                        <FileText size={18} color="#f59e0b" /> Verified Storefront Proofs ({allStorefrontImages.length})
+                      </h3>
+                      <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: '12px' }}>
+                        {allStorefrontImages.length > 0 ? `${allStorefrontImages.length} On-Ground Photo${allStorefrontImages.length > 1 ? 's' : ''}` : 'On-Ground Photo'}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="card-body" style={{ padding: '18px' }}>
+                    {allStorefrontImages.length > 0 ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {allStorefrontImages.map((rawDoc, idx) => {
+                          const doc = typeof rawDoc === 'string'
+                            ? { url: rawDoc, name: rawDoc.split('/').pop() || `Business Image ${idx + 1}`, size: 0 }
+                            : (rawDoc || {});
+                          const rawUrl = doc.url || '';
+                          const resolvedUrl = resolveMediaUrl(rawUrl);
+                          const docName = doc.name || `Business Image ${idx + 1}`;
+                          const isDocPdf = Boolean(
+                            doc.type === 'application/pdf' ||
+                            (doc.type && doc.type.toLowerCase().includes('pdf')) ||
+                            docName.toLowerCase().endsWith('.pdf') ||
+                            rawUrl.toLowerCase().endsWith('.pdf') ||
+                            (typeof rawUrl === 'string' && rawUrl.startsWith('data:application/pdf'))
+                          );
+
+                          return (
+                            <div key={idx} style={{
+                              background: '#f8fafc',
+                              border: '1px solid #e2e8f0',
+                              borderRadius: '10px',
+                              overflow: 'hidden'
+                            }}>
+                              {resolvedUrl && isDocPdf ? (
+                                <div 
+                                  onClick={() => setPreviewDoc({ url: resolvedUrl, name: docName, isPdf: true })}
+                                  style={{
+                                    position: 'relative',
+                                    width: '100%',
+                                    height: '140px',
+                                    cursor: 'pointer',
+                                    background: 'linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%)',
+                                    display: 'flex',
+                                    flexDirection: 'column',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    padding: '16px',
+                                    borderBottom: '1px solid #fecaca'
+                                  }}
+                                  title="Click to preview PDF document"
+                                >
+                                  <div style={{
+                                    width: '44px',
+                                    height: '44px',
+                                    borderRadius: '10px',
+                                    background: '#dc2626',
+                                    color: '#ffffff',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 4px 10px rgba(220, 38, 38, 0.25)',
+                                    marginBottom: '8px'
+                                  }}>
+                                    <FileText size={24} />
+                                  </div>
+                                  <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#991b1b', maxWidth: '90%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                    {docName}
+                                  </div>
+                                  <div style={{ fontSize: '0.72rem', color: '#b91c1c', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Eye size={12} /> Tap to preview document
+                                  </div>
+                                </div>
+                              ) : resolvedUrl ? (
+                                <div 
+                                  onClick={() => setPreviewDoc({ url: resolvedUrl, name: docName, isPdf: false })}
+                                  style={{
+                                    position: 'relative',
+                                    width: '100%',
+                                    height: '140px',
+                                    cursor: 'pointer',
+                                    background: '#f1f5f9',
+                                    overflow: 'hidden'
+                                  }}
+                                  title="Click to view full image"
+                                >
+                                  <img
+                                    src={resolvedUrl}
+                                    alt={docName}
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                                    onError={(e) => {
+                                      e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="400" height="200" viewBox="0 0 400 200"><rect width="400" height="200" fill="%23f1f5f9"/><text x="50%" y="48%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="13" font-weight="600" fill="%2364748b">Business Image Preview</text><text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="11" fill="%2394a3b8">Tap to view full resolution</text></svg>';
+                                    }}
+                                  />
+                                  <div style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    background: 'rgba(0,0,0,0.3)',
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    color: '#fff',
+                                    fontSize: '0.8rem',
+                                    fontWeight: 700,
+                                    gap: '4px'
+                                  }}
+                                  onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+                                  onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
+                                  >
+                                    <Maximize2 size={16} /> Tap to expand
+                                  </div>
+                                </div>
+                              ) : null}
                               <div style={{
-                                position: 'absolute',
-                                inset: 0,
-                                background: 'rgba(0,0,0,0.3)',
-                                opacity: 0,
-                                transition: 'opacity 0.2s',
+                                padding: '10px 12px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                color: '#fff',
-                                fontSize: '0.8rem',
-                                fontWeight: 700,
-                                gap: '4px'
-                              }}
-                              onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-                              onMouseLeave={(e) => e.currentTarget.style.opacity = '0'}
-                              >
-                                <Maximize2 size={16} /> Tap to expand
+                                justifyContent: 'space-between',
+                                gap: '8px'
+                              }}>
+                                <div style={{ overflow: 'hidden' }}>
+                                  <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {docName}
+                                  </div>
+                                  <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                                    {isDocPdf ? 'Storefront Document (PDF)' : 'Storefront Visual Proof'} • {doc.size ? `${Math.round(doc.size / 1024)} KB` : (isDocPdf ? 'Verified PDF' : 'Verified Image')}
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '6px' }}>
+                                  {resolvedUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewDoc({ url: resolvedUrl, name: docName, isPdf: isDocPdf })}
+                                      style={{
+                                        padding: '4px 8px',
+                                        fontSize: '0.74rem',
+                                        fontWeight: 600,
+                                        background: '#eff6ff',
+                                        color: '#2563eb',
+                                        border: '1px solid #bfdbfe',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '3px'
+                                      }}
+                                    >
+                                      <Eye size={12} /> View
+                                    </button>
+                                  )}
+                                  {resolvedUrl && (
+                                    <a
+                                      href={resolvedUrl}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      download
+                                      style={{
+                                        padding: '4px 8px',
+                                        fontSize: '0.74rem',
+                                        fontWeight: 600,
+                                        background: '#f1f5f9',
+                                        color: '#475569',
+                                        border: '1px solid #e2e8f0',
+                                        borderRadius: '6px',
+                                        textDecoration: 'none',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '3px'
+                                      }}
+                                    >
+                                      <ExternalLink size={12} />
+                                    </a>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          )}
-                          <div style={{
-                            padding: '10px 12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            gap: '8px'
-                          }}>
-                            <div style={{ overflow: 'hidden' }}>
-                              <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                {docName}
-                              </div>
-                              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                                Field Upload • {doc.size ? `${Math.round(doc.size / 1024)} KB` : 'Verified Document'}
-                              </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '6px' }}>
-                              {resolvedUrl && (
-                                <button
-                                  type="button"
-                                  onClick={() => setPreviewImage(resolvedUrl)}
-                                  style={{
-                                    padding: '4px 8px',
-                                    fontSize: '0.74rem',
-                                    fontWeight: 600,
-                                    background: '#eff6ff',
-                                    color: '#2563eb',
-                                    border: '1px solid #bfdbfe',
-                                    borderRadius: '6px',
-                                    cursor: 'pointer',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '3px'
-                                  }}
-                                >
-                                  <Eye size={12} /> View
-                                </button>
-                              )}
-                              {resolvedUrl && (
-                                <a
-                                  href={resolvedUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  download
-                                  style={{
-                                    padding: '4px 8px',
-                                    fontSize: '0.74rem',
-                                    fontWeight: 600,
-                                    background: '#f1f5f9',
-                                    color: '#475569',
-                                    border: '1px solid #e2e8f0',
-                                    borderRadius: '6px',
-                                    textDecoration: 'none',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    gap: '3px'
-                                  }}
-                                >
-                                  <ExternalLink size={12} />
-                                </a>
-                              )}
-                            </div>
-                          </div>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
+                        <Store size={32} style={{ color: '#cbd5e1', marginBottom: '6px' }} />
+                        <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>No business images uploaded.</div>
+                        <div style={{ fontSize: '0.74rem' }}>KYC agent will capture storefront photos during verification visit.</div>
+                      </div>
+                    )}
+
+                    {/* Attached KYC Documents & Licenses */}
+                    {kycDocs.length > 0 && (
+                      <div style={{ marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
+                        <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <ShieldCheck size={14} color="#10b981" /> Attached KYC & License Documents ({kycDocs.length})
                         </div>
-                      );
-                    })}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                          {kycDocs.map((rawDoc, kidx) => {
+                            const kdoc = typeof rawDoc === 'string' ? { url: rawDoc, name: rawDoc.split('/').pop() } : rawDoc;
+                            const kUrl = resolveMediaUrl(kdoc.url || '');
+                            const isPdf = kdoc.type?.includes('pdf') || (kdoc.url || '').toLowerCase().endsWith('.pdf');
+                            return (
+                              <div key={kidx} style={{
+                                padding: '8px 10px',
+                                background: '#f8fafc',
+                                border: '1px solid #e2e8f0',
+                                borderRadius: '8px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '8px'
+                              }}>
+                                <div style={{ overflow: 'hidden' }}>
+                                  <div style={{ fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-main)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {kdoc.name || `Document ${kidx + 1}`}
+                                  </div>
+                                  <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
+                                    {isPdf ? 'PDF Document' : 'Statutory File'} • {kdoc.size ? `${Math.round(kdoc.size / 1024)} KB` : 'Verified'}
+                                  </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '4px' }}>
+                                  {kUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setPreviewDoc({ url: kUrl, name: kdoc.name || `Document ${kidx + 1}`, isPdf })}
+                                      style={{
+                                        padding: '3px 6px',
+                                        fontSize: '0.72rem',
+                                        fontWeight: 600,
+                                        background: '#eff6ff',
+                                        color: '#2563eb',
+                                        border: '1px solid #bfdbfe',
+                                        borderRadius: '4px',
+                                        cursor: 'pointer'
+                                      }}
+                                    >
+                                      View
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
-                    <Store size={32} style={{ color: '#cbd5e1', marginBottom: '6px' }} />
-                    <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>No storefront photos attached</div>
-                    <div style={{ fontSize: '0.74rem' }}>KYC agent will capture photos during verification visit.</div>
-                  </div>
-                );
-              })()}
-            </div>
+                </>
+              );
+            })()}
           </div>
         </div>
       </div>
 
-      {/* ─── Lightbox Modal for Full Image View ─── */}
-      {previewImage && (
-        <div style={{
-          position: 'fixed',
-          inset: 0,
-          zIndex: 10000,
-          background: 'rgba(0,0,0,0.85)',
-          backdropFilter: 'blur(5px)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          padding: '10px'
-        }}>
-          <div style={{ position: 'relative', maxWidth: '88vw', maxHeight: '88vh' }}>
-            <button
-              onClick={() => setPreviewImage(null)}
-              style={{
-                position: 'absolute',
-                top: '-40px',
-                right: '0',
-                background: 'rgba(255,255,255,0.2)',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '50%',
-                width: '34px',
-                height: '34px',
+      {/* ─── Lightbox Modal for Full Image or PDF View ─── */}
+      {(previewDoc || previewImage) && (() => {
+        const activeUrl = previewDoc?.url || previewImage;
+        const activeName = previewDoc?.name || (typeof activeUrl === 'string' ? activeUrl.split('/').pop() : 'Document Preview');
+        const isPdf = Boolean(previewDoc?.isPdf || (typeof activeUrl === 'string' && (
+          activeUrl.toLowerCase().includes('.pdf') ||
+          activeUrl.startsWith('data:application/pdf') ||
+          activeName.toLowerCase().endsWith('.pdf')
+        )));
+
+        return (
+          <div style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 10000,
+            background: 'rgba(15, 23, 42, 0.88)',
+            backdropFilter: 'blur(6px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '16px'
+          }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setPreviewImage(null);
+              setPreviewDoc(null);
+            }
+          }}
+          >
+            <div style={{
+              position: 'relative',
+              width: isPdf ? '90vw' : 'auto',
+              maxWidth: isPdf ? '1100px' : '90vw',
+              maxHeight: '92vh',
+              background: isPdf ? '#ffffff' : 'transparent',
+              borderRadius: '14px',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
+            }}>
+              {/* Modal Top Bar */}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '12px 18px',
+                background: isPdf ? '#f8fafc' : 'rgba(0,0,0,0.65)',
+                borderBottom: isPdf ? '1px solid #e2e8f0' : 'none',
+                color: isPdf ? '#0f172a' : '#ffffff'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                  {isPdf ? <FileText size={18} color="#dc2626" /> : <Eye size={18} />}
+                  <span style={{ fontSize: '0.88rem', fontWeight: 700, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {activeName}
+                  </span>
+                  {isPdf && (
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#b91c1c', padding: '2px 8px', borderRadius: '12px' }}>
+                      PDF Document
+                    </span>
+                  )}
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                  <button
+                    type="button"
+                    onClick={() => window.open(activeUrl, '_blank')}
+                    title="Open in new window / tab"
+                    style={{
+                      padding: '5px 10px',
+                      fontSize: '0.74rem',
+                      fontWeight: 600,
+                      background: isPdf ? '#eff6ff' : 'rgba(255,255,255,0.2)',
+                      color: isPdf ? '#2563eb' : '#ffffff',
+                      border: isPdf ? '1px solid #bfdbfe' : 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px'
+                    }}
+                  >
+                    <ExternalLink size={12} /> Open in New Tab
+                  </button>
+                  <a
+                    href={activeUrl}
+                    download={activeName}
+                    title="Download document"
+                    style={{
+                      padding: '5px 10px',
+                      fontSize: '0.74rem',
+                      fontWeight: 600,
+                      background: isPdf ? '#f1f5f9' : 'rgba(255,255,255,0.2)',
+                      color: isPdf ? '#475569' : '#ffffff',
+                      border: isPdf ? '1px solid #e2e8f0' : 'none',
+                      borderRadius: '6px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      textDecoration: 'none'
+                    }}
+                  >
+                    <Download size={12} /> Download
+                  </a>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setPreviewImage(null);
+                      setPreviewDoc(null);
+                    }}
+                    title="Close preview"
+                    style={{
+                      background: isPdf ? '#fee2e2' : 'rgba(255,255,255,0.2)',
+                      color: isPdf ? '#dc2626' : '#ffffff',
+                      border: 'none',
+                      borderRadius: '50%',
+                      width: '30px',
+                      height: '30px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      cursor: 'pointer',
+                      marginLeft: '4px'
+                    }}
+                  >
+                    <X size={16} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Modal Body: Embedded iframe for PDF or img for image */}
+              <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                cursor: 'pointer'
-              }}
-            >
-              <X size={20} />
-            </button>
-            <img
-              src={previewImage}
-              alt="Verification Preview"
-              style={{
-                maxWidth: '88vw',
-                maxHeight: '88vh',
-                borderRadius: '12px',
-                boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
-                display: 'block'
-              }}
-            />
+                padding: isPdf ? '0' : '10px',
+                maxHeight: 'calc(92vh - 56px)',
+                overflow: 'auto',
+                background: isPdf ? '#ffffff' : 'transparent'
+              }}>
+                {isPdf ? (
+                  <iframe
+                    src={activeUrl}
+                    title={activeName}
+                    style={{
+                      width: '100%',
+                      height: '76vh',
+                      border: 'none',
+                      display: 'block',
+                      background: '#ffffff'
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={activeUrl}
+                    alt={activeName}
+                    style={{
+                      maxWidth: '88vw',
+                      maxHeight: '80vh',
+                      borderRadius: '8px',
+                      display: 'block',
+                      objectFit: 'contain'
+                    }}
+                  />
+                )}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
     </div>
   );
 };

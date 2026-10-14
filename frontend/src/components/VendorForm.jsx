@@ -225,20 +225,28 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     const prefillCat = effectivePrefill.businessCategory || effectivePrefill.category || CATEGORIES[0];
     const prefillDocs = effectivePrefill.storefrontPhoto
       ? [{ url: effectivePrefill.storefrontPhoto, name: 'Storefront On-Ground Photo.jpg', type: 'image/jpeg' }]
-      : [];
+      : (Array.isArray(effectivePrefill.documents) ? effectivePrefill.documents : []);
+
+    const initialBusinessImages = Array.isArray(effectivePrefill.businessImages)
+      ? effectivePrefill.businessImages
+      : (Array.isArray(initialData?.businessImages) ? initialData.businessImages : []);
+
+    const initialBusinessPreviews = initialBusinessImages
+      .map(img => typeof img === 'string' ? img : img.url || '')
+      .filter(Boolean);
 
     return {
       businessName: prefillShop,
-      logo: null,
-      logoPreview: null,
+      logo: effectivePrefill.logo || null,
+      logoPreview: (typeof effectivePrefill.logo === 'string' ? effectivePrefill.logo : effectivePrefill.logo?.url) || null,
       category: prefillCat,
       mobile: effectivePrefill.mobile || effectivePrefill.phone || '',
       email: effectivePrefill.email || '',
       address: '',
       website: '',
       operatingHours: '09:00 AM - 09:00 PM',
-      businessImages: [],
-      businessImagePreviews: [],
+      businessImages: initialBusinessImages,
+      businessImagePreviews: initialBusinessPreviews,
       name: '',
       alternatePhone: '',
       agentName: '',
@@ -250,7 +258,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       companyRegNumber: '',
       gstStatus: 'Registered',
       msmeStatus: 'Not Registered',
-      businessLicense: null,
+      businessLicense: effectivePrefill.businessLicense || null,
       gstNumber: '',
       subCategory: '',
       description: '',
@@ -458,6 +466,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const [submitting,setSubmitting]=useState(false);
   const [globalError,setGlobalError]=useState('');
   const [uploadingDoc,setUploadingDoc]=useState(false);
+  const [uploadingImgs, setUploadingImgs] = useState(false);
   const [districts, setDistricts] = useState([]);
   const [divisions, setDivisions] = useState([]);
   const [pincodes, setPincodes] = useState([]);
@@ -559,7 +568,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     }
   };
 
-  const onLogo = e => {
+  const onLogo = async (e) => {
     const f = e.target.files[0];
     if (!f) return;
     if (f.size > 2 * 1024 * 1024) {
@@ -578,15 +587,31 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       return;
     }
     setErrors(p => { const next = { ...p }; delete next.logo; return next; });
-    upd('logo', f);
     upd('logoPreview', URL.createObjectURL(f));
+    try {
+      const res = await uploadService.uploadPhoto(f);
+      if (res && res.success) {
+        const logoUrl = res.avatarUrl || res.file?.url;
+        upd('logo', logoUrl || f);
+        if (logoUrl) upd('logoPreview', logoUrl);
+        setFileFeedback({ message: 'Shop logo uploaded successfully' });
+        setTimeout(() => setFileFeedback(null), 2500);
+      } else {
+        upd('logo', f);
+      }
+    } catch (err) {
+      console.warn('Immediate logo upload warning, will retry on submit:', err);
+      upd('logo', f);
+    }
   };
 
   const handleRemoveLogo = async (e) => {
     if (e) e.stopPropagation();
     try {
-      if (typeof formData.logo === 'string' && formData.logo.startsWith('/uploads')) {
-        await uploadService.deleteFile(formData.logo);
+      const cur = formData.logo;
+      const targetUrl = typeof cur === 'string' ? cur : cur?.url;
+      if (targetUrl && targetUrl.startsWith('/uploads')) {
+        await uploadService.deleteFile(targetUrl);
       }
     } catch (err) {
       console.warn('Could not delete logo from server:', err);
@@ -597,36 +622,98 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     setTimeout(() => setFileFeedback(null), 2500);
   };
 
-  const onImgs = e => {
-    const files = Array.from(e.target.files);
-    const oversized = files.find(f => f.size > 5 * 1024 * 1024);
-    if (oversized) {
-      setErrors(p => ({ ...p, businessImages: 'Each additional KYC document must not exceed 5MB.' }));
-      setGlobalError('Each additional KYC document must not exceed 5MB.');
+  const onImgs = async (e) => {
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length === 0) return;
+
+    // Check file types (images only)
+    const invalidType = rawFiles.find(f => !f.type.startsWith('image/') && !['.jpg', '.jpeg', '.png', '.webp'].some(ext => f.name.toLowerCase().endsWith(ext)));
+    if (invalidType) {
+      setErrors(p => ({ ...p, businessImages: 'Invalid file type. Only JPG, PNG, and WEBP image files are accepted.' }));
+      setGlobalError('Invalid file type. Only JPG, PNG, and WEBP image files are accepted.');
       if (e.target) e.target.value = '';
       return;
     }
+
+    // Check size limit: max 5MB per image
+    const oversized = rawFiles.find(f => f.size > 5 * 1024 * 1024);
+    if (oversized) {
+      setErrors(p => ({ ...p, businessImages: 'Each business image must not exceed 5MB.' }));
+      setGlobalError('Each business image must not exceed 5MB.');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    // Check count limit: max 5 images total
+    const currentImgs = formData.businessImages || [];
+    const availableSlots = Math.max(0, 5 - currentImgs.length);
+    if (availableSlots <= 0) {
+      setErrors(p => ({ ...p, businessImages: 'Maximum of 5 business images allowed.' }));
+      setGlobalError('Maximum of 5 business images allowed.');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    const filesToUpload = rawFiles.slice(0, availableSlots);
     setErrors(p => { const next = { ...p }; delete next.businessImages; return next; });
-    const all = [...formData.businessImages, ...files].slice(0, 5);
-    const prev = [...formData.businessImagePreviews, ...files.map(f => URL.createObjectURL(f))].slice(0, 5);
-    upd('businessImages', all);
-    upd('businessImagePreviews', prev);
+    setGlobalError('');
+
+    // Generate immediate local preview blobs for smooth user feedback
+    const tempPreviews = filesToUpload.map(f => URL.createObjectURL(f));
+    const combinedPreviews = [...(formData.businessImagePreviews || []), ...tempPreviews].slice(0, 5);
+    upd('businessImagePreviews', combinedPreviews);
+
+    setUploadingImgs(true);
+    try {
+      const uploadResults = await Promise.all(
+        filesToUpload.map(async (file) => {
+          const res = await uploadService.uploadBusinessImage(file);
+          if (res && res.success && res.file) {
+            return res.file;
+          }
+          if (res && res.url) {
+            return {
+              url: res.url,
+              name: file.name,
+              filename: res.url.split('/').pop(),
+              size: file.size,
+              type: file.type
+            };
+          }
+          throw new Error(res?.message || `Failed to upload "${file.name}"`);
+        })
+      );
+
+      const allSavedImgs = [...(formData.businessImages || []), ...uploadResults].slice(0, 5);
+      upd('businessImages', allSavedImgs);
+      upd('businessImagePreviews', allSavedImgs.map(img => typeof img === 'string' ? img : img.url || ''));
+      setFileFeedback({ message: `${uploadResults.length} business image(s) uploaded successfully` });
+      setTimeout(() => setFileFeedback(null), 2500);
+    } catch (err) {
+      console.error('Error uploading business images:', err);
+      setErrors(p => ({ ...p, businessImages: err.message || 'Failed to upload business images.' }));
+      setGlobalError(err.message || 'Failed to upload business images. Please try again.');
+    } finally {
+      setUploadingImgs(false);
+      if (e.target) e.target.value = '';
+    }
   };
 
   const rmImg = async (idx) => {
-    const targetImg = formData.businessImages[idx];
-    if (typeof targetImg === 'string' && targetImg.startsWith('/uploads')) {
+    const targetImg = (formData.businessImages || [])[idx];
+    const imgUrl = typeof targetImg === 'string' ? targetImg : targetImg?.url;
+    if (imgUrl && typeof imgUrl === 'string' && imgUrl.startsWith('/uploads')) {
       try {
-        await uploadService.deleteFile(targetImg);
+        await uploadService.deleteFile(imgUrl);
       } catch (err) {
         console.warn('Could not delete image from server:', err);
       }
     }
-    upd('businessImages', formData.businessImages.filter((_, i) => i !== idx));
-    upd('businessImagePreviews', formData.businessImagePreviews.filter((_, i) => i !== idx));
+    upd('businessImages', (formData.businessImages || []).filter((_, i) => i !== idx));
+    upd('businessImagePreviews', (formData.businessImagePreviews || []).filter((_, i) => i !== idx));
   };
 
-  const onLicense = e => {
+  const onLicense = async (e) => {
     const f = e.target.files[0];
     if (!f) return;
     if (f.size > 5 * 1024 * 1024) {
@@ -645,7 +732,19 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       return;
     }
     setErrors(p => { const next = { ...p }; delete next.businessLicense; return next; });
-    upd('businessLicense', f);
+    try {
+      const res = await uploadService.uploadDocument(f);
+      if (res && res.success && res.file) {
+        upd('businessLicense', res.file);
+        setFileFeedback({ message: 'Business license uploaded successfully' });
+        setTimeout(() => setFileFeedback(null), 2500);
+      } else {
+        upd('businessLicense', f);
+      }
+    } catch (err) {
+      console.warn('Immediate license upload warning, will retry on submit:', err);
+      upd('businessLicense', f);
+    }
   };
 
   const handleRemoveLicense = async (e) => {
@@ -669,6 +768,21 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const handleFileUpload = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    if ((formData.documents || []).length >= 5) {
+      setGlobalError('Maximum 5 additional KYC documents allowed.');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
+    const validExtensions = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+    const ext = '.' + file.name.split('.').pop().toLowerCase();
+    if (!validExtensions.includes(ext)) {
+      setGlobalError('Invalid document format. Only PDF, JPG, PNG, and WEBP documents are allowed.');
+      if (e.target) e.target.value = '';
+      return;
+    }
+
     if (file.size > 5 * 1024 * 1024) {
       setGlobalError('Each additional KYC document must not exceed 5MB.');
       if (e.target) e.target.value = '';
@@ -677,13 +791,16 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     setUploadingDoc(true);
     try {
       const r = await uploadService.uploadDocument(file);
-      if (r.success && r.file) {
-        upd('documents', [...formData.documents, r.file]);
+      if (r && r.file) {
+        upd('documents', [...(formData.documents || []), r.file]);
         setFileFeedback({ message: `"${file.name}" uploaded successfully` });
         setTimeout(() => setFileFeedback(null), 2500);
+      } else {
+        setGlobalError(r?.message || 'Failed to attach KYC document.');
       }
     } catch (err) {
-      setGlobalError(err.message || 'Upload failed');
+      console.warn('KYC document upload error:', err);
+      setGlobalError(err.message || 'Upload failed. Please check network connection and try again.');
     } finally {
       setUploadingDoc(false);
       if (e.target) e.target.value = '';
@@ -954,8 +1071,63 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     setGlobalError('');
     setSubmitting(true);
     try {
+      // 1. Resolve all business images to server URLs/objects
+      const resolvedBusinessImages = [];
+      for (const item of (formData.businessImages || [])) {
+        if (typeof window !== 'undefined' && item instanceof File) {
+          const res = await uploadService.uploadBusinessImage(item);
+          if (res && res.success && res.file) {
+            resolvedBusinessImages.push(res.file);
+          } else if (res && res.url) {
+            resolvedBusinessImages.push({
+              url: res.url,
+              name: item.name,
+              filename: res.url.split('/').pop(),
+              size: item.size,
+              type: item.type
+            });
+          }
+        } else if (item && typeof item === 'object') {
+          if (item.url || item.filename || item.path) {
+            resolvedBusinessImages.push(item);
+          }
+        } else if (typeof item === 'string' && item.trim()) {
+          resolvedBusinessImages.push({
+            url: item,
+            name: item.split('/').pop() || 'Business Image',
+            filename: item.split('/').pop() || '',
+            type: 'image/jpeg'
+          });
+        }
+      }
+
+      // 2. Resolve logo
+      let resolvedLogo = formData.logo;
+      if (typeof window !== 'undefined' && formData.logo instanceof File) {
+        const res = await uploadService.uploadPhoto(formData.logo);
+        if (res && res.success) {
+          resolvedLogo = res.avatarUrl || res.file?.url || resolvedLogo;
+        }
+      }
+
+      // 3. Resolve business license
+      let resolvedLicense = formData.businessLicense;
+      if (typeof window !== 'undefined' && formData.businessLicense instanceof File) {
+        const res = await uploadService.uploadDocument(formData.businessLicense);
+        if (res && res.success && res.file) {
+          resolvedLicense = res.file;
+        }
+      }
+
+      const primaryStorefront = resolvedBusinessImages.length > 0 ? (resolvedBusinessImages[0].url || resolvedBusinessImages[0]) : null;
+
       const payload = {
         ...formData,
+        businessImages: resolvedBusinessImages,
+        logo: resolvedLogo,
+        businessLicense: resolvedLicense,
+        storefrontPhoto: formData.storefrontPhoto || primaryStorefront,
+        shopPhoto: formData.shopPhoto || primaryStorefront,
         stateId: userStateId || formData.stateId,
         districtId: isDistrictLocked ? userDistrictId : formData.districtId,
         divisionId: isDivisionLocked ? userDivisionId : formData.divisionId,
@@ -1546,12 +1718,66 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         </div>
       </div>
       <div style={{gridColumn:'1/-1'}}>
-        <label className="form-label">Business Images <span style={{color:'var(--text-muted)',fontWeight:400}}>(Optional, max 5)</span></label>
-        <div onClick={()=>formData.businessImages.length<5&&imgRef.current?.click()} style={{display:'flex',flexWrap:'wrap',alignItems:'center',gap:8,padding:'10px 12px',border:'2px dashed var(--border)',borderRadius:'var(--radius-sm)',cursor:'pointer',minHeight:52}} {...hb}>
-          {(formData.businessImagePreviews || []).map((src,i)=>(<div key={i} style={{position:'relative',flexShrink:0}}><img src={src} alt="" style={{width:40,height:40,borderRadius:6,objectFit:'cover',border:'1px solid var(--border)'}}/><button type="button" onClick={ev=>{ev.stopPropagation();rmImg(i);}} style={{position:'absolute',top:-5,right:-5,width:16,height:16,borderRadius:'50%',background:'#ef4444',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}><X size={10} color="#fff"/></button></div>))}
-          {formData.businessImages.length<5&&<div style={{display:'flex',alignItems:'center',gap:6,color:'var(--text-muted)',fontSize:12}}><ImageIcon size={15}/>{formData.businessImages.length===0?'Upload business images':'Add more'}</div>}
-          <input ref={imgRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={onImgs}/>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+          <label className="form-label" style={{ margin: 0 }}>
+            Business Images <span style={{color:'var(--text-muted)',fontWeight:400}}>(Optional, max 5)</span>
+          </label>
+          <span style={{ fontSize: 11, color: 'var(--text-muted)' }}>
+            {(formData.businessImages || []).length} / 5 uploaded
+          </span>
         </div>
+        <div
+          onClick={() => !uploadingImgs && (formData.businessImages || []).length < 5 && imgRef.current?.click()}
+          style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            gap: 8,
+            padding: '10px 12px',
+            border: '2px dashed var(--border)',
+            borderRadius: 'var(--radius-sm)',
+            cursor: uploadingImgs ? 'wait' : ((formData.businessImages || []).length < 5 ? 'pointer' : 'default'),
+            minHeight: 52
+          }}
+          {...hb}
+        >
+          {(formData.businessImagePreviews || []).map((src, i) => (
+            <div key={i} style={{position:'relative',flexShrink:0}}>
+              <img
+                src={src}
+                alt={`Business proof ${i+1}`}
+                style={{width:40,height:40,borderRadius:6,objectFit:'cover',border:'1px solid var(--border)'}}
+                onError={(e) => {
+                  e.target.src = 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 40 40"><rect width="40" height="40" fill="%23f1f5f9"/><text x="50%" y="55%" dominant-baseline="middle" text-anchor="middle" font-family="sans-serif" font-size="9" fill="%2394a3b8">IMG</text></svg>';
+                }}
+              />
+              <button
+                type="button"
+                onClick={ev => { ev.stopPropagation(); rmImg(i); }}
+                title="Remove image"
+                style={{position:'absolute',top:-5,right:-5,width:16,height:16,borderRadius:'50%',background:'#ef4444',border:'none',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',padding:0}}
+              >
+                <X size={10} color="#fff"/>
+              </button>
+            </div>
+          ))}
+          {uploadingImgs && (
+            <div style={{display:'flex',alignItems:'center',gap:6,color:'var(--primary)',fontSize:12}}>
+              <RefreshCw size={14} className="animate-spin" /> Uploading image(s)...
+            </div>
+          )}
+          {!uploadingImgs && (formData.businessImages || []).length < 5 && (
+            <div style={{display:'flex',alignItems:'center',gap:6,color:'var(--text-muted)',fontSize:12}}>
+              <ImageIcon size={15}/>{(formData.businessImages || []).length === 0 ? 'Upload business images' : 'Add more'}
+            </div>
+          )}
+          <input ref={imgRef} type="file" accept="image/*" multiple style={{display:'none'}} onChange={onImgs} disabled={uploadingImgs}/>
+        </div>
+        {errors.businessImages && (
+          <p style={{fontSize:11,color:'#ef4444',marginTop:4,display:'flex',alignItems:'center',gap:4}}>
+            <AlertCircle size={11}/>{errors.businessImages}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1628,7 +1854,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         <div style={{border:'2px dashed var(--border-strong)',borderRadius:'var(--radius-md)',padding:'20px',textAlign:'center',background:'#faf5ff'}}>
           <Upload size={24} style={{color:'var(--primary)',marginBottom:6}}/>
           <div style={{fontSize:'0.83rem',color:'var(--text-muted)',marginBottom:10}}>Select PAN card copy, GST registration, or Trade license</div>
-          <input type="file" accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileUpload} disabled={uploadingDoc} style={{fontSize:'0.83rem'}}/>
+          <input type="file" accept=".pdf,.jpg,.jpeg,.png,.webp,application/pdf,image/*" onChange={handleFileUpload} disabled={uploadingDoc} style={{fontSize:'0.83rem'}}/>
           {uploadingDoc&&<span style={{fontSize:'0.8rem',color:'var(--primary)'}}> Uploading...</span>}
         </div>
         {formData.documents?.length > 0 && (

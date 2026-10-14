@@ -1,7 +1,6 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
-const upload = require('../middleware/uploadMiddleware');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { checkRole } = require('../middleware/roleMiddleware');
 
@@ -21,12 +20,12 @@ router.use(uploadLimiter);
 
 const { upload, logoUpload, documentUpload } = require('../middleware/uploadMiddleware');
 
-// POST /api/uploads/document
-router.post('/document', (req, res) => {
-  documentUpload.single('document')(req, res, (err) => {
+// Handler for document, KYC file, and business image uploads
+const handleDocumentUpload = (req, res) => {
+  documentUpload.any()(req, res, (err) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
-        ? 'Business document / KYC document must not exceed 5MB.'
+        ? 'Business document / KYC document / Business image must not exceed 5MB.'
         : (err.message || 'File upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
@@ -35,21 +34,22 @@ router.post('/document', (req, res) => {
     }
 
     try {
-      if (!req.file) {
+      const file = req.file || (req.files && req.files[0]);
+      if (!file) {
         return res.status(400).json({ success: false, message: 'No file uploaded.' });
       }
 
-      const safeOriginalName = path.basename(req.file.originalname || '').replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileUrl = `/uploads/${req.file.filename}`;
+      const safeOriginalName = path.basename(file.originalname || '').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const fileUrl = `/uploads/${file.filename}`;
       res.json({
         success: true,
         message: 'File uploaded successfully',
         file: {
           name: safeOriginalName,
-          filename: req.file.filename,
+          filename: file.filename,
           url: fileUrl,
-          size: req.file.size,
-          type: req.file.mimetype
+          size: file.size,
+          type: file.mimetype
         }
       });
     } catch (routeErr) {
@@ -57,7 +57,12 @@ router.post('/document', (req, res) => {
       res.status(500).json({ success: false, message: 'File upload processing failed.' });
     }
   });
-});
+};
+
+// POST /api/uploads/document, /api/uploads/business-image, /api/uploads/storefront-photo
+router.post('/document', handleDocumentUpload);
+router.post('/business-image', handleDocumentUpload);
+router.post('/storefront-photo', handleDocumentUpload);
 
 // POST /api/uploads/avatar, /api/uploads/photo, /api/uploads/profile-photo, /api/uploads/logo
 const handleAvatarUpload = (req, res) => {

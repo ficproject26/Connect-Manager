@@ -191,12 +191,28 @@ const submitVendorOnboarding = async (req, res) => {
 
     const pincodeAdmin = await findPincodeAdmin(territory.pincodeCode, territory.pincodeId);
 
+    const cleanBusinessImages = (Array.isArray(req.body.businessImages) ? req.body.businessImages : [])
+      .filter(img => img && (typeof img === 'string' ? img.trim().length > 0 : Boolean(img.url || img.filename || img.path)))
+      .slice(0, 5)
+      .map((img, idx) => {
+        if (typeof img === 'string') {
+          return { url: img, name: img.split('/').pop() || `storefront_${idx + 1}.jpg`, type: 'image/jpeg' };
+        }
+        return {
+          url: img.url || img.path || '',
+          name: img.name || img.filename || `storefront_${idx + 1}.jpg`,
+          filename: img.filename || (img.url ? img.url.split('/').pop() : ''),
+          size: img.size || 0,
+          type: img.type || 'image/jpeg'
+        };
+      });
+
     const onboarding = await db.managerOnboardings.insertOne({
       type:            'VENDOR_ONBOARDING',
       fieldVisitId,
       shopName:        shopName        || fieldVisit.shopName,
       businessCategory: businessCategory || fieldVisit.businessCategory,
-      storefrontPhoto: storefrontPhoto || fieldVisit.storefrontPhoto,
+      storefrontPhoto: storefrontPhoto || fieldVisit.storefrontPhoto || (cleanBusinessImages[0]?.url || null),
       interestStatus:  'YES',
       businessName:    businessName    || shopName || fieldVisit.shopName,
       businessPhone:   businessPhone   || null,
@@ -213,6 +229,9 @@ const submitVendorOnboarding = async (req, res) => {
       panNumber:    panNumber    || null,
       gstNumber:    gstNumber    || null,
       documents:    Array.isArray(documents) ? documents : [],
+      businessImages: cleanBusinessImages,
+      logo:         req.body.logo || null,
+      businessLicense: req.body.businessLicense || null,
       accountHolderName: accountHolderName || null,
       accountNumber:     accountNumber     || null,
       ifsc:              ifsc              || null,

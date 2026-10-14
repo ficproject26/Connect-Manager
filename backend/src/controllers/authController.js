@@ -2424,41 +2424,42 @@ const resetPassword = async (req, res) => {
 
 const uploadDocument = (req, res) => {
   try {
-    if (!req.file) {
+    const file = req.file || (req.files && req.files[0]);
+    if (!file) {
       return res.status(400).json({ success: false, message: 'No document file uploaded.' });
     }
 
-    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png'];
-    const allowedMimes = ['application/pdf', 'image/jpeg', 'image/pjpeg', 'image/png'];
-    const ext = path.extname(req.file.originalname || '').toLowerCase();
-    const mime = (req.file.mimetype || '').toLowerCase();
+    const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+    const allowedMimes = ['application/pdf', 'image/jpeg', 'image/pjpeg', 'image/png', 'image/webp'];
+    const ext = path.extname(file.originalname || '').toLowerCase();
+    const mime = (file.mimetype || '').toLowerCase();
 
     if (!allowedExts.includes(ext) || !allowedMimes.includes(mime)) {
-      try { if (req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
+      try { if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path); } catch (e) {}
       return res.status(400).json({
         success: false,
-        message: 'Invalid document format. Only PDF, JPG, and PNG files are allowed.'
+        message: 'Invalid document format. Only PDF, JPG, PNG, and WEBP files are allowed.'
       });
     }
 
-    if (req.file.size > 5 * 1024 * 1024) {
-      try { if (req.file.path && fs.existsSync(req.file.path)) fs.unlinkSync(req.file.path); } catch (e) {}
+    if (file.size > 5 * 1024 * 1024) {
+      try { if (file.path && fs.existsSync(file.path)) fs.unlinkSync(file.path); } catch (e) {}
       return res.status(400).json({
         success: false,
         message: 'Document size must not exceed 5MB.'
       });
     }
 
-    const fileUrl = `/uploads/${req.file.filename}`;
+    const fileUrl = `/uploads/${file.filename}`;
     res.json({
       success: true,
       message: 'Document uploaded successfully',
       file: {
-        name: req.file.originalname,
-        filename: req.file.filename,
+        name: file.originalname,
+        filename: file.filename,
         url: fileUrl,
-        size: req.file.size,
-        type: req.file.mimetype
+        size: file.size,
+        type: file.mimetype
       }
     });
   } catch (err) {

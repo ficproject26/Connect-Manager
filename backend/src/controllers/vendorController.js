@@ -101,12 +101,32 @@ const populateVendorLocations = async (vendor) => {
 
   const canonicalAddress = vendor.address || vendor.location?.address || vendor.businessAddress || '';
 
+  const rawBusinessImages = Array.isArray(vendor.businessImages) ? vendor.businessImages : [];
+  const cleanBusinessImages = rawBusinessImages
+    .filter(img => img && (typeof img === 'string' ? img.trim().length > 0 : Boolean(img.url || img.filename || img.path)))
+    .map((img, idx) => {
+      if (typeof img === 'string') {
+        const fn = img.split('/').pop() || `storefront_${idx + 1}.jpg`;
+        return { url: img, name: fn, filename: fn, type: 'image/jpeg' };
+      }
+      const url = img.url || img.path || '';
+      const fn = img.filename || (url ? url.split('/').pop() : `storefront_${idx + 1}.jpg`);
+      return {
+        url,
+        name: img.name || fn,
+        filename: fn,
+        size: img.size || 0,
+        type: img.type || 'image/jpeg'
+      };
+    });
+
   return {
     ...vendor,
     mobile: cleanMobile || vendor.mobile || '',
     phone: cleanMobile || vendor.phone || '',
     address: canonicalAddress,
     businessAddress: canonicalAddress,
+    businessImages: cleanBusinessImages,
     state: canonicalState,
     stateName: canonicalState,
     district: canonicalDistrict,
@@ -178,12 +198,58 @@ const populateVendorManagers = async (vendor) => {
     designation: 'Field Supervisor'
   } : null);
 
+  // Dynamic Pincode Admin resolution
+  let pincodeAdmin = null;
+  const pincodeId = vendor.pincodeId;
+  const pincodeCode = vendor.pincode || vendor.pincodeCode;
+  if (pincodeId || pincodeCode) {
+    pincodeAdmin = await db.users.findOne({
+      role: { $in: ['pincode_admin', 'pincode_manager', 'sub_admin'] },
+      $or: [
+        ...(pincodeId ? [{ pincodeId: String(pincodeId) }] : []),
+        ...(pincodeCode ? [{ pincode: String(pincodeCode) }] : [])
+      ]
+    }).catch(() => null);
+  }
+
+  const assignedPincodeAdminName = vendor.assignedPincodeAdminName ||
+    vendor.pincodeAdminApproval?.decidedBy ||
+    vendor.pincodeApproval?.approvedBy ||
+    pincodeAdmin?.name ||
+    null;
+
+  const isApproved = ['Approved', 'Active'].includes(vendor.status) || vendor.approvalStatus === 'Approved';
+  const isRejected = vendor.status === 'Rejected' || vendor.approvalStatus === 'Rejected';
+
+  const pincodeAdminApproval = vendor.pincodeAdminApproval || (
+    vendor.pincodeApproval ? {
+      status: 'Approved',
+      decidedBy: vendor.pincodeApproval.approvedBy || assignedPincodeAdminName || 'Pincode Administrator',
+      decidedAt: vendor.pincodeApproval.approvedAt || vendor.updatedAt || vendor.createdAt
+    } : (isApproved ? {
+      status: 'Approved',
+      decidedBy: assignedPincodeAdminName || 'Pincode Administrator',
+      decidedAt: vendor.approvedAt || vendor.updatedAt || vendor.createdAt
+    } : (isRejected ? {
+      status: 'Rejected',
+      decidedBy: assignedPincodeAdminName || 'Pincode Administrator',
+      decidedAt: vendor.updatedAt || vendor.createdAt,
+      rejectionReason: vendor.rejectionReason || vendor.statusNotes || 'Verification criteria not met'
+    } : {
+      status: 'Pending',
+      decidedBy: null,
+      assignedPincodeAdminName
+    }))
+  );
+
   return {
     ...vendor,
     assignedFieldManager,
     assignedManager: assignedFieldManager,
     fieldSupervisor: fieldSupervisorObj,
-    addedBy: assignedFieldManager || vendor.addedBy || null
+    addedBy: assignedFieldManager || vendor.addedBy || null,
+    assignedPincodeAdminName,
+    pincodeAdminApproval
   };
 };
 
@@ -416,7 +482,12 @@ const createVendor = async (req, res) => {
       accountNumber,
       ifsc,
       bankName,
-      documents = []
+      documents = [],
+      businessImages = [],
+      logo = null,
+      businessLicense = null,
+      storefrontPhoto = null,
+      shopPhoto = null
     } = req.body;
 
     if (!name || !mobile || !businessName || !category) {
@@ -512,6 +583,32 @@ const createVendor = async (req, res) => {
 
     const merchantAddress = String(req.body.address || req.body.businessAddress || '').trim();
 
+    const cleanBusinessImages = (Array.isArray(businessImages) ? businessImages : [])
+      .filter(img => {
+        if (!img) return false;
+        if (typeof img === 'string') return img.trim().length > 0;
+        if (typeof img === 'object') return Boolean(img.url || img.filename || img.path);
+        return false;
+      })
+      .slice(0, 5)
+      .map((img, idx) => {
+        if (typeof img === 'string') {
+          const fn = img.split('/').pop() || `storefront_${idx + 1}.jpg`;
+          return { url: img, name: fn, filename: fn, type: 'image/jpeg' };
+        }
+        const url = img.url || img.path || '';
+        const fn = img.filename || (url ? url.split('/').pop() : `storefront_${idx + 1}.jpg`);
+        return {
+          url,
+          name: img.name || fn,
+          filename: fn,
+          size: img.size || 0,
+          type: img.type || 'image/jpeg'
+        };
+      });
+
+    const primaryStorefront = storefrontPhoto || shopPhoto || (cleanBusinessImages.length > 0 ? cleanBusinessImages[0].url : null);
+
     const newVendor = await db.vendors.insertOne({
       name,
       mobile: cleanPhone || mobile,
@@ -537,6 +634,11 @@ const createVendor = async (req, res) => {
       gstNumber: rawGst || '',
       gst: rawGst || '',
       documents: Array.isArray(documents) ? documents : [],
+      businessImages: cleanBusinessImages,
+      logo: logo || null,
+      businessLicense: businessLicense || null,
+      storefrontPhoto: primaryStorefront,
+      shopPhoto: primaryStorefront,
       accountHolderName: accountHolderName || '',
       accountNumber: accountNumber || '',
       ifsc: ifsc ? ifsc.toUpperCase() : '',
@@ -657,7 +759,16 @@ const updateVendor = async (req, res) => {
       accountNumber: updates.accountNumber ?? vendor.accountNumber,
       ifsc: updates.ifsc ? updates.ifsc.toUpperCase() : vendor.ifsc,
       bankName: updates.bankName ?? vendor.bankName,
-      documents: updates.documents ?? vendor.documents
+      documents: updates.documents ?? vendor.documents,
+      businessImages: updates.businessImages !== undefined
+        ? (Array.isArray(updates.businessImages) ? updates.businessImages : [])
+            .filter(img => img && (typeof img === 'string' ? img.trim().length > 0 : Boolean(img.url || img.filename || img.path)))
+            .map((img, idx) => typeof img === 'string' ? { url: img, name: img.split('/').pop() || `storefront_${idx + 1}.jpg`, type: 'image/jpeg' } : img)
+        : vendor.businessImages,
+      logo: updates.logo !== undefined ? updates.logo : vendor.logo,
+      businessLicense: updates.businessLicense !== undefined ? updates.businessLicense : vendor.businessLicense,
+      storefrontPhoto: updates.storefrontPhoto !== undefined ? updates.storefrontPhoto : vendor.storefrontPhoto,
+      shopPhoto: updates.shopPhoto !== undefined ? updates.shopPhoto : vendor.shopPhoto
     };
 
     const previousSnapshot = {
