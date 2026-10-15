@@ -44,6 +44,17 @@ const normalizeUser = (u) => {
 
   const resolvedAvatar = u.avatarUrl || u.avatar || u.profilePhoto || u.image || u.profileImage || null;
 
+  let resolvedBank = u.bankDetails || u.bankAccount || null;
+  if (!resolvedBank && typeof localStorage !== 'undefined') {
+    try {
+      const uid = u.id || u._id;
+      if (uid) {
+        const cached = localStorage.getItem(`agent_mgr_bank_details_${uid}`);
+        if (cached) resolvedBank = JSON.parse(cached);
+      }
+    } catch (e) {}
+  }
+
   return {
     ...u,
     id: u.id || u._id,
@@ -51,6 +62,8 @@ const normalizeUser = (u) => {
     managerId: u.managerId || u.id || u._id,
     level,
     avatarUrl: resolvedAvatar,
+    bankDetails: resolvedBank,
+    bankAccount: resolvedBank,
     stateId: stateIdVal,
     state: stateVal,
     stateName: stateVal,

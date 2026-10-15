@@ -245,28 +245,90 @@ export const authService = {
   },
 
   async getBankDetails() {
+    const headers = getAuthHeaders();
+    // 1. Try GET /api/auth/bank-details
     try {
       const res = await fetch(`${API_BASE}/auth/bank-details`, {
         method: 'GET',
-        headers: getAuthHeaders()
+        headers
       });
-      if (res.status === 404) {
-        return { success: true, bankDetails: null };
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data && data.success) return data;
       }
-      return handleResponse(res);
     } catch (err) {
-      console.warn('[authService] getBankDetails error:', err?.message);
-      return { success: true, bankDetails: null };
+      console.warn('[authService] GET /auth/bank-details warning:', err?.message);
     }
+
+    // 2. Try GET /api/bank-details
+    try {
+      const res = await fetch(`${API_BASE}/bank-details`, {
+        method: 'GET',
+        headers
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data && data.success) return data;
+      }
+    } catch (e) {}
+
+    // 3. Try GET /api/settings/bank-details
+    try {
+      const res = await fetch(`${API_BASE}/settings/bank-details`, {
+        method: 'GET',
+        headers
+      });
+      if (res.ok) {
+        const data = await res.json().catch(() => ({}));
+        if (data && data.success) return data;
+      }
+    } catch (e) {}
+
+    return { success: true, bankDetails: null };
   },
 
   async updateBankDetails(bankDetails) {
-    const res = await fetch(`${API_BASE}/auth/bank-details`, {
-      method: 'PUT',
-      headers: getAuthHeaders(),
-      body: JSON.stringify(bankDetails)
-    });
-    return handleResponse(res);
+    const headers = getAuthHeaders();
+    const payload = JSON.stringify(bankDetails);
+    const endpoints = [
+      { url: `${API_BASE}/auth/bank-details`, method: 'PUT' },
+      { url: `${API_BASE}/auth/bank-details`, method: 'POST' },
+      { url: `${API_BASE}/bank-details`, method: 'PUT' },
+      { url: `${API_BASE}/bank-details`, method: 'POST' },
+      { url: `${API_BASE}/settings/bank-details`, method: 'PUT' },
+      { url: `${API_BASE}/settings/bank-details`, method: 'POST' }
+    ];
+
+    let lastError = null;
+
+    for (const ep of endpoints) {
+      try {
+        const res = await fetch(ep.url, {
+          method: ep.method,
+          headers,
+          body: payload
+        });
+
+        if (res.ok) {
+          const data = await res.json().catch(() => ({}));
+          return data.success ? data : { success: true, bankDetails, ...data };
+        }
+
+        // If client-level validation or business error (400, 401, 403), do not continue falling back — return the real message
+        if (res.status === 400 || res.status === 401 || res.status === 403) {
+          return handleResponse(res);
+        }
+
+        // If 404 or 405, save status and attempt next fallback route
+        const errData = await res.json().catch(() => ({}));
+        lastError = new Error(errData.message || `Request to ${ep.url} failed with status ${res.status}`);
+        lastError.status = res.status;
+      } catch (networkErr) {
+        lastError = networkErr;
+      }
+    }
+
+    throw lastError || new Error('Could not save bank details. Please check your network connection and try again.');
   },
 
   async updateProfilePhoto(file) {

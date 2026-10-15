@@ -151,6 +151,14 @@ app.use('/api/settings', settingsRoutes);
 app.use('/api/realtime', realtimeRoutes);
 app.use('/api/manager-onboarding', managerOnboardingRoutes);
 
+// Direct /api/bank-details alias routes
+const { authMiddleware } = require('./middleware/authMiddleware');
+const { checkRole } = require('./middleware/roleMiddleware');
+const authController = require('./controllers/authController');
+app.get('/api/bank-details', authMiddleware, checkRole(), authController.getBankDetails);
+app.put('/api/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
+app.post('/api/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
+
 // Centralized production-safe error handling
 app.use((err, req, res, next) => {
   const isProd = process.env.NODE_ENV === 'production';

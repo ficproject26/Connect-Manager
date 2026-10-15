@@ -7,10 +7,21 @@ const { checkRole } = require('../middleware/roleMiddleware');
 router.use(authMiddleware);
 router.use(checkRole());
 
+const authController = require('../controllers/authController');
+
 // GET /api/settings
 router.get('/', settingsController.getSettings);
 
 // PUT /api/settings
 router.put('/', settingsController.updateSettings);
+
+// GET /api/settings/bank-details
+router.get('/bank-details', authController.getBankDetails);
+
+// PUT /api/settings/bank-details
+router.put('/bank-details', authController.updateBankDetails);
+
+// POST /api/settings/bank-details
+router.post('/bank-details', authController.updateBankDetails);
 
 module.exports = router;

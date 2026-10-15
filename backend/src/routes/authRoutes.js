@@ -37,6 +37,7 @@ router.post('/refresh', authMiddleware, checkRole(), authController.refreshToken
 router.put('/change-password', authMiddleware, checkRole(), authController.changePassword);
 router.get('/bank-details', authMiddleware, checkRole(), authController.getBankDetails);
 router.put('/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
+router.post('/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
 router.put('/profile-photo', authMiddleware, checkRole(), uploadLimiter, upload.any(), authController.updateProfilePhoto);
 router.post('/profile-photo', authMiddleware, checkRole(), uploadLimiter, upload.any(), authController.updateProfilePhoto);
 router.delete('/profile-photo', authMiddleware, checkRole(), authController.removeProfilePhoto);

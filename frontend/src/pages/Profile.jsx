@@ -10,8 +10,38 @@ const Profile = () => {
     (async () => {
       try {
         const res = await authService.getMe();
+        let fetchedBank = null;
+        try {
+          const bRes = await authService.getBankDetails();
+          if (bRes && bRes.success && bRes.bankDetails && bRes.bankDetails.accountNumber) {
+            fetchedBank = bRes.bankDetails;
+          }
+        } catch (be) {}
+
+        const targetUser = res?.user || user;
+        const uid = targetUser?._id || targetUser?.id;
+        let cachedBank = null;
+        if (uid) {
+          try {
+            const raw = localStorage.getItem(`agent_mgr_bank_details_${uid}`);
+            if (raw) cachedBank = JSON.parse(raw);
+          } catch (ce) {}
+        }
+
+        const effectiveBank = fetchedBank || targetUser?.bankDetails || targetUser?.bankAccount || cachedBank || null;
+
         if (res && res.success && res.user && setSession) {
-          setSession(res.user);
+          setSession({
+            ...res.user,
+            bankDetails: effectiveBank,
+            bankAccount: effectiveBank
+          });
+        } else if (effectiveBank && user && setSession) {
+          setSession({
+            ...user,
+            bankDetails: effectiveBank,
+            bankAccount: effectiveBank
+          });
         }
       } catch (e) {
         if (refreshUser) refreshUser();
@@ -72,14 +102,15 @@ const Profile = () => {
   const [bankSuccess, setBankSuccess] = useState('');
 
   const openBankModal = () => {
+    const currentBank = user?.bankDetails || user?.bankAccount || {};
     setBankForm({
-      accountHolderName: user?.bankDetails?.accountHolderName || user?.name || '',
-      bankName: user?.bankDetails?.bankName || '',
-      branchName: user?.bankDetails?.branchName || '',
-      city: user?.bankDetails?.city || '',
-      street: user?.bankDetails?.street || '',
-      accountNumber: user?.bankDetails?.accountNumber || '',
-      ifscCode: user?.bankDetails?.ifscCode || ''
+      accountHolderName: currentBank.accountHolderName || user?.name || '',
+      bankName: currentBank.bankName || '',
+      branchName: currentBank.branchName || '',
+      city: currentBank.city || '',
+      street: currentBank.street || '',
+      accountNumber: currentBank.accountNumber || '',
+      ifscCode: currentBank.ifscCode || ''
     });
     setBankError('');
     setBankSuccess('');
@@ -88,15 +119,87 @@ const Profile = () => {
 
   const handleSaveBankDetails = async (e) => {
     e.preventDefault();
-    setBankSaving(true);
     setBankError('');
     setBankSuccess('');
 
+    // Client-side validations
+    const holderName = String(bankForm.accountHolderName || '').trim();
+    const bank = String(bankForm.bankName || '').trim();
+    const branch = String(bankForm.branchName || '').trim();
+    const city = String(bankForm.city || '').trim();
+    const street = bankForm.street ? String(bankForm.street).trim() : '';
+    const cleanAccount = String(bankForm.accountNumber || '').trim().replace(/\s/g, '');
+    const cleanIfsc = String(bankForm.ifscCode || '').trim().toUpperCase();
+
+    if (!holderName) {
+      setBankError('Account Holder Name is required.');
+      return;
+    }
+    if (!bank) {
+      setBankError('Bank Name is required.');
+      return;
+    }
+    if (!branch) {
+      setBankError('Branch Name is required.');
+      return;
+    }
+    if (!city) {
+      setBankError('City is required.');
+      return;
+    }
+    if (!/^\d{9,18}$/.test(cleanAccount)) {
+      setBankError('Account Number must be between 9 and 18 digits.');
+      return;
+    }
+    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
+      setBankError('IFSC Code must be valid (e.g. SBIN0001234, 4 letters, 0, then 6 alphanumeric characters).');
+      return;
+    }
+
+    const payload = {
+      accountHolderName: holderName,
+      bankName: bank,
+      branchName: branch,
+      city,
+      street: street || null,
+      accountNumber: cleanAccount,
+      ifscCode: cleanIfsc
+    };
+
+    setBankSaving(true);
+
     try {
-      const res = await authService.updateBankDetails(bankForm);
+      const res = await authService.updateBankDetails(payload);
       if (res.success) {
+        const savedBankDetails = res.bankDetails || payload;
         setBankSuccess('Bank details saved and persisted to database successfully.');
-        if (refreshUser) await refreshUser();
+
+        // Immediately update session user state
+        if (user && setSession) {
+          setSession({
+            ...user,
+            bankDetails: savedBankDetails,
+            bankAccount: savedBankDetails
+          });
+        }
+
+        // Cache in localStorage for persistence across reloads
+        try {
+          const uid = user?._id || user?.id;
+          if (uid) {
+            localStorage.setItem(`agent_mgr_bank_details_${uid}`, JSON.stringify(savedBankDetails));
+          }
+          const savedUserStr = localStorage.getItem('agent_mgr_user');
+          if (savedUserStr) {
+            const uObj = JSON.parse(savedUserStr);
+            uObj.bankDetails = savedBankDetails;
+            uObj.bankAccount = savedBankDetails;
+            localStorage.setItem('agent_mgr_user', JSON.stringify(uObj));
+          }
+        } catch (cacheErr) {}
+
+        if (refreshUser) refreshUser();
+
         setTimeout(() => {
           setBankModalOpen(false);
           setBankSuccess('');

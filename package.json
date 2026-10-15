@@ -10,5 +10,9 @@
     "seed": "node backend/src/seed/seed.js",
     "dev:client": "cd frontend && npm run dev",
     "build:client": "cd frontend && npm run build"
+  },
+  "dependencies": {
+    "jsonwebtoken": "^9.0.3",
+    "mongodb": "^7.7.0"
   }
 }

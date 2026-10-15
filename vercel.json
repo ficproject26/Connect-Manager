@@ -4,6 +4,18 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
+      "source": "/api/auth/bank-details",
+      "destination": "/api/auth/bank-details"
+    },
+    {
+      "source": "/api/settings/bank-details",
+      "destination": "/api/auth/bank-details"
+    },
+    {
+      "source": "/api/bank-details",
+      "destination": "/api/auth/bank-details"
+    },
+    {
       "source": "/api/:path*",
       "destination": "http://3.110.88.42:8005/api/:path*"
     },
