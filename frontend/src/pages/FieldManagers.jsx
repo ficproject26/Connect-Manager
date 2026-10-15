@@ -434,7 +434,7 @@ const FieldManagers = () => {
             Managers Directory & Team Hierarchy
           </h2>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
-            Directory of reporting authorities, equal-level peers, and subordinate managers operating under your assigned hierarchy branch ({totalCount} total)
+            Directory of equal-level peers and subordinate managers operating under your assigned hierarchy branch ({totalCount} total)
           </p>
         </div>
 
@@ -500,23 +500,6 @@ const FieldManagers = () => {
               }}
             >
               All Managers ({totalCount})
-            </button>
-            <button
-              onClick={() => handleTabChange('supervisors')}
-              style={{
-                background: activeTab === 'supervisors' ? 'white' : 'transparent',
-                color: activeTab === 'supervisors' ? '#b45309' : '#64748b',
-                border: 'none',
-                borderRadius: '6px',
-                padding: '6px 12px',
-                fontSize: '0.8rem',
-                fontWeight: activeTab === 'supervisors' ? 700 : 500,
-                cursor: 'pointer',
-                boxShadow: activeTab === 'supervisors' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              Reporting Authority ({supervisorsCount})
             </button>
             <button
               onClick={() => handleTabChange('equal')}
@@ -635,15 +618,6 @@ const FieldManagers = () => {
                 style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px' }}
               >
                 View All Managers ({totalCount})
-              </button>
-            )}
-            {activeTab !== 'supervisors' && supervisorsCount > 0 && (
-              <button
-                onClick={() => setActiveTab('supervisors')}
-                className="btn btn-primary btn-sm"
-                style={{ fontSize: '0.78rem', padding: '5px 12px', borderRadius: '6px' }}
-              >
-                View Reporting Authority ({supervisorsCount})
               </button>
             )}
             {activeTab !== 'equal' && peersCount > 0 && (
