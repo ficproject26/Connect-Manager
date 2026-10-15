@@ -977,6 +977,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase', width: '70px' }}>
+                      S.No
+                    </th>
                     <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                       Date
                     </th>
@@ -994,7 +997,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 <tbody>
                   {loadingVisits ? (
                     <tr>
-                      <td colSpan="4" style={{ padding: '48px 20px', textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan="5" style={{ padding: '48px 20px', textAlign: 'center', color: '#94a3b8' }}>
                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
                           <RotateCcw className="animate-spin" size={24} style={{ color: '#f59e0b' }} />
                           <span style={{ fontWeight: 600, fontSize: '0.86rem' }}>Loading shop visits...</span>
@@ -1003,7 +1006,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     </tr>
                   ) : displayedVisits.length === 0 ? (
                     <tr>
-                      <td colSpan="4" style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b' }}>
+                      <td colSpan="5" style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b' }}>
                         <Store size={36} style={{ margin: '0 auto 10px', color: '#cbd5e1' }} />
                         <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>No Shop Visit Reports Found</div>
                         <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: '4px 0 14px' }}>
@@ -1020,6 +1023,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                       const roleLabel = formatRoleLabel(v.managerRole);
                       const badgeStyle = getLevelBadgeStyle(v.managerRole);
                       const catStyle = getCategoryBadgeStyle(v.category || 'Products');
+                      const serialNumber = ((pagination?.page || 1) - 1) * (pagination?.limit || 25) + idx + 1;
 
                       return (
                         <tr
@@ -1030,6 +1034,11 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
+                          {/* S.No */}
+                          <td style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontWeight: 700, color: '#64748b', fontSize: '0.84rem' }}>
+                            {serialNumber}
+                          </td>
+
                           {/* Date */}
                           <td style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
                             <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -1619,6 +1628,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
                   <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase', width: '70px' }}>
+                      S.No
+                    </th>
                     <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                       Date
                     </th>
@@ -1639,14 +1651,14 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 <tbody>
                   {loadingSubmitted ? (
                     <tr>
-                      <td colSpan="5" style={{ padding: '48px 20px', textAlign: 'center', color: '#94a3b8' }}>
+                      <td colSpan="6" style={{ padding: '48px 20px', textAlign: 'center', color: '#94a3b8' }}>
                         <RotateCcw className="animate-spin" size={24} style={{ color: '#0284c7', margin: '0 auto 8px' }} />
                         <div>Loading submitted team reports...</div>
                       </td>
                     </tr>
                   ) : submittedReports.length === 0 ? (
                     <tr>
-                      <td colSpan="5" style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b' }}>
+                      <td colSpan="6" style={{ padding: '48px 20px', textAlign: 'center', color: '#64748b' }}>
                         <FileSpreadsheet size={36} style={{ color: '#cbd5e1', margin: '0 auto 10px' }} />
                         <div style={{ fontWeight: 800, color: '#1e293b', fontSize: '1rem' }}>No Submitted Reports Found</div>
                         <p style={{ fontSize: '0.82rem', color: '#94a3b8', margin: '4px 0 14px' }}>
@@ -1680,6 +1692,11 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                           onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
+                          {/* S.No */}
+                          <td style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontWeight: 700, color: '#64748b', fontSize: '0.84rem' }}>
+                            {idx + 1}
+                          </td>
+
                           {/* 1. Date */}
                           <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, color: '#0f172a', fontSize: '0.86rem' }}>

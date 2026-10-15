@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { auditService } from '../services/api';
 import { History, Shield, CheckCircle2, AlertCircle } from 'lucide-react';
 import { useRealtime } from '../realtime';
+import { useAuth } from '../context/AuthContext';
 
 const AuditLogs = ({ onNavigate }) => {
+  const { user } = useAuth();
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -32,7 +34,6 @@ const AuditLogs = ({ onNavigate }) => {
       setLogs((prev) => [event.data, ...prev.filter(l => (l._id || l.id) !== (event.data._id || event.data.id))]);
     }
   });
-
 
   const getActionBadgeColor = (action) => {
     switch (action) {
@@ -131,6 +132,14 @@ const AuditLogs = ({ onNavigate }) => {
     );
   };
 
+  const jurisdictionLabel = user?.role === 'pincode_manager'
+    ? (user.pincode || user.pincodeCode ? `PIN ${user.pincode || user.pincodeCode}` : 'Assigned Pincode')
+    : user?.role === 'division_manager'
+      ? (user.division || user.divisionName ? `${user.division || user.divisionName} Division` : 'Assigned Division')
+      : user?.role === 'district_manager'
+        ? (user.district || user.districtName ? `${user.district || user.districtName} District` : 'Assigned District')
+        : (user?.state || user?.stateName || 'Tamil Nadu State');
+
   return (
     <div>
       {onNavigate && (
@@ -154,11 +163,29 @@ const AuditLogs = ({ onNavigate }) => {
           ← Back to Dashboard
         </button>
       )}
-      <div style={{ marginBottom: '24px' }}>
-        <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Audit Trail & Compliance Log</h2>
-        <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-          Traceability of all vendor registrations, status transitions, and modifications within your jurisdiction
-        </p>
+      <div style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 12 }}>
+        <div>
+          <h2 style={{ fontSize: '1.5rem', fontWeight: 800 }}>Audit Trail &amp; Compliance Log</h2>
+          <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+            Traceability of all vendor registrations, status transitions, and modifications within your assigned jurisdiction
+          </p>
+        </div>
+        {jurisdictionLabel && (
+          <div style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            padding: '6px 12px',
+            borderRadius: 8,
+            background: '#f0fdf4',
+            border: '1px solid #bbf7d0',
+            color: '#15803d',
+            fontSize: '0.8rem',
+            fontWeight: 700
+          }}>
+            <Shield size={14} /> Scoped: {jurisdictionLabel}
+          </div>
+        )}
       </div>
 
       <div className="table-container">
@@ -181,14 +208,14 @@ const AuditLogs = ({ onNavigate }) => {
             ) : logs.length === 0 ? (
               <tr>
                 <td colSpan="6" style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)' }}>
-                  No audit logs found for your assigned scope.
+                  No audit logs found for your assigned jurisdiction ({jurisdictionLabel}).
                 </td>
               </tr>
             ) : (
-              logs.map((log) => {
+              logs.map((log, idx) => {
                 const color = getActionBadgeColor(log.action);
                 return (
-                  <tr key={log._id}>
+                  <tr key={log._id || log.id || idx}>
                     <td style={{ fontSize: '0.8rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                       {formatSafeTimestamp(log.timestamp || log.createdAt || log.updatedAt)}
                     </td>
