@@ -446,7 +446,6 @@ export function scopeManagersForUser(allRawManagers, currentUser) {
   };
 
   const seen = new Set();
-  const supervisors = [];
   const peers = [];
   const subordinates = [];
 
@@ -480,26 +479,7 @@ export function scopeManagersForUser(allRawManagers, currentUser) {
       isSelf: false
     };
 
-    if (mLevel < userLevel) {
-      // Supervisor: higher rank in user's territorial branch
-      let isSupervisorInScope = false;
-      if (userLevel === 4) {
-        if (mLevel === 3) isSupervisorInScope = matchDivision(raw) || matchDistrict(raw);
-        if (mLevel === 2) isSupervisorInScope = matchDistrict(raw);
-        if (mLevel === 1) isSupervisorInScope = matchState(raw);
-      } else if (userLevel === 3) {
-        if (mLevel === 2) isSupervisorInScope = matchDistrict(raw);
-        if (mLevel === 1) isSupervisorInScope = matchState(raw);
-      } else if (userLevel === 2) {
-        if (mLevel === 1) isSupervisorInScope = matchState(raw);
-      }
-
-      if (isSupervisorInScope) {
-        enhancedManager.relation = 'supervisor';
-        enhancedManager.relationLabel = 'Reporting Authority (Supervisor)';
-        supervisors.push(enhancedManager);
-      }
-    } else if (mLevel === userLevel) {
+    if (mLevel === userLevel) {
       let isPeerInScope = false;
       if (userLevel === 1) isPeerInScope = matchState(raw); // State managers in same state ONLY (no cross-state exposure)
       else if (userLevel === 2) isPeerInScope = matchDistrict(raw); // District managers in same district ONLY
@@ -527,19 +507,19 @@ export function scopeManagersForUser(allRawManagers, currentUser) {
     }
   }
 
-  const all = [...supervisors, ...peers, ...subordinates];
+  const all = [...peers, ...subordinates];
   return {
     success: true,
     count: all.length,
     data: subordinates,
     subordinates,
     peers,
-    supervisors,
-    reporting: supervisors,
+    supervisors: [],
+    reporting: [],
     all,
     stats: {
       total: all.length,
-      supervisorsCount: supervisors.length,
+      supervisorsCount: 0,
       peersCount: peers.length,
       subordinatesCount: subordinates.length,
       currentUserRole: userRole
@@ -676,11 +656,9 @@ export const managerService = {
     }
 
     if (data && data.success) {
-      const supervisors = Array.isArray(data.supervisors) ? data.supervisors : (Array.isArray(data.reporting) ? data.reporting : []);
       const peers = Array.isArray(data.peers) ? data.peers : [];
       const subordinates = Array.isArray(data.subordinates) ? data.subordinates : (Array.isArray(data.data) ? data.data : []);
-      let all = Array.isArray(data.all) && data.all.length > 0 ? data.all : [...supervisors, ...peers, ...subordinates];
-
+      let all = (Array.isArray(data.all) && data.all.length > 0 ? data.all : [...peers, ...subordinates]).filter(m => m.relation !== 'supervisor');
 
       return {
         ...data,
@@ -688,14 +666,14 @@ export const managerService = {
         data: subordinates,
         subordinates,
         peers,
-        supervisors,
-        reporting: supervisors,
+        supervisors: [],
+        reporting: [],
         count: all.length,
-        stats: data.stats || {
+        stats: {
           total: all.length,
-          supervisorsCount: supervisors.length,
-          peersCount: peers.length,
-          subordinatesCount: subordinates.length
+          supervisorsCount: 0,
+          peersCount: (data.stats && data.stats.peersCount !== undefined) ? data.stats.peersCount : peers.length,
+          subordinatesCount: (data.stats && data.stats.subordinatesCount !== undefined) ? data.stats.subordinatesCount : subordinates.length
         }
       };
     }

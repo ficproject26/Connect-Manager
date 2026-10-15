@@ -29,11 +29,10 @@ const FieldManagers = () => {
   const [allManagers, setAllManagers] = useState([]);
   const [peersList, setPeersList] = useState([]);
   const [subordinatesList, setSubordinatesList] = useState([]);
-  const [supervisorsList, setSupervisorsList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [search, setSearch] = useState('');
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'supervisors' | 'equal' | 'under'
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'equal' | 'under'
   const [roleFilter, setRoleFilter] = useState('All');
   const [viewMode, setViewMode] = useState('table'); // Default to clean table view
   const [selectedManager, setSelectedManager] = useState(null);
@@ -96,18 +95,15 @@ const FieldManagers = () => {
     if (!res) return;
     const currentId = String(user?.id || user?._id || '');
     const resAll = Array.isArray(res.all) ? res.all : null;
-    const resSup = Array.isArray(res.supervisors) ? res.supervisors : (Array.isArray(res.reporting) ? res.reporting : []);
     const resPeers = Array.isArray(res.peers) ? res.peers : [];
     const resSubs = Array.isArray(res.subordinates) ? res.subordinates : (Array.isArray(res.data) ? res.data : []);
-    const rawAll = resAll || [...resSup, ...resPeers, ...resSubs];
+    const rawAll = resAll || [...resPeers, ...resSubs];
     const safeRawAll = Array.isArray(rawAll) ? rawAll : [];
-    const all = safeRawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-    const supervisors = (resSup.length > 0 ? resSup : all.filter(m => m.relation === 'supervisor')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const all = safeRawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId && m.relation !== 'supervisor');
     const peers = (resPeers.length > 0 ? resPeers : all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
     const subordinates = (resSubs.length > 0 ? resSubs : all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
 
     setAllManagers(all);
-    setSupervisorsList(supervisors);
     setPeersList(peers);
     setSubordinatesList(subordinates);
   };
@@ -117,7 +113,6 @@ const FieldManagers = () => {
     if (!authLoading && (!user || userLevel === 99 || !hasVerifiedJurisdiction)) {
       setError('Authorization Required: Manager hierarchy role or geographical jurisdiction could not be verified.');
       setAllManagers([]);
-      setSupervisorsList([]);
       setPeersList([]);
       setSubordinatesList([]);
       setLoading(false);
@@ -290,24 +285,6 @@ const FieldManagers = () => {
         </span>
       );
     }
-    if (m.relation === 'supervisor') {
-      return (
-        <span style={{
-          background: '#fef3c7',
-          color: '#92400e',
-          padding: '4px 9px',
-          borderRadius: '6px',
-          fontSize: '0.72rem',
-          fontWeight: 700,
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: '4px',
-          whiteSpace: 'nowrap'
-        }}>
-          <ArrowUpRight size={12} /> Reporting Authority
-        </span>
-      );
-    }
     if (m.relation === 'peer') {
       return (
         <span style={{
@@ -392,9 +369,7 @@ const FieldManagers = () => {
   // Filter managers based on tab, search, and role filter
   const filteredManagers = useMemo(() => {
     let sourceList = allManagers;
-    if (activeTab === 'supervisors') {
-      sourceList = supervisorsList;
-    } else if (activeTab === 'equal') {
+    if (activeTab === 'equal') {
       sourceList = peersList;
     } else if (activeTab === 'under') {
       sourceList = subordinatesList;
@@ -418,9 +393,8 @@ const FieldManagers = () => {
       if (roleFilter !== 'All' && m.role !== roleFilter) return false;
       return true;
     });
-  }, [allManagers, supervisorsList, peersList, subordinatesList, activeTab, search, roleFilter]);
+  }, [allManagers, peersList, subordinatesList, activeTab, search, roleFilter]);
 
-  const supervisorsCount = (Array.isArray(supervisorsList) ? supervisorsList : []).length;
   const peersCount = (Array.isArray(peersList) ? peersList : []).length;
   const subordinatesCount = (Array.isArray(subordinatesList) ? subordinatesList : []).length;
   const totalCount = (Array.isArray(allManagers) ? allManagers : []).length;
@@ -592,19 +566,13 @@ const FieldManagers = () => {
           <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '4px' }}>
             {activeTab === 'under' && (user?.role || '').toLowerCase().includes('pincode')
               ? 'Ground Level Manager (No Subordinate Managers)'
-              : activeTab === 'supervisors' && (user?.role || '').toLowerCase().includes('state')
-              ? 'State Regional Authority (Top Level)'
               : 'No managers found'}
           </div>
           <div style={{ fontSize: '0.82rem', maxWidth: '520px', margin: '0 auto 16px', lineHeight: 1.5 }}>
             {search
               ? `No managers matching "${search}" in this category.`
               : activeTab === 'under' && (user?.role || '').toLowerCase().includes('pincode')
-              ? 'As a Pincode Manager (Level 4), you directly supervise Field Agents in your PIN code (accessible in the Agents Directory). You report to Division, District, and State Managers.'
-              : activeTab === 'supervisors' && (user?.role || '').toLowerCase().includes('state')
-              ? 'As a State Agent Manager (Level 1), you hold the top regional tier. District, division, and pincode managers operate under your scope.'
-              : activeTab === 'supervisors'
-              ? 'No supervising managers assigned for this branch.'
+              ? 'As a Pincode Manager (Level 4), you directly supervise Field Agents in your PIN code (accessible in the Agents Directory).'
               : activeTab === 'equal'
               ? 'No other managers at your hierarchy rank are assigned within this territory.'
               : 'No managers currently found in this category for your assigned jurisdiction.'}
