@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
@@ -135,11 +135,30 @@ class GlobalErrorBoundary extends React.Component {
 function AppInner() {
   const { isAuthenticated, loading } = useAuth();
 
-  // Navigation State
-  const [currentPage, setCurrentPage] = useState('dashboard');
-  const [visitedPages, setVisitedPages] = useState(() => new Set(['dashboard']));
+  // Navigation State with URL synchronization
+  const getInitialNavigation = () => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const pageParam = params.get('page');
+      const hash = window.location.hash.replace(/^#\/?/, '');
+      let page = pageParam || hash || 'dashboard';
+      if (page === 'issues') page = 'tasks';
+
+      const initialParams = {};
+      for (const [key, value] of params.entries()) {
+        if (key !== 'page') initialParams[key] = value;
+      }
+      return { page, initialParams };
+    } catch (_) {
+      return { page: 'dashboard', initialParams: {} };
+    }
+  };
+
+  const initialNav = useMemo(getInitialNavigation, []);
+  const [currentPage, setCurrentPage] = useState(initialNav.page);
+  const [visitedPages, setVisitedPages] = useState(() => new Set(['dashboard', initialNav.page]));
   const [authPage, setAuthPage] = useState('login'); // 'login' | 'forgot-password' | 'reset-password'
-  const [navParams, setNavParams] = useState({});
+  const [navParams, setNavParams] = useState(initialNav.initialParams);
   const [onboardModalOpen, setOnboardModalOpen] = useState(false);
   const [fieldVisitModalOpen, setFieldVisitModalOpen] = useState(false);
   const [pendingFieldVisitId, setPendingFieldVisitId] = useState(null);
@@ -167,16 +186,33 @@ function AppInner() {
       handleFieldVisitProceed(fId, prefill);
       return;
     }
+    let targetPage = page;
+    if (targetPage === 'issues') targetPage = 'tasks';
+
     setNavParams(params);
-    setCurrentPage(page);
+    setCurrentPage(targetPage);
     setVisitedPages(prev => {
-      if (prev.has(page)) return prev;
+      if (prev.has(targetPage)) return prev;
       const next = new Set(prev);
-      next.add(page);
+      next.add(targetPage);
       return next;
     });
     setMobileSidebarOpen(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    // Sync URL without full page reload
+    try {
+      const url = new URL(window.location.href);
+      url.searchParams.set('page', targetPage);
+      // Clean up previous query params
+      Array.from(url.searchParams.keys()).forEach(k => {
+        if (k !== 'page' && !params[k]) url.searchParams.delete(k);
+      });
+      Object.entries(params).forEach(([k, v]) => {
+        if (v && typeof v === 'string') url.searchParams.set(k, v);
+      });
+      window.history.pushState({}, '', url.toString());
+    } catch (_) {}
   };
 
   const navigateAuth = (page, params = {}) => {

@@ -80,17 +80,41 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
   });
   const [refreshing, setRefreshing] = useState(false);
 
+  const normalizeStatusParam = (s) => {
+    if (!s) return 'All';
+    const clean = String(s).trim();
+    const l = clean.toLowerCase();
+    if (l === 'all' || l === 'all tasks') return 'All';
+    if (l === 'open') return 'Open';
+    if (l === 'in progress' || l === 'in_progress') return 'In Progress';
+    if (l === 'escalated') return 'Escalated';
+    if (l === 'resolved' || l === 'completed') return 'Resolved';
+    return clean;
+  };
+
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState(() => filterParams?.status || 'All');
+  const [statusFilter, setStatusFilter] = useState(() => normalizeStatusParam(filterParams?.status));
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
 
   // Synchronize when navigated with filterParams (e.g. from Dashboard Issue Status)
   useEffect(() => {
     if (filterParams?.status) {
-      setStatusFilter(filterParams.status);
+      setStatusFilter(normalizeStatusParam(filterParams.status));
     }
   }, [filterParams?.status]);
+
+  // Automatically select and open task details modal if taskId or id is provided in navigation params
+  useEffect(() => {
+    const targetId = filterParams?.taskId || filterParams?.id || filterParams?.issueId;
+    if (targetId && tasks.length > 0) {
+      const found = tasks.find(t => String(t.id || t._id || t.taskNumber) === String(targetId));
+      if (found) {
+        setSelectedTask(found);
+      }
+    }
+  }, [filterParams?.taskId, filterParams?.id, filterParams?.issueId, tasks]);
+
   const [selectedTask, setSelectedTask] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [previewZoom, setPreviewZoom] = useState(1);

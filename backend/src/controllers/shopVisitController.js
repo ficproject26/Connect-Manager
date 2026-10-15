@@ -135,7 +135,7 @@ function resolveVisitOnboarding(visit, vendors = [], onboardings = []) {
 const getShopVisits = async (req, res) => {
   try {
     const user = req.user;
-    const { page = 1, limit = 15, search, status, category, scope, pendingOnboardingOnly, eligibleOnly } = req.query;
+    const { page = 1, limit = 15, search, status, category, scope, pendingOnboardingOnly, eligibleOnly, startDate, endDate, export: exportFormat } = req.query;
 
     const pageNum = Math.max(1, parseInt(page, 10) || 1);
     const limitNum = (limit === 'all' || parseInt(limit, 10) >= 1000) ? 1000 : (parseInt(limit, 10) || 15);
@@ -170,7 +170,7 @@ const getShopVisits = async (req, res) => {
     }
 
     // Base filtered list matching category and search (for consistent KPI aggregation)
-    const baseFiltered = scopedVisits.filter(v => {
+    let baseFiltered = scopedVisits.filter(v => {
       // Category filter
       if (category && category !== 'All' && v.category !== category) return false;
 
@@ -186,6 +186,43 @@ const getShopVisits = async (req, res) => {
 
       return true;
     });
+
+    // Date range filtering with Asia/Kolkata boundary handling
+    if (startDate || endDate) {
+      const kolkataFormatter = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Kolkata',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+      const todayKolkataStr = kolkataFormatter.format(new Date());
+      const endOfTodayTime = new Date(`${todayKolkataStr}T23:59:59.999+05:30`).getTime();
+
+      let startTime = null;
+      let endTime = null;
+
+      if (startDate) {
+        const s = new Date(`${startDate}T00:00:00+05:30`).getTime();
+        if (!isNaN(s)) startTime = s;
+      }
+      if (endDate) {
+        const e = new Date(`${endDate}T23:59:59.999+05:30`).getTime();
+        if (!isNaN(e)) endTime = Math.min(e, endOfTodayTime);
+      }
+
+      if (startTime !== null) {
+        baseFiltered = baseFiltered.filter(v => {
+          const vt = new Date(v.createdAt).getTime();
+          return !isNaN(vt) && vt >= startTime;
+        });
+      }
+      if (endTime !== null) {
+        baseFiltered = baseFiltered.filter(v => {
+          const vt = new Date(v.createdAt).getTime();
+          return !isNaN(vt) && vt <= endTime;
+        });
+      }
+    }
 
     // KPI reflects the active scope + category + search dataset
     const isStatusFiltered = Boolean(status && status !== 'All');
@@ -222,6 +259,44 @@ const getShopVisits = async (req, res) => {
     });
 
     filtered.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+
+    // Server-side CSV Export support
+    if (exportFormat === 'csv') {
+      const escapeCsv = (val) => {
+        if (val === null || val === undefined) return '""';
+        const clean = String(val).replace(/"/g, '""').replace(/\r?\n/g, ' ');
+        return `"${clean}"`;
+      };
+
+      const headers = [
+        'Date & Time',
+        'Shop Name',
+        'Category',
+        'Manager Name',
+        'Manager Level',
+        'Scope Territory',
+        'Voice Note URL',
+        'Interest Status',
+        'Onboarding Status'
+      ];
+
+      const rows = filtered.map(v => [
+        escapeCsv(v.createdAt ? new Date(v.createdAt).toLocaleString() : ''),
+        escapeCsv(v.shopName || ''),
+        escapeCsv(v.category || 'Products'),
+        escapeCsv(v.managerName || ''),
+        escapeCsv(v.managerRole || 'Manager'),
+        escapeCsv(v.pincodeCode ? `PIN: ${v.pincodeCode}` : (v.division || v.district || v.state || 'Assigned Territory')),
+        escapeCsv(v.voiceNote || ''),
+        escapeCsv(v.interestedStatus || v.interestStatus || 'YES'),
+        escapeCsv(v.onboardingStatus || 'Pending')
+      ]);
+
+      const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+      res.setHeader('Content-Type', 'text/csv');
+      res.setHeader('Content-Disposition', `attachment; filename="shop_visits_${startDate || 'export'}_to_${endDate || 'today'}.csv"`);
+      return res.status(200).send(csvContent);
+    }
 
     const total = filtered.length;
     const totalPages = Math.max(1, Math.ceil(total / limitNum));

@@ -112,7 +112,7 @@ const Sidebar = ({ currentPage, onNavigate, mobileOpen, onCloseMobile }) => {
 
           {/* Tasks */}
           <div 
-            className={`sidebar-link ${currentPage === 'tasks' || currentPage === 'issues' ? 'active' : ''}`}
+            className={`sidebar-link ${currentPage === 'tasks' ? 'active' : ''}`}
             onClick={() => handleNav('tasks')}
           >
             <div className="sidebar-link-left">

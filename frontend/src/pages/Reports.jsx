@@ -38,7 +38,8 @@ import {
   Eye,
   Filter,
   Sparkles,
-  ChevronRight
+  ChevronRight,
+  AlertCircle
 } from 'lucide-react';
 import GenerateReportModal from '../components/GenerateReportModal';
 
@@ -379,21 +380,39 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
       setExportDateError('Both Start Date and End Date are required.');
       return;
     }
-    const start = new Date(exportStartDate + 'T00:00:00');
-    const end = new Date(exportEndDate + 'T23:59:59.999');
+
+    // Time calculations strictly in Asia/Kolkata (+05:30)
+    const kolkataFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const todayKolkataStr = kolkataFormatter.format(new Date());
+    const endOfToday = new Date(`${todayKolkataStr}T23:59:59.999+05:30`);
+
+    const start = new Date(`${exportStartDate}T00:00:00+05:30`);
+    const end = new Date(`${exportEndDate}T23:59:59.999+05:30`);
+
     if (isNaN(start.getTime()) || isNaN(end.getTime())) {
       setExportDateError('Please select valid start and end dates.');
       return;
     }
-    if (start > end) {
-      setExportDateError('Start Date cannot be later than End Date.');
+
+    if (start.getTime() > end.getTime()) {
+      setExportDateError('Start Date cannot be later than End Date. Please select a valid range.');
+      return;
+    }
+
+    if (start.getTime() > endOfToday.getTime() || end.getTime() > endOfToday.getTime()) {
+      setExportDateError('Future dates are not allowed. Please select a date up to today.');
       return;
     }
 
     const dateFiltered = eligibleVisits.filter(v => {
       if (!v || !v.createdAt) return false;
       const d = new Date(v.createdAt);
-      return !isNaN(d.getTime()) && d >= start && d <= end;
+      return !isNaN(d.getTime()) && d.getTime() >= start.getTime() && d.getTime() <= end.getTime();
     });
 
     if (dateFiltered.length === 0) {
@@ -2801,6 +2820,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                   <input
                     type="date"
                     className="form-input"
+                    max={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())}
                     value={exportStartDate}
                     onChange={(e) => {
                       setExportStartDate(e.target.value);
@@ -2816,6 +2836,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                   <input
                     type="date"
                     className="form-input"
+                    max={new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date())}
                     value={exportEndDate}
                     onChange={(e) => {
                       setExportEndDate(e.target.value);

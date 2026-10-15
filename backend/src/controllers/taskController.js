@@ -188,7 +188,28 @@ const getTasks = async (req, res) => {
 
     // 2. Query-level user UI filters (can only narrow down within authorized territory)
     if (status && status !== 'All') {
-      filtered = filtered.filter(t => t.status === status);
+      const sLower = status.toLowerCase().trim();
+      filtered = filtered.filter(t => {
+        const ts = (t.status || '').toLowerCase().trim();
+        const tp = (t.priority || '').toLowerCase().trim();
+        if (sLower === 'open') {
+          return ['open', 'pending', 'pending acceptance', 'assigned'].includes(ts);
+        } else if (sLower === 'in progress' || sLower === 'in_progress') {
+          return ['in progress', 'accepted'].includes(ts);
+        } else if (sLower === 'escalated') {
+          return ts === 'escalated' || tp === 'urgent' || Boolean(t.isEscalated);
+        } else if (sLower === 'resolved' || sLower === 'completed') {
+          return ['resolved', 'completed', 'closed'].includes(ts);
+        } else if (sLower === 'pending') {
+          return ['pending', 'pending acceptance', 'assigned', 'accepted'].includes(ts);
+        }
+        return ts === sLower || (t.status && t.status === status);
+      });
+    }
+
+    if (req.query.taskId || req.query.id || req.query.issueId) {
+      const targetId = String(req.query.taskId || req.query.id || req.query.issueId).trim();
+      filtered = filtered.filter(t => String(t.id || t._id || t.taskNumber) === targetId);
     }
     if (category && category !== 'All') {
       filtered = filtered.filter(t => t.category === category);

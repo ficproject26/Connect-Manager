@@ -2914,17 +2914,22 @@ const updateBankDetails = async (req, res) => {
       ifscCode: cleanIfsc
     };
 
-    const user = await db.users.findById(userId);
+    let user = await db.users.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User account not found.' });
+      user = await db.users.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
+    }
+    if (!user && db.managers) {
+      user = await db.managers.findById(userId) || await db.managers.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
     }
 
+    const targetUserId = user ? (user._id || user.id) : userId;
+
     // Persist to users collection (single source of truth)
-    await db.users.findByIdAndUpdate(userId, {
+    await db.users.findByIdAndUpdate(targetUserId, {
       bankDetails: sanitizedBankDetails,
       bankAccount: sanitizedBankDetails,
       updatedAt: new Date().toISOString()
-    });
+    }).catch(() => null);
 
     // Mirror to managers collection if record exists
     try {
@@ -2977,16 +2982,19 @@ const getBankDetails = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Authentication required.' });
     }
 
-    const user = await db.users.findById(userId);
+    let user = await db.users.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User account not found.' });
+      user = await db.users.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
+    }
+    if (!user && db.managers) {
+      user = await db.managers.findById(userId) || await db.managers.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
     }
 
-    const bankDetails = user.bankDetails || user.bankAccount || null;
-    res.json({
+    const bankDetails = user?.bankDetails || user?.bankAccount || null;
+    return res.json({
       success: true,
       bankDetails: bankDetails || {
-        accountHolderName: user.name || '',
+        accountHolderName: user?.name || req.user?.name || '',
         bankName: '',
         branchName: '',
         city: '',
