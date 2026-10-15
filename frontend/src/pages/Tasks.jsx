@@ -44,7 +44,7 @@ import { getDisplayValue, normalizeString } from '../utils/normalize';
 import { resolveUserTerritoryProfile, isTaskInManagerTerritory, buildTerritoryQueryParams } from '../utils/territoryScoping';
 import VoiceRecorder from '../components/VoiceRecorder';
 
-const Tasks = ({ onNavigate }) => {
+const Tasks = ({ onNavigate, filterParams = {} }) => {
   const { user } = useAuth();
   const territoryProfile = useMemo(() => resolveUserTerritoryProfile(user), [user]);
   const isPincodeManager = territoryProfile.level === 'pincode';
@@ -81,9 +81,16 @@ const Tasks = ({ onNavigate }) => {
   const [refreshing, setRefreshing] = useState(false);
 
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState(() => filterParams?.status || 'All');
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
+
+  // Synchronize when navigated with filterParams (e.g. from Dashboard Issue Status)
+  useEffect(() => {
+    if (filterParams?.status) {
+      setStatusFilter(filterParams.status);
+    }
+  }, [filterParams?.status]);
   const [selectedTask, setSelectedTask] = useState(null);
   const [previewPhoto, setPreviewPhoto] = useState(null);
   const [previewZoom, setPreviewZoom] = useState(1);
@@ -555,9 +562,19 @@ const Tasks = ({ onNavigate }) => {
       if (!isTaskInManagerTerritory(t.raw || t, territoryProfile)) return false;
 
       if (statusFilter !== 'All') {
-        if (statusFilter === 'Pending') {
-          if (!['Pending', 'Pending Acceptance', 'Assigned', 'Accepted'].includes(t.status)) return false;
-        } else if (t.status !== statusFilter) {
+        const sf = statusFilter.toLowerCase();
+        const ts = (t.status || '').toLowerCase();
+        if (sf === 'open') {
+          if (!['open', 'pending', 'pending acceptance', 'assigned'].includes(ts)) return false;
+        } else if (sf === 'in progress') {
+          if (!['in progress', 'accepted'].includes(ts)) return false;
+        } else if (sf === 'escalated') {
+          if (!['escalated'].includes(ts) && (t.priority || '').toLowerCase() !== 'urgent' && !t.isEscalated) return false;
+        } else if (sf === 'resolved') {
+          if (!['resolved', 'completed', 'closed'].includes(ts)) return false;
+        } else if (sf === 'pending') {
+          if (!['pending', 'pending acceptance', 'assigned', 'accepted'].includes(t.status)) return false;
+        } else if (t.status !== statusFilter && ts !== sf) {
           return false;
         }
       }
@@ -832,9 +849,12 @@ const Tasks = ({ onNavigate }) => {
           }}
         >
           <option value="All">All Statuses</option>
+          <option value="Open">Open Tasks</option>
+          <option value="In Progress">In Progress</option>
+          <option value="Escalated">Escalated Tasks</option>
+          <option value="Resolved">Resolved Tasks</option>
           <option value="Pending Acceptance">Pending Acceptance</option>
           <option value="Accepted">Accepted</option>
-          <option value="In Progress">In Progress</option>
           <option value="Completed">Completed</option>
           <option value="Rework Required">Rework Required</option>
           <option value="Rejected">Rejected</option>

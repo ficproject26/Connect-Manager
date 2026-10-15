@@ -535,6 +535,32 @@ class TerritoryScopeService {
         if (rec) rec.shopVisits++;
       });
 
+      // Ensure logged-in district manager's district is always present and reflects scoped records
+      if (userLevel === 2) {
+        const distName = resUser.districtName || user.district || user.districtName;
+        const distKey = String(resUser.districtId || distName);
+        let rec = districtMap.get(distKey);
+        if (!rec && distName) {
+          rec = Array.from(districtMap.values()).find(r => norm(r.districtName) === norm(distName));
+        }
+        if (!rec && distName) {
+          rec = {
+            districtId: distKey,
+            districtName: distName,
+            totalVendors: scopedVendors.length,
+            activeVendors: scopedVendors.filter(v => isVendorActive(v.status)).length,
+            tieUps: scopedVendors.filter(v => isVendorActive(v.status)).length,
+            shopVisits: scopedVisits.length
+          };
+          districtMap.set(distKey, rec);
+        } else if (rec && rec.totalVendors === 0 && scopedVendors.length > 0) {
+          rec.totalVendors = scopedVendors.length;
+          rec.activeVendors = scopedVendors.filter(v => isVendorActive(v.status)).length;
+          rec.tieUps = rec.activeVendors;
+          rec.shopVisits = Math.max(rec.shopVisits, scopedVisits.length);
+        }
+      }
+
       return Array.from(districtMap.values())
         .filter(d => d.totalVendors > 0 || d.shopVisits > 0 || userLevel >= 2)
         .sort((a, b) => (b.totalVendors + b.shopVisits) - (a.totalVendors + a.shopVisits));
@@ -599,6 +625,32 @@ class TerritoryScopeService {
         if (rec) rec.shopVisits++;
       });
 
+      // Ensure logged-in division manager's division is always present
+      if (userLevel === 3) {
+        const divName = resUser.divisionName || user.division || user.divisionName;
+        const divKey = String(resUser.divisionId || divName);
+        let rec = divisionMap.get(divKey);
+        if (!rec && divName) {
+          rec = Array.from(divisionMap.values()).find(r => norm(r.divisionName) === norm(divName));
+        }
+        if (!rec && divName) {
+          rec = {
+            divisionId: divKey,
+            divisionName: divName,
+            totalVendors: scopedVendors.length,
+            activeVendors: scopedVendors.filter(v => isVendorActive(v.status)).length,
+            tieUps: scopedVendors.filter(v => isVendorActive(v.status)).length,
+            shopVisits: scopedVisits.length
+          };
+          divisionMap.set(divKey, rec);
+        } else if (rec && rec.totalVendors === 0 && scopedVendors.length > 0) {
+          rec.totalVendors = scopedVendors.length;
+          rec.activeVendors = scopedVendors.filter(v => isVendorActive(v.status)).length;
+          rec.tieUps = rec.activeVendors;
+          rec.shopVisits = Math.max(rec.shopVisits, scopedVisits.length);
+        }
+      }
+
       return Array.from(divisionMap.values())
         .filter(d => d.totalVendors > 0 || d.shopVisits > 0 || userLevel >= 3)
         .sort((a, b) => (b.totalVendors + b.shopVisits) - (a.totalVendors + a.shopVisits));
@@ -650,16 +702,28 @@ class TerritoryScopeService {
       });
 
       // Ensure logged-in pincode manager's assigned PIN is always included
-      if (userLevel === 4 && resUser.pincodeCode && !pincodeMap.has(resUser.pincodeCode)) {
-        pincodeMap.set(resUser.pincodeCode, {
-          pincodeId: resUser.pincodeId || resUser.pincodeCode,
-          pincodeCode: resUser.pincodeCode,
-          areaName: resUser.areaName || 'Assigned Area',
-          totalVendors: 0,
-          activeVendors: 0,
-          tieUps: 0,
-          shopVisits: 0
-        });
+      if (userLevel === 4) {
+        const pinCode = resUser.pincodeCode || user.pincode || user.pincodeCode;
+        if (pinCode) {
+          let rec = pincodeMap.get(pinCode);
+          if (!rec) {
+            rec = {
+              pincodeId: resUser.pincodeId || pinCode,
+              pincodeCode: pinCode,
+              areaName: resUser.areaName || user.assignedArea || 'Assigned Area',
+              totalVendors: scopedVendors.length,
+              activeVendors: scopedVendors.filter(v => isVendorActive(v.status)).length,
+              tieUps: scopedVendors.filter(v => isVendorActive(v.status)).length,
+              shopVisits: scopedVisits.length
+            };
+            pincodeMap.set(pinCode, rec);
+          } else if (rec.totalVendors === 0 && scopedVendors.length > 0) {
+            rec.totalVendors = scopedVendors.length;
+            rec.activeVendors = scopedVendors.filter(v => isVendorActive(v.status)).length;
+            rec.tieUps = rec.activeVendors;
+            rec.shopVisits = Math.max(rec.shopVisits, scopedVisits.length);
+          }
+        }
       }
 
       return Array.from(pincodeMap.values())

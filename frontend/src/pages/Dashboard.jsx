@@ -25,26 +25,42 @@ import { getDisplayValue, normalizeString } from '../utils/normalize';
 
 const Dashboard = ({ onNavigate }) => {
   const { user } = useAuth();
+  const userName = user?.name || 'Manager';
+  const userRole = (user?.role || '').toLowerCase();
+  const userLevel = Number(user?.level) || (userRole.includes('state') ? 1 : userRole.includes('district') ? 2 : userRole.includes('division') ? 3 : (userRole.includes('pincode') || userRole.includes('pin_')) ? 4 : 0);
+  const isStateManager = userLevel === 1;
+
+  const getInitialTerritoryFilter = () => {
+    if (userLevel === 2) return 'div';
+    if (userLevel === 3 || userLevel === 4) return 'pin';
+    return 'dist';
+  };
+
   const [currentTime, setCurrentTime] = useState(new Date());
   const [hoveredIssue, setHoveredIssue] = useState(null);
-  const [dashboardData, setDashboardData] = useState(() => cacheClient.get('dashboard:stats')?.data || null);
+  const userCacheKey = `dashboard:stats:${user?.id || user?._id || 'mgr'}`;
+  const [dashboardData, setDashboardData] = useState(() => cacheClient.get(userCacheKey)?.data || cacheClient.get('dashboard:stats')?.data || null);
   const [leaderboardList, setLeaderboardList] = useState(() => {
     const raw = cacheClient.get('leaderboard')?.data;
     if (Array.isArray(raw)) return raw;
     if (Array.isArray(raw?.data)) return raw.data;
     return [];
   });
-  const [loadingStats, setLoadingStats] = useState(() => !cacheClient.get('dashboard:stats')?.data);
+  const [loadingStats, setLoadingStats] = useState(() => !cacheClient.get(userCacheKey)?.data && !cacheClient.get('dashboard:stats')?.data);
   const [trendPeriod, setTrendPeriod] = useState('6m'); // '3m' | '6m' | '1y'
   const [issuePeriod, setIssuePeriod] = useState('month'); // 'month' | 'week' | 'year' | 'all'
-  const [territoryFilter, setTerritoryFilter] = useState('pin'); // 'dist' | 'div' | 'pin'
+  const [territoryFilter, setTerritoryFilter] = useState(getInitialTerritoryFilter);
   const [isActivitiesModalOpen, setIsActivitiesModalOpen] = useState(false);
   const [activityFilter, setActivityFilter] = useState('all');
+
+  useEffect(() => {
+    setTerritoryFilter(getInitialTerritoryFilter());
+  }, [userLevel]);
 
   const fetchDashboardMetrics = async (force = false) => {
     try {
       const [res, leadRes] = await Promise.all([
-        cacheClient.fetchWithCache('dashboard:stats', () => reportService.getDashboardStats(), { force }),
+        cacheClient.fetchWithCache(userCacheKey, () => reportService.getDashboardStats(), { force }),
         cacheClient.fetchWithCache('leaderboard', () => reportService.getLeaderboardData(), { force }).catch(() => ({ success: false }))
       ]);
       if (res && res.success) {
@@ -69,6 +85,7 @@ const Dashboard = ({ onNavigate }) => {
   // Real-time synchronization: refresh dashboard metrics when tasks, vendors, or agents change
   useRealtime('*', (event) => {
     if (['task', 'vendor', 'agent', 'shop_visit', 'manager', 'user'].includes(event.entity)) {
+      cacheClient.invalidateQueries(userCacheKey);
       cacheClient.invalidateQueries('dashboard:stats');
       fetchDashboardMetrics(true);
     }
@@ -162,11 +179,6 @@ const Dashboard = ({ onNavigate }) => {
   };
 
   // Location Scope Variables derived authoritatively from user session
-  const userName = user?.name || 'Manager';
-  const userRole = (user?.role || '').toLowerCase();
-  const userLevel = Number(user?.level) || (userRole.includes('state') ? 1 : userRole.includes('district') ? 2 : userRole.includes('division') ? 3 : 4);
-  const isStateManager = userLevel === 1;
-
   const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.stateName || user?.state || 'Tamil Nadu';
   const districtName = userLevel >= 2 ? (user?.scope?.districtName || user?.districtName || user?.district || null) : null;
   const divisionName = userLevel >= 3 ? (user?.scope?.divisionName || user?.divisionName || user?.division || null) : null;
@@ -249,7 +261,7 @@ const Dashboard = ({ onNavigate }) => {
       }));
     } else if (territoryFilter === 'pin') {
       list = (roleData?.pincodeBreakdown || []).map(p => ({
-        name: `PIN ${p.pincodeCode || p.pincodeId}`,
+        name: p.pincodeCode ? `PIN ${p.pincodeCode}${p.areaName ? ' (' + p.areaName + ')' : ''}` : (p.name || 'Assigned Pincode'),
         value: (p.totalVendors || 0) > 0 ? p.totalVendors : (p.shopVisits || p.tieUps || 0)
       }));
     }
@@ -265,13 +277,38 @@ const Dashboard = ({ onNavigate }) => {
     }));
   }, [dashboardData, territoryFilter]);
 
-  // Dynamic Activities from audit logs
+  const totalPeriodActivity = React.useMemo(() => {
+    return trendData.reduce((acc, d) => acc + (d.merchants || 0) + (d.tieUps || 0), 0);
+  }, [trendData]);
+
+  // Dynamic Activities strictly from today's activities within Asia/Kolkata day
   const allActivitiesList = React.useMemo(() => {
-    const raw = Array.isArray(dashboardData?.recentActivities) ? dashboardData.recentActivities : [];
-    return raw.map((act, idx) => {
+    const raw = Array.isArray(dashboardData?.todayActivities) 
+      ? dashboardData.todayActivities 
+      : (Array.isArray(dashboardData?.recentActivities) ? dashboardData.recentActivities : []);
+    
+    // Strict client-side verification of Asia/Kolkata today boundary
+    const kolkataFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const todayStr = kolkataFormatter.format(new Date());
+    const startOfToday = new Date(`${todayStr}T00:00:00+05:30`).getTime();
+    const startOfTomorrow = startOfToday + 24 * 60 * 60 * 1000;
+
+    const todayOnly = raw.filter(act => {
+      const ts = act.timestamp || act.createdAt;
+      if (!ts) return false;
+      const t = new Date(ts).getTime();
+      return !isNaN(t) && t >= startOfToday && t < startOfTomorrow;
+    });
+
+    return todayOnly.map((act, idx) => {
       const action = act.action || act.title || 'Activity';
       const isTieup = action.toLowerCase().includes('tieup') || action.toLowerCase().includes('merchant');
-      const isIssue = action.toLowerCase().includes('issue') || action.toLowerCase().includes('escalat');
+      const isIssue = action.toLowerCase().includes('issue') || action.toLowerCase().includes('escalat') || action.toLowerCase().includes('task');
       const isReport = action.toLowerCase().includes('report');
       
       const category = isTieup ? 'tieup' : isIssue ? 'escalation' : isReport ? 'report' : 'vendor';
@@ -284,7 +321,12 @@ const Dashboard = ({ onNavigate }) => {
         category,
         title: action,
         sub: act.details || act.description || act.entity || 'Audit record',
-        time: act.timestamp ? new Date(act.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Recent',
+        time: act.timestamp ? new Intl.DateTimeFormat('en-IN', {
+          timeZone: 'Asia/Kolkata',
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        }).format(new Date(act.timestamp)) : 'Today',
         icon,
         bg,
         color,
@@ -544,101 +586,121 @@ const Dashboard = ({ onNavigate }) => {
             </div>
           </div>
 
-          {/* SVG Dual-Axis Chart */}
+          {/* SVG Dual-Axis Chart or Clean Empty State */}
           <div className="chart-container">
-            <svg width="100%" height="100%" viewBox="0 0 380 160" preserveAspectRatio="none">
-              {/* Horizontal Grid Lines */}
-              <line x1="36" y1="18" x2="344" y2="18" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="36" y1="46" x2="344" y2="46" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="36" y1="74" x2="344" y2="74" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="36" y1="102" x2="344" y2="102" stroke="#f1f5f9" strokeWidth="1" />
-              <line x1="36" y1="130" x2="344" y2="130" stroke="#e2e8f0" strokeWidth="1" />
+            {totalPeriodActivity > 0 ? (
+              <svg width="100%" height="100%" viewBox="0 0 380 160" preserveAspectRatio="none">
+                {/* Horizontal Grid Lines */}
+                <line x1="36" y1="18" x2="344" y2="18" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="36" y1="46" x2="344" y2="46" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="36" y1="74" x2="344" y2="74" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="36" y1="102" x2="344" y2="102" stroke="#f1f5f9" strokeWidth="1" />
+                <line x1="36" y1="130" x2="344" y2="130" stroke="#e2e8f0" strokeWidth="1" />
 
-              {/* Y Axis Left labels: Merchants */}
-              <text x="30" y="22" fontSize="8" fill="#94a3b8" textAnchor="end">{trendData[0]?.merchScaleMax || 100}</text>
-              <text x="30" y="50" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.8)}</text>
-              <text x="30" y="78" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.6)}</text>
-              <text x="30" y="106" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.4)}</text>
-              <text x="30" y="133" fontSize="8" fill="#94a3b8" textAnchor="end">0</text>
+                {/* Y Axis Left labels: Merchants */}
+                <text x="30" y="22" fontSize="8" fill="#94a3b8" textAnchor="end">{trendData[0]?.merchScaleMax || 100}</text>
+                <text x="30" y="50" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.8)}</text>
+                <text x="30" y="78" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.6)}</text>
+                <text x="30" y="106" fontSize="8" fill="#94a3b8" textAnchor="end">{Math.round((trendData[0]?.merchScaleMax || 100) * 0.4)}</text>
+                <text x="30" y="133" fontSize="8" fill="#94a3b8" textAnchor="end">0</text>
 
-              {/* Y Axis Right labels: Tie-ups */}
-              <text x="350" y="22" fontSize="8" fill="#94a3b8" textAnchor="start">{(trendData[0]?.tieupsScaleMax || 1000).toLocaleString()}</text>
-              <text x="350" y="50" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.8).toLocaleString()}</text>
-              <text x="350" y="78" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.6).toLocaleString()}</text>
-              <text x="350" y="106" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.4).toLocaleString()}</text>
-              <text x="350" y="133" fontSize="8" fill="#94a3b8" textAnchor="start">0</text>
+                {/* Y Axis Right labels: Tie-ups */}
+                <text x="350" y="22" fontSize="8" fill="#94a3b8" textAnchor="start">{(trendData[0]?.tieupsScaleMax || 1000).toLocaleString()}</text>
+                <text x="350" y="50" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.8).toLocaleString()}</text>
+                <text x="350" y="78" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.6).toLocaleString()}</text>
+                <text x="350" y="106" fontSize="8" fill="#94a3b8" textAnchor="start">{Math.round((trendData[0]?.tieupsScaleMax || 1000) * 0.4).toLocaleString()}</text>
+                <text x="350" y="133" fontSize="8" fill="#94a3b8" textAnchor="start">0</text>
 
-              {/* Bars: Merchants (Golden Yellow) */}
-              {trendData.map((d, i) => {
-                const { barX, barWidth } = getTrendCoords(i, trendData.length);
-                const y = 130 - d.barH;
-                return (
-                  <rect
-                    key={d.month}
-                    x={barX}
-                    y={y}
-                    width={barWidth}
-                    height={d.barH}
-                    rx="3"
-                    fill="#facc15"
-                    style={{ transition: 'all 0.3s ease' }}
-                  >
-                    <title>{`${d.month}: ${d.merchants} New Merchants`}</title>
-                  </rect>
-                );
-              })}
+                {/* Bars: Merchants (Golden Yellow) */}
+                {trendData.map((d, i) => {
+                  const { barX, barWidth } = getTrendCoords(i, trendData.length);
+                  const y = 130 - d.barH;
+                  return (
+                    <rect
+                      key={`${d.month}-${i}`}
+                      x={barX}
+                      y={y}
+                      width={barWidth}
+                      height={d.barH}
+                      rx="3"
+                      fill="#facc15"
+                      style={{ transition: 'all 0.3s ease' }}
+                    >
+                      <title>{`${d.month}: ${d.merchants} New Merchants`}</title>
+                    </rect>
+                  );
+                })}
 
-              {/* Line: Tie-ups (Blue) */}
-              <polyline
-                fill="none"
-                stroke="#0284c7"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ transition: 'all 0.3s ease' }}
-                points={trendData.map((d, i) => {
+                {/* Line: Tie-ups (Blue) */}
+                <polyline
+                  fill="none"
+                  stroke="#0284c7"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  style={{ transition: 'all 0.3s ease' }}
+                  points={trendData.map((d, i) => {
+                    const { dotX } = getTrendCoords(i, trendData.length);
+                    return `${dotX},${d.dotY}`;
+                  }).join(' ')}
+                />
+
+                {/* Dots: Tie-ups */}
+                {trendData.map((d, i) => {
                   const { dotX } = getTrendCoords(i, trendData.length);
-                  return `${dotX},${d.dotY}`;
-                }).join(' ')}
-              />
+                  return (
+                    <circle
+                      key={`dot-${d.month}-${i}`}
+                      cx={dotX}
+                      cy={d.dotY}
+                      r={trendData.length > 6 ? "2.5" : "3.5"}
+                      fill="#0284c7"
+                      stroke="#ffffff"
+                      strokeWidth="1.5"
+                      style={{ transition: 'all 0.3s ease' }}
+                    >
+                      <title>{`${d.month}: ${d.tieUps} Tie-ups`}</title>
+                    </circle>
+                  );
+                })}
 
-              {/* Dots: Tie-ups */}
-              {trendData.map((d, i) => {
-                const { dotX } = getTrendCoords(i, trendData.length);
-                return (
-                  <circle
-                    key={`dot-${d.month}`}
-                    cx={dotX}
-                    cy={d.dotY}
-                    r={trendData.length > 6 ? "2.5" : "3.5"}
-                    fill="#0284c7"
-                    stroke="#ffffff"
-                    strokeWidth="1.5"
-                    style={{ transition: 'all 0.3s ease' }}
-                  >
-                    <title>{`${d.month}: ${d.tieUps} Tie-ups`}</title>
-                  </circle>
-                );
-              })}
-
-              {/* X Axis Month Labels */}
-              {trendData.map((d, i) => {
-                const { dotX } = getTrendCoords(i, trendData.length);
-                return (
-                  <text
-                    key={`label-${d.month}`}
-                    x={dotX}
-                    y="148"
-                    fontSize={trendData.length > 6 ? "7.5" : "8.5"}
-                    fill="#64748b"
-                    textAnchor="middle"
-                    fontWeight="600"
-                  >
-                    {d.month}
-                  </text>
-                );
-              })}
-            </svg>
+                {/* X Axis Month Labels */}
+                {trendData.map((d, i) => {
+                  const { dotX } = getTrendCoords(i, trendData.length);
+                  return (
+                    <text
+                      key={`label-${d.month}-${i}`}
+                      x={dotX}
+                      y="148"
+                      fontSize={trendData.length > 6 ? "7.5" : "8.5"}
+                      fill="#64748b"
+                      textAnchor="middle"
+                      fontWeight="600"
+                    >
+                      {d.month}
+                    </text>
+                  );
+                })}
+              </svg>
+            ) : (
+              <div style={{
+                height: '160px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: 'var(--text-muted)',
+                fontSize: '0.82rem',
+                padding: '16px',
+                textAlign: 'center'
+              }}>
+                <TrendingUp size={28} style={{ color: '#cbd5e1', marginBottom: 8 }} />
+                <div style={{ fontWeight: 700, color: '#64748b' }}>No merchant growth or tie-ups recorded yet</div>
+                <div style={{ fontSize: '0.75rem', color: '#94a3b8', marginTop: 3 }}>
+                  No activity found for {trendPeriod === '1y' ? 'Last Year' : trendPeriod === '6m' ? 'Last 6 Months' : 'Last 3 Months'}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -655,12 +717,22 @@ const Dashboard = ({ onNavigate }) => {
               value={territoryFilter}
               onChange={(e) => setTerritoryFilter(e.target.value)}
             >
-              {(isStateManager || (user?.role || '').toLowerCase().includes('admin')) && (
+              {(userLevel === 0 || userRole.includes('admin')) && (
                 <option value="state">States</option>
               )}
-              <option value="dist">Districts</option>
-              <option value="div">Divisions</option>
+              {userLevel <= 1 && (
+                <option value="dist">Districts</option>
+              )}
+              {userLevel <= 2 && (
+                <option value="div">Divisions</option>
+              )}
               <option value="pin">Pincodes</option>
+              {userLevel === 2 && (
+                <option value="dist">District Summary</option>
+              )}
+              {userLevel === 3 && (
+                <option value="div">Division Summary</option>
+              )}
             </select>
           </div>
 
@@ -680,7 +752,7 @@ const Dashboard = ({ onNavigate }) => {
               ))
             ) : (
               <div style={{ textAlign: 'center', padding: '24px 0', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                No territory data recorded yet
+                No territory data recorded yet for your authorized scope
               </div>
             )}
           </div>
@@ -702,7 +774,7 @@ const Dashboard = ({ onNavigate }) => {
             </button>
           </div>
 
-          <div className="activities-timeline">
+            <div className="activities-timeline">
             {allActivitiesList.length > 0 ? (
               allActivitiesList.slice(0, 5).map((act) => {
                 const IconComponent = act.icon;
@@ -721,7 +793,7 @@ const Dashboard = ({ onNavigate }) => {
               })
             ) : (
               <div style={{ textAlign: 'center', padding: '32px 16px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
-                No recent activities recorded
+                No activities recorded yet today
               </div>
             )}
           </div>
@@ -847,7 +919,7 @@ const Dashboard = ({ onNavigate }) => {
                       strokeDasharray={seg.dashArray}
                       strokeDashoffset={seg.dashOffset}
                       style={{ cursor: 'pointer', transition: 'all 0.2s ease' }}
-                      onClick={() => onNavigate && onNavigate('issues', { status: seg.label })}
+                      onClick={() => onNavigate && onNavigate('tasks', { status: seg.label })}
                       onMouseEnter={() => setHoveredIssue(seg.id)}
                       onMouseLeave={() => setHoveredIssue(null)}
                     />
@@ -857,7 +929,7 @@ const Dashboard = ({ onNavigate }) => {
               <div 
                 className="donut-center-text"
                 style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate && onNavigate('issues', { status: hoveredIssue ? issueSegments.find(s => s.id === hoveredIssue)?.label : 'All' })}
+                onClick={() => onNavigate && onNavigate('tasks', { status: hoveredIssue ? issueSegments.find(s => s.id === hoveredIssue)?.label : 'All' })}
               >
                 <div 
                   className="donut-center-num" 
@@ -886,7 +958,7 @@ const Dashboard = ({ onNavigate }) => {
                     key={seg.id} 
                     className={`donut-legend-row ${isHovered ? 'active' : ''}`}
                     style={{ cursor: 'pointer' }}
-                    onClick={() => onNavigate && onNavigate('issues', { status: seg.label })}
+                    onClick={() => onNavigate && onNavigate('tasks', { status: seg.label })}
                     onMouseEnter={() => setHoveredIssue(seg.id)}
                     onMouseLeave={() => setHoveredIssue(null)}
                   >
@@ -931,7 +1003,7 @@ const Dashboard = ({ onNavigate }) => {
               <div 
                 className="issue-stat-box"
                 style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate && onNavigate('issues', { status: 'Resolved' })}
+                onClick={() => onNavigate && onNavigate('tasks', { status: 'Resolved' })}
               >
                 <div className="stat-icon-wrap" style={{ background: '#f0fdf4', color: '#16a34a' }}>
                   <Clock size={13} />
@@ -948,7 +1020,7 @@ const Dashboard = ({ onNavigate }) => {
               <div 
                 className="issue-stat-box"
                 style={{ cursor: 'pointer' }}
-                onClick={() => onNavigate && onNavigate('issues', { status: 'Escalated' })}
+                onClick={() => onNavigate && onNavigate('tasks', { status: 'Escalated' })}
               >
                 <div className="stat-icon-wrap" style={{ background: '#fef2f2', color: '#ef4444' }}>
                   <AlertTriangle size={13} />
@@ -962,7 +1034,7 @@ const Dashboard = ({ onNavigate }) => {
 
             <button 
               className="btn-view-issues"
-              onClick={() => onNavigate && onNavigate('issues')}
+              onClick={() => onNavigate && onNavigate('tasks', { status: 'All' })}
             >
               <span>View & Manage Issues</span>
               <ArrowRight size={13} />

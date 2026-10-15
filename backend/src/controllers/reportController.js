@@ -252,14 +252,32 @@ const getDashboardStats = async (req, res) => {
 
     const activeManagersCount = scopedManagers.filter(u => String(u.status || 'active').toLowerCase() === 'active').length;
 
-    // Tie-ups time calculations
+    // Time calculations strictly in Asia/Kolkata (+05:30) timezone
     const now = new Date();
-    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
+    const kolkataFormatter = new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'Asia/Kolkata',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    });
+    const todayKolkataStr = kolkataFormatter.format(now); // e.g. "2026-10-15"
+    const startOfToday = new Date(`${todayKolkataStr}T00:00:00+05:30`);
+    const startOfTomorrow = new Date(startOfToday.getTime() + 24 * 60 * 60 * 1000);
 
-    const todayTieups = vendors.filter(v => isVendorActive(v.status) && new Date(v.createdAt) >= startOfToday).length;
-    const weekTieups = vendors.filter(v => isVendorActive(v.status) && new Date(v.createdAt) >= startOfWeek).length;
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfToday.getDate() - startOfToday.getDay());
+
+    const todayTieups = vendors.filter(v => {
+      if (!isVendorActive(v.status)) return false;
+      const vt = new Date(v.createdAt).getTime();
+      return !isNaN(vt) && vt >= startOfToday.getTime() && vt < startOfTomorrow.getTime();
+    }).length;
+
+    const weekTieups = vendors.filter(v => {
+      if (!isVendorActive(v.status)) return false;
+      const vt = new Date(v.createdAt).getTime();
+      return !isNaN(vt) && vt >= startOfWeek.getTime();
+    }).length;
 
     const kpiMetrics = {
       totalManagers: scopedManagers.length,
@@ -416,15 +434,25 @@ const getDashboardStats = async (req, res) => {
     kpiMetrics.openIssues = activeTasksCount;
     kpiMetrics.activeTasks = activeTasksCount;
 
-    // Recent activities from auditLogs
+    // Filter audit logs strictly within current calendar day in Asia/Kolkata: [startOfToday, startOfTomorrow)
     const allLogs = (db.auditLogs.cache && db.auditLogs.cache.length > 0)
       ? db.auditLogs.cache
       : await db.auditLogs.find();
-    const scopedVendorIds = new Set(vendors.map(v => v._id));
-    const recentActivities = allLogs
-      .filter(log => scopedVendorIds.has(log.recordId) || log.userId === user.id)
+    const scopedVendorIds = new Set(vendors.map(v => String(v._id || v.id)));
+    const todayActivities = allLogs
+      .filter(log => {
+        const rawTime = log.timestamp || log.createdAt;
+        if (!rawTime) return false;
+        const t = new Date(rawTime).getTime();
+        if (isNaN(t) || t < startOfToday.getTime() || t >= startOfTomorrow.getTime()) {
+          return false;
+        }
+        return isGlobalAdmin || scopedVendorIds.has(String(log.recordId || log.targetId)) || String(log.userId) === String(user.id || user._id);
+      })
       .sort((a, b) => new Date(b.timestamp || b.createdAt) - new Date(a.timestamp || a.createdAt))
-      .slice(0, 10);
+      .slice(0, 50);
+
+    const recentActivities = todayActivities.slice(0, 10);
 
     return {
       success: true,
@@ -440,9 +468,11 @@ const getDashboardStats = async (req, res) => {
       data: kpiMetrics,
       roleSpecificData,
       recentVendors,
-      recentActivities
+      todayActivities,
+      recentActivities,
+      todayDate: todayKolkataStr
     };
-    }, 300);
+    }, 15);
 
     res.json(payload);
   } catch (err) {
