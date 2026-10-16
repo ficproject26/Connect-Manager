@@ -36,6 +36,26 @@ import {
   Banknote,
   RefreshCw
 } from 'lucide-react';
+import {
+  formatName,
+  validateName,
+  normalizeEmail,
+  validateEmail,
+  cleanMobile,
+  validateMobile,
+  validatePassword,
+  validatePasswordMatch,
+  cleanAadhaar,
+  validateAadhaar,
+  cleanPan,
+  validatePan,
+  cleanAccountNumber,
+  validateAccountNumber,
+  cleanIfsc,
+  validateIfsc,
+  validateDob,
+  getEighteenYearsAgoDateString
+} from '../utils/validation';
 
 const ROLES = [
   {
@@ -257,29 +277,17 @@ export default function Register({
   const [error, setError] = useState('');
   const [nameError, setNameError] = useState('');
 
-  // Full Name formatting and validation:
-  // - Only English alphabetic characters (A-Z, a-z) and spaces between name parts
-  // - No numbers, special characters, leading spaces
+  // Full Name formatting and validation using centralized utility:
   // - Auto-capitalize first letter of every name part
+  // - Allow regional/international letters & valid name punctuation
+  // - Strip leading spaces
   const formatAndValidateName = (rawVal) => {
-    // Strip leading spaces
-    const noLeading = rawVal.replace(/^\s+/, '');
-    // Collapse consecutive spaces into a single space
-    const singleSpaced = noLeading.replace(/\s{2,}/g, ' ');
-
-    const endsWithSpace = singleSpaced.endsWith(' ');
-    const parts = singleSpaced.split(' ');
-    const capitalized = parts.map(part => {
-      if (!part) return '';
-      return part.charAt(0).toUpperCase() + part.slice(1).toLowerCase();
-    }).join(' ');
-
-    return endsWithSpace && !capitalized.endsWith(' ') ? capitalized + ' ' : capitalized;
+    return formatName(rawVal);
   };
 
   const handleNameChange = (e) => {
     const rawVal = e.target.value;
-    const formatted = formatAndValidateName(rawVal);
+    const formatted = formatName(rawVal);
     setName(formatted);
 
     // Validation while typing
@@ -288,26 +296,15 @@ export default function Register({
       setNameError('');
       return;
     }
-
-    if (/[^a-zA-Z\s]/.test(formatted)) {
-      setNameError('Only English alphabetic characters (A–Z, a–z) and spaces between name parts are allowed. Numbers and special characters are not permitted.');
-    } else {
-      setNameError('');
-    }
+    const err = validateName(trimmed, false, 'Full Name');
+    setNameError(err || '');
   };
 
   const handleNameBlur = () => {
     const trimmed = name.trim();
     setName(trimmed);
-    if (!trimmed) {
-      setNameError('Full Name is required.');
-    } else if (/[^a-zA-Z\s]/.test(trimmed) || !/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(trimmed)) {
-      setNameError('Invalid Full Name. Only English alphabetic characters (A–Z, a–z) and spaces between name parts are allowed.');
-    } else if (trimmed.length < 2) {
-      setNameError('Full Name must be at least 2 characters long.');
-    } else {
-      setNameError('');
-    }
+    const err = validateName(trimmed, true, 'Full Name');
+    setNameError(err || '');
   };
 
   // Load states on mount (fast — no sync delay)
@@ -562,35 +559,28 @@ export default function Register({
 
     // Validations
     const trimmedName = name.trim();
-    if (trimmedName.length > 50) {
-      setNameError('Full Name must not exceed 50 characters.');
-      setError('Full Name must not exceed 50 characters.');
-      return;
-    }
-    const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-    if (!trimmedName || !email.trim() || !mobile.trim() || !password) {
-      setError('Please fill in all mandatory fields.');
+    const nameErr = validateName(trimmedName, true, 'Full Name');
+    if (nameErr) {
+      setNameError(nameErr);
+      setError(nameErr);
       return;
     }
 
-    if (!nameRegex.test(trimmedName) || trimmedName.length < 2) {
-      setNameError('Invalid Full Name. Only English alphabetic characters (A–Z, a–z) and single spaces between name parts are allowed.');
-      setError('Full Name is invalid. Numbers, special characters, and extra spaces are not permitted.');
+    const emailErr = validateEmail(email, true);
+    if (emailErr) {
+      setError(emailErr);
       return;
     }
 
-    if (email.trim().length > 100) {
-      setError('Email address must not exceed 100 characters.');
+    const mobileErr = validateMobile(mobile, true, 'Mobile number');
+    if (mobileErr) {
+      setError(mobileErr);
       return;
     }
 
-    if (mobile.trim().length !== 10 || !/^\d{10}$/.test(mobile.trim())) {
-      setError('Mobile number must be a valid 10-digit number.');
-      return;
-    }
-
-    if (!dob) {
-      setError('Please select your Date of Birth.');
+    const dobErr = validateDob(dob, 18, true);
+    if (dobErr) {
+      setError(dobErr);
       return;
     }
 
@@ -624,27 +614,29 @@ export default function Register({
       return;
     }
 
-    const cleanAadhar = aadharNumber.trim().replace(/\D/g, '');
-    if (!cleanAadhar || cleanAadhar.length !== 12) {
-      setAadharError('Aadhaar Number must be exactly 12 digits.');
-      setError('Please provide a valid 12-digit Aadhaar Number.');
+    const aadharErr = validateAadhaar(aadharNumber, true);
+    if (aadharErr) {
+      setAadharError(aadharErr);
+      setError(aadharErr);
       return;
     }
 
-    const cleanPan = panNumber.trim().toUpperCase();
-    if (!cleanPan || !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
-      setPanError('Invalid PAN format (e.g. ABCDE1234F).');
-      setError('Please provide a valid 10-character PAN Number (e.g. ABCDE1234F).');
+    const panErr = validatePan(panNumber, true);
+    if (panErr) {
+      setPanError(panErr);
+      setError(panErr);
       return;
     }
 
-    if (password.length < 6) {
-      setError('Password must be at least 6 characters long.');
+    const passErr = validatePassword(password, true);
+    if (passErr) {
+      setError(passErr);
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError('Password and Confirm Password do not match.');
+    const matchErr = validatePasswordMatch(password, confirmPassword);
+    if (matchErr) {
+      setError(matchErr);
       return;
     }
 
@@ -673,20 +665,16 @@ export default function Register({
 
     // Bank Details validation
     const bdErrors = {};
-    if (!bankDetails.accountHolderName.trim()) bdErrors.accountHolderName = 'Account Holder Name is required.';
+    const holderErr = validateName(bankDetails.accountHolderName, true, 'Account Holder Name');
+    if (holderErr) bdErrors.accountHolderName = holderErr;
     if (!bankDetails.bankName.trim()) bdErrors.bankName = 'Bank Name is required.';
     if (!bankDetails.branchName.trim()) bdErrors.branchName = 'Bank Branch is required.';
     if (!bankDetails.city.trim()) bdErrors.city = 'Bank City is required.';
-    if (!bankDetails.accountNumber.trim()) {
-      bdErrors.accountNumber = 'Account Number is required.';
-    } else if (!/^\d{9,18}$/.test(bankDetails.accountNumber.trim().replace(/\s/g, ''))) {
-      bdErrors.accountNumber = 'Account Number must be 9–18 digits.';
-    }
-    if (!bankDetails.ifscCode.trim()) {
-      bdErrors.ifscCode = 'IFSC Code is required.';
-    } else if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(bankDetails.ifscCode.trim().toUpperCase())) {
-      bdErrors.ifscCode = 'Invalid IFSC Code format (e.g. SBIN0001234).';
-    }
+    const accErr = validateAccountNumber(bankDetails.accountNumber, true, bankDetails.bankName);
+    if (accErr) bdErrors.accountNumber = accErr;
+    const ifscErr = validateIfsc(bankDetails.ifscCode, true);
+    if (ifscErr) bdErrors.ifscCode = ifscErr;
+
     if (Object.keys(bdErrors).length > 0) {
       setBankErrors(bdErrors);
       setError('Please fill in all required Bank Details correctly.');
@@ -1346,7 +1334,7 @@ export default function Register({
                         <input
                           type="date"
                           required
-                          max="2008-12-31"
+                          max={getEighteenYearsAgoDateString()}
                           className="form-input"
                           style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
                           value={dob}
@@ -2308,7 +2296,7 @@ export default function Register({
                         style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.accountHolderName ? '#ef4444' : undefined }}
                         value={bankDetails.accountHolderName}
                         onChange={(e) => {
-                          setBankDetails(prev => ({ ...prev, accountHolderName: e.target.value }));
+                          setBankDetails(prev => ({ ...prev, accountHolderName: formatName(e.target.value) }));
                           if (bankErrors.accountHolderName) setBankErrors(prev => ({ ...prev, accountHolderName: '' }));
                         }}
                         maxLength={100}

@@ -1,5 +1,13 @@
 const db = require('../config/db');
 const { publishEntityEvent, cacheManager } = require('../realtime');
+const {
+  formatName,
+  validateName,
+  normalizeEmail,
+  validateEmail,
+  cleanMobile,
+  validateMobile
+} = require('../utils/validation');
 
 const norm = (s) => (s !== undefined && s !== null ? String(s).trim().toLowerCase() : '');
 
@@ -293,6 +301,21 @@ const createAgent = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Agent name and mobile are required' });
     }
 
+    const nameErr = validateName(name, true, 'Agent name');
+    if (nameErr) return res.status(400).json({ success: false, message: nameErr });
+
+    const mobileErr = validateMobile(mobile, true, 'Mobile number');
+    if (mobileErr) return res.status(400).json({ success: false, message: mobileErr });
+
+    if (email) {
+      const emailErr = validateEmail(email, false);
+      if (emailErr) return res.status(400).json({ success: false, message: emailErr });
+    }
+
+    const formattedName = formatName(name);
+    const cleanPhone = cleanMobile(mobile);
+    const cleanEmail = email ? normalizeEmail(email) : `${cleanPhone}@agent.forgeconnect.in`;
+
     // Verify creating manager has authority over target agent territory
     const candidateScope = {
       stateId: stateId || user.stateId,
@@ -314,9 +337,9 @@ const createAgent = async (req, res) => {
     }
 
     const newAgent = await db.agents.insertOne({
-      name: name.trim(),
-      mobile: mobile.trim(),
-      email: email ? email.trim() : `${mobile.trim()}@agent.forgeconnect.in`,
+      name: formattedName,
+      mobile: cleanPhone,
+      email: cleanEmail,
       role: role || 'Pincode Field Agent',
       level: level ? parseInt(level, 10) : 4,
       status: 'Active',

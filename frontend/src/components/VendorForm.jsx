@@ -21,12 +21,30 @@ const STEPS = [
   { id: 5, label: 'Review',    icon: BadgeCheck },
 ];
 
-const phoneOk     = v => /^[6-9]\d{9}$/.test(v.replace(/\s/g, ''));
-const panOk       = v => /^[A-Z]{5}[0-9]{4}[A-Z]$/.test(v.toUpperCase());
-const aadhaarOk   = v => /^\d{12}$/.test(v.replace(/\s/g, ''));
-const ifscOk      = v => /^[A-Z]{4}0[A-Z0-9]{6}$/.test(v.toUpperCase());
-const maskAadhaar = v => v ? v.replace(/\d(?=\d{4})/g, 'X') : '';
-const maskAccount = v => v && v.length > 4 ? 'X'.repeat(v.length - 4) + v.slice(-4) : v;
+import {
+  formatName,
+  validateName,
+  validateEmail,
+  cleanMobile,
+  validateMobile,
+  validatePassword,
+  validatePasswordMatch,
+  cleanPan,
+  validatePan,
+  cleanAadhaar,
+  validateAadhaar,
+  maskAadhaar,
+  cleanAccountNumber,
+  validateAccountNumber,
+  maskAccountNumber,
+  cleanIfsc,
+  validateIfsc
+} from '../utils/validation';
+
+const phoneOk     = v => !validateMobile(v, true);
+const panOk       = v => !validatePan(v, true);
+const aadhaarOk   = v => !validateAadhaar(v, true);
+const ifscOk      = v => !validateIfsc(v, true);
 function StepBar({ current }) {
   return (
     <div style={{
@@ -420,10 +438,8 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const handleNameChange = e => {
     const raw = e.target.value;
-    const clean = raw.replace(/[^a-zA-Z\s]/g, '').slice(0, 50);
-    const parts = clean.split(' ');
-    const formatted = parts.map(part => part ? part.charAt(0).toUpperCase() + part.slice(1).toLowerCase() : '').join(' ');
-    upd('name', clean.endsWith(' ') && !formatted.endsWith(' ') ? formatted + ' ' : formatted);
+    const formatted = formatName(raw);
+    upd('name', formatted);
   };
 
   // Time Slot State & Handlers
@@ -844,15 +860,13 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
       case 'mobile':
         if (!strVal) return 'Business phone number is required';
-        if (!phoneOk(String(value))) return 'Must be 10 digits starting with 6-9';
+        const mobileErr = validateMobile(value, true, 'Business phone');
+        if (mobileErr) return mobileErr;
         if (!phoneVerified && !isEditing) return 'Business phone must be verified via OTP';
         return '';
 
       case 'email':
-        if (!strVal) return 'Email address is required';
-        if (strVal.length > 100) return 'Email must not exceed 100 characters';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(strVal)) return 'Invalid email format (e.g. vendor@business.com)';
-        return '';
+        return validateEmail(strVal, true) || '';
 
       case 'address':
         if (!strVal) return 'Business address is required';
@@ -884,35 +898,38 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         return '';
 
       case 'name':
-        if (!strVal) return 'Owner / contact person name is required';
-        if (strVal.length > 50) return 'Owner name must not exceed 50 characters';
-        if (!/^[A-Za-z]+(?: [A-Za-z]+)*$/.test(strVal)) return 'Owner name must contain only letters and spaces';
-        return '';
+        return validateName(strVal, true, 'Owner / contact person name') || '';
 
       case 'alternatePhone':
-        if (strVal && !phoneOk(String(value))) return 'Must be 10 digits starting with 6-9';
+        if (strVal) return validateMobile(strVal, false, 'Alternate phone') || '';
+        return '';
+
+      case 'agentName':
+        if (strVal) return validateName(strVal, false, 'Agent name') || '';
+        return '';
+
+      case 'coPartnerName':
+        if (strVal) return validateName(strVal, false, 'Co-partner name') || '';
         return '';
 
       case 'password':
         if (!isEditing) {
-          if (!value) return 'Account password is required';
-          if (String(value).length < 8) return 'Password must be at least 8 characters';
+          return validatePassword(value, true) || '';
         }
         return '';
 
       case 'confirmPassword':
         if (!isEditing) {
-          if (!value) return 'Please confirm password';
-          if (value !== allData.password) return 'Passwords do not match';
+          return validatePasswordMatch(allData.password, value) || '';
         }
         return '';
 
       case 'panNumber':
-        if (strVal && !panOk(strVal)) return 'Invalid PAN format (e.g. ABCDE1234F)';
+        if (strVal) return validatePan(strVal, false) || '';
         return '';
 
       case 'aadhaarNumber':
-        if (strVal && !aadhaarOk(String(value))) return 'Aadhaar must be 12 digits';
+        if (strVal) return validateAadhaar(strVal, false) || '';
         return '';
 
       case 'gstNumber':
@@ -928,15 +945,16 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         }
         return '';
 
+      case 'accountHolderName':
+        if (strVal) return validateName(strVal, false, 'Account Holder Name') || '';
+        return '';
+
       case 'accountNumber':
-        if (strVal) {
-          const digits = String(value).replace(/\D/g, '');
-          if (digits.length < 9 || digits.length > 18) return 'Account number must be 9-18 digits';
-        }
+        if (strVal) return validateAccountNumber(strVal, false, allData.bankName) || '';
         return '';
 
       case 'ifsc':
-        if (strVal && !ifscOk(strVal)) return 'Invalid IFSC code (e.g. HDFC0001234)';
+        if (strVal) return validateIfsc(strVal, false) || '';
         return '';
 
       case 'declaration':
@@ -1784,9 +1802,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const step2=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
       <div style={{gridColumn:'1/-1'}}><Field label="Owner / Contact Person Name" required error={errors.name}><input type="text" name="name" maxLength={50} value={formData.name} onChange={handleNameChange} onBlur={handleBlur} placeholder="Full legal name" className="form-input" style={inp(!!errors.name)}/></Field></div>
-      <Field label="Alternate Phone (Optional)" error={errors.alternatePhone}><input type="tel" name="alternatePhone" value={formData.alternatePhone||''} maxLength={10} onChange={e=>upd('alternatePhone',e.target.value.replace(/\D/g,'').slice(0,10))} onBlur={handleBlur} placeholder="Alternate number" className="form-input" style={inp(!!errors.alternatePhone)}/></Field>
-      <Field label="Agent Name (Optional)"><input type="text" name="agentName" value={formData.agentName||''} onChange={onChange} onBlur={handleBlur} placeholder="Agent name" className="form-input" style={inp()}/></Field>
-      <div style={{gridColumn:'1/-1'}}><Field label="Co-partner Name (Optional)"><input type="text" name="coPartnerName" value={formData.coPartnerName||''} onChange={onChange} onBlur={handleBlur} placeholder="Co-partner name" className="form-input" style={inp()}/></Field></div>
+      <Field label="Alternate Phone (Optional)" error={errors.alternatePhone}><input type="tel" name="alternatePhone" value={formData.alternatePhone||''} maxLength={10} onChange={e=>upd('alternatePhone',cleanMobile(e.target.value).slice(0,10))} onBlur={handleBlur} placeholder="Alternate number" className="form-input" style={inp(!!errors.alternatePhone)}/></Field>
+      <Field label="Agent Name (Optional)"><input type="text" name="agentName" value={formData.agentName||''} onChange={e=>upd('agentName', formatName(e.target.value))} onBlur={handleBlur} placeholder="Agent name" className="form-input" style={inp()}/></Field>
+      <div style={{gridColumn:'1/-1'}}><Field label="Co-partner Name (Optional)"><input type="text" name="coPartnerName" value={formData.coPartnerName||''} onChange={e=>upd('coPartnerName', formatName(e.target.value))} onBlur={handleBlur} placeholder="Co-partner name" className="form-input" style={inp()}/></Field></div>
       {!isEditing&&(<>
         <Field label="Account Password" required error={errors.password}><div style={{position:'relative'}}><input type={showPw?'text':'password'} name="password" value={formData.password} onChange={onChange} onBlur={handleBlur} placeholder="Min. 8 characters" className="form-input" style={{...inp(!!errors.password),paddingRight:36}}/><button type="button" onClick={()=>setShowPw(p=>!p)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',display:'flex'}}>{showPw?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></Field>
         <Field label="Confirm Password" required error={errors.confirmPassword}><div style={{position:'relative'}}><input type={showCPw?'text':'password'} name="confirmPassword" value={formData.confirmPassword} onChange={onChange} onBlur={handleBlur} placeholder="Re-enter password" className="form-input" style={{...inp(!!errors.confirmPassword),paddingRight:36}}/><button type="button" onClick={()=>setShowCPw(p=>!p)} style={{position:'absolute',right:10,top:'50%',transform:'translateY(-50%)',background:'none',border:'none',cursor:'pointer',color:'var(--text-muted)',display:'flex'}}>{showCPw?<EyeOff size={15}/>:<Eye size={15}/>}</button></div></Field>
@@ -1796,8 +1814,8 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const step3=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,10))} onBlur={handleBlur} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
-      <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',e.target.value.replace(/\D/g,'').slice(0,12))} onBlur={handleBlur} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
+      <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',cleanPan(e.target.value).slice(0,10))} onBlur={handleBlur} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
+      <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',cleanAadhaar(e.target.value).slice(0,12))} onBlur={handleBlur} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
       <Field label="GST Status"><select name="gstStatus" value={formData.gstStatus||'Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
       <Field label="GST Number" error={errors.gstNumber}><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} onBlur={handleBlur} placeholder={formData.gstStatus === 'Registered' ? "e.g. 29ABCDE1234F1Z5 (Required)" : "e.g. 29ABCDE1234F1Z5 (Optional)"} className="form-input" style={{...inp(!!errors.gstNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
       <Field label="MSME Status"><select name="msmeStatus" value={formData.msmeStatus||'Not Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
@@ -1902,13 +1920,13 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const step4=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={onChange} onBlur={handleBlur} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={e=>upd('accountHolderName', formatName(e.target.value))} onBlur={handleBlur} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
       <Field label="Bank Name" error={errors.bankName}><input type="text" name="bankName" value={formData.bankName} onChange={onChange} onBlur={handleBlur} placeholder="e.g. HDFC Bank" className="form-input" style={inp(!!errors.bankName)}/></Field>
       <Field label="Bank Branch" error={errors.bankBranch}><input type="text" name="bankBranch" value={formData.bankBranch||''} onChange={onChange} onBlur={handleBlur} placeholder="Branch name" className="form-input" style={inp(!!errors.bankBranch)}/></Field>
       <Field label="Bank Street (Optional)"><input type="text" name="bankStreet" value={formData.bankStreet||''} onChange={onChange} onBlur={handleBlur} placeholder="Street address" className="form-input" style={inp()}/></Field>
       <Field label="Bank City (Optional)"><input type="text" name="bankCity" value={formData.bankCity||''} onChange={onChange} onBlur={handleBlur} placeholder="City" className="form-input" style={inp()}/></Field>
-      <Field label="Account Number" error={errors.accountNumber}><input type="text" name="accountNumber" value={formData.accountNumber} maxLength={18} onChange={e=>upd('accountNumber',e.target.value.replace(/\D/g,'').slice(0,18))} onBlur={handleBlur} placeholder="Bank Account Number" className="form-input" style={{...inp(!!errors.accountNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
-      <Field label="IFSC Code" error={errors.ifsc}><input type="text" name="ifsc" value={formData.ifsc} maxLength={11} onChange={e=>upd('ifsc',e.target.value.toUpperCase().slice(0,11))} onBlur={handleBlur} placeholder="e.g. HDFC0001234" className="form-input" style={{...inp(!!errors.ifsc),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <Field label="Account Number" error={errors.accountNumber}><input type="text" name="accountNumber" value={formData.accountNumber} maxLength={18} onChange={e=>upd('accountNumber',cleanAccountNumber(e.target.value).slice(0,18))} onBlur={handleBlur} placeholder="Bank Account Number" className="form-input" style={{...inp(!!errors.accountNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <Field label="IFSC Code" error={errors.ifsc}><input type="text" name="ifsc" value={formData.ifsc} maxLength={11} onChange={e=>upd('ifsc',cleanIfsc(e.target.value).slice(0,11))} onBlur={handleBlur} placeholder="e.g. HDFC0001234" className="form-input" style={{...inp(!!errors.ifsc),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
     </div>
   );
 
@@ -1917,7 +1935,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       <RSection title="Business Information" icon={Store}><RRow label="Business Name" value={formData.businessName}/><RRow label="Category" value={formData.category}/><RRow label="Phone" value={formData.mobile}/><RRow label="Email" value={formData.email}/><RRow label="Address" value={formData.address}/><RRow label="Website" value={formData.website||'Not provided'}/><RRow label="Operating Hours" value={formData.operatingHours||'Not provided'}/></RSection>
       <RSection title="Owner Information" icon={User}><RRow label="Owner Name" value={formData.name}/><RRow label="Alternate Phone" value={formData.alternatePhone||'Not provided'}/><RRow label="Agent Name" value={formData.agentName||'Not provided'}/><RRow label="Co-partner" value={formData.coPartnerName||'Not provided'}/></RSection>
       <RSection title="Documents" icon={FileText}><RRow label="PAN Number" value={formData.panNumber||'Not provided'}/><RRow label="Aadhaar" value={formData.aadhaarNumber?maskAadhaar(formData.aadhaarNumber):'Not provided'}/><RRow label="GST Number" value={formData.gstNumber||'Not provided'}/><RRow label="GST Status" value={formData.gstStatus}/><RRow label="MSME Status" value={formData.msmeStatus}/><RRow label="Business License" value={formData.businessLicense?formData.businessLicense.name:'Not uploaded'}/></RSection>
-      <RSection title="Bank Details" icon={CreditCard}><RRow label="Account Holder" value={formData.accountHolderName||'Not provided'}/><RRow label="Bank" value={formData.bankName||'Not provided'}/><RRow label="Branch" value={formData.bankBranch||'Not provided'}/><RRow label="Account No." value={formData.accountNumber?maskAccount(formData.accountNumber):'Not provided'}/><RRow label="IFSC Code" value={formData.ifsc||'Not provided'}/></RSection>
+      <RSection title="Bank Details" icon={CreditCard}><RRow label="Account Holder" value={formData.accountHolderName||'Not provided'}/><RRow label="Bank" value={formData.bankName||'Not provided'}/><RRow label="Branch" value={formData.bankBranch||'Not provided'}/><RRow label="Account No." value={formData.accountNumber?maskAccountNumber(formData.accountNumber):'Not provided'}/><RRow label="IFSC Code" value={formData.ifsc||'Not provided'}/></RSection>
       <div style={{borderRadius:10,border:'2px solid '+(errors.declaration?'#f87171':'var(--primary)'),padding:'14px 16px',background:errors.declaration?'#fef2f2':'rgba(99,102,241,0.04)',marginTop:4}}>
         <label style={{display:'flex',alignItems:'flex-start',gap:10,cursor:'pointer'}}>
           <input type="checkbox" name="declaration" checked={formData.declaration} onChange={onChange} style={{marginTop:2,width:15,height:15,accentColor:'var(--primary)',flexShrink:0,cursor:'pointer'}}/>

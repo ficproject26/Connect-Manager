@@ -2,6 +2,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/api';
 import { User, Shield, Key, MapPin, CheckCircle2, AlertCircle, Clock, Sparkles, Lock, Eye, EyeOff, Camera, Upload, Trash2, X, Check, RefreshCw, Landmark, Copy, Edit3 } from 'lucide-react';
+import {
+  formatName,
+  validateName,
+  validatePassword,
+  validatePasswordMatch,
+  cleanAccountNumber,
+  validateAccountNumber,
+  cleanIfsc,
+  validateIfsc
+} from '../utils/validation';
 
 const Profile = () => {
   const { user, setSession, refreshUser } = useAuth();
@@ -123,18 +133,16 @@ const Profile = () => {
     setBankSuccess('');
 
     // Client-side validations
-    const holderName = String(bankForm.accountHolderName || '').trim();
+    const holderErr = validateName(bankForm.accountHolderName, true, 'Account Holder Name');
+    if (holderErr) {
+      setBankError(holderErr);
+      return;
+    }
     const bank = String(bankForm.bankName || '').trim();
     const branch = String(bankForm.branchName || '').trim();
     const city = String(bankForm.city || '').trim();
     const street = bankForm.street ? String(bankForm.street).trim() : '';
-    const cleanAccount = String(bankForm.accountNumber || '').trim().replace(/\s/g, '');
-    const cleanIfsc = String(bankForm.ifscCode || '').trim().toUpperCase();
 
-    if (!holderName) {
-      setBankError('Account Holder Name is required.');
-      return;
-    }
     if (!bank) {
       setBankError('Bank Name is required.');
       return;
@@ -147,23 +155,27 @@ const Profile = () => {
       setBankError('City is required.');
       return;
     }
-    if (!/^\d{9,18}$/.test(cleanAccount)) {
-      setBankError('Account Number must be between 9 and 18 digits.');
+
+    const accErr = validateAccountNumber(bankForm.accountNumber, true, bank);
+    if (accErr) {
+      setBankError(accErr);
       return;
     }
-    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
-      setBankError('IFSC Code must be valid (e.g. SBIN0001234, 4 letters, 0, then 6 alphanumeric characters).');
+
+    const ifscErr = validateIfsc(bankForm.ifscCode, true);
+    if (ifscErr) {
+      setBankError(ifscErr);
       return;
     }
 
     const payload = {
-      accountHolderName: holderName,
+      accountHolderName: formatName(bankForm.accountHolderName),
       bankName: bank,
       branchName: branch,
       city,
       street: street || null,
-      accountNumber: cleanAccount,
-      ifscCode: cleanIfsc
+      accountNumber: cleanAccountNumber(bankForm.accountNumber),
+      ifscCode: cleanIfsc(bankForm.ifscCode)
     };
 
     setBankSaving(true);
@@ -318,13 +330,15 @@ const Profile = () => {
     setMessage('');
     setError('');
 
-    if (newPassword !== confirmPassword) {
-      setError('New password and confirmation do not match');
+    const passErr = validatePassword(newPassword, true);
+    if (passErr) {
+      setError(passErr);
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
+    const matchErr = validatePasswordMatch(newPassword, confirmPassword);
+    if (matchErr) {
+      setError(matchErr);
       return;
     }
 
@@ -1117,7 +1131,7 @@ const Profile = () => {
                       required
                       className="form-input"
                       value={bankForm.accountHolderName}
-                      onChange={(e) => setBankForm({ ...bankForm, accountHolderName: e.target.value })}
+                      onChange={(e) => setBankForm({ ...bankForm, accountHolderName: formatName(e.target.value) })}
                       placeholder="e.g. Balavignesh"
                       style={{ width: '100%' }}
                     />

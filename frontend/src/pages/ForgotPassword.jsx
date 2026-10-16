@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../services/api';
 import { Mail, ArrowLeft, CheckCircle2, AlertCircle, Key, Shield, ArrowRight } from 'lucide-react';
+import { validateEmail } from '../utils/validation';
 
 const ForgotPassword = ({ onNavigate }) => {
   const [email, setEmail] = useState('');
@@ -12,6 +13,13 @@ const ForgotPassword = ({ onNavigate }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+
+    const emailErr = validateEmail(email, true);
+    if (emailErr) {
+      setError(emailErr);
+      return;
+    }
+
     setLoading(true);
 
     try {

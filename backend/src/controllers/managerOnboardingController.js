@@ -11,6 +11,23 @@
 
 const db = require('../config/db');
 const { broadcastNotification } = require('../routes/notificationRoutes');
+const {
+  formatName,
+  validateName,
+  normalizeEmail,
+  validateEmail,
+  cleanMobile,
+  validateMobile,
+  cleanPan,
+  validatePan,
+  cleanAadhaar,
+  validateAadhaar,
+  cleanAccountNumber,
+  validateAccountNumber,
+  cleanIfsc,
+  validateIfsc,
+  validateDob
+} = require('../utils/validation');
 
 // ─────────────────────────────────────────────────────────
 // HELPERS
@@ -181,6 +198,51 @@ const submitVendorOnboarding = async (req, res) => {
       });
     }
 
+    if (ownerName) {
+      const nameErr = validateName(ownerName, false, 'Owner name');
+      if (nameErr) return res.status(400).json({ success: false, message: nameErr });
+    }
+    if (ownerPhone) {
+      const phoneErr = validateMobile(ownerPhone, false, 'Owner phone');
+      if (phoneErr) return res.status(400).json({ success: false, message: phoneErr });
+    }
+    if (businessPhone) {
+      const bPhoneErr = validateMobile(businessPhone, false, 'Business phone');
+      if (bPhoneErr) return res.status(400).json({ success: false, message: bPhoneErr });
+    }
+    if (ownerEmail) {
+      const emailErr = validateEmail(ownerEmail, false);
+      if (emailErr) return res.status(400).json({ success: false, message: emailErr });
+    }
+    if (businessEmail) {
+      const bEmailErr = validateEmail(businessEmail, false);
+      if (bEmailErr) return res.status(400).json({ success: false, message: bEmailErr });
+    }
+    if (ownerDob) {
+      const dobErr = validateDob(ownerDob, 18, false);
+      if (dobErr) return res.status(400).json({ success: false, message: dobErr });
+    }
+    if (panNumber) {
+      const panErr = validatePan(panNumber, false);
+      if (panErr) return res.status(400).json({ success: false, message: panErr });
+    }
+    if (req.body.aadhaarNumber) {
+      const aadharErr = validateAadhaar(req.body.aadhaarNumber, false);
+      if (aadharErr) return res.status(400).json({ success: false, message: aadharErr });
+    }
+    if (accountHolderName) {
+      const holderErr = validateName(accountHolderName, false, 'Account Holder Name');
+      if (holderErr) return res.status(400).json({ success: false, message: holderErr });
+    }
+    if (accountNumber) {
+      const accErr = validateAccountNumber(accountNumber, false, bankName);
+      if (accErr) return res.status(400).json({ success: false, message: accErr });
+    }
+    if (ifsc) {
+      const ifscErr = validateIfsc(ifsc, false);
+      if (ifscErr) return res.status(400).json({ success: false, message: ifscErr });
+    }
+
     const territory = {
       stateId:     stateId    || fieldVisit.stateId    || user.stateId    || null,
       districtId:  districtId || fieldVisit.districtId || user.districtId || null,
@@ -215,26 +277,27 @@ const submitVendorOnboarding = async (req, res) => {
       storefrontPhoto: storefrontPhoto || fieldVisit.storefrontPhoto || (cleanBusinessImages[0]?.url || null),
       interestStatus:  'YES',
       businessName:    businessName    || shopName || fieldVisit.shopName,
-      businessPhone:   businessPhone   || null,
-      businessEmail:   businessEmail   || null,
+      businessPhone:   businessPhone   ? cleanMobile(businessPhone) : null,
+      businessEmail:   businessEmail   ? normalizeEmail(businessEmail) : null,
       businessAddress: businessAddress || null,
       businessWebsite: businessWebsite || null,
       operatingHours:  operatingHours  || null,
-      ownerName:    ownerName    || null,
-      ownerPhone:   ownerPhone   || null,
-      ownerEmail:   ownerEmail   || null,
+      ownerName:    ownerName    ? formatName(ownerName) : null,
+      ownerPhone:   ownerPhone   ? cleanMobile(ownerPhone) : null,
+      ownerEmail:   ownerEmail   ? normalizeEmail(ownerEmail) : null,
       ownerDob:     ownerDob     || null,
       ownerGender:  ownerGender  || null,
       ownerAddress: ownerAddress || null,
-      panNumber:    panNumber    || null,
+      panNumber:    panNumber    ? cleanPan(panNumber) : null,
+      aadhaarNumber: req.body.aadhaarNumber ? cleanAadhaar(req.body.aadhaarNumber) : null,
       gstNumber:    gstNumber    || null,
       documents:    Array.isArray(documents) ? documents : [],
       businessImages: cleanBusinessImages,
       logo:         req.body.logo || null,
       businessLicense: req.body.businessLicense || null,
-      accountHolderName: accountHolderName || null,
-      accountNumber:     accountNumber     || null,
-      ifsc:              ifsc              || null,
+      accountHolderName: accountHolderName ? formatName(accountHolderName) : null,
+      accountNumber:     accountNumber     ? cleanAccountNumber(accountNumber) : null,
+      ifsc:              ifsc              ? cleanIfsc(ifsc) : null,
       bankName:          bankName          || null,
       ...territory,
       managerId:    String(user.id || user._id),

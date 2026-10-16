@@ -13,6 +13,24 @@ const {
   isApprovedStatus,
   isRejectedOrBlockedStatus
 } = require('../middleware/roleMiddleware');
+const {
+  formatName,
+  validateName,
+  normalizeEmail,
+  validateEmail,
+  cleanMobile,
+  validateMobile,
+  validatePassword,
+  cleanAadhaar,
+  validateAadhaar,
+  cleanPan,
+  validatePan,
+  cleanAccountNumber,
+  validateAccountNumber,
+  cleanIfsc,
+  validateIfsc,
+  validateDob
+} = require('../utils/validation');
 
 const ROLE_LIMITS = {
   state_manager: 8,      // 8 managers per State
@@ -552,31 +570,17 @@ const register = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please provide all required fields: Full Name, Email, Mobile, Password, and Role.' });
     }
 
-    const trimmedName = String(name).trim();
-    if (trimmedName.length > 50) {
-      return res.status(400).json({ success: false, message: 'Full Name must not exceed 50 characters.' });
+    const nameErr = validateName(name, true, 'Full Name');
+    if (nameErr) {
+      return res.status(400).json({ success: false, message: nameErr });
     }
-    const nameRegex = /^[A-Za-z]+(?: [A-Za-z]+)*$/;
-    if (!nameRegex.test(trimmedName) || trimmedName.length < 2) {
-      return res.status(400).json({
-        success: false,
-        message: 'Full Name must contain only English alphabetic characters (A–Z, a–z) and spaces between name parts. Numbers and special characters are not permitted.'
-      });
-    }
+    const formattedName = formatName(name);
 
-    const formattedName = trimmedName
-      .split(/\s+/)
-      .map(part => part.charAt(0).toUpperCase() + part.slice(1).toLowerCase())
-      .join(' ');
-
-    const emailStr = String(email).trim();
-    if (emailStr.length > 100) {
-      return res.status(400).json({ success: false, message: 'Email address must not exceed 100 characters.' });
+    const emailErr = validateEmail(email, true);
+    if (emailErr) {
+      return res.status(400).json({ success: false, message: emailErr });
     }
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(emailStr)) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid email address.' });
-    }
+    const emailStr = normalizeEmail(email);
 
     // Parse & Validate Residential / Operational Address (7 Fields or legacy single string)
     let addressObj = null;
@@ -648,26 +652,38 @@ const register = async (req, res) => {
       formattedAddressStr = parts.join(', ');
     }
 
-    const cleanAadhar = (aadharNumber || documents?.aadharNumber || '').toString().replace(/\D/g, '');
-    if (cleanAadhar && cleanAadhar.length !== 12) {
-      return res.status(400).json({ success: false, message: 'Aadhaar Number must be exactly 12 digits.' });
+    const aadharVal = aadharNumber || documents?.aadharNumber || '';
+    const cleanAadhar = cleanAadhaar(aadharVal);
+    if (cleanAadhar) {
+      const aadharErr = validateAadhaar(cleanAadhar, false);
+      if (aadharErr) {
+        return res.status(400).json({ success: false, message: aadharErr });
+      }
     }
 
-    const cleanPan = (panNumber || documents?.panNumber || '').toString().trim().toUpperCase();
-    if (cleanPan && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(cleanPan)) {
-      return res.status(400).json({ success: false, message: 'PAN Number must be in valid format (e.g., ABCDE1234F).' });
+    const panVal = panNumber || documents?.panNumber || '';
+    const cleanPanVal = cleanPan(panVal);
+    if (cleanPanVal) {
+      const panErr = validatePan(cleanPanVal, false);
+      if (panErr) {
+        return res.status(400).json({ success: false, message: panErr });
+      }
     }
 
-    const cleanMobile = String(mobile).replace(/\D/g, '');
-    if (!/^[6-9]\d{9}$/.test(cleanMobile)) {
-      return res.status(400).json({ success: false, message: 'Please provide a valid 10-digit Indian mobile number.' });
+    const mobileErr = validateMobile(mobile, true, 'Mobile number');
+    if (mobileErr) {
+      return res.status(400).json({ success: false, message: mobileErr });
+    }
+    const cleanMobileNum = cleanMobile(mobile);
+
+    const passErr = validatePassword(password, true);
+    if (passErr) {
+      return res.status(400).json({ success: false, message: passErr });
     }
 
-    if (password.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(password)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Password must be at least 8 characters long and include at least one uppercase letter, one lowercase letter, and one number.'
-      });
+    const dobErr = validateDob(dob, 18, true);
+    if (dobErr) {
+      return res.status(400).json({ success: false, message: dobErr });
     }
 
     if (!['state_manager', 'district_manager', 'division_manager', 'pincode_manager'].includes(role)) {
@@ -760,22 +776,28 @@ const register = async (req, res) => {
         return res.status(400).json({ success: false, message: `${label} is required in Bank Details.` });
       }
     }
-    const cleanIfsc = String(bd.ifscCode).trim().toUpperCase();
-    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
-      return res.status(400).json({ success: false, message: 'IFSC Code must be in valid format (e.g., SBIN0001234).' });
+    const holderErr = validateName(bd.accountHolderName, true, 'Account Holder Name');
+    if (holderErr) {
+      return res.status(400).json({ success: false, message: holderErr });
     }
-    const cleanAccountNumber = String(bd.accountNumber).trim().replace(/\s/g, '');
-    if (!/^\d{9,18}$/.test(cleanAccountNumber)) {
-      return res.status(400).json({ success: false, message: 'Account Number must be between 9 and 18 digits.' });
+    const ifscErr = validateIfsc(bd.ifscCode, true);
+    if (ifscErr) {
+      return res.status(400).json({ success: false, message: ifscErr });
     }
+    const accErr = validateAccountNumber(bd.accountNumber, true, bd.bankName);
+    if (accErr) {
+      return res.status(400).json({ success: false, message: accErr });
+    }
+    const cleanIfscCode = cleanIfsc(bd.ifscCode);
+    const cleanAccount = cleanAccountNumber(bd.accountNumber);
     const sanitizedBankDetails = {
-      accountHolderName: String(bd.accountHolderName).trim(),
+      accountHolderName: formatName(bd.accountHolderName),
       bankName: String(bd.bankName).trim(),
       branchName: String(bd.branchName).trim(),
       street: bd.street ? String(bd.street).trim() : null,
       city: String(bd.city).trim(),
-      accountNumber: cleanAccountNumber,
-      ifscCode: cleanIfsc
+      accountNumber: cleanAccount,
+      ifscCode: cleanIfscCode
     };
 
     // Role-specific location validation
@@ -827,12 +849,18 @@ const register = async (req, res) => {
     }
 
     // Check duplicate email or mobile
-    const existingEmail = await db.users.findOne({ email: email.trim().toLowerCase() });
+    const existingEmail = await db.users.findOne({ email: emailStr });
     if (existingEmail) {
       return res.status(400).json({ success: false, message: 'An account with this email address already exists. Please sign in or use another email.' });
     }
 
-    const existingMobile = await db.users.findOne({ mobile: mobile.trim() });
+    const existingMobile = await db.users.findOne({
+      $or: [
+        { mobile: cleanMobileNum },
+        { phone: cleanMobileNum },
+        { mobile: mobile.trim() }
+      ]
+    });
     if (existingMobile) {
       return res.status(400).json({ success: false, message: 'An account with this mobile number already exists. Please sign in or use another mobile number.' });
     }
@@ -896,8 +924,8 @@ const register = async (req, res) => {
     const newUser = await db.users.insertOne({
       managerId,
       name: formattedName,
-      email: email.trim().toLowerCase(),
-      mobile: mobile.trim(),
+      email: emailStr,
+      mobile: cleanMobileNum,
       passwordHash,
       role,
       level,
@@ -921,10 +949,10 @@ const register = async (req, res) => {
       address: formattedAddressStr || (address ? String(address).trim() : null),
       residentialAddress: addressObj || null,
       aadharNumber: cleanAadhar || null,
-      panNumber: cleanPan || null,
+      panNumber: cleanPanVal || null,
       documents: {
         aadharNumber: cleanAadhar || null,
-        panNumber: cleanPan || null,
+        panNumber: cleanPanVal || null,
         aadharUrl: aadharDocUrl,
         panUrl: panDocUrl,
         bankUrl: bankDocUrl,
@@ -2409,11 +2437,9 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Both current and new password are required.' });
     }
 
-    if (newPassword.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(newPassword)) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 8 characters long and include an uppercase letter, lowercase letter, and number.'
-      });
+    const passErr = validatePassword(newPassword, true);
+    if (passErr) {
+      return res.status(400).json({ success: false, message: passErr });
     }
 
     const user = await db.users.findById(req.user.id);
@@ -2441,6 +2467,11 @@ const forgotPassword = async (req, res) => {
     const { email } = req.body;
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email is required.' });
+    }
+
+    const emailErr = validateEmail(email, true);
+    if (emailErr) {
+      return res.status(400).json({ success: false, message: emailErr });
     }
 
     const user = await db.users.findOne({ email: email.trim().toLowerCase() });
@@ -2483,11 +2514,9 @@ const resetPassword = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Token and new password are required.' });
     }
 
-    if (newPassword.length < 8 || !/(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])/.test(newPassword)) {
-      return res.status(400).json({
-        success: false,
-        message: 'New password must be at least 8 characters long and include an uppercase letter, lowercase letter, and number.'
-      });
+    const passErr = validatePassword(newPassword, true);
+    if (passErr) {
+      return res.status(400).json({ success: false, message: passErr });
     }
 
     const user = await db.users.findOne({ resetPasswordToken: token });
@@ -2888,30 +2917,32 @@ const updateBankDetails = async (req, res) => {
       });
     }
 
-    const cleanAccountNumber = String(accountNumber).trim().replace(/\s/g, '');
-    if (!/^\d{9,18}$/.test(cleanAccountNumber)) {
-      return res.status(400).json({
-        success: false,
-        message: 'Account Number must be between 9 and 18 digits.'
-      });
+    const holderErr = validateName(accountHolderName, true, 'Account Holder Name');
+    if (holderErr) {
+      return res.status(400).json({ success: false, message: holderErr });
     }
 
-    const cleanIfsc = String(ifscCode).trim().toUpperCase();
-    if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
-      return res.status(400).json({
-        success: false,
-        message: 'IFSC Code must be in valid format (e.g., SBIN0001234).'
-      });
+    const accErr = validateAccountNumber(accountNumber, true, bankName);
+    if (accErr) {
+      return res.status(400).json({ success: false, message: accErr });
     }
+
+    const ifscErr = validateIfsc(ifscCode, true);
+    if (ifscErr) {
+      return res.status(400).json({ success: false, message: ifscErr });
+    }
+
+    const cleanAccount = cleanAccountNumber(accountNumber);
+    const cleanIfscCode = cleanIfsc(ifscCode);
 
     const sanitizedBankDetails = {
-      accountHolderName: String(accountHolderName).trim(),
+      accountHolderName: formatName(accountHolderName),
       bankName: String(bankName).trim(),
       branchName: String(branchName).trim(),
       city: city ? String(city).trim() : String(branchName).trim(),
       street: street ? String(street).trim() : null,
-      accountNumber: cleanAccountNumber,
-      ifscCode: cleanIfsc
+      accountNumber: cleanAccount,
+      ifscCode: cleanIfscCode
     };
 
     let user = await db.users.findById(userId);

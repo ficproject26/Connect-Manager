@@ -19,6 +19,7 @@ import {
   KeyRound,
   RotateCcw
 } from 'lucide-react';
+import { validateMobile, cleanMobile } from '../utils/validation';
 
 const Login = ({ onNavigate }) => {
   const { login, loginWithOtp } = useAuth();
@@ -105,11 +106,12 @@ const Login = ({ onNavigate }) => {
     if (e) e.preventDefault();
     setError('');
     setOtpMessage('');
-    const cleanPhone = mobile.trim();
-    if (!cleanPhone || !/^[6-9][0-9]{9}$/.test(cleanPhone)) {
-      setError('Please enter a valid 10-digit Indian mobile number.');
+    const mobileErr = validateMobile(mobile, true, 'Mobile number');
+    if (mobileErr) {
+      setError(mobileErr);
       return;
     }
+    const cleanPhone = cleanMobile(mobile);
     setLoading(true);
     try {
       const res = await authService.sendOtp(cleanPhone);
@@ -130,11 +132,12 @@ const Login = ({ onNavigate }) => {
     if (otpCooldown > 0 || loading) return;
     setError('');
     setOtpMessage('');
-    const cleanPhone = mobile.trim();
-    if (!cleanPhone) {
-      setError('Mobile number is missing.');
+    const mobileErr = validateMobile(mobile, true, 'Mobile number');
+    if (mobileErr) {
+      setError(mobileErr);
       return;
     }
+    const cleanPhone = cleanMobile(mobile);
     setLoading(true);
     try {
       const res = await authService.sendOtp(cleanPhone);

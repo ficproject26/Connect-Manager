@@ -1,6 +1,22 @@
 const db = require('../config/db');
 const { getScopeFilter, isVendorInScope } = require('../middleware/scopeMiddleware');
 const { publishEntityEvent, cacheManager } = require('../realtime');
+const {
+  formatName,
+  validateName,
+  normalizeEmail,
+  validateEmail,
+  cleanMobile,
+  validateMobile,
+  cleanPan,
+  validatePan,
+  cleanAadhaar,
+  validateAadhaar,
+  cleanAccountNumber,
+  validateAccountNumber,
+  cleanIfsc,
+  validateIfsc
+} = require('../utils/validation');
 
 // Mask sensitive identifiers for security
 const maskPan = (pan) => {
@@ -497,14 +513,77 @@ const createVendor = async (req, res) => {
       });
     }
 
-    if (String(name).trim().length > 50) {
-      return res.status(400).json({ success: false, message: 'Owner name must not exceed 50 characters.' });
+    const nameErr = validateName(name, true, 'Owner name');
+    if (nameErr) return res.status(400).json({ success: false, message: nameErr });
+    const formattedOwnerName = formatName(name);
+
+    const mobileErr = validateMobile(mobile, true, 'Business mobile');
+    if (mobileErr) return res.status(400).json({ success: false, message: mobileErr });
+    const cleanPhone = cleanMobile(mobile);
+
+    let cleanEmail = '';
+    if (email) {
+      const emailErr = validateEmail(email, false);
+      if (emailErr) return res.status(400).json({ success: false, message: emailErr });
+      cleanEmail = normalizeEmail(email);
     }
+
+    let cleanPanNumber = '';
+    if (panNumber) {
+      const panErr = validatePan(panNumber, false);
+      if (panErr) return res.status(400).json({ success: false, message: panErr });
+      cleanPanNumber = cleanPan(panNumber);
+    }
+
+    let cleanAccNum = '';
+    let cleanIfscCode = '';
+    let formattedHolderName = '';
+    if (accountNumber) {
+      const accErr = validateAccountNumber(accountNumber, false, bankName);
+      if (accErr) return res.status(400).json({ success: false, message: accErr });
+      cleanAccNum = cleanAccountNumber(accountNumber);
+    }
+    if (ifsc) {
+      const ifscErr = validateIfsc(ifsc, false);
+      if (ifscErr) return res.status(400).json({ success: false, message: ifscErr });
+      cleanIfscCode = cleanIfsc(ifsc);
+    }
+    if (accountHolderName) {
+      const holderErr = validateName(accountHolderName, false, 'Account Holder Name');
+      if (holderErr) return res.status(400).json({ success: false, message: holderErr });
+      formattedHolderName = formatName(accountHolderName);
+    }
+
+    let cleanAadhaarNum = '';
+    if (req.body.aadhaarNumber) {
+      const aadharErr = validateAadhaar(req.body.aadhaarNumber, false);
+      if (aadharErr) return res.status(400).json({ success: false, message: aadharErr });
+      cleanAadhaarNum = cleanAadhaar(req.body.aadhaarNumber);
+    }
+
+    let cleanAltPhone = '';
+    if (req.body.alternatePhone) {
+      const altErr = validateMobile(req.body.alternatePhone, false, 'Alternate mobile');
+      if (altErr) return res.status(400).json({ success: false, message: altErr });
+      cleanAltPhone = cleanMobile(req.body.alternatePhone);
+    }
+
+    let formattedAgentName = '';
+    if (req.body.agentName) {
+      const agErr = validateName(req.body.agentName, false, 'Agent name');
+      if (agErr) return res.status(400).json({ success: false, message: agErr });
+      formattedAgentName = formatName(req.body.agentName);
+    }
+
+    let formattedCoPartner = '';
+    if (req.body.coPartnerName) {
+      const cpErr = validateName(req.body.coPartnerName, false, 'Co-partner name');
+      if (cpErr) return res.status(400).json({ success: false, message: cpErr });
+      formattedCoPartner = formatName(req.body.coPartnerName);
+    }
+
     if (String(businessName).trim().length > 100) {
       return res.status(400).json({ success: false, message: 'Business name must not exceed 100 characters.' });
-    }
-    if (email && String(email).trim().length > 100) {
-      return res.status(400).json({ success: false, message: 'Email address must not exceed 100 characters.' });
     }
     if (description && String(description).trim().length > 1000) {
       return res.status(400).json({ success: false, message: 'Business description must not exceed 1000 characters.' });
@@ -514,8 +593,6 @@ const createVendor = async (req, res) => {
     }
 
     const fieldVisitId = req.body.fieldVisitId || null;
-
-    const cleanPhone = String(mobile).trim().replace(/\D/g, '').slice(-10);
     const cleanBusiness = String(businessName).trim().toLowerCase();
 
     // 1. Phone OTP Verification Enforcement
@@ -610,10 +687,10 @@ const createVendor = async (req, res) => {
     const primaryStorefront = storefrontPhoto || shopPhoto || (cleanBusinessImages.length > 0 ? cleanBusinessImages[0].url : null);
 
     const newVendor = await db.vendors.insertOne({
-      name,
-      mobile: cleanPhone || mobile,
-      phone: cleanPhone || mobile,
-      email: email || '',
+      name: formattedOwnerName,
+      mobile: cleanPhone,
+      phone: cleanPhone,
+      email: cleanEmail,
       businessName,
       category,
       subCategory: subCategory || '',
@@ -630,7 +707,7 @@ const createVendor = async (req, res) => {
       divisionId,
       pincodeId,
       fieldVisitId,
-      panNumber: panNumber ? panNumber.toUpperCase() : '',
+      panNumber: cleanPanNumber,
       gstNumber: rawGst || '',
       gst: rawGst || '',
       documents: Array.isArray(documents) ? documents : [],
@@ -639,9 +716,9 @@ const createVendor = async (req, res) => {
       businessLicense: businessLicense || null,
       storefrontPhoto: primaryStorefront,
       shopPhoto: primaryStorefront,
-      accountHolderName: accountHolderName || '',
-      accountNumber: accountNumber || '',
-      ifsc: ifsc ? ifsc.toUpperCase() : '',
+      accountHolderName: formattedHolderName,
+      accountNumber: cleanAccNum,
+      ifsc: cleanIfscCode,
       bankName: bankName || '',
       status: 'Pending',
       statusNotes: 'New vendor onboarding submitted. Awaiting document inspection.',
@@ -728,14 +805,63 @@ const updateVendor = async (req, res) => {
     const user = req.user;
     const vendor = req.targetVendor;
     const updates = req.body || {};
-    if (updates.name && String(updates.name).trim().length > 50) {
-      return res.status(400).json({ success: false, message: 'Owner name must not exceed 50 characters.' });
+    if (updates.name) {
+      const nameErr = validateName(updates.name, true, 'Owner name');
+      if (nameErr) return res.status(400).json({ success: false, message: nameErr });
+      updates.name = formatName(updates.name);
+    }
+    if (updates.mobile) {
+      const mobileErr = validateMobile(updates.mobile, true, 'Business mobile');
+      if (mobileErr) return res.status(400).json({ success: false, message: mobileErr });
+      updates.mobile = cleanMobile(updates.mobile);
+    }
+    if (updates.email) {
+      const emailErr = validateEmail(updates.email, false);
+      if (emailErr) return res.status(400).json({ success: false, message: emailErr });
+      updates.email = normalizeEmail(updates.email);
+    }
+    if (updates.panNumber) {
+      const panErr = validatePan(updates.panNumber, false);
+      if (panErr) return res.status(400).json({ success: false, message: panErr });
+      updates.panNumber = cleanPan(updates.panNumber);
+    }
+    if (updates.accountNumber) {
+      const accErr = validateAccountNumber(updates.accountNumber, false, updates.bankName || vendor.bankName);
+      if (accErr) return res.status(400).json({ success: false, message: accErr });
+      updates.accountNumber = cleanAccountNumber(updates.accountNumber);
+    }
+    if (updates.ifsc) {
+      const ifscErr = validateIfsc(updates.ifsc, false);
+      if (ifscErr) return res.status(400).json({ success: false, message: ifscErr });
+      updates.ifsc = cleanIfsc(updates.ifsc);
+    }
+    if (updates.accountHolderName) {
+      const holderErr = validateName(updates.accountHolderName, false, 'Account Holder Name');
+      if (holderErr) return res.status(400).json({ success: false, message: holderErr });
+      updates.accountHolderName = formatName(updates.accountHolderName);
+    }
+    if (updates.aadhaarNumber) {
+      const aadharErr = validateAadhaar(updates.aadhaarNumber, false);
+      if (aadharErr) return res.status(400).json({ success: false, message: aadharErr });
+      updates.aadhaarNumber = cleanAadhaar(updates.aadhaarNumber);
+    }
+    if (updates.alternatePhone) {
+      const altErr = validateMobile(updates.alternatePhone, false, 'Alternate mobile');
+      if (altErr) return res.status(400).json({ success: false, message: altErr });
+      updates.alternatePhone = cleanMobile(updates.alternatePhone);
+    }
+    if (updates.agentName) {
+      const agErr = validateName(updates.agentName, false, 'Agent name');
+      if (agErr) return res.status(400).json({ success: false, message: agErr });
+      updates.agentName = formatName(updates.agentName);
+    }
+    if (updates.coPartnerName) {
+      const cpErr = validateName(updates.coPartnerName, false, 'Co-partner name');
+      if (cpErr) return res.status(400).json({ success: false, message: cpErr });
+      updates.coPartnerName = formatName(updates.coPartnerName);
     }
     if (updates.businessName && String(updates.businessName).trim().length > 100) {
       return res.status(400).json({ success: false, message: 'Business name must not exceed 100 characters.' });
-    }
-    if (updates.email && String(updates.email).trim().length > 100) {
-      return res.status(400).json({ success: false, message: 'Email address must not exceed 100 characters.' });
     }
     if (updates.description && String(updates.description).trim().length > 1000) {
       return res.status(400).json({ success: false, message: 'Business description must not exceed 1000 characters.' });
@@ -753,11 +879,11 @@ const updateVendor = async (req, res) => {
       category: updates.category ?? vendor.category,
       subCategory: updates.subCategory ?? vendor.subCategory,
       description: updates.description ?? vendor.description,
-      panNumber: updates.panNumber ? updates.panNumber.toUpperCase() : vendor.panNumber,
+      panNumber: updates.panNumber ?? vendor.panNumber,
       gstNumber: updates.gstNumber ? updates.gstNumber.toUpperCase() : vendor.gstNumber,
       accountHolderName: updates.accountHolderName ?? vendor.accountHolderName,
       accountNumber: updates.accountNumber ?? vendor.accountNumber,
-      ifsc: updates.ifsc ? updates.ifsc.toUpperCase() : vendor.ifsc,
+      ifsc: updates.ifsc ?? vendor.ifsc,
       bankName: updates.bankName ?? vendor.bankName,
       documents: updates.documents ?? vendor.documents,
       businessImages: updates.businessImages !== undefined

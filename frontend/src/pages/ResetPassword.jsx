@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { authService } from '../services/api';
 import { Lock, ArrowLeft, CheckCircle2, AlertCircle, Shield, ArrowRight, Eye, EyeOff } from 'lucide-react';
+import { validatePassword, validatePasswordMatch } from '../utils/validation';
 
 const ResetPassword = ({ onNavigate, token: initialToken = '' }) => {
   const [token, setToken] = useState(initialToken);
@@ -21,13 +22,15 @@ const ResetPassword = ({ onNavigate, token: initialToken = '' }) => {
       return;
     }
 
-    if (newPassword !== confirmPassword) {
-      setError('New password and confirmation do not match');
+    const passErr = validatePassword(newPassword, true);
+    if (passErr) {
+      setError(passErr);
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
+    const matchErr = validatePasswordMatch(newPassword, confirmPassword);
+    if (matchErr) {
+      setError(matchErr);
       return;
     }
 

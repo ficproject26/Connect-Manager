@@ -2,6 +2,14 @@
 // Handles GET, PUT, POST for Manager Bank Details persistence directly with MongoDB Atlas
 
 const crypto = require('crypto');
+const {
+  formatName,
+  validateName,
+  cleanAccountNumber,
+  validateAccountNumber,
+  cleanIfsc,
+  validateIfsc
+} = require('../../backend/src/utils/validation');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Connect-app:Connect123@cluster0.fzj1k5l.mongodb.net/test?retryWrites=true&w=majority';
 const JWT_SECRETS = [
@@ -175,10 +183,11 @@ module.exports = async function handler(req, res) {
           ifscCode
         } = body;
 
-        if (!accountHolderName || !String(accountHolderName).trim()) {
+        const holderErr = validateName(accountHolderName, true, 'Account Holder Name');
+        if (holderErr) {
           return res.status(400).json({
             success: false,
-            message: 'Account Holder Name is required.'
+            message: holderErr
           });
         }
 
@@ -203,30 +212,33 @@ module.exports = async function handler(req, res) {
           });
         }
 
-        const cleanAccountNumber = String(accountNumber || '').trim().replace(/\s/g, '');
-        if (!/^\d{9,18}$/.test(cleanAccountNumber)) {
+        const accErr = validateAccountNumber(accountNumber, true, bankName);
+        if (accErr) {
           return res.status(400).json({
             success: false,
-            message: 'Account Number must contain between 9 and 18 digits.'
+            message: accErr
           });
         }
 
-        const cleanIfsc = String(ifscCode || '').trim().toUpperCase();
-        if (!/^[A-Z]{4}0[A-Z0-9]{6}$/.test(cleanIfsc)) {
+        const ifscErr = validateIfsc(ifscCode, true);
+        if (ifscErr) {
           return res.status(400).json({
             success: false,
-            message: 'IFSC Code must be valid (e.g., SBIN0001234, 4 letters, 0, then 6 alphanumeric characters).'
+            message: ifscErr
           });
         }
+
+        const cleanAccountNumberVal = cleanAccountNumber(accountNumber);
+        const cleanIfscVal = cleanIfsc(ifscCode);
 
         const sanitizedBankDetails = {
-          accountHolderName: String(accountHolderName).trim(),
+          accountHolderName: formatName(accountHolderName),
           bankName: String(bankName).trim(),
           branchName: String(branchName).trim(),
           city: String(city).trim(),
           street: street ? String(street).trim() : null,
-          accountNumber: cleanAccountNumber,
-          ifscCode: cleanIfsc
+          accountNumber: cleanAccountNumberVal,
+          ifscCode: cleanIfscVal
         };
 
         const userQuery = {
@@ -257,7 +269,7 @@ module.exports = async function handler(req, res) {
         await db.collection('managers').updateOne(userQuery, updateData, { upsert: false }).catch(() => null);
 
         // 3. Security Audit Log (Masked Account Number - Never log full credentials or account numbers)
-        const maskedAcct = cleanAccountNumber.slice(-4);
+        const maskedAcct = cleanAccountNumberVal.slice(-4);
         const managerName = existingUser?.name || decoded.name || 'Manager';
         const managerRole = existingUser?.role || decoded.role || 'manager';
 
