@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { reportService } from '../../services/api';
+import { reportService, taskService } from '../../services/api';
 import { 
   MapPin, 
   Store, 
@@ -9,19 +9,27 @@ import {
   ArrowRight,
   ShieldAlert,
   Tag,
-  Users
+  Users,
+  CheckSquare
 } from 'lucide-react';
 import StatusBadge from '../../components/StatusBadge';
 
 const PincodeDashboard = ({ user, onNavigate }) => {
   const [stats, setStats] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await reportService.getDashboardStats();
-        if (res.success) setStats(res);
+        const [dashRes, taskRes] = await Promise.all([
+          reportService.getDashboardStats().catch(() => null),
+          taskService.getTasks({}, user).catch(() => null)
+        ]);
+        if (dashRes?.success) setStats(dashRes);
+        if (taskRes?.success && Array.isArray(taskRes.tasks)) {
+          setTasks(taskRes.tasks);
+        }
       } catch (err) {
         console.error('Failed to load Pincode Dashboard stats:', err);
       } finally {
@@ -29,7 +37,7 @@ const PincodeDashboard = ({ user, onNavigate }) => {
       }
     };
     fetchStats();
-  }, []);
+  }, [user]);
 
   if (loading) {
     return <div style={{ padding: '40px', textAlign: 'center' }}>Loading Pincode Dashboard...</div>;
@@ -183,7 +191,79 @@ const PincodeDashboard = ({ user, onNavigate }) => {
         </div>
       )}
 
-      {/* 5. Local Vendors Directory / Queue */}
+      {/* 5. Assigned Pincode Tasks & Field Deliverables */}
+      <div className="card" style={{ marginBottom: '24px' }}>
+        <div className="card-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h3 style={{ fontSize: '1.05rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <CheckSquare size={18} color="#7e22ce" /> Assigned Pincode Tasks & Field Deliverables ({tasks.length})
+            </h3>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
+              Actionable tasks assigned in your PIN Code territory
+            </p>
+          </div>
+          <button className="btn btn-secondary btn-sm" onClick={() => onNavigate('tasks')}>
+            View All Tasks <ArrowRight size={14} />
+          </button>
+        </div>
+        <div className="table-container">
+          {tasks.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: '#64748b', fontSize: '0.88rem' }}>
+              No pending tasks assigned in this PIN Code right now.
+            </div>
+          ) : (
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th style={{ width: '55px', textAlign: 'center' }}>S.No</th>
+                  <th>Task Title</th>
+                  <th>Vendor / Store</th>
+                  <th>Priority</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {tasks.slice(0, 5).map((t, index) => (
+                  <tr key={t._id || t.id}>
+                    <td style={{ textAlign: 'center', fontWeight: 600, color: '#64748b', fontSize: '0.82rem' }}>
+                      {index + 1}
+                    </td>
+                    <td>
+                      <div style={{ fontWeight: 600 }}>{t.title}</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>{t.type || t.category || 'Field Deliverable'}</div>
+                    </td>
+                    <td>{t.vendor || t.merchantName || t.shopName || '—'}</td>
+                    <td>
+                      <span style={{
+                        padding: '3px 8px',
+                        borderRadius: '4px',
+                        fontSize: '0.72rem',
+                        fontWeight: 700,
+                        background: (t.priority || '').toLowerCase() === 'urgent' ? '#fee2e2' : '#f1f5f9',
+                        color: (t.priority || '').toLowerCase() === 'urgent' ? '#dc2626' : '#475569'
+                      }}>
+                        {t.priority || 'Normal'}
+                      </span>
+                    </td>
+                    <td><StatusBadge status={t.status || 'Assigned'} /></td>
+                    <td>
+                      <button
+                        className="btn btn-primary btn-sm"
+                        onClick={() => onNavigate('tasks', { taskId: t._id || t.id })}
+                      >
+                        Open Task
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+
+      {/* 6. Local Vendors Directory / Queue */}
       <div className="card">
         <div className="card-header">
           <div>

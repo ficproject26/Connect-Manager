@@ -87,11 +87,19 @@ const otpLimiter = createRateLimiter({
   message: 'Too many OTP requests. Please wait a few minutes before requesting again.'
 });
 
-const uploadLimiter = createRateLimiter({
+const avatarUploadLimiter = createRateLimiter({
   windowMs: 10 * 60 * 1000, // 10 minutes
-  max: 500, // Raised from 25 to 500 to accommodate multi-file vendor onboarding (images, logo, docs)
-  message: 'Upload rate limit exceeded. Please wait a few minutes before uploading more files.'
+  max: 300,
+  message: 'Avatar upload rate limit exceeded. Please wait a few minutes before trying again.'
 });
+
+const documentUploadLimiter = createRateLimiter({
+  windowMs: 10 * 60 * 1000, // 10 minutes
+  max: 500, // Independent bucket for multi-document registration and vendor onboarding
+  message: 'Document upload rate limit exceeded. Please wait a few minutes before uploading more documents.'
+});
+
+const uploadLimiter = documentUploadLimiter;
 
 const apiLimiter = createRateLimiter({
   windowMs: 60 * 1000, // 1 minute
@@ -104,5 +112,8 @@ module.exports = {
   authLimiter,
   otpLimiter,
   uploadLimiter,
+  avatarUploadLimiter,
+  documentUploadLimiter,
   apiLimiter
 };
+

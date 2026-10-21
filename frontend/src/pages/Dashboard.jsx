@@ -395,14 +395,14 @@ const Dashboard = ({ onNavigate }) => {
         {/* Location Scope Breadcrumb Pill Chain */}
         <div className="hero-bottom-row">
           <div className="location-scope-chain">
-            <div className="location-chain-item" onClick={() => onNavigate('reports')}>
+            <div className="location-chain-item" style={{ cursor: 'default' }}>
               <MapPin size={13} style={{ color: 'var(--forge-gold)' }} />
               <span>{stateName} (State)</span>
             </div>
             {userLevel >= 2 && districtName && (
               <>
                 <span className="location-chain-sep">››</span>
-                <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
+                <div className="location-chain-item" style={{ cursor: 'default' }}>
                   <span>{districtName}</span>
                 </div>
               </>
@@ -410,7 +410,7 @@ const Dashboard = ({ onNavigate }) => {
             {userLevel >= 3 && divisionName && (
               <>
                 <span className="location-chain-sep">››</span>
-                <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
+                <div className="location-chain-item" style={{ cursor: 'default' }}>
                   <span>{divisionName}</span>
                 </div>
               </>
@@ -418,7 +418,7 @@ const Dashboard = ({ onNavigate }) => {
             {userLevel >= 4 && pincodeCode && (
               <>
                 <span className="location-chain-sep">››</span>
-                <div className="location-chain-item" onClick={() => onNavigate('vendors')}>
+                <div className="location-chain-item" style={{ cursor: 'default' }}>
                   <span>PIN {pincodeCode}</span>
                 </div>
               </>

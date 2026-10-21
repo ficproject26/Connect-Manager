@@ -265,5 +265,49 @@
     "createdAt": "2026-10-17T05:46:06.543Z",
     "updatedAt": "2026-10-17T05:46:06.543Z",
     "__v": 0
+  },
+  {
+    "_id": "6ad8b0b5bd236ef1f0e2c42f",
+    "ticketId": "TKT-Z7HIG27B",
+    "creator": "6ad34f1f7173698dd149ee5b",
+    "creatorRole": "pincode",
+    "creatorName": "Chat",
+    "assignedTo": "6ad34f1f7173698dd149ee5b",
+    "assignedAgent": "Chat",
+    "assignedAgentIdStr": "REG-20261017-9205",
+    "assignedAgentRole": "pincode",
+    "assignedAgentPhone": "8765345678",
+    "assignedAgentPincode": "605757",
+    "assignedAgentDistrict": "Kallakurichi",
+    "assignedAgentDivision": "Tirukkoilur",
+    "assignedAgentState": "Tamil Nadu",
+    "assignmentStatus": "assigned",
+    "assignmentHistory": [
+      {
+        "agentId": "REG-20261017-9205",
+        "agentName": "Chat",
+        "role": "pincode",
+        "assignedBy": "pincode",
+        "assignedAt": "2026-10-21T12:31:49.414Z",
+        "reason": "Auto-assigned by territory hierarchy upon ticket creation",
+        "_id": "6ad8b0b5bd236ef1f0e2c430"
+      }
+    ],
+    "vendorName": "",
+    "storeName": "",
+    "ticketType": "my_issue",
+    "subject": "amount",
+    "state": "Tamil Nadu",
+    "district": "Kallakurichi",
+    "division": "Tirukkoilur",
+    "pincode": "605757",
+    "territory": "Kallakurichi → Tirukkoilur → 605757",
+    "category": "Payout & Commission",
+    "description": "swdfghjk",
+    "priority": "medium",
+    "status": "open",
+    "createdAt": "2026-10-21T12:31:49.427Z",
+    "updatedAt": "2026-10-21T12:31:49.427Z",
+    "__v": 0
   }
 ]

@@ -34,10 +34,10 @@ const getDistricts = async (req, res) => {
     const user = req.user || {};
     const { stateId, state } = req.query;
 
-    let targetStateId = stateId || user.stateId;
+    let targetStateId = stateId || user.stateId || user.scope?.stateId;
     if (!targetStateId && (state || user.state)) {
       const stateName = state || user.state;
-      const stateDoc = await db.states.findOne({ name: new RegExp('^' + stateName.trim() + '$', 'i'), status: 'Active' });
+      const stateDoc = await db.states.findOne({ name: new RegExp('^' + String(stateName).trim() + '$', 'i') });
       if (stateDoc) {
         targetStateId = stateDoc._id || stateDoc.id;
       }

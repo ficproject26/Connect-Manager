@@ -261,6 +261,17 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 <span>Category: <strong>{vendor.category}</strong> {vendor.subCategory && `(${vendor.subCategory})`}</span>
                 <span>•</span>
                 <span>Registered: {formatDateSafe(vendor.createdAt)}</span>
+                <span>•</span>
+                <span>
+                  Registered By:{' '}
+                  <strong style={{ color: 'var(--text-main)' }}>
+                    {vendor.registeredBy?.name || vendor.agentName || vendor.assignedManagerName || vendor.addedBy?.name || (vendor.source === 'vendor' || vendor.selfRegistered ? 'Self-registered' : 'System / Legacy')}
+                  </strong>
+                  {' '}
+                  <span style={{ fontSize: '0.74rem', color: '#6366f1', fontWeight: 600 }}>
+                    ({vendor.registeredBy?.role || (vendor.agentName ? 'Agent' : (vendor.assignedManagerRole ? vendor.assignedManagerRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : (vendor.source === 'vendor' || vendor.selfRegistered ? 'Vendor' : 'Manager')))})
+                  </span>
+                </span>
               </div>
             </div>
           </div>

@@ -852,5 +852,27 @@
     "stateId": "state_ka",
     "status": "Active",
     "updatedAt": "2026-10-15T12:40:31.214Z"
+  },
+  {
+    "_id": "test_dt1_1792597364045",
+    "id": "test_dt1_1792597364045",
+    "districtId": "test_dt1_1792597364045",
+    "name": "Test Dist 1 1792597364045",
+    "stateId": "test_st_1792597364045",
+    "state": "Test State 1792597364045",
+    "status": "Active",
+    "createdAt": "2026-10-21T15:42:44.118Z",
+    "updatedAt": "2026-10-21T15:42:44.118Z"
+  },
+  {
+    "_id": "test_dt2_1792597364045",
+    "id": "test_dt2_1792597364045",
+    "districtId": "test_dt2_1792597364045",
+    "name": "Test Dist 2 1792597364045",
+    "stateId": "test_st_1792597364045",
+    "state": "Test State 1792597364045",
+    "status": "Active",
+    "createdAt": "2026-10-21T15:42:44.207Z",
+    "updatedAt": "2026-10-21T15:42:44.207Z"
   }
 ]

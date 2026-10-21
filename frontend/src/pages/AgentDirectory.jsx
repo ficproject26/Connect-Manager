@@ -71,14 +71,19 @@ const AgentDirectory = ({ onNavigate }) => {
         () => agentService.getAgents({}, user),
         { force: showSpinner }
       );
-      if (res && res.success) {
+      if (Array.isArray(res)) {
+        setAgents(res);
+      } else if (res && (res.success || Array.isArray(res.agents) || Array.isArray(res.data))) {
         const list = (Array.isArray(res.agents) ? res.agents : (Array.isArray(res.data) ? res.data : [])) || [];
         setAgents(list);
-        cacheClient.set(cacheKey, list);
-      } else {
+      } else if (res && res.success === false) {
         setError(res?.message || 'Failed to load agent directory');
         setAgents([]);
+      } else {
+        setError('Failed to load agent directory');
+        setAgents([]);
       }
+
     } catch (err) {
       console.error('Failed to load agents:', err);
       setError(err?.message || 'Network error while loading agent directory');

@@ -258,16 +258,48 @@ const populateVendorManagers = async (vendor) => {
     }))
   );
 
+  let registeredBy = vendor.registeredBy || null;
+  if (!registeredBy || typeof registeredBy !== 'object') {
+    if (vendor.agentName || vendor.agentId) {
+      registeredBy = {
+        name: vendor.agentName || 'Field Agent',
+        role: 'Agent'
+      };
+    } else if (assignedFieldManager) {
+      registeredBy = {
+        name: assignedFieldManager.name,
+        role: assignedFieldManager.role ? String(assignedFieldManager.role).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Manager'
+      };
+    } else if (vendor.addedBy?.name) {
+      registeredBy = {
+        name: vendor.addedBy.name,
+        role: vendor.addedBy.role || 'Manager'
+      };
+    } else if (vendor.source === 'vendor' || vendor.selfRegistered || !vendor.assignedManagerId) {
+      registeredBy = {
+        name: vendor.name || vendor.contactPerson || 'Vendor',
+        role: 'Vendor (Self-registered)'
+      };
+    } else {
+      registeredBy = {
+        name: vendor.managerName || vendor.assignedManagerName || 'Field Manager',
+        role: 'Manager'
+      };
+    }
+  }
+
   return {
     ...vendor,
     assignedFieldManager,
     assignedManager: assignedFieldManager,
     fieldSupervisor: fieldSupervisorObj,
     addedBy: assignedFieldManager || vendor.addedBy || null,
+    registeredBy,
     assignedPincodeAdminName,
     pincodeAdminApproval
   };
 };
+
 
 // Helper: Determine whether a vendor has a genuine incomplete draft
 const isVendorIncompleteDraft = (v) => {
@@ -373,10 +405,17 @@ const getVendors = async (req, res) => {
       // 4. Sub-location filters (bounded by scope) - match by ID or Name
       if (districtId) {
         const dId = String(districtId).toLowerCase();
+        let targetDistName = null;
+        const distList = db.districts.cache && db.districts.cache.length > 0 ? db.districts.cache : [];
+        const matchedD = distList.find(d => String(d._id || d.id).toLowerCase() === dId || d.name?.toLowerCase() === dId);
+        if (matchedD && matchedD.name) targetDistName = matchedD.name.toLowerCase();
         const matchesDistrict = (v.districtId && String(v.districtId).toLowerCase() === dId) ||
-          (v.district && v.district.toLowerCase() === dId);
+          (v.district && v.district.toLowerCase() === dId) ||
+          (targetDistName && v.district && v.district.toLowerCase() === targetDistName) ||
+          (targetDistName && v.districtName && v.districtName.toLowerCase() === targetDistName);
         if (!matchesDistrict) return false;
       }
+
       if (divisionId) {
         const divId = String(divisionId).toLowerCase();
         const matchesDiv = (v.divisionId && String(v.divisionId).toLowerCase() === divId) ||
@@ -528,11 +567,19 @@ const createVendor = async (req, res) => {
       cleanEmail = normalizeEmail(email);
     }
 
+    // Bug 14: Vendor Aadhaar and PAN are mandatory for non-draft onboarding submission
+    const isDraft = Boolean(req.body.isDraft || req.body.status === 'Draft' || req.body.isDraftIncomplete);
+    const rawPan = panNumber || req.body.pan || req.body.panNumber;
+    const rawAadhaar = req.body.aadhaarNumber || req.body.aadhaar;
+
     let cleanPanNumber = '';
-    if (panNumber) {
-      const panErr = validatePan(panNumber, false);
+    if (!isDraft && !rawPan) {
+      return res.status(400).json({ success: false, message: 'Vendor PAN number is mandatory.' });
+    }
+    if (rawPan) {
+      const panErr = validatePan(rawPan, !isDraft);
       if (panErr) return res.status(400).json({ success: false, message: panErr });
-      cleanPanNumber = cleanPan(panNumber);
+      cleanPanNumber = cleanPan(rawPan);
     }
 
     let cleanAccNum = '';
@@ -555,10 +602,13 @@ const createVendor = async (req, res) => {
     }
 
     let cleanAadhaarNum = '';
-    if (req.body.aadhaarNumber) {
-      const aadharErr = validateAadhaar(req.body.aadhaarNumber, false);
+    if (!isDraft && !rawAadhaar) {
+      return res.status(400).json({ success: false, message: 'Vendor Aadhaar number is mandatory.' });
+    }
+    if (rawAadhaar) {
+      const aadharErr = validateAadhaar(rawAadhaar, !isDraft);
       if (aadharErr) return res.status(400).json({ success: false, message: aadharErr });
-      cleanAadhaarNum = cleanAadhaar(req.body.aadhaarNumber);
+      cleanAadhaarNum = cleanAadhaar(rawAadhaar);
     }
 
     let cleanAltPhone = '';
@@ -687,6 +737,20 @@ const createVendor = async (req, res) => {
 
     const primaryStorefront = storefrontPhoto || shopPhoto || (cleanBusinessImages.length > 0 ? cleanBusinessImages[0].url : null);
 
+    const [stateDoc, districtDoc, divisionDoc, pincodeDoc] = await Promise.all([
+      stateId ? resolveLocationDoc('states', stateId) : null,
+      districtId ? resolveLocationDoc('districts', districtId) : null,
+      divisionId ? resolveLocationDoc('divisions', divisionId) : null,
+      pincodeId ? resolveLocationDoc('pincodes', pincodeId) : null
+    ]);
+
+    const registeredRole = (user.role ? String(user.role).replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : 'Manager');
+    const registeredByObj = {
+      id: user.id || user._id,
+      name: user.name || 'Manager',
+      role: registeredRole
+    };
+
     const newVendor = await db.vendors.insertOne({
       name: formattedOwnerName,
       mobile: cleanPhone,
@@ -703,10 +767,15 @@ const createVendor = async (req, res) => {
         latitude: req.body.latitude || 12.9716,
         longitude: req.body.longitude || 77.5946
       },
-      stateId,
-      districtId,
-      divisionId,
-      pincodeId,
+      stateId: stateId || stateDoc?._id || stateDoc?.id || null,
+      state: stateDoc?.name || req.body.state || '',
+      districtId: districtId || districtDoc?._id || districtDoc?.id || null,
+      district: districtDoc?.name || req.body.district || '',
+      divisionId: divisionId || divisionDoc?._id || divisionDoc?.id || null,
+      division: divisionDoc?.name || req.body.division || '',
+      pincodeId: pincodeId || pincodeDoc?._id || pincodeDoc?.id || null,
+      pincode: pincodeDoc?.code || req.body.pincode || '',
+      pincodeArea: pincodeDoc?.areaName || req.body.pincodeArea || '',
       fieldVisitId,
       panNumber: cleanPanNumber,
       gstNumber: rawGst || '',
@@ -727,6 +796,9 @@ const createVendor = async (req, res) => {
       isApproved: false,
       kycStatus: 'pending',
       createdBy: user.id || user._id,
+      createdByName: user.name || null,
+      createdByRole: user.role || null,
+      registeredBy: registeredByObj,
       assignedManagerId: user.id || user._id,
       assignedManagerName: user.name || null,
       assignedManagerRole: user.role || null,
@@ -735,6 +807,7 @@ const createVendor = async (req, res) => {
 
     // Invalidate aggregated dashboard and leaderboard cache so metrics reflect immediately
     await cacheManager.invalidateEntity('vendor', newVendor._id);
+    await cacheManager.purgeLocalEntity('vendors', null, true);
 
     // If originated from a field shop visit, link it immediately
     if (fieldVisitId) {
@@ -905,6 +978,10 @@ const updateVendor = async (req, res) => {
     };
 
     const updated = await db.vendors.findByIdAndUpdate(vendor._id, safeUpdates);
+
+    // Invalidate cached lists and entity
+    await cacheManager.invalidateEntity('vendor', vendor._id);
+    await cacheManager.purgeLocalEntity('vendors', null, true);
 
     // Record audit log
     await db.auditLogs.insertOne({

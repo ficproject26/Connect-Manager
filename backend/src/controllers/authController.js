@@ -29,7 +29,8 @@ const {
   validateAccountNumber,
   cleanIfsc,
   validateIfsc,
-  validateDob
+  validateDob,
+  validateLocationName
 } = require('../utils/validation');
 
 const ROLE_LIMITS = {
@@ -48,7 +49,22 @@ const ROLE_LEVELS = {
 
 // Helper: Calculate occupancy for a location and role
 const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }) => {
-  const users = await db.users.find();
+  const [users, managers] = await Promise.all([
+    db.users.find().catch(() => []),
+    db.managers.find().catch(() => [])
+  ]);
+
+  // Merge and deduplicate by _id, id, and email
+  const seen = new Set();
+  const allAccounts = [];
+  for (const u of [...(users || []), ...(managers || [])]) {
+    if (!u) continue;
+    const key = String(u._id || u.id || u.email || '');
+    if (seen.has(key)) continue;
+    seen.add(key);
+    allAccounts.push(u);
+  }
+
   // Count active and pending accounts across both legacy and new approval workflow statuses
   const pendingStatuses = [
     'active',
@@ -56,37 +72,45 @@ const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }
     'under_review',
     'kyc_pending',
     'pending_sub_admin_approval',
+    'pending_main_admin_approval',
+    'pending_kyc_verification',
     'pending_kyc_approval'
   ];
-  const occupiedUsers = users.filter(u => pendingStatuses.includes(String(u.status || '').toLowerCase().trim()));
+  const occupiedUsers = allAccounts.filter(u => {
+    const s = String(u.status || '').toLowerCase().trim();
+    const ost = String(u.overallRegistrationStatus || '').toLowerCase().trim();
+    return pendingStatuses.includes(s) || pendingStatuses.includes(ost) || u.isApproved === true;
+  });
   const limit = ROLE_LIMITS[role] || 2;
+  const normId = (id) => (id ? String(id).trim().toLowerCase() : '');
 
   if (role === 'state_manager') {
-    if (!stateId) return { count: 0, limit, isFull: false };
-    const matches = occupiedUsers.filter(u => u.role === 'state_manager' && u.stateId === stateId);
+    if (!stateId) return { count: 0, limit, isFull: false, remaining: limit };
+    const matches = occupiedUsers.filter(u => u.role === 'state_manager' && (normId(u.stateId) === normId(stateId) || normId(u.state) === normId(stateId)));
     return { count: matches.length, limit, isFull: matches.length >= limit, remaining: Math.max(0, limit - matches.length) };
   }
 
   if (role === 'district_manager') {
-    if (!districtId) return { count: 0, limit, isFull: false };
-    const matches = occupiedUsers.filter(u => u.role === 'district_manager' && u.districtId === districtId);
+    if (!districtId) return { count: 0, limit, isFull: false, remaining: limit };
+    const matches = occupiedUsers.filter(u => u.role === 'district_manager' && (normId(u.districtId) === normId(districtId) || normId(u.district) === normId(districtId)));
     return { count: matches.length, limit, isFull: matches.length >= limit, remaining: Math.max(0, limit - matches.length) };
   }
 
   if (role === 'division_manager') {
-    if (!divisionId) return { count: 0, limit, isFull: false };
-    const matches = occupiedUsers.filter(u => u.role === 'division_manager' && u.divisionId === divisionId);
+    if (!divisionId) return { count: 0, limit, isFull: false, remaining: limit };
+    const matches = occupiedUsers.filter(u => u.role === 'division_manager' && (normId(u.divisionId) === normId(divisionId) || normId(u.division) === normId(divisionId)));
     return { count: matches.length, limit, isFull: matches.length >= limit, remaining: Math.max(0, limit - matches.length) };
   }
 
   if (role === 'pincode_manager') {
-    if (!pincodeId) return { count: 0, limit, isFull: false };
-    const matches = occupiedUsers.filter(u => u.role === 'pincode_manager' && u.pincodeId === pincodeId);
+    if (!pincodeId) return { count: 0, limit, isFull: false, remaining: limit };
+    const matches = occupiedUsers.filter(u => u.role === 'pincode_manager' && (normId(u.pincodeId) === normId(pincodeId) || normId(u.pincode) === normId(pincodeId) || normId(u.pincodeCode) === normId(pincodeId)));
     return { count: matches.length, limit, isFull: matches.length >= limit, remaining: Math.max(0, limit - matches.length) };
   }
 
   return { count: 0, limit, isFull: false, remaining: limit };
 };
+
 
 // Helper: Safely resolve and populate saved manager bank details from users, managers, or top-level fields
 const resolveUserBankDetails = async (user) => {
@@ -450,7 +474,9 @@ const login = async (req, res) => {
       subAdminRoutingStatus: user.subAdminRoutingStatus || null,
       dob: user.dob || null,
       gender: user.gender || null,
-      address: user.address || null,
+      address: user.address || (user.residentialAddress ? [user.residentialAddress.doorNumberStreet, user.residentialAddress.villageTown, user.residentialAddress.taluk, user.residentialAddress.district, user.residentialAddress.state, user.residentialAddress.pincode].filter(Boolean).join(', ') : null),
+      residentialAddress: user.residentialAddress || (typeof user.address === 'object' ? user.address : null),
+      activeSince: user.activatedAt || user.approvedAt || user.adminApprovedAt || user.subAdminApprovedAt || (['active', 'approved'].includes(statusLower) ? (user.updatedAt || user.createdAt) : null),
       aadharNumber: user.aadharNumber || user.documents?.aadharNumber || null,
       panNumber: user.panNumber || user.documents?.panNumber || null,
       documents: user.documents || {},
@@ -627,6 +653,28 @@ const register = async (req, res) => {
     // Ensure email is not mistakenly passed as address
     if (addressObj.doorNumberStreet && addressObj.doorNumberStreet.toLowerCase() === emailStr.toLowerCase()) {
       return res.status(400).json({ success: false, message: 'Email address cannot be used as a residential address.' });
+    }
+
+    // Validate location names rejecting numeric-only values (PDF Page 1 Bug 1)
+    if (addressObj.villageTown) {
+      const vtErr = validateLocationName(addressObj.villageTown, true, 'Village / Town Name');
+      if (vtErr) return res.status(400).json({ success: false, message: vtErr });
+    }
+    if (addressObj.postOffice) {
+      const poErr = validateLocationName(addressObj.postOffice, true, 'Post Office');
+      if (poErr) return res.status(400).json({ success: false, message: poErr });
+    }
+    if (addressObj.taluk) {
+      const talukErr = validateLocationName(addressObj.taluk, true, 'Taluk');
+      if (talukErr) return res.status(400).json({ success: false, message: talukErr });
+    }
+    if (addressObj.district) {
+      const distErr = validateLocationName(addressObj.district, true, 'District');
+      if (distErr) return res.status(400).json({ success: false, message: distErr });
+    }
+    if (addressObj.state) {
+      const stateErr = validateLocationName(addressObj.state, true, 'State');
+      if (stateErr) return res.status(400).json({ success: false, message: stateErr });
     }
 
     // Validate 6-digit Indian PIN Code starting with 1-9 if present
@@ -868,12 +916,14 @@ const register = async (req, res) => {
     // Check location capacity / exclusivity
     const occupancy = await getOccupancy(role, { stateId, districtId, divisionId, pincodeId });
     if (occupancy.isFull) {
+      const roleTitle = role === 'state_manager' ? 'State' : role === 'district_manager' ? 'District' : role === 'division_manager' ? 'Division' : 'PIN Code';
       return res.status(400).json({
         success: false,
         limitReached: true,
-        message: `This place has reached its maximum manager capacity (${occupancy.count}/${occupancy.limit}). Registration not allowed for this location.`
+        message: `This location has reached its maximum manager capacity (${occupancy.count}/${occupancy.limit} ${roleTitle} Managers). Registration not allowed for this location.`
       });
     }
+
 
     // Hash password with strong cost factor
     const passwordHash = await bcrypt.hash(password, 12);
@@ -2390,6 +2440,7 @@ const getMe = async (req, res) => {
         gender: user.gender || null,
         address: user.address || (user.residentialAddress ? [user.residentialAddress.doorNumberStreet, user.residentialAddress.villageTown, user.residentialAddress.taluk, user.residentialAddress.district, user.residentialAddress.state, user.residentialAddress.pincode].filter(Boolean).join(', ') : null),
         residentialAddress: user.residentialAddress || (typeof user.address === 'object' ? user.address : null),
+        activeSince: user.activatedAt || user.approvedAt || user.adminApprovedAt || user.subAdminApprovedAt || (['active', 'approved'].includes(String(user.status || '').toLowerCase()) ? (user.updatedAt || user.createdAt) : null),
         passwordChangedAt: user.passwordChangedAt || null,
         aadharNumber: user.aadharNumber || user.documents?.aadharNumber || null,
         panNumber: user.panNumber || user.documents?.panNumber || null,

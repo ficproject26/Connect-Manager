@@ -163,7 +163,14 @@ function AppInner() {
   const [fieldVisitModalOpen, setFieldVisitModalOpen] = useState(false);
   const [pendingFieldVisitId, setPendingFieldVisitId] = useState(null);
   const [pendingPrefill, setPendingPrefill] = useState({});
-  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('manager_theme') || 'light';
+  });
+
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('manager_theme', theme);
+  }, [theme]);
 
   const openOnboard = () => {
     setFieldVisitModalOpen(true);
@@ -416,14 +423,21 @@ function AppInner() {
                       };
 
                       let res;
+                      const existingDraftId = pendingPrefill?._id || pendingPrefill?.id;
                       try {
-                        if (pendingFieldVisitId) {
+                        if (existingDraftId) {
+                          res = await vendorService.updateVendor(existingDraftId, payload);
+                        } else if (pendingFieldVisitId) {
                           res = await managerOnboardingService.submitVendorOnboarding(payload);
                         } else {
                           res = await vendorService.createVendor(payload);
                         }
                       } catch (err) {
-                        res = await vendorService.createVendor(payload);
+                        if (existingDraftId) {
+                          res = await vendorService.updateVendor(existingDraftId, payload);
+                        } else {
+                          res = await vendorService.createVendor(payload);
+                        }
                       }
 
                       if (res && (res.success || res.status === 'success')) {
@@ -470,7 +484,7 @@ function AppInner() {
           )}
           {visitedPages.has('settings') && (
             <div style={{ display: currentPage === 'settings' ? 'block' : 'none', width: '100%' }}>
-              <Settings onNavigate={navigate} />
+              <Settings onNavigate={navigate} currentTheme={theme} onToggleTheme={setTheme} />
             </div>
           )}
         </main>

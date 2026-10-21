@@ -95,9 +95,11 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
   useEffect(() => {
     const loadScopeOptions = async () => {
       try {
-        if (user?.role === 'state_manager') {
-          const res = await locationService.getDistricts(user?.stateId);
-          if (res?.success) setDistricts(res.data || []);
+        const effectiveStateId = user?.stateId || user?.scope?.stateId;
+        if (user?.role === 'state_manager' || !user?.districtId) {
+          const res = await locationService.getDistricts(effectiveStateId);
+          const distList = res?.data || res?.districts || (Array.isArray(res) ? res : []);
+          setDistricts(distList);
         } else if (user?.role === 'district_manager' || user?.districtId) {
           const dId = user?.districtId;
           if (dId) {

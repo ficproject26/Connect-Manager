@@ -511,27 +511,49 @@ const Notifications = ({ onNavigate }) => {
 
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }} onClick={(e) => e.stopPropagation()}>
                       <button
-                        onClick={() => removeNotification(notifId)}
-                        title="Dismiss"
-                        style={{ background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer', padding: '4px' }}
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                      <button
+                        type="button"
                         onClick={() => handleClickItem(n)}
                         style={{
-                          background: 'none',
-                          border: 'none',
+                          background: '#fef3c7',
+                          border: '1px solid #fde68a',
                           color: '#b45309',
                           fontWeight: 700,
                           fontSize: '0.75rem',
+                          padding: '5px 12px',
+                          borderRadius: '6px',
                           cursor: 'pointer',
-                          display: 'flex',
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          gap: '2px'
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
                         }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fde68a'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#fef3c7'; }}
                       >
-                        Open <ArrowRight size={12} />
+                        Open <ArrowRight size={13} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeNotification(notifId)}
+                        title="Delete notification"
+                        style={{
+                          background: '#fee2e2',
+                          border: '1px solid #fecaca',
+                          color: '#dc2626',
+                          fontWeight: 600,
+                          fontSize: '0.75rem',
+                          padding: '5px 10px',
+                          borderRadius: '6px',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          transition: 'all 0.15s ease'
+                        }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fecaca'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                      >
+                        <Trash2 size={13} /> Delete
                       </button>
                     </div>
                   </div>

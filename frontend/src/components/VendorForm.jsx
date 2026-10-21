@@ -1019,12 +1019,12 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         return '';
 
       case 'panNumber':
-        if (strVal) return validatePan(strVal, false) || '';
-        return '';
+        if (!strVal) return 'PAN number is required';
+        return validatePan(strVal, true) || '';
 
       case 'aadhaarNumber':
-        if (strVal) return validateAadhaar(strVal, false) || '';
-        return '';
+        if (!strVal) return 'Aadhaar number is required';
+        return validateAadhaar(strVal, true) || '';
 
       case 'gstNumber':
         if (allData.gstStatus === 'Registered') {
@@ -2040,8 +2040,8 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const step3=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <Field label="PAN Number" error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',cleanPan(e.target.value).slice(0,10))} onBlur={handleBlur} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
-      <Field label="Aadhaar Number" error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',cleanAadhaar(e.target.value).slice(0,12))} onBlur={handleBlur} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
+      <Field label="PAN Number" required error={errors.panNumber}><input type="text" name="panNumber" value={formData.panNumber} maxLength={10} onChange={e=>upd('panNumber',cleanPan(e.target.value).slice(0,10))} onBlur={handleBlur} placeholder="e.g. ABCDE1234F" className="form-input" style={{...inp(!!errors.panNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
+      <Field label="Aadhaar Number" required error={errors.aadhaarNumber}><input type="text" name="aadhaarNumber" value={formData.aadhaarNumber} maxLength={12} onChange={e=>upd('aadhaarNumber',cleanAadhaar(e.target.value).slice(0,12))} onBlur={handleBlur} placeholder="12-digit Aadhaar" className="form-input" style={{...inp(!!errors.aadhaarNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.1em'}}/></Field>
       <Field label="GST Status"><select name="gstStatus" value={formData.gstStatus||'Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
       <Field label="GST Number" error={errors.gstNumber}><input type="text" name="gstNumber" value={formData.gstNumber} maxLength={15} onChange={e=>upd('gstNumber',e.target.value.toUpperCase())} onBlur={handleBlur} placeholder={formData.gstStatus === 'Registered' ? "e.g. 29ABCDE1234F1Z5 (Required)" : "e.g. 29ABCDE1234F1Z5 (Optional)"} className="form-input" style={{...inp(!!errors.gstNumber),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
       <Field label="MSME Status"><select name="msmeStatus" value={formData.msmeStatus||'Not Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>

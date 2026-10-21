@@ -34,7 +34,8 @@ import {
   Square,
   Landmark,
   Banknote,
-  RefreshCw
+  RefreshCw,
+  Search
 } from 'lucide-react';
 import {
   formatName,
@@ -54,7 +55,8 @@ import {
   cleanIfsc,
   validateIfsc,
   validateDob,
-  getEighteenYearsAgoDateString
+  getEighteenYearsAgoDateString,
+  validateLocationName
 } from '../utils/validation';
 
 const ROLES = [
@@ -102,6 +104,15 @@ const ROLES = [
     bg: '#ecfdf5',
     border: '#a7f3d0'
   }
+];
+
+export const STEP_TITLES = [
+  'Role Level',
+  'Personal & Address',
+  'Territory Jurisdiction',
+  'KYC Documents',
+  'Bank Details',
+  'Review & Submit'
 ];
 
 export default function Register({ 
@@ -216,6 +227,18 @@ export default function Register({
   // Profile Photo
   const [avatarFile, setAvatarFile] = useState(null);
   const [avatarPreview, setAvatarPreview] = useState(initialUser?.avatarUrl || null);
+
+  // Six-Step Wizard State & Searchable District (Bugs 2, 3, 4)
+  const [currentStep, setCurrentStep] = useState(1);
+  const [fieldErrors, setFieldErrors] = useState({});
+  const [districtSearch, setDistrictSearch] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const searchedDistricts = useMemo(() => {
+    if (!districtSearch.trim()) return filteredDistricts;
+    const q = districtSearch.toLowerCase().trim();
+    return filteredDistricts.filter(d => (d.name || '').toLowerCase().includes(q));
+  }, [filteredDistricts, districtSearch]);
 
   // UI Flow Status: 'form' | 'under_review' | 'kyc_pending' | 'rejected' | 'approved'
   const [flowState, setFlowState] = useState(() => getInitialFlowState(initialUser, initialFlowState));
@@ -552,152 +575,141 @@ export default function Register({
   const pwdStrength = getPasswordStrength(password);
   const passwordsMatch = confirmPassword && password === confirmPassword;
 
+  // Step Validation & Error Tracking (Bugs 1, 2, 3)
+  const validateStep = (step) => {
+    const errors = {};
+    if (step === 1) {
+      if (!role) errors.role = 'Please select a manager role level.';
+    } else if (step === 2) {
+      const nameErr = validateName(name.trim(), true, 'Full Name');
+      if (nameErr) errors.name = nameErr;
+
+      const emailErr = validateEmail(email, true);
+      if (emailErr) errors.email = emailErr;
+
+      const mobileErr = validateMobile(mobile, true, 'Mobile number');
+      if (mobileErr) errors.mobile = mobileErr;
+
+      const dobErr = validateDob(dob, 18, true);
+      if (dobErr) errors.dob = dobErr;
+
+      if (!addressFields.doorNumberStreet.trim()) {
+        errors.doorNumberStreet = 'Door Number / Street Name is required.';
+      }
+      const vtErr = validateLocationName(addressFields.villageTown, true, 'Village / Town Name');
+      if (vtErr) errors.villageTown = vtErr;
+
+      const poErr = validateLocationName(addressFields.postOffice, true, 'Post Office');
+      if (poErr) errors.postOffice = poErr;
+
+      const talukErr = validateLocationName(addressFields.taluk, true, 'Taluk');
+      if (talukErr) errors.taluk = talukErr;
+
+      const distErr = validateLocationName(addressFields.district, true, 'District');
+      if (distErr) errors.district = distErr;
+
+      const stErr = validateLocationName(addressFields.state, true, 'State');
+      if (stErr) errors.state = stErr;
+
+      const cleanPin = (addressFields.pincode || '').trim().replace(/\D/g, '');
+      if (!/^[1-9][0-9]{5}$/.test(cleanPin)) {
+        errors.pincode = 'Please enter a valid 6-digit Indian PIN Code starting with 1–9.';
+      }
+
+      const pwdErr = validatePassword(password, true);
+      if (pwdErr) errors.password = pwdErr;
+
+      const matchErr = validatePasswordMatch(password, confirmPassword);
+      if (matchErr) errors.confirmPassword = matchErr;
+    } else if (step === 3) {
+      if (!stateId) errors.stateId = 'Please select an assigned State.';
+      if (['district_manager', 'division_manager', 'pincode_manager'].includes(role) && !districtId) {
+        errors.districtId = 'Please select an assigned District.';
+      }
+      if (['division_manager', 'pincode_manager'].includes(role) && !divisionId) {
+        errors.divisionId = 'Please select an assigned Division.';
+      }
+      if (role === 'pincode_manager' && !pincodeId) {
+        errors.pincodeId = 'Please select an assigned PIN Code.';
+      }
+      if (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager') {
+        errors.jurisdiction = 'Selected jurisdiction is currently full. Please choose an alternate location.';
+      }
+    } else if (step === 4) {
+      const aadharErr = validateAadhaar(aadharNumber, true);
+      if (aadharErr) errors.aadharNumber = aadharErr;
+      if (!aadharFile) errors.aadharFile = 'Aadhaar Card document upload is mandatory.';
+
+      const panErr = validatePan(panNumber, true);
+      if (panErr) errors.panNumber = panErr;
+      if (!panFile) errors.panFile = 'PAN Card document upload is mandatory.';
+
+      if (!bankFile) errors.bankFile = 'Bank Passbook / Cheque document upload is mandatory.';
+      if (!signatureFile) errors.signatureFile = 'Digital Signature specimen upload is mandatory.';
+    } else if (step === 5) {
+      const holderErr = validateName(bankDetails.accountHolderName, true, 'Account Holder Name');
+      if (holderErr) errors.accountHolderName = holderErr;
+      if (!bankDetails.bankName.trim()) errors.bankName = 'Bank Name is required.';
+      if (!bankDetails.branchName.trim()) errors.branchName = 'Bank Branch is required.';
+      if (!bankDetails.city.trim()) errors.city = 'Bank City is required.';
+      const accErr = validateAccountNumber(bankDetails.accountNumber, true, bankDetails.bankName);
+      if (accErr) errors.accountNumber = accErr;
+      const ifscErr = validateIfsc(bankDetails.ifscCode, true);
+      if (ifscErr) errors.ifscCode = ifscErr;
+    } else if (step === 6) {
+      if (!declarationAccepted) {
+        errors.declaration = 'Please accept the official undertaking and declaration before submitting.';
+      }
+    }
+
+    setFieldErrors(prev => {
+      const next = { ...prev };
+      if (step === 1) delete next.role;
+      if (step === 2) {
+        ['name', 'email', 'mobile', 'dob', 'doorNumberStreet', 'villageTown', 'postOffice', 'taluk', 'district', 'state', 'pincode', 'password', 'confirmPassword'].forEach(k => delete next[k]);
+      }
+      if (step === 3) {
+        ['stateId', 'districtId', 'divisionId', 'pincodeId', 'jurisdiction'].forEach(k => delete next[k]);
+      }
+      if (step === 4) {
+        ['aadharNumber', 'aadharFile', 'panNumber', 'panFile', 'bankFile', 'signatureFile'].forEach(k => delete next[k]);
+      }
+      if (step === 5) {
+        ['accountHolderName', 'bankName', 'branchName', 'city', 'accountNumber', 'ifscCode'].forEach(k => delete next[k]);
+      }
+      if (step === 6) delete next.declaration;
+      return { ...next, ...errors };
+    });
+
+    return Object.keys(errors).length === 0;
+  };
+
+  const handleNextStep = (step) => {
+    setError('');
+    const isValid = validateStep(step);
+    if (!isValid) {
+      setError('Please fix the errors highlighted below before proceeding.');
+      return;
+    }
+    setCurrentStep(prev => Math.min(prev + 1, 6));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   // Form Submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
 
-    // Validations
-    const trimmedName = name.trim();
-    const nameErr = validateName(trimmedName, true, 'Full Name');
-    if (nameErr) {
-      setNameError(nameErr);
-      setError(nameErr);
-      return;
-    }
+    if (isSubmitting || loading) return;
 
-    const emailErr = validateEmail(email, true);
-    if (emailErr) {
-      setError(emailErr);
-      return;
-    }
-
-    const mobileErr = validateMobile(mobile, true, 'Mobile number');
-    if (mobileErr) {
-      setError(mobileErr);
-      return;
-    }
-
-    const dobErr = validateDob(dob, 18, true);
-    if (dobErr) {
-      setError(dobErr);
-      return;
-    }
-
-    if (!addressFields.doorNumberStreet.trim()) {
-      setError('Please enter Door Number / Street Name.');
-      return;
-    }
-    if (!addressFields.villageTown.trim()) {
-      setError('Please enter Village / Town Name.');
-      return;
-    }
-    if (!addressFields.postOffice.trim()) {
-      setError('Please enter Post Office.');
-      return;
-    }
-    if (!addressFields.taluk.trim()) {
-      setError('Please enter Taluk.');
-      return;
-    }
-    if (!addressFields.district.trim()) {
-      setError('Please enter District for residential address.');
-      return;
-    }
-    if (!addressFields.state.trim()) {
-      setError('Please enter State for residential address.');
-      return;
-    }
-    const cleanAddressPin = addressFields.pincode.trim().replace(/\D/g, '');
-    if (!/^[1-9][0-9]{5}$/.test(cleanAddressPin)) {
-      setError('Please enter a valid 6-digit Indian PIN Code starting with 1–9.');
-      return;
-    }
-
-    const aadharErr = validateAadhaar(aadharNumber, true);
-    if (aadharErr) {
-      setAadharError(aadharErr);
-      setError(aadharErr);
-      return;
-    }
-
-    const panErr = validatePan(panNumber, true);
-    if (panErr) {
-      setPanError(panErr);
-      setError(panErr);
-      return;
-    }
-
-    const passErr = validatePassword(password, true);
-    if (passErr) {
-      setError(passErr);
-      return;
-    }
-
-    const matchErr = validatePasswordMatch(password, confirmPassword);
-    if (matchErr) {
-      setError(matchErr);
-      return;
-    }
-
-    // Role-specific location check
-    if (role === 'state_manager' && !stateId) {
-      setError('Please select an assigned State for State Manager.');
-      return;
-    }
-    if (role === 'district_manager' && (!stateId || !districtId)) {
-      setError('Please select both State and District for District Manager.');
-      return;
-    }
-    if (role === 'division_manager' && (!stateId || !districtId || !divisionId)) {
-      setError('Please select State, District, and Division for Division Manager.');
-      return;
-    }
-    if (role === 'pincode_manager' && (!stateId || !districtId || !divisionId || !pincodeId)) {
-      setError('Please select State, District, Division, and PIN Code for PIN Code Manager.');
-      return;
-    }
-
-    if (!declarationAccepted) {
-      setError('Please accept the official declaration and operational guidelines before submitting.');
-      return;
-    }
-
-    // Bank Details validation
-    const bdErrors = {};
-    const holderErr = validateName(bankDetails.accountHolderName, true, 'Account Holder Name');
-    if (holderErr) bdErrors.accountHolderName = holderErr;
-    if (!bankDetails.bankName.trim()) bdErrors.bankName = 'Bank Name is required.';
-    if (!bankDetails.branchName.trim()) bdErrors.branchName = 'Bank Branch is required.';
-    if (!bankDetails.city.trim()) bdErrors.city = 'Bank City is required.';
-    const accErr = validateAccountNumber(bankDetails.accountNumber, true, bankDetails.bankName);
-    if (accErr) bdErrors.accountNumber = accErr;
-    const ifscErr = validateIfsc(bankDetails.ifscCode, true);
-    if (ifscErr) bdErrors.ifscCode = ifscErr;
-
-    if (Object.keys(bdErrors).length > 0) {
-      setBankErrors(bdErrors);
-      setError('Please fill in all required Bank Details correctly.');
-      return;
-    }
-    setBankErrors({});
-
-    // 4 Mandatory KYC Document Uploads Validation
-    if (!aadharFile) {
-      setError('Please upload your Aadhaar Card document (mandatory).');
-      return;
-    }
-    if (!panFile) {
-      setError('Please upload your PAN Card document (mandatory).');
-      return;
-    }
-    if (!bankFile) {
-      setError('Please upload your Bank Passbook / Cheque document (mandatory).');
-      return;
-    }
-    if (!signatureFile) {
-      setError('Please upload your Digital Signature specimen (mandatory).');
-      return;
+    // Validate all 6 steps before final submission
+    for (let s = 1; s <= 6; s++) {
+      if (!validateStep(s)) {
+        setCurrentStep(s);
+        setError(`Please complete all required fields in Step ${s} (${STEP_TITLES[s - 1]}).`);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
     }
 
     if (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager') {
@@ -705,6 +717,7 @@ export default function Register({
       return;
     }
 
+    setIsSubmitting(true);
     setLoading(true);
 
     try {
@@ -847,6 +860,7 @@ export default function Register({
     } catch (err) {
       setError(err.message || 'Registration failed. Please check your inputs.');
     } finally {
+      setIsSubmitting(false);
       setLoading(false);
     }
   };
@@ -1065,113 +1079,205 @@ export default function Register({
         {/* ----------------- STATE 1: REGISTRATION FORM ----------------- */}
         {flowState === 'form' && (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {/* Step 1: Horizontal Manager Role Selection Strip */}
-            <div>
-              <div style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                marginBottom: '8px'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-main)' }}>
-                    1. Select Manager Role Level
+            {/* ----------------- SIX-STEP WIZARD PROGRESS BAR (Bug 3) ----------------- */}
+            <div className="card" style={{ margin: 0, padding: '14px 18px', boxShadow: 'var(--shadow-card)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)' }}>
+                    Step {currentStep} of 6: {STEP_TITLES[currentStep - 1]}
                   </span>
-                  <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>&bull; Choose your tier</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                    ({Math.round((currentStep / 6) * 100)}% Completed)
+                  </span>
                 </div>
-                <span style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 600 }}>
-                  Hierarchy &bull; 4 Tier Architecture
-                </span>
+                <div style={{ fontSize: '0.74rem', color: '#6366f1', fontWeight: 700 }}>
+                  Role: {ROLES.find(r => r.key === role)?.label || 'State Manager'}
+                </div>
               </div>
 
-              <div className="register-role-grid">
-                {ROLES.map((r) => {
-                  const IconComponent = r.icon;
-                  const isSelected = role === r.key;
+              {/* Progress Bar Track */}
+              <div style={{ width: '100%', height: '6px', background: '#e2e8f0', borderRadius: '3px', overflow: 'hidden' }}>
+                <div style={{
+                  width: `${(currentStep / 6) * 100}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #f59e0b, #10b981)',
+                  transition: 'width 0.3s ease'
+                }} />
+              </div>
+
+              {/* Step Navigation Tabs */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px', marginTop: '12px' }}>
+                {STEP_TITLES.map((title, idx) => {
+                  const stepNum = idx + 1;
+                  const isCurrent = currentStep === stepNum;
+                  const isPast = currentStep > stepNum;
                   return (
                     <div
-                      key={r.key}
-                      onClick={() => setRole(r.key)}
+                      key={stepNum}
+                      onClick={() => {
+                        if (isPast) {
+                          setCurrentStep(stepNum);
+                        }
+                      }}
                       style={{
-                        border: isSelected ? `2px solid ${r.color}` : '1px solid var(--border-normal)',
-                        background: isSelected ? r.bg : '#ffffff',
-                        borderRadius: 'var(--radius-md)',
-                        padding: '10px 12px',
-                        cursor: 'pointer',
-                        transition: 'all 0.15s ease',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '10px',
-                        boxShadow: isSelected ? `0 2px 8px ${r.border}` : 'var(--shadow-xs)'
+                        gap: '6px',
+                        padding: '6px 8px',
+                        borderRadius: '6px',
+                        background: isCurrent ? '#fef3c7' : (isPast ? '#f0fdf4' : '#f8fafc'),
+                        border: isCurrent ? '1.5px solid #f59e0b' : (isPast ? '1px solid #bbf7d0' : '1px solid #e2e8f0'),
+                        cursor: isPast ? 'pointer' : 'default',
+                        transition: 'all 0.15s ease'
                       }}
                     >
                       <div style={{
-                        width: '36px',
-                        height: '36px',
-                        borderRadius: '8px',
-                        background: isSelected ? r.color : '#f1f5f9',
-                        color: isSelected ? '#ffffff' : '#64748b',
+                        width: '18px',
+                        height: '18px',
+                        borderRadius: '50%',
+                        background: isCurrent ? '#f59e0b' : (isPast ? '#16a34a' : '#cbd5e1'),
+                        color: '#ffffff',
+                        fontSize: '0.68rem',
+                        fontWeight: 800,
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
                         flexShrink: 0
                       }}>
-                        <IconComponent size={18} />
+                        {isPast ? <Check size={11} /> : stepNum}
                       </div>
-
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <span style={{ fontWeight: 700, fontSize: '0.82rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {r.label}
-                          </span>
-                          {isSelected && (
-                            <div style={{
-                              background: r.color,
-                              color: 'white',
-                              borderRadius: '50%',
-                              width: '15px',
-                              height: '15px',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0
-                            }}>
-                              <Check size={10} />
-                            </div>
-                          )}
-                        </div>
-                        <div style={{ fontSize: '0.68rem', color: isSelected ? r.color : '#64748b', fontWeight: 600, marginTop: '2px' }}>
-                          {r.scopeDesc}
-                        </div>
-                      </div>
+                      <span style={{
+                        fontSize: '0.7rem',
+                        fontWeight: isCurrent ? 800 : 600,
+                        color: isCurrent ? '#92400e' : (isPast ? '#166534' : '#64748b'),
+                        whiteSpace: 'nowrap',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis'
+                      }}>
+                        {title}
+                      </span>
                     </div>
                   );
                 })}
               </div>
             </div>
 
-            {/* Steps 2 & 4: Balanced Side-by-Side 2-Column Grid (Horizontally Aligned) */}
-            <div className="register-columns-grid">
-              {/* Left Column Card: 2. Personal Information & Credentials */}
-              <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
-                <div className="card-header" style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
+            {/* ----------------- STEP 1: ROLE SELECTION ----------------- */}
+            {currentStep === 1 && (
+              <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+                <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <User size={16} style={{ color: 'var(--forge-gold)' }} />
-                    <h3 style={{ fontSize: '0.88rem', fontWeight: 700, margin: 0 }}>
-                      2. Personal Details & Credentials
+                    <Shield size={18} style={{ color: 'var(--forge-gold)' }} />
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0 }}>
+                      1. Select Manager Role Level
                     </h3>
                   </div>
-                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                    Manager Identity & Access
+                  <span style={{ fontSize: '0.72rem', color: '#6366f1', fontWeight: 600 }}>
+                    Hierarchy &bull; 4 Tier Architecture
                   </span>
                 </div>
 
-                <div className="card-body" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
-                  {/* Photo Upload & Full Name (Horizontally Aligned) */}
+                <div className="card-body" style={{ padding: '20px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div className="register-role-grid">
+                    {ROLES.map((r) => {
+                      const IconComponent = r.icon;
+                      const isSelected = role === r.key;
+                      return (
+                        <div
+                          key={r.key}
+                          onClick={() => {
+                            setRole(r.key);
+                            if (fieldErrors.role) setFieldErrors(prev => ({ ...prev, role: '' }));
+                          }}
+                          style={{
+                            border: isSelected ? `2px solid ${r.color}` : '1px solid var(--border-normal)',
+                            background: isSelected ? r.bg : '#ffffff',
+                            borderRadius: 'var(--radius-md)',
+                            padding: '12px 14px',
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            boxShadow: isSelected ? `0 2px 8px ${r.border}` : 'var(--shadow-xs)'
+                          }}
+                        >
+                          <div style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '8px',
+                            background: isSelected ? r.color : '#f1f5f9',
+                            color: isSelected ? '#ffffff' : '#64748b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            flexShrink: 0
+                          }}>
+                            <IconComponent size={20} />
+                          </div>
+
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <span style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {r.label}
+                              </span>
+                              {isSelected && (
+                                <div style={{
+                                  background: r.color,
+                                  color: 'white',
+                                  borderRadius: '50%',
+                                  width: '16px',
+                                  height: '16px',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                  flexShrink: 0
+                                }}>
+                                  <Check size={11} />
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.72rem', color: isSelected ? r.color : '#64748b', fontWeight: 600, marginTop: '2px' }}>
+                              {r.scopeDesc}
+                            </div>
+                            <div style={{ fontSize: '0.68rem', color: '#94a3b8', marginTop: '1px' }}>
+                              Capacity Limit: Max {r.limit} managers
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {fieldErrors.role && (
+                    <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#ef4444', fontWeight: 600 }}>
+                      {fieldErrors.role}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ----------------- STEP 2: PERSONAL DETAILS & ADDRESS ----------------- */}
+            {currentStep === 2 && (
+              <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+                <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <User size={18} style={{ color: 'var(--forge-gold)' }} />
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0 }}>
+                      2. Personal Details, Address & Credentials
+                    </h3>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    Manager Identity & Operational Base
+                  </span>
+                </div>
+
+                <div className="card-body" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Photo Upload & Full Name */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <div style={{
-                      width: '52px',
-                      height: '52px',
+                      width: '56px',
+                      height: '56px',
                       borderRadius: '50%',
                       border: '2px dashed #cbd5e1',
                       background: '#f8fafc',
@@ -1185,17 +1291,17 @@ export default function Register({
                       {avatarPreview ? (
                         <img src={avatarPreview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <Camera size={20} style={{ color: '#94a3b8' }} />
+                        <Camera size={22} style={{ color: '#94a3b8' }} />
                       )}
                     </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', flexShrink: 0 }}>
                       <label style={{
-                        padding: '4px 8px',
+                        padding: '5px 10px',
                         background: '#ffffff',
                         border: '1px solid #cbd5e1',
                         borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.72rem',
+                        fontSize: '0.74rem',
                         fontWeight: 600,
                         color: '#475569',
                         cursor: 'pointer',
@@ -1203,7 +1309,7 @@ export default function Register({
                         alignItems: 'center',
                         gap: '4px'
                       }}>
-                        <Upload size={11} /> {avatarPreview ? 'Change' : 'Photo'}
+                        <Upload size={12} /> {avatarPreview ? 'Change Photo' : 'Upload Photo'}
                         <input type="file" accept="image/png, image/jpeg, image/jpg" style={{ display: 'none' }} onChange={handlePhotoSelect} />
                       </label>
                       {avatarPreview && (
@@ -1238,25 +1344,28 @@ export default function Register({
                             paddingLeft: '34px',
                             height: '38px',
                             fontSize: '0.84rem',
-                            border: nameError ? '1.5px solid #ef4444' : undefined,
-                            background: nameError ? '#fff5f5' : undefined
+                            border: (fieldErrors.name || nameError) ? '1.5px solid #ef4444' : undefined,
+                            background: (fieldErrors.name || nameError) ? '#fff5f5' : undefined
                           }}
                           placeholder="e.g. Ramesh Kumar"
                           value={name}
                           onChange={handleNameChange}
-                          onBlur={handleNameBlur}
+                          onBlur={() => {
+                            const err = validateName(name.trim(), true, 'Full Name');
+                            setFieldErrors(prev => ({ ...prev, name: err || '' }));
+                          }}
                         />
-                        <User size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: nameError ? '#ef4444' : '#94a3b8' }} />
+                        <User size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: (fieldErrors.name || nameError) ? '#ef4444' : '#94a3b8' }} />
                       </div>
-                      {nameError && (
+                      {(fieldErrors.name || nameError) && (
                         <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
-                          {nameError}
+                          {fieldErrors.name || nameError}
                         </p>
                       )}
                     </div>
                   </div>
 
-                  {/* Email & Mobile (Horizontally Aligned in 2 Columns) */}
+                  {/* Email & Mobile */}
                   <div className="responsive-grid-2">
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Official Email *</label>
@@ -1266,13 +1375,30 @@ export default function Register({
                           required
                           maxLength={100}
                           className="form-input"
-                          style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
+                          style={{
+                            paddingLeft: '34px',
+                            height: '38px',
+                            fontSize: '0.84rem',
+                            border: fieldErrors.email ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="manager@example.com"
                           value={email}
-                          onChange={(e) => setEmail(e.target.value)}
+                          onChange={(e) => {
+                            setEmail(e.target.value);
+                            if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateEmail(email, true);
+                            setFieldErrors(prev => ({ ...prev, email: err || '' }));
+                          }}
                         />
-                        <Mail size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
+                        <Mail size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: fieldErrors.email ? '#ef4444' : '#94a3b8' }} />
                       </div>
+                      {fieldErrors.email && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.email}
+                        </p>
+                      )}
                     </div>
 
                     <div className="form-group" style={{ margin: 0 }}>
@@ -1280,7 +1406,7 @@ export default function Register({
                       <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        border: '1px solid var(--border-normal)',
+                        border: fieldErrors.mobile ? '1.5px solid #ef4444' : '1px solid var(--border-normal)',
                         borderRadius: 'var(--radius-sm, 6px)',
                         overflow: 'hidden',
                         height: '38px',
@@ -1309,7 +1435,14 @@ export default function Register({
                           maxLength={10}
                           placeholder="10-digit mobile"
                           value={mobile}
-                          onChange={(e) => setMobile(e.target.value.replace(/\D/g, '').slice(0, 10))}
+                          onChange={(e) => {
+                            setMobile(e.target.value.replace(/\D/g, '').slice(0, 10));
+                            if (fieldErrors.mobile) setFieldErrors(prev => ({ ...prev, mobile: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateMobile(mobile, true, 'Mobile number');
+                            setFieldErrors(prev => ({ ...prev, mobile: err || '' }));
+                          }}
                           style={{
                             flex: 1,
                             border: 'none',
@@ -1323,10 +1456,15 @@ export default function Register({
                           }}
                         />
                       </div>
+                      {fieldErrors.mobile && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.mobile}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Date of Birth & Gender (Horizontally Aligned in 2 Columns) */}
+                  {/* Date of Birth & Gender */}
                   <div className="responsive-grid-2">
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Date of Birth (DOB) *</label>
@@ -1336,12 +1474,29 @@ export default function Register({
                           required
                           max={getEighteenYearsAgoDateString()}
                           className="form-input"
-                          style={{ paddingLeft: '34px', height: '38px', fontSize: '0.84rem' }}
+                          style={{
+                            paddingLeft: '34px',
+                            height: '38px',
+                            fontSize: '0.84rem',
+                            border: fieldErrors.dob ? '1.5px solid #ef4444' : undefined
+                          }}
                           value={dob}
-                          onChange={(e) => setDob(e.target.value)}
+                          onChange={(e) => {
+                            setDob(e.target.value);
+                            if (fieldErrors.dob) setFieldErrors(prev => ({ ...prev, dob: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateDob(dob, 18, true);
+                            setFieldErrors(prev => ({ ...prev, dob: err || '' }));
+                          }}
                         />
-                        <Calendar size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
+                        <Calendar size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: fieldErrors.dob ? '#ef4444' : '#94a3b8' }} />
                       </div>
+                      {fieldErrors.dob && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.dob}
+                        </p>
+                      )}
                     </div>
 
                     <div className="form-group" style={{ margin: 0 }}>
@@ -1360,22 +1515,22 @@ export default function Register({
                     </div>
                   </div>
 
-                  {/* Residential / Operational Address (7 Separate Fields) */}
+                  {/* Residential / Operational Address (7 Fields with Inline Validation - Bugs 1 & 2) */}
                   <div style={{
                     background: '#f8fafc',
                     border: '1px solid #e2e8f0',
                     borderRadius: '8px',
-                    padding: '14px',
+                    padding: '16px',
                     display: 'flex',
                     flexDirection: 'column',
                     gap: '12px'
                   }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.82rem', fontWeight: 700, color: '#334155' }}>
-                      <Home size={14} style={{ color: 'var(--primary, #0ea5e9)' }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.84rem', fontWeight: 700, color: '#334155' }}>
+                      <Home size={15} style={{ color: 'var(--primary, #0ea5e9)' }} />
                       Residential / Operational Address *
                     </div>
 
-                    {/* Field 1: Door Number / Street Name (Full width) */}
+                    {/* Field 1: Door Number / Street Name */}
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
                         1. Door Number / Street Name *
@@ -1383,16 +1538,32 @@ export default function Register({
                       <input
                         type="text"
                         required
-                        autoComplete="address-line1"
                         className="form-input"
-                        style={{ height: '36px', fontSize: '0.82rem' }}
+                        style={{
+                          height: '36px',
+                          fontSize: '0.82rem',
+                          border: fieldErrors.doorNumberStreet ? '1.5px solid #ef4444' : undefined
+                        }}
                         placeholder="e.g. Door No. 12/4B, North Car Street"
                         value={addressFields.doorNumberStreet}
-                        onChange={(e) => handleAddressChange('doorNumberStreet', e.target.value)}
+                        onChange={(e) => {
+                          handleAddressChange('doorNumberStreet', e.target.value);
+                          if (fieldErrors.doorNumberStreet) setFieldErrors(prev => ({ ...prev, doorNumberStreet: '' }));
+                        }}
+                        onBlur={() => {
+                          if (!addressFields.doorNumberStreet.trim()) {
+                            setFieldErrors(prev => ({ ...prev, doorNumberStreet: 'Door Number / Street Name is required.' }));
+                          }
+                        }}
                       />
+                      {fieldErrors.doorNumberStreet && (
+                        <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.doorNumberStreet}
+                        </p>
+                      )}
                     </div>
 
-                    {/* Row 2: Village/Town & Post Office (2 Columns) */}
+                    {/* Row 2: Village/Town & Post Office (Bugs 1 & 2 - Location validation) */}
                     <div className="responsive-grid-2" style={{ gap: '10px' }}>
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
@@ -1401,13 +1572,28 @@ export default function Register({
                         <input
                           type="text"
                           required
-                          autoComplete="address-level3"
                           className="form-input"
-                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          style={{
+                            height: '36px',
+                            fontSize: '0.82rem',
+                            border: fieldErrors.villageTown ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="e.g. Anna Nagar / Mettur"
                           value={addressFields.villageTown}
-                          onChange={(e) => handleAddressChange('villageTown', e.target.value)}
+                          onChange={(e) => {
+                            handleAddressChange('villageTown', e.target.value);
+                            if (fieldErrors.villageTown) setFieldErrors(prev => ({ ...prev, villageTown: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateLocationName(addressFields.villageTown, true, 'Village / Town Name');
+                            setFieldErrors(prev => ({ ...prev, villageTown: err || '' }));
+                          }}
                         />
+                        {fieldErrors.villageTown && (
+                          <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                            {fieldErrors.villageTown}
+                          </p>
+                        )}
                       </div>
 
                       <div className="form-group" style={{ margin: 0 }}>
@@ -1417,17 +1603,32 @@ export default function Register({
                         <input
                           type="text"
                           required
-                          autoComplete="off"
                           className="form-input"
-                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          style={{
+                            height: '36px',
+                            fontSize: '0.82rem',
+                            border: fieldErrors.postOffice ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="e.g. Mettur Dam SO"
                           value={addressFields.postOffice}
-                          onChange={(e) => handleAddressChange('postOffice', e.target.value)}
+                          onChange={(e) => {
+                            handleAddressChange('postOffice', e.target.value);
+                            if (fieldErrors.postOffice) setFieldErrors(prev => ({ ...prev, postOffice: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateLocationName(addressFields.postOffice, true, 'Post Office');
+                            setFieldErrors(prev => ({ ...prev, postOffice: err || '' }));
+                          }}
                         />
+                        {fieldErrors.postOffice && (
+                          <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                            {fieldErrors.postOffice}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Row 3: Taluk & District (2 Columns) */}
+                    {/* Row 3: Taluk & District (Bugs 1 & 2 - Location validation) */}
                     <div className="responsive-grid-2" style={{ gap: '10px' }}>
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
@@ -1436,13 +1637,28 @@ export default function Register({
                         <input
                           type="text"
                           required
-                          autoComplete="off"
                           className="form-input"
-                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          style={{
+                            height: '36px',
+                            fontSize: '0.82rem',
+                            border: fieldErrors.taluk ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="e.g. Mettur Taluk"
                           value={addressFields.taluk}
-                          onChange={(e) => handleAddressChange('taluk', e.target.value)}
+                          onChange={(e) => {
+                            handleAddressChange('taluk', e.target.value);
+                            if (fieldErrors.taluk) setFieldErrors(prev => ({ ...prev, taluk: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateLocationName(addressFields.taluk, true, 'Taluk');
+                            setFieldErrors(prev => ({ ...prev, taluk: err || '' }));
+                          }}
                         />
+                        {fieldErrors.taluk && (
+                          <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                            {fieldErrors.taluk}
+                          </p>
+                        )}
                       </div>
 
                       <div className="form-group" style={{ margin: 0 }}>
@@ -1452,17 +1668,32 @@ export default function Register({
                         <input
                           type="text"
                           required
-                          autoComplete="address-level2"
                           className="form-input"
-                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          style={{
+                            height: '36px',
+                            fontSize: '0.82rem',
+                            border: fieldErrors.district ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="e.g. Salem"
                           value={addressFields.district}
-                          onChange={(e) => handleAddressChange('district', e.target.value)}
+                          onChange={(e) => {
+                            handleAddressChange('district', e.target.value);
+                            if (fieldErrors.district) setFieldErrors(prev => ({ ...prev, district: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateLocationName(addressFields.district, true, 'District');
+                            setFieldErrors(prev => ({ ...prev, district: err || '' }));
+                          }}
                         />
+                        {fieldErrors.district && (
+                          <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                            {fieldErrors.district}
+                          </p>
+                        )}
                       </div>
                     </div>
 
-                    {/* Row 4: State & PIN Code (2 Columns) */}
+                    {/* Row 4: State & PIN Code (Bugs 1 & 2 - Location validation) */}
                     <div className="responsive-grid-2" style={{ gap: '10px' }}>
                       <div className="form-group" style={{ margin: 0 }}>
                         <label className="form-label" style={{ fontSize: '0.74rem', marginBottom: '3px', color: '#475569' }}>
@@ -1471,13 +1702,28 @@ export default function Register({
                         <input
                           type="text"
                           required
-                          autoComplete="address-level1"
                           className="form-input"
-                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          style={{
+                            height: '36px',
+                            fontSize: '0.82rem',
+                            border: fieldErrors.state ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="e.g. Tamil Nadu"
                           value={addressFields.state}
-                          onChange={(e) => handleAddressChange('state', e.target.value)}
+                          onChange={(e) => {
+                            handleAddressChange('state', e.target.value);
+                            if (fieldErrors.state) setFieldErrors(prev => ({ ...prev, state: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateLocationName(addressFields.state, true, 'State');
+                            setFieldErrors(prev => ({ ...prev, state: err || '' }));
+                          }}
                         />
+                        {fieldErrors.state && (
+                          <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                            {fieldErrors.state}
+                          </p>
+                        )}
                       </div>
 
                       <div className="form-group" style={{ margin: 0 }}>
@@ -1488,21 +1734,36 @@ export default function Register({
                           type="text"
                           required
                           maxLength={6}
-                          autoComplete="postal-code"
                           className="form-input"
-                          style={{ height: '36px', fontSize: '0.82rem' }}
+                          style={{
+                            height: '36px',
+                            fontSize: '0.82rem',
+                            border: fieldErrors.pincode ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="e.g. 636401"
                           value={addressFields.pincode}
                           onChange={(e) => {
                             const val = e.target.value.replace(/\D/g, '').slice(0, 6);
                             handleAddressChange('pincode', val);
+                            if (fieldErrors.pincode) setFieldErrors(prev => ({ ...prev, pincode: '' }));
+                          }}
+                          onBlur={() => {
+                            const clean = (addressFields.pincode || '').replace(/\D/g, '');
+                            if (!/^[1-9][0-9]{5}$/.test(clean)) {
+                              setFieldErrors(prev => ({ ...prev, pincode: 'Please enter a valid 6-digit Indian PIN Code starting with 1–9.' }));
+                            }
                           }}
                         />
+                        {fieldErrors.pincode && (
+                          <p style={{ margin: '3px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                            {fieldErrors.pincode}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
 
-                  {/* Passwords (Horizontally Aligned in 2 Columns) */}
+                  {/* Passwords */}
                   <div className="responsive-grid-2">
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>Password *</label>
@@ -1511,28 +1772,38 @@ export default function Register({
                           type={showPassword ? 'text' : 'password'}
                           required
                           className="form-input"
-                          style={{ paddingLeft: '34px', paddingRight: '34px', height: '38px', fontSize: '0.84rem' }}
+                          style={{
+                            paddingLeft: '34px',
+                            paddingRight: '34px',
+                            height: '38px',
+                            fontSize: '0.84rem',
+                            border: fieldErrors.password ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="Min 6 characters"
                           value={password}
-                          onChange={(e) => setPassword(e.target.value)}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validatePassword(password, true);
+                            setFieldErrors(prev => ({ ...prev, password: err || '' }));
+                          }}
                         />
                         <Lock size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          style={{
-                            position: 'absolute',
-                            right: '9px',
-                            top: '10px',
-                            background: 'none',
-                            border: 'none',
-                            color: '#94a3b8',
-                            cursor: 'pointer'
-                          }}
+                          style={{ position: 'absolute', right: '9px', top: '10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
                         >
                           {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
                       </div>
+                      {fieldErrors.password && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.password}
+                        </p>
+                      )}
                       {password && (
                         <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <div style={{ flex: 1, height: '3px', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden' }}>
@@ -1552,28 +1823,38 @@ export default function Register({
                           type={showConfirmPassword ? 'text' : 'password'}
                           required
                           className="form-input"
-                          style={{ paddingLeft: '34px', paddingRight: '34px', height: '38px', fontSize: '0.84rem' }}
+                          style={{
+                            paddingLeft: '34px',
+                            paddingRight: '34px',
+                            height: '38px',
+                            fontSize: '0.84rem',
+                            border: fieldErrors.confirmPassword ? '1.5px solid #ef4444' : undefined
+                          }}
                           placeholder="Re-enter password"
                           value={confirmPassword}
-                          onChange={(e) => setConfirmPassword(e.target.value)}
+                          onChange={(e) => {
+                            setConfirmPassword(e.target.value);
+                            if (fieldErrors.confirmPassword) setFieldErrors(prev => ({ ...prev, confirmPassword: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validatePasswordMatch(password, confirmPassword);
+                            setFieldErrors(prev => ({ ...prev, confirmPassword: err || '' }));
+                          }}
                         />
                         <Lock size={14} style={{ position: 'absolute', left: '10px', top: '12px', color: '#94a3b8' }} />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          style={{
-                            position: 'absolute',
-                            right: '9px',
-                            top: '10px',
-                            background: 'none',
-                            border: 'none',
-                            color: '#94a3b8',
-                            cursor: 'pointer'
-                          }}
+                          style={{ position: 'absolute', right: '9px', top: '10px', background: 'none', border: 'none', color: '#94a3b8', cursor: 'pointer' }}
                         >
                           {showConfirmPassword ? <EyeOff size={14} /> : <Eye size={14} />}
                         </button>
                       </div>
+                      {fieldErrors.confirmPassword && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.confirmPassword}
+                        </p>
+                      )}
                       {confirmPassword && (
                         <div style={{ fontSize: '0.66rem', marginTop: '4px', fontWeight: 600, color: passwordsMatch ? '#10b981' : '#ef4444' }}>
                           {passwordsMatch ? '✓ Passwords match' : '✕ Passwords do not match'}
@@ -1583,14 +1864,16 @@ export default function Register({
                   </div>
                 </div>
               </div>
+            )}
 
-              {/* Right Column Card: 4. Assigned Geographic Jurisdiction & Allocation */}
-              <div className="card" style={{ margin: 0, display: 'flex', flexDirection: 'column', boxShadow: 'var(--shadow-card)' }}>
-                <div className="card-header" style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-subtle)' }}>
+            {/* ----------------- STEP 3: ASSIGNED JURISDICTION & ALLOCATION ----------------- */}
+            {currentStep === 3 && (
+              <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+                <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MapPin size={16} style={{ color: 'var(--forge-gold)' }} />
-                    <h3 style={{ fontSize: '0.88rem', fontWeight: 700, margin: 0 }}>
-                      4. Assigned Jurisdiction & Allocation
+                    <MapPin size={18} style={{ color: 'var(--forge-gold)' }} />
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0 }}>
+                      3. Assigned Jurisdiction & Allocation
                     </h3>
                   </div>
 
@@ -1629,8 +1912,8 @@ export default function Register({
                   )}
                 </div>
 
-                <div className="card-body" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px', flex: 1 }}>
-                  {/* Row 1: State & District (Horizontally Aligned in 2 Columns) */}
+                <div className="card-body" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Row 1: State & District with Search (Bug 4) */}
                   <div className="responsive-grid-2">
                     {/* State */}
                     <div className="form-group" style={{ margin: 0 }}>
@@ -1641,9 +1924,12 @@ export default function Register({
                       <select
                         id="reg-state-select"
                         className="form-select"
-                        style={{ height: '38px', fontSize: '0.84rem' }}
+                        style={{ height: '38px', fontSize: '0.84rem', borderColor: fieldErrors.stateId ? '#ef4444' : undefined }}
                         value={stateId}
-                        onChange={(e) => handleStateChange(e.target.value)}
+                        onChange={(e) => {
+                          handleStateChange(e.target.value);
+                          if (fieldErrors.stateId) setFieldErrors(prev => ({ ...prev, stateId: '' }));
+                        }}
                         required
                       >
                         <option value="">Select State / UT</option>
@@ -1661,20 +1947,50 @@ export default function Register({
                           );
                         })}
                       </select>
+                      {fieldErrors.stateId && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.stateId}
+                        </p>
+                      )}
                     </div>
 
-                    {/* District */}
+                    {/* District (Searchable Dropdown - Bug 4) */}
                     <div className="form-group" style={{ margin: 0 }}>
                       <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
                         <span>District {['district_manager', 'division_manager', 'pincode_manager'].includes(role) ? '*' : ''}</span>
                         {role === 'district_manager' && <span style={{ color: '#0284c7', fontSize: '0.68rem', fontWeight: 600 }}>Required</span>}
                       </label>
+                      {/* Search Input for District (Bug 4) */}
+                      {stateId && role !== 'state_manager' && (
+                        <div style={{ position: 'relative', marginBottom: '6px' }}>
+                          <Search size={13} style={{ position: 'absolute', left: '8px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                          <input
+                            type="text"
+                            placeholder="Type to filter districts..."
+                            value={districtSearch}
+                            onChange={(e) => setDistrictSearch(e.target.value)}
+                            style={{
+                              width: '100%',
+                              height: '30px',
+                              paddingLeft: '26px',
+                              paddingRight: '8px',
+                              fontSize: '0.76rem',
+                              borderRadius: '4px',
+                              border: '1px solid #cbd5e1',
+                              background: '#ffffff'
+                            }}
+                          />
+                        </div>
+                      )}
                       <select
                         id="reg-district-select"
                         className="form-select"
-                        style={{ height: '38px', fontSize: '0.84rem' }}
+                        style={{ height: '38px', fontSize: '0.84rem', borderColor: fieldErrors.districtId ? '#ef4444' : undefined }}
                         value={districtId}
-                        onChange={(e) => handleDistrictChange(e.target.value)}
+                        onChange={(e) => {
+                          handleDistrictChange(e.target.value);
+                          if (fieldErrors.districtId) setFieldErrors(prev => ({ ...prev, districtId: '' }));
+                        }}
                         disabled={!stateId || role === 'state_manager'}
                         required={['district_manager', 'division_manager', 'pincode_manager'].includes(role)}
                       >
@@ -1683,11 +1999,11 @@ export default function Register({
                             ? 'N/A (State Level)'
                             : !stateId
                             ? 'Select State First'
-                            : filteredDistricts.length === 0
-                            ? 'No districts available'
+                            : searchedDistricts.length === 0
+                            ? (districtSearch ? 'No matching districts' : 'No districts available')
                             : 'Select District'}
                         </option>
-                        {filteredDistricts.map((d) => {
+                        {searchedDistricts.map((d) => {
                           const isFilled = role === 'district_manager' && d.isFull;
                           return (
                             <option
@@ -1701,10 +2017,15 @@ export default function Register({
                           );
                         })}
                       </select>
+                      {fieldErrors.districtId && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.districtId}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Row 2: Division & PIN Code (Horizontally Aligned in 2 Columns) */}
+                  {/* Row 2: Division & PIN Code */}
                   <div className="responsive-grid-2">
                     {/* Division */}
                     <div className="form-group" style={{ margin: 0 }}>
@@ -1715,9 +2036,12 @@ export default function Register({
                       <select
                         id="reg-division-select"
                         className="form-select"
-                        style={{ height: '38px', fontSize: '0.84rem' }}
+                        style={{ height: '38px', fontSize: '0.84rem', borderColor: fieldErrors.divisionId ? '#ef4444' : undefined }}
                         value={divisionId}
-                        onChange={(e) => handleDivisionChange(e.target.value)}
+                        onChange={(e) => {
+                          handleDivisionChange(e.target.value);
+                          if (fieldErrors.divisionId) setFieldErrors(prev => ({ ...prev, divisionId: '' }));
+                        }}
                         disabled={!districtId || ['state_manager', 'district_manager'].includes(role)}
                         required={['division_manager', 'pincode_manager'].includes(role)}
                       >
@@ -1742,6 +2066,11 @@ export default function Register({
                           );
                         })}
                       </select>
+                      {fieldErrors.divisionId && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.divisionId}
+                        </p>
+                      )}
                     </div>
 
                     {/* PIN Code */}
@@ -1753,9 +2082,12 @@ export default function Register({
                       <select
                         id="reg-pincode-select"
                         className="form-select"
-                        style={{ height: '38px', fontSize: '0.84rem' }}
+                        style={{ height: '38px', fontSize: '0.84rem', borderColor: fieldErrors.pincodeId ? '#ef4444' : undefined }}
                         value={pincodeId}
-                        onChange={(e) => setPincodeId(e.target.value)}
+                        onChange={(e) => {
+                          setPincodeId(e.target.value);
+                          if (fieldErrors.pincodeId) setFieldErrors(prev => ({ ...prev, pincodeId: '' }));
+                        }}
                         disabled={!divisionId || role !== 'pincode_manager'}
                         required={role === 'pincode_manager'}
                       >
@@ -1775,10 +2107,15 @@ export default function Register({
                           </option>
                         ))}
                       </select>
+                      {fieldErrors.pincodeId && (
+                        <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#ef4444', fontWeight: 600 }}>
+                          {fieldErrors.pincodeId}
+                        </p>
+                      )}
                     </div>
                   </div>
 
-                  {/* Row 3: Jurisdiction Scope Preview (Full Width) */}
+                  {/* Scope Preview */}
                   <div className="form-group" style={{ margin: 0, display: 'flex', flexDirection: 'column' }}>
                     <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
                       Jurisdiction Scope Preview
@@ -1791,7 +2128,7 @@ export default function Register({
                       borderRadius: 'var(--radius-xs)',
                       display: 'flex',
                       alignItems: 'center',
-                      fontSize: '0.75rem',
+                      fontSize: '0.78rem',
                       fontWeight: 600,
                       color: '#334155',
                       overflow: 'hidden',
@@ -1808,6 +2145,12 @@ export default function Register({
                       })()}
                     </div>
                   </div>
+
+                  {fieldErrors.jurisdiction && (
+                    <div style={{ padding: '8px 12px', background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 'var(--radius-sm)', color: '#991b1b', fontSize: '0.74rem' }}>
+                      {fieldErrors.jurisdiction}
+                    </div>
+                  )}
 
                   {/* Vacancy Status / Exclusivity Notice */}
                   {capacityInfo && capacityInfo.isFull && role !== 'pincode_manager' ? (
@@ -1847,675 +2190,913 @@ export default function Register({
                   )}
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Section 3: Mandatory KYC Document Uploads & Digital Signature (Full Width Card) */}
-            <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
-              <div className="card-header" style={{ padding: '12px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <FileCheck size={16} style={{ color: 'var(--forge-gold)' }} />
-                  <h3 style={{ fontSize: '0.88rem', fontWeight: 700, margin: 0 }}>
-                    3. Mandatory KYC Document Uploads & Digital Signature
-                  </h3>
+            {/* ----------------- STEP 4: MANDATORY KYC DOCUMENTS ----------------- */}
+            {currentStep === 4 && (
+              <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+                <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FileCheck size={18} style={{ color: 'var(--forge-gold)' }} />
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0 }}>
+                      4. Mandatory KYC Document Uploads & Digital Signature
+                    </h3>
+                  </div>
+                  <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                    Govt ID Proofs & Payout Authorization (PDF, JPG, PNG &bull; Max 5MB)
+                  </span>
                 </div>
-                <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-                  Govt ID Proofs & Payout Authorization (PDF, JPG, PNG &bull; Max 5MB)
-                </span>
-              </div>
 
-              <div className="card-body" style={{ padding: '16px 18px' }}>
-                <div className="responsive-grid-4">
-                  {/* 1. Aadhaar Card Upload */}
-                  <div style={{
-                    border: aadharFile ? '1.5px solid #10b981' : '1px solid var(--border-normal)',
-                    background: aadharFile ? '#f0fdf4' : '#ffffff',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '6px',
-                          background: aadharFile ? '#dcfce7' : '#f0f9ff',
-                          color: aadharFile ? '#15803d' : '#0284c7',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <FileText size={15} />
+                <div className="card-body" style={{ padding: '18px' }}>
+                  <div className="responsive-grid-4">
+                    {/* 1. Aadhaar Card Upload */}
+                    <div style={{
+                      border: aadharFile ? '1.5px solid #10b981' : (fieldErrors.aadharFile || fieldErrors.aadharNumber ? '1.5px solid #ef4444' : '1px solid var(--border-normal)'),
+                      background: aadharFile ? '#f0fdf4' : '#ffffff',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            background: aadharFile ? '#dcfce7' : '#f0f9ff',
+                            color: aadharFile ? '#15803d' : '#0284c7',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <FileText size={15} />
+                          </div>
+                          <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                            Aadhaar Card <span style={{ color: '#ef4444' }}>*</span>
+                          </span>
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
-                          Aadhaar Card <span style={{ color: '#ef4444' }}>*</span>
-                        </span>
+                        {aadharFile && (
+                          <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Check size={10} /> Attached
+                          </span>
+                        )}
                       </div>
+
+                      <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                        Govt Identification Proof (Front & Back)
+                      </div>
+
+                      {aadharPreview && aadharPreview.startsWith('blob:') && (
+                        <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={aadharPreview} alt="Aadhaar" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                      )}
+
                       {aadharFile && (
-                        <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          <Check size={10} /> Attached
-                        </span>
+                        <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          📄 {aadharFile.name}
+                        </div>
                       )}
-                    </div>
 
-                    <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
-                      Govt Identification Proof (Front & Back)
-                    </div>
-
-                    {aadharPreview && aadharPreview.startsWith('blob:') && (
-                      <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src={aadharPreview} alt="Aadhaar" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      {/* Aadhaar Number Input */}
+                      <div style={{ margin: '4px 0' }}>
+                        <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
+                          Aadhaar Number (12 Digits) *
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={12}
+                          placeholder="12-digit Aadhaar"
+                          value={aadharNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                            setAadharNumber(val);
+                            if (aadharError && val.length === 12) setAadharError('');
+                            if (fieldErrors.aadharNumber && val.length === 12) setFieldErrors(prev => ({ ...prev, aadharNumber: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateAadhaar(aadharNumber, true);
+                            setFieldErrors(prev => ({ ...prev, aadharNumber: err || '' }));
+                          }}
+                          style={{
+                            width: '100%',
+                            height: '32px',
+                            padding: '0 8px',
+                            fontSize: '0.78rem',
+                            borderRadius: '6px',
+                            border: (aadharError || fieldErrors.aadharNumber) ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            fontWeight: 600,
+                            letterSpacing: '0.5px'
+                          }}
+                        />
+                        {(aadharError || fieldErrors.aadharNumber) && (
+                          <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                            {aadharError || fieldErrors.aadharNumber}
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    {aadharFile && (
-                      <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        📄 {aadharFile.name}
-                      </div>
-                    )}
-
-                    {/* Dedicated Aadhaar Number Input */}
-                    <div style={{ margin: '4px 0' }}>
-                      <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
-                        Aadhaar Number (12 Digits) *
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={12}
-                        placeholder="12-digit Aadhaar"
-                        value={aadharNumber}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '').slice(0, 12);
-                          setAadharNumber(val);
-                          if (aadharError && val.length === 12) setAadharError('');
-                        }}
-                        onBlur={() => {
-                          if (aadharNumber && aadharNumber.length !== 12) {
-                            setAadharError('Must be exactly 12 digits');
-                          } else {
-                            setAadharError('');
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          height: '32px',
-                          padding: '0 8px',
-                          fontSize: '0.78rem',
-                          borderRadius: '6px',
-                          border: aadharError ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
-                          background: '#ffffff',
+                      <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
+                        <label style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          background: aadharFile ? '#ffffff' : 'var(--primary)',
+                          color: aadharFile ? '#334155' : '#ffffff',
+                          border: aadharFile ? '1px solid #cbd5e1' : 'none',
+                          borderRadius: 'var(--radius-xs)',
+                          fontSize: '0.72rem',
                           fontWeight: 600,
-                          letterSpacing: '0.5px'
-                        }}
-                      />
-                      {aadharError && (
-                        <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
-                          {aadharError}
-                        </span>
-                      )}
-                    </div>
-
-                    <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
-                      <label style={{
-                        flex: 1,
-                        padding: '6px 8px',
-                        background: aadharFile ? '#ffffff' : 'var(--primary)',
-                        color: aadharFile ? '#334155' : '#ffffff',
-                        border: aadharFile ? '1px solid #cbd5e1' : 'none',
-                        borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px'
-                      }}>
-                        <Upload size={11} /> {aadharFile ? 'Change' : 'Upload Aadhaar'}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('aadhar', e)} />
-                      </label>
-                      {aadharFile && (
-                        <button type="button" onClick={() => handleRemoveDoc('aadhar')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 2. PAN Card Upload */}
-                  <div style={{
-                    border: panFile ? '1.5px solid #10b981' : '1px solid var(--border-normal)',
-                    background: panFile ? '#f0fdf4' : '#ffffff',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '6px',
-                          background: panFile ? '#dcfce7' : '#fffbeb',
-                          color: panFile ? '#15803d' : '#f59e0b',
-                          display: 'flex',
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
                           alignItems: 'center',
-                          justifyContent: 'center'
+                          justifyContent: 'center',
+                          gap: '4px'
                         }}>
-                          <CreditCard size={15} />
-                        </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
-                          PAN Card <span style={{ color: '#ef4444' }}>*</span>
-                        </span>
+                          <Upload size={11} /> {aadharFile ? 'Change' : 'Upload Aadhaar'}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => {
+                            handleDocSelect('aadhar', e);
+                            if (fieldErrors.aadharFile) setFieldErrors(prev => ({ ...prev, aadharFile: '' }));
+                          }} />
+                        </label>
+                        {aadharFile && (
+                          <button type="button" onClick={() => handleRemoveDoc('aadhar')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
+                            Remove
+                          </button>
+                        )}
                       </div>
-                      {panFile && (
-                        <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          <Check size={10} /> Attached
+                      {fieldErrors.aadharFile && (
+                        <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                          {fieldErrors.aadharFile}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
-                      Permanent Account Number (Tax ID)
-                    </div>
-
-                    {panPreview && panPreview.startsWith('blob:') && (
-                      <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src={panPreview} alt="PAN" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    {/* 2. PAN Card Upload */}
+                    <div style={{
+                      border: panFile ? '1.5px solid #10b981' : (fieldErrors.panFile || fieldErrors.panNumber ? '1.5px solid #ef4444' : '1px solid var(--border-normal)'),
+                      background: panFile ? '#f0fdf4' : '#ffffff',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            background: panFile ? '#dcfce7' : '#fffbeb',
+                            color: panFile ? '#15803d' : '#f59e0b',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <CreditCard size={15} />
+                          </div>
+                          <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                            PAN Card <span style={{ color: '#ef4444' }}>*</span>
+                          </span>
+                        </div>
+                        {panFile && (
+                          <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Check size={10} /> Attached
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    {panFile && (
-                      <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        📄 {panFile.name}
+                      <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                        Permanent Account Number (Tax ID)
                       </div>
-                    )}
 
-                    {/* Dedicated PAN Number Input */}
-                    <div style={{ margin: '4px 0' }}>
-                      <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
-                        PAN Number (e.g. ABCDE1234F) *
-                      </label>
-                      <input
-                        type="text"
-                        maxLength={10}
-                        placeholder="10-character PAN"
-                        value={panNumber}
-                        onChange={(e) => {
-                          const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
-                          setPanNumber(val);
-                          if (panError && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) setPanError('');
-                        }}
-                        onBlur={() => {
-                          if (panNumber && !/^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(panNumber)) {
-                            setPanError('Format: ABCDE1234F');
-                          } else {
-                            setPanError('');
-                          }
-                        }}
-                        style={{
-                          width: '100%',
-                          height: '32px',
-                          padding: '0 8px',
-                          fontSize: '0.78rem',
-                          borderRadius: '6px',
-                          border: panError ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
-                          background: '#ffffff',
+                      {panPreview && panPreview.startsWith('blob:') && (
+                        <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={panPreview} alt="PAN" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                      )}
+
+                      {panFile && (
+                        <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          📄 {panFile.name}
+                        </div>
+                      )}
+
+                      {/* PAN Number Input */}
+                      <div style={{ margin: '4px 0' }}>
+                        <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
+                          PAN Number (e.g. ABCDE1234F) *
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={10}
+                          placeholder="10-character PAN"
+                          value={panNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 10);
+                            setPanNumber(val);
+                            if (panError && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) setPanError('');
+                            if (fieldErrors.panNumber && /^[A-Z]{5}[0-9]{4}[A-Z]{1}$/.test(val)) setFieldErrors(prev => ({ ...prev, panNumber: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validatePan(panNumber, true);
+                            setFieldErrors(prev => ({ ...prev, panNumber: err || '' }));
+                          }}
+                          style={{
+                            width: '100%',
+                            height: '32px',
+                            padding: '0 8px',
+                            fontSize: '0.78rem',
+                            borderRadius: '6px',
+                            border: (panError || fieldErrors.panNumber) ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                            background: '#ffffff',
+                            fontWeight: 600,
+                            letterSpacing: '0.5px',
+                            textTransform: 'uppercase'
+                          }}
+                        />
+                        {(panError || fieldErrors.panNumber) && (
+                          <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                            {panError || fieldErrors.panNumber}
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
+                        <label style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          background: panFile ? '#ffffff' : 'var(--primary)',
+                          color: panFile ? '#334155' : '#ffffff',
+                          border: panFile ? '1px solid #cbd5e1' : 'none',
+                          borderRadius: 'var(--radius-xs)',
+                          fontSize: '0.72rem',
                           fontWeight: 600,
-                          letterSpacing: '0.5px',
-                          textTransform: 'uppercase'
-                        }}
-                      />
-                      {panError && (
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}>
+                          <Upload size={11} /> {panFile ? 'Change' : 'Upload PAN'}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => {
+                            handleDocSelect('pan', e);
+                            if (fieldErrors.panFile) setFieldErrors(prev => ({ ...prev, panFile: '' }));
+                          }} />
+                        </label>
+                        {panFile && (
+                          <button type="button" onClick={() => handleRemoveDoc('pan')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {fieldErrors.panFile && (
                         <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
-                          {panError}
+                          {fieldErrors.panFile}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
-                      <label style={{
-                        flex: 1,
-                        padding: '6px 8px',
-                        background: panFile ? '#ffffff' : 'var(--primary)',
-                        color: panFile ? '#334155' : '#ffffff',
-                        border: panFile ? '1px solid #cbd5e1' : 'none',
-                        borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px'
-                      }}>
-                        <Upload size={11} /> {panFile ? 'Change' : 'Upload PAN'}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('pan', e)} />
-                      </label>
-                      {panFile && (
-                        <button type="button" onClick={() => handleRemoveDoc('pan')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 3. Bank Passbook / Cheque */}
-                  <div style={{
-                    border: bankFile ? '1.5px solid #10b981' : '1px solid var(--border-normal)',
-                    background: bankFile ? '#f0fdf4' : '#ffffff',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '6px',
-                          background: bankFile ? '#dcfce7' : '#ecfdf5',
-                          color: bankFile ? '#15803d' : '#10b981',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <Building size={15} />
+                    {/* 3. Bank Passbook / Cheque */}
+                    <div style={{
+                      border: bankFile ? '1.5px solid #10b981' : (fieldErrors.bankFile ? '1.5px solid #ef4444' : '1px solid var(--border-normal)'),
+                      background: bankFile ? '#f0fdf4' : '#ffffff',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            background: bankFile ? '#dcfce7' : '#ecfdf5',
+                            color: bankFile ? '#15803d' : '#10b981',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <Building size={15} />
+                          </div>
+                          <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                            Bank Passbook <span style={{ color: '#ef4444' }}>*</span>
+                          </span>
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
-                          Bank Passbook <span style={{ color: '#ef4444' }}>*</span>
-                        </span>
+                        {bankFile && (
+                          <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Check size={10} /> Attached
+                          </span>
+                        )}
                       </div>
-                      {bankFile && (
-                        <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          <Check size={10} /> Attached
-                        </span>
-                      )}
-                    </div>
 
-                    <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
-                      Cancelled Cheque / Passbook Copy
-                    </div>
-
-                    {bankPreview && bankPreview.startsWith('blob:') && (
-                      <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src={bankPreview} alt="Bank" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                      <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                        Cancelled Cheque / Passbook Copy
                       </div>
-                    )}
 
-                    {bankFile && (
-                      <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        📄 {bankFile.name}
-                      </div>
-                    )}
-
-                    <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
-                      <label style={{
-                        flex: 1,
-                        padding: '6px 8px',
-                        background: bankFile ? '#ffffff' : 'var(--primary)',
-                        color: bankFile ? '#334155' : '#ffffff',
-                        border: bankFile ? '1px solid #cbd5e1' : 'none',
-                        borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px'
-                      }}>
-                        <Upload size={11} /> {bankFile ? 'Change' : 'Upload Passbook'}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('bank', e)} />
-                      </label>
-                      {bankFile && (
-                        <button type="button" onClick={() => handleRemoveDoc('bank')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
-                          Remove
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* 4. Digital Signature */}
-                  <div style={{
-                    border: signatureFile ? '1.5px solid #10b981' : '1px solid var(--border-normal)',
-                    background: signatureFile ? '#f0fdf4' : '#ffffff',
-                    borderRadius: 'var(--radius-md)',
-                    padding: '12px',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <div style={{
-                          width: '28px',
-                          height: '28px',
-                          borderRadius: '6px',
-                          background: signatureFile ? '#dcfce7' : '#f5f3ff',
-                          color: signatureFile ? '#15803d' : '#8b5cf6',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center'
-                        }}>
-                          <PenTool size={15} />
+                      {bankPreview && bankPreview.startsWith('blob:') && (
+                        <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={bankPreview} alt="Bank" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
                         </div>
-                        <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
-                          Digital Signature <span style={{ color: '#ef4444' }}>*</span>
-                        </span>
+                      )}
+
+                      {bankFile && (
+                        <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          📄 {bankFile.name}
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
+                        <label style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          background: bankFile ? '#ffffff' : 'var(--primary)',
+                          color: bankFile ? '#334155' : '#ffffff',
+                          border: bankFile ? '1px solid #cbd5e1' : 'none',
+                          borderRadius: 'var(--radius-xs)',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}>
+                          <Upload size={11} /> {bankFile ? 'Change' : 'Upload Passbook'}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => {
+                            handleDocSelect('bank', e);
+                            if (fieldErrors.bankFile) setFieldErrors(prev => ({ ...prev, bankFile: '' }));
+                          }} />
+                        </label>
+                        {bankFile && (
+                          <button type="button" onClick={() => handleRemoveDoc('bank')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
+                            Remove
+                          </button>
+                        )}
                       </div>
-                      {signatureFile && (
-                        <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
-                          <Check size={10} /> Attached
+                      {fieldErrors.bankFile && (
+                        <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                          {fieldErrors.bankFile}
                         </span>
                       )}
                     </div>
 
-                    <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
-                      Authorized Signature Specimen
-                    </div>
-
-                    {signaturePreview && signaturePreview.startsWith('blob:') && (
-                      <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <img src={signaturePreview} alt="Signature" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    {/* 4. Digital Signature */}
+                    <div style={{
+                      border: signatureFile ? '1.5px solid #10b981' : (fieldErrors.signatureFile ? '1.5px solid #ef4444' : '1px solid var(--border-normal)'),
+                      background: signatureFile ? '#f0fdf4' : '#ffffff',
+                      borderRadius: 'var(--radius-md)',
+                      padding: '12px',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <div style={{
+                            width: '28px',
+                            height: '28px',
+                            borderRadius: '6px',
+                            background: signatureFile ? '#dcfce7' : '#f5f3ff',
+                            color: signatureFile ? '#15803d' : '#8b5cf6',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <PenTool size={15} />
+                          </div>
+                          <span style={{ fontWeight: 700, fontSize: '0.8rem', color: '#0f172a' }}>
+                            Digital Signature <span style={{ color: '#ef4444' }}>*</span>
+                          </span>
+                        </div>
+                        {signatureFile && (
+                          <span style={{ background: '#dcfce7', color: '#15803d', fontSize: '0.66rem', fontWeight: 700, padding: '2px 6px', borderRadius: '4px', display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
+                            <Check size={10} /> Attached
+                          </span>
+                        )}
                       </div>
-                    )}
 
-                    {signatureFile && (
-                      <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        📄 {signatureFile.name}
+                      <div style={{ fontSize: '0.68rem', color: '#64748b' }}>
+                        Authorized Signature Specimen
                       </div>
-                    )}
 
-                    <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
-                      <label style={{
-                        flex: 1,
-                        padding: '6px 8px',
-                        background: signatureFile ? '#ffffff' : 'var(--primary)',
-                        color: signatureFile ? '#334155' : '#ffffff',
-                        border: signatureFile ? '1px solid #cbd5e1' : 'none',
-                        borderRadius: 'var(--radius-xs)',
-                        fontSize: '0.72rem',
-                        fontWeight: 600,
-                        textAlign: 'center',
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '4px'
-                      }}>
-                        <Upload size={11} /> {signatureFile ? 'Change' : 'Upload Signature'}
-                        <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => handleDocSelect('signature', e)} />
-                      </label>
+                      {signaturePreview && signaturePreview.startsWith('blob:') && (
+                        <div style={{ width: '100%', height: '52px', borderRadius: '4px', overflow: 'hidden', background: '#f8fafc', border: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          <img src={signaturePreview} alt="Signature" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                        </div>
+                      )}
+
                       {signatureFile && (
-                        <button type="button" onClick={() => handleRemoveDoc('signature')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
-                          Remove
-                        </button>
+                        <div style={{ fontSize: '0.68rem', color: '#334155', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          📄 {signatureFile.name}
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: 'auto', display: 'flex', gap: '6px' }}>
+                        <label style={{
+                          flex: 1,
+                          padding: '6px 8px',
+                          background: signatureFile ? '#ffffff' : 'var(--primary)',
+                          color: signatureFile ? '#334155' : '#ffffff',
+                          border: signatureFile ? '1px solid #cbd5e1' : 'none',
+                          borderRadius: 'var(--radius-xs)',
+                          fontSize: '0.72rem',
+                          fontWeight: 600,
+                          textAlign: 'center',
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '4px'
+                        }}>
+                          <Upload size={11} /> {signatureFile ? 'Change' : 'Upload Signature'}
+                          <input type="file" accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" style={{ display: 'none' }} onChange={(e) => {
+                            handleDocSelect('signature', e);
+                            if (fieldErrors.signatureFile) setFieldErrors(prev => ({ ...prev, signatureFile: '' }));
+                          }} />
+                        </label>
+                        {signatureFile && (
+                          <button type="button" onClick={() => handleRemoveDoc('signature')} style={{ padding: '6px 8px', background: '#fee2e2', border: '1px solid #fca5a5', color: '#b91c1c', borderRadius: 'var(--radius-xs)', fontSize: '0.72rem', fontWeight: 600, cursor: 'pointer' }}>
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                      {fieldErrors.signatureFile && (
+                        <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                          {fieldErrors.signatureFile}
+                        </span>
                       )}
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-            {/* Section 4: Bank Details (Full Width Card) */}
-            <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
-              <div className="card-body" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* Header */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', paddingBottom: '10px', borderBottom: '1.5px solid #e2e8f0' }}>
+            )}
+
+            {/* ----------------- STEP 5: BANK DETAILS ----------------- */}
+            {currentStep === 5 && (
+              <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+                <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1.5px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: '10px' }}>
                   <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: 'linear-gradient(135deg, #0f766e, #0d9488)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Landmark size={14} color="#fff" />
+                    <Landmark size={15} color="#fff" />
                   </div>
                   <div>
-                    <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>4. Bank Details</div>
-                    <div style={{ fontSize: '0.71rem', color: '#64748b' }}>Required for commission & incentive payments</div>
+                    <div style={{ fontWeight: 800, fontSize: '0.92rem', color: '#0f172a' }}>5. Bank Details</div>
+                    <div style={{ fontSize: '0.72rem', color: '#64748b' }}>Required for commission & incentive payments</div>
                   </div>
                 </div>
 
-                {/* Row 1: Account Holder Name & Bank Name */}
-                <div className="responsive-grid-2">
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
-                      Account Holder Name *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <User size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                      <input
-                        id="reg-bank-holder-name"
-                        type="text"
-                        className="form-input"
-                        placeholder="As per bank records"
-                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.accountHolderName ? '#ef4444' : undefined }}
-                        value={bankDetails.accountHolderName}
-                        onChange={(e) => {
-                          setBankDetails(prev => ({ ...prev, accountHolderName: formatName(e.target.value) }));
-                          if (bankErrors.accountHolderName) setBankErrors(prev => ({ ...prev, accountHolderName: '' }));
-                        }}
-                        maxLength={100}
-                      />
+                <div className="card-body" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  {/* Row 1: Account Holder Name & Bank Name */}
+                  <div className="responsive-grid-2">
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                        Account Holder Name *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <User size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                        <input
+                          id="reg-bank-holder-name"
+                          type="text"
+                          className="form-input"
+                          placeholder="As per bank records"
+                          style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.accountHolderName || fieldErrors.accountHolderName) ? '#ef4444' : undefined }}
+                          value={bankDetails.accountHolderName}
+                          onChange={(e) => {
+                            setBankDetails(prev => ({ ...prev, accountHolderName: formatName(e.target.value) }));
+                            if (bankErrors.accountHolderName) setBankErrors(prev => ({ ...prev, accountHolderName: '' }));
+                            if (fieldErrors.accountHolderName) setFieldErrors(prev => ({ ...prev, accountHolderName: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateName(bankDetails.accountHolderName, true, 'Account Holder Name');
+                            setFieldErrors(prev => ({ ...prev, accountHolderName: err || '' }));
+                          }}
+                          maxLength={100}
+                        />
+                      </div>
+                      {(bankErrors.accountHolderName || fieldErrors.accountHolderName) && (
+                        <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>
+                          {bankErrors.accountHolderName || fieldErrors.accountHolderName}
+                        </div>
+                      )}
                     </div>
-                    {bankErrors.accountHolderName && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.accountHolderName}</div>}
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                        Bank Name *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <Landmark size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                        <input
+                          id="reg-bank-name"
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. State Bank of India"
+                          style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.bankName || fieldErrors.bankName) ? '#ef4444' : undefined }}
+                          value={bankDetails.bankName}
+                          onChange={(e) => {
+                            setBankDetails(prev => ({ ...prev, bankName: e.target.value }));
+                            if (bankErrors.bankName) setBankErrors(prev => ({ ...prev, bankName: '' }));
+                            if (fieldErrors.bankName) setFieldErrors(prev => ({ ...prev, bankName: '' }));
+                          }}
+                          onBlur={() => {
+                            if (!bankDetails.bankName.trim()) {
+                              setFieldErrors(prev => ({ ...prev, bankName: 'Bank Name is required.' }));
+                            }
+                          }}
+                          maxLength={100}
+                        />
+                      </div>
+                      {(bankErrors.bankName || fieldErrors.bankName) && (
+                        <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>
+                          {bankErrors.bankName || fieldErrors.bankName}
+                        </div>
+                      )}
+                    </div>
                   </div>
 
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
-                      Bank Name *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <Landmark size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                      <input
-                        id="reg-bank-name"
-                        type="text"
-                        className="form-input"
-                        placeholder="e.g. State Bank of India"
-                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.bankName ? '#ef4444' : undefined }}
-                        value={bankDetails.bankName}
-                        onChange={(e) => {
-                          setBankDetails(prev => ({ ...prev, bankName: e.target.value }));
-                          if (bankErrors.bankName) setBankErrors(prev => ({ ...prev, bankName: '' }));
-                        }}
-                        maxLength={100}
-                      />
+                  {/* Row 2: Bank Branch & Bank City */}
+                  <div className="responsive-grid-2">
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                        Bank Branch *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <MapPin size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                        <input
+                          id="reg-bank-branch"
+                          type="text"
+                          className="form-input"
+                          placeholder="Branch name or location"
+                          style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.branchName || fieldErrors.branchName) ? '#ef4444' : undefined }}
+                          value={bankDetails.branchName}
+                          onChange={(e) => {
+                            setBankDetails(prev => ({ ...prev, branchName: e.target.value }));
+                            if (bankErrors.branchName) setBankErrors(prev => ({ ...prev, branchName: '' }));
+                            if (fieldErrors.branchName) setFieldErrors(prev => ({ ...prev, branchName: '' }));
+                          }}
+                          onBlur={() => {
+                            if (!bankDetails.branchName.trim()) {
+                              setFieldErrors(prev => ({ ...prev, branchName: 'Bank Branch is required.' }));
+                            }
+                          }}
+                          maxLength={100}
+                        />
+                      </div>
+                      {(bankErrors.branchName || fieldErrors.branchName) && (
+                        <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>
+                          {bankErrors.branchName || fieldErrors.branchName}
+                        </div>
+                      )}
                     </div>
-                    {bankErrors.bankName && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.bankName}</div>}
-                  </div>
-                </div>
 
-                {/* Row 2: Bank Branch & Bank City */}
-                <div className="responsive-grid-2">
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
-                      Bank Branch *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <MapPin size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                      <input
-                        id="reg-bank-branch"
-                        type="text"
-                        className="form-input"
-                        placeholder="Branch name or location"
-                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.branchName ? '#ef4444' : undefined }}
-                        value={bankDetails.branchName}
-                        onChange={(e) => {
-                          setBankDetails(prev => ({ ...prev, branchName: e.target.value }));
-                          if (bankErrors.branchName) setBankErrors(prev => ({ ...prev, branchName: '' }));
-                        }}
-                        maxLength={100}
-                      />
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                        Bank City *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <Building size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                        <input
+                          id="reg-bank-city"
+                          type="text"
+                          className="form-input"
+                          placeholder="City where branch is located"
+                          style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.city || fieldErrors.city) ? '#ef4444' : undefined }}
+                          value={bankDetails.city}
+                          onChange={(e) => {
+                            setBankDetails(prev => ({ ...prev, city: e.target.value }));
+                            if (bankErrors.city) setBankErrors(prev => ({ ...prev, city: '' }));
+                            if (fieldErrors.city) setFieldErrors(prev => ({ ...prev, city: '' }));
+                          }}
+                          onBlur={() => {
+                            if (!bankDetails.city.trim()) {
+                              setFieldErrors(prev => ({ ...prev, city: 'Bank City is required.' }));
+                            }
+                          }}
+                          maxLength={80}
+                        />
+                      </div>
+                      {(bankErrors.city || fieldErrors.city) && (
+                        <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>
+                          {bankErrors.city || fieldErrors.city}
+                        </div>
+                      )}
                     </div>
-                    {bankErrors.branchName && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.branchName}</div>}
-                  </div>
-
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
-                      Bank City *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <Building size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                      <input
-                        id="reg-bank-city"
-                        type="text"
-                        className="form-input"
-                        placeholder="City where branch is located"
-                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: bankErrors.city ? '#ef4444' : undefined }}
-                        value={bankDetails.city}
-                        onChange={(e) => {
-                          setBankDetails(prev => ({ ...prev, city: e.target.value }));
-                          if (bankErrors.city) setBankErrors(prev => ({ ...prev, city: '' }));
-                        }}
-                        maxLength={80}
-                      />
-                    </div>
-                    {bankErrors.city && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.city}</div>}
-                  </div>
-                </div>
-
-                {/* Row 3: Bank Street Address (optional, full width) */}
-                <div className="form-group" style={{ margin: 0 }}>
-                  <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
-                    <span>Bank Street / Address</span>
-                    <span style={{ color: '#94a3b8', fontSize: '0.68rem' }}>Optional</span>
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <Home size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                    <input
-                      id="reg-bank-street"
-                      type="text"
-                      className="form-input"
-                      placeholder="Street address of the bank branch (optional)"
-                      style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem' }}
-                      value={bankDetails.street}
-                      onChange={(e) => setBankDetails(prev => ({ ...prev, street: e.target.value }))}
-                      maxLength={200}
-                    />
-                  </div>
-                </div>
-
-                {/* Row 4: Account Number & IFSC Code */}
-                <div className="responsive-grid-2">
-                  <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
-                      Account Number *
-                    </label>
-                    <div style={{ position: 'relative' }}>
-                      <Banknote size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
-                      <input
-                        id="reg-bank-account-number"
-                        type="text"
-                        className="form-input"
-                        placeholder="9–18 digit account number"
-                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', letterSpacing: '0.05em', borderColor: bankErrors.accountNumber ? '#ef4444' : undefined }}
-                        value={bankDetails.accountNumber}
-                        onChange={(e) => {
-                          const val = e.target.value.replace(/\D/g, '').slice(0, 18);
-                          setBankDetails(prev => ({ ...prev, accountNumber: val }));
-                          if (bankErrors.accountNumber) setBankErrors(prev => ({ ...prev, accountNumber: '' }));
-                        }}
-                        inputMode="numeric"
-                        maxLength={18}
-                      />
-                    </div>
-                    {bankErrors.accountNumber && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.accountNumber}</div>}
                   </div>
 
+                  {/* Row 3: Bank Street Address (optional) */}
                   <div className="form-group" style={{ margin: 0 }}>
-                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
-                      IFSC Code *
+                    <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px', display: 'flex', justifyContent: 'space-between' }}>
+                      <span>Bank Street / Address</span>
+                      <span style={{ color: '#94a3b8', fontSize: '0.68rem' }}>Optional</span>
                     </label>
                     <div style={{ position: 'relative' }}>
-                      <Hash size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                      <Home size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
                       <input
-                        id="reg-bank-ifsc"
+                        id="reg-bank-street"
                         type="text"
                         className="form-input"
-                        placeholder="e.g. SBIN0001234"
-                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'monospace', borderColor: bankErrors.ifscCode ? '#ef4444' : undefined }}
-                        value={bankDetails.ifscCode}
-                        onChange={(e) => {
-                          const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
-                          setBankDetails(prev => ({ ...prev, ifscCode: val }));
-                          if (bankErrors.ifscCode) setBankErrors(prev => ({ ...prev, ifscCode: '' }));
-                        }}
-                        maxLength={11}
+                        placeholder="Street address of the bank branch (optional)"
+                        style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem' }}
+                        value={bankDetails.street}
+                        onChange={(e) => setBankDetails(prev => ({ ...prev, street: e.target.value }))}
+                        maxLength={200}
                       />
                     </div>
-                    {bankErrors.ifscCode && <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>{bankErrors.ifscCode}</div>}
-                    <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '2px' }}>Format: 4 letters + 0 + 6 alphanumeric</div>
+                  </div>
+
+                  {/* Row 4: Account Number & IFSC Code */}
+                  <div className="responsive-grid-2">
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                        Account Number *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <Banknote size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                        <input
+                          id="reg-bank-account-number"
+                          type="text"
+                          className="form-input"
+                          placeholder="9–18 digit account number"
+                          style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', letterSpacing: '0.05em', borderColor: (bankErrors.accountNumber || fieldErrors.accountNumber) ? '#ef4444' : undefined }}
+                          value={bankDetails.accountNumber}
+                          onChange={(e) => {
+                            const val = e.target.value.replace(/\D/g, '').slice(0, 18);
+                            setBankDetails(prev => ({ ...prev, accountNumber: val }));
+                            if (bankErrors.accountNumber) setBankErrors(prev => ({ ...prev, accountNumber: '' }));
+                            if (fieldErrors.accountNumber) setFieldErrors(prev => ({ ...prev, accountNumber: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateAccountNumber(bankDetails.accountNumber, true, bankDetails.bankName);
+                            setFieldErrors(prev => ({ ...prev, accountNumber: err || '' }));
+                          }}
+                          inputMode="numeric"
+                          maxLength={18}
+                        />
+                      </div>
+                      {(bankErrors.accountNumber || fieldErrors.accountNumber) && (
+                        <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>
+                          {bankErrors.accountNumber || fieldErrors.accountNumber}
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="form-group" style={{ margin: 0 }}>
+                      <label className="form-label" style={{ fontSize: '0.78rem', marginBottom: '4px' }}>
+                        IFSC Code *
+                      </label>
+                      <div style={{ position: 'relative' }}>
+                        <Hash size={13} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8', pointerEvents: 'none' }} />
+                        <input
+                          id="reg-bank-ifsc"
+                          type="text"
+                          className="form-input"
+                          placeholder="e.g. SBIN0001234"
+                          style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'monospace', borderColor: (bankErrors.ifscCode || fieldErrors.ifscCode) ? '#ef4444' : undefined }}
+                          value={bankDetails.ifscCode}
+                          onChange={(e) => {
+                            const val = e.target.value.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 11);
+                            setBankDetails(prev => ({ ...prev, ifscCode: val }));
+                            if (bankErrors.ifscCode) setBankErrors(prev => ({ ...prev, ifscCode: '' }));
+                            if (fieldErrors.ifscCode) setFieldErrors(prev => ({ ...prev, ifscCode: '' }));
+                          }}
+                          onBlur={() => {
+                            const err = validateIfsc(bankDetails.ifscCode, true);
+                            setFieldErrors(prev => ({ ...prev, ifscCode: err || '' }));
+                          }}
+                          maxLength={11}
+                        />
+                      </div>
+                      {(bankErrors.ifscCode || fieldErrors.ifscCode) && (
+                        <div style={{ fontSize: '0.72rem', color: '#ef4444', marginTop: '3px' }}>
+                          {bankErrors.ifscCode || fieldErrors.ifscCode}
+                        </div>
+                      )}
+                      <div style={{ fontSize: '0.68rem', color: '#64748b', marginTop: '2px' }}>Format: 4 letters + 0 + 6 alphanumeric</div>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Section 5: Declaration & Final Submission (Full Width Card) */}
-            <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
-              <div className="card-body" style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    id="reg-declaration-checkbox"
-                    checked={declarationAccepted}
-                    onChange={(e) => setDeclarationAccepted(e.target.checked)}
-                    style={{ marginTop: '3px', width: '17px', height: '17px', accentColor: 'var(--primary)', cursor: 'pointer' }}
-                  />
-                  <span style={{ fontSize: '0.82rem', color: '#334155', lineHeight: 1.45 }}>
-                    <strong>5. Official Undertaking & Declaration:</strong> I hereby declare that all personal details (DOB, Gender, Address) and uploaded KYC documents (Aadhaar, PAN, Bank Passbook, and Digital Signature) provided in this registration are genuine, authentic, and legally accurate. I agree to adhere to the Forge India Connect Code of Conduct and regional operating guidelines.
-                  </span>
-                </label>
-
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', paddingTop: '12px', borderTop: '1px solid #f1f5f9', flexWrap: 'wrap' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
-                    Already have an authorized manager account?{' '}
-                    <button
-                      type="button"
-                      onClick={() => onNavigate('login')}
-                      style={{
-                        background: 'none',
-                        border: 'none',
-                        color: 'var(--primary)',
-                        fontWeight: 700,
-                        fontSize: '0.8rem',
-                        cursor: 'pointer'
-                      }}
-                    >
-                      Sign In to Dashboard
-                    </button>
+            {/* ----------------- STEP 6: APPLICATION REVIEW & SUBMISSION ----------------- */}
+            {currentStep === 6 && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div className="card" style={{ margin: 0, boxShadow: 'var(--shadow-card)' }}>
+                  <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <CheckCircle2 size={18} style={{ color: '#16a34a' }} />
+                      <h3 style={{ fontSize: '0.92rem', fontWeight: 800, margin: 0 }}>
+                        6. Review Application & Final Undertaking
+                      </h3>
+                    </div>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                      Carefully verify all submitted details
+                    </span>
                   </div>
 
+                  <div className="card-body" style={{ padding: '18px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Summary Section 1: Role & Personal */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                      {/* Role Card */}
+                      <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>MANAGER ROLE LEVEL</div>
+                        <div style={{ fontWeight: 800, fontSize: '0.95rem', color: '#0f172a', marginTop: '2px' }}>
+                          {ROLES.find(r => r.key === role)?.label}
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: '#475569', marginTop: '2px' }}>
+                          {ROLES.find(r => r.key === role)?.scopeDesc}
+                        </div>
+                      </div>
+
+                      {/* Personal Details */}
+                      <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>PERSONAL DETAILS</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.9rem', color: '#0f172a', marginTop: '2px' }}>
+                          {name} ({gender ? gender.toUpperCase() : 'N/A'})
+                        </div>
+                        <div style={{ fontSize: '0.76rem', color: '#475569', marginTop: '2px' }}>
+                          Email: {email} &bull; Mobile: +91 {mobile}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '1px' }}>
+                          DOB: {dob || 'Not provided'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary Section 2: Address & Jurisdiction */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                      {/* Residential Address */}
+                      <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>RESIDENTIAL / OPERATIONAL ADDRESS</div>
+                        <div style={{ fontSize: '0.78rem', color: '#1e293b', fontWeight: 600, marginTop: '4px', lineHeight: 1.45 }}>
+                          {[
+                            addressFields.doorNumberStreet,
+                            addressFields.villageTown,
+                            addressFields.postOffice ? `PO: ${addressFields.postOffice}` : null,
+                            addressFields.taluk ? `Taluk: ${addressFields.taluk}` : null,
+                            addressFields.district,
+                            addressFields.state,
+                            `PIN: ${addressFields.pincode}`
+                          ].filter(Boolean).join(', ')}
+                        </div>
+                      </div>
+
+                      {/* Assigned Jurisdiction */}
+                      <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>ASSIGNED JURISDICTION SCOPE</div>
+                        <div style={{ fontSize: '0.82rem', fontWeight: 700, color: '#0f172a', marginTop: '4px' }}>
+                          {(() => {
+                            const st = states.find(s => (s._id || s.id) === stateId)?.name;
+                            const dt = filteredDistricts.find(d => (d._id || d.id) === districtId)?.name;
+                            const dv = filteredDivisions.find(v => (v._id || v.id) === divisionId)?.name;
+                            const pin = filteredPincodes.find(p => (p._id || p.id) === pincodeId)?.code;
+                            const parts = [st, dt, dv, pin ? `PIN ${pin}` : null].filter(Boolean);
+                            return parts.length > 0 ? parts.join(' › ') : 'Not selected';
+                          })()}
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#16a34a', fontWeight: 600, marginTop: '4px' }}>
+                          Status: Regional Vacancy Verified
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Summary Section 3: KYC Documents & Bank Details */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px' }}>
+                      {/* Documents Status */}
+                      <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>KYC VERIFICATION DOCUMENTS</div>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', fontSize: '0.76rem', color: '#334155' }}>
+                          <div>• Aadhaar: <strong>{maskAadhaar(aadharNumber)}</strong> {aadharFile ? `(📄 ${aadharFile.name})` : '⚠️ Missing'}</div>
+                          <div>• PAN Card: <strong>{maskPan(panNumber)}</strong> {panFile ? `(📄 ${panFile.name})` : '⚠️ Missing'}</div>
+                          <div>• Bank Passbook: {bankFile ? `(📄 ${bankFile.name})` : '⚠️ Missing'}</div>
+                          <div>• Digital Signature: {signatureFile ? `(📄 ${signatureFile.name})` : '⚠️ Missing'}</div>
+                        </div>
+                      </div>
+
+                      {/* Bank Details */}
+                      <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>COMMISSION & PAYOUT BANK ACCOUNT</div>
+                        <div style={{ fontWeight: 700, fontSize: '0.85rem', color: '#0f172a', marginTop: '2px' }}>
+                          {bankDetails.accountHolderName} &bull; {bankDetails.bankName}
+                        </div>
+                        <div style={{ fontSize: '0.76rem', color: '#475569', marginTop: '2px' }}>
+                          Account: <strong>••••••••{bankDetails.accountNumber.slice(-4)}</strong>
+                        </div>
+                        <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '1px' }}>
+                          IFSC: {bankDetails.ifscCode} &bull; Branch: {bankDetails.branchName}, {bankDetails.city}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Official Undertaking Checkbox */}
+                    <div style={{ marginTop: '6px', padding: '14px', background: '#fffbeb', border: '1px solid #fde68a', borderRadius: '8px' }}>
+                      <label style={{ display: 'flex', alignItems: 'flex-start', gap: '12px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          id="reg-declaration-checkbox"
+                          checked={declarationAccepted}
+                          onChange={(e) => {
+                            setDeclarationAccepted(e.target.checked);
+                            if (fieldErrors.declaration) setFieldErrors(prev => ({ ...prev, declaration: '' }));
+                          }}
+                          style={{ marginTop: '3px', width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                        />
+                        <span style={{ fontSize: '0.82rem', color: '#78350f', lineHeight: 1.45 }}>
+                          <strong>Official Undertaking & Declaration:</strong> I hereby declare that all personal details (DOB, Gender, Residential Address) and uploaded KYC documents (Aadhaar, PAN, Bank Passbook, and Digital Signature) provided in this registration are genuine, authentic, and legally accurate. I agree to adhere to the Forge India Connect Code of Conduct and regional operating guidelines.
+                        </span>
+                      </label>
+                      {fieldErrors.declaration && (
+                        <p style={{ margin: '8px 0 0 30px', fontSize: '0.74rem', color: '#ef4444', fontWeight: 700 }}>
+                          {fieldErrors.declaration}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ----------------- STEP NAVIGATION BAR (Bug 3) ----------------- */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: '14px 20px',
+              background: '#ffffff',
+              borderRadius: 'var(--radius-md)',
+              border: '1px solid var(--border-normal)',
+              boxShadow: 'var(--shadow-xs)'
+            }}>
+              {currentStep > 1 ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setCurrentStep(prev => prev - 1);
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="btn btn-secondary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '9px 18px', fontWeight: 700 }}
+                >
+                  <ArrowLeft size={15} /> Previous Step
+                </button>
+              ) : (
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                  Already registered?{' '}
                   <button
-                    type="submit"
-                    className="btn btn-primary"
-                    style={{
-                      minWidth: '260px',
-                      padding: '11px 24px',
-                      fontSize: '0.9rem',
-                      fontWeight: 700,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      background: (!declarationAccepted || (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager')) ? '#94a3b8' : undefined,
-                      cursor: (!declarationAccepted || (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager')) ? 'not-allowed' : 'pointer'
-                    }}
-                    disabled={loading || !declarationAccepted || (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager')}
+                    type="button"
+                    onClick={() => onNavigate('login')}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: 700, cursor: 'pointer' }}
                   >
-                    {loading ? (
-                      'Submitting Application...'
-                    ) : (
-                      <>
-                        Register as Manager <ArrowRight size={15} />
-                      </>
-                    )}
+                    Sign In to Dashboard
                   </button>
                 </div>
-              </div>
+              )}
+
+              {currentStep < 6 ? (
+                <button
+                  type="button"
+                  onClick={() => handleNextStep(currentStep)}
+                  className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '9px 22px', fontWeight: 700 }}
+                >
+                  Next: {STEP_TITLES[currentStep]} <ArrowRight size={15} />
+                </button>
+              ) : (
+                <button
+                  type="submit"
+                  disabled={loading || isSubmitting || !declarationAccepted || (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager')}
+                  className="btn btn-primary"
+                  style={{
+                    minWidth: '240px',
+                    padding: '11px 24px',
+                    fontSize: '0.9rem',
+                    fontWeight: 700,
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
+                    background: (!declarationAccepted || isSubmitting || loading || (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager')) ? '#94a3b8' : undefined,
+                    cursor: (!declarationAccepted || isSubmitting || loading || (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager')) ? 'not-allowed' : 'pointer'
+                  }}
+                >
+                  {loading || isSubmitting ? (
+                    'Submitting Application...'
+                  ) : (
+                    <>
+                      Submit Application <CheckCircle2 size={16} />
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           </form>
         )}

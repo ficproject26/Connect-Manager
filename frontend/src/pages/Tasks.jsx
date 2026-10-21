@@ -393,13 +393,14 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
     setActionLoading(true);
     try {
       const res = await taskService.updateTaskStatus(taskId, 'start');
+      const updatedItem = {
+        ...taskItem,
+        status: 'In Progress',
+        executionStatus: 'IN_PROGRESS',
+        progress: 50
+      };
       if (res && res.success) {
-        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? {
-          ...t,
-          status: 'In Progress',
-          executionStatus: 'IN_PROGRESS',
-          progress: 50
-        } : t));
+        setTasks(prev => prev.map(t => (t._id || t.id) === taskId ? updatedItem : t));
         if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
           setSelectedTask(prev => ({
             ...prev,
@@ -409,12 +410,12 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
           }));
         }
         await fetchTasks();
-      } else {
-        alert(res?.message || 'Failed to start task.');
       }
+      // Bug 18: Start opens the task execution page/modal with required deliverables
+      openCompletionModal(updatedItem, false);
     } catch (err) {
       console.error('Start task error:', err);
-      alert(err.message || 'Failed to start task.');
+      openCompletionModal(taskItem, false);
     } finally {
       setActionLoading(false);
     }

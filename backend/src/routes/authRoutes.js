@@ -5,7 +5,7 @@ const { authMiddleware } = require('../middleware/authMiddleware');
 const { checkRole, requireApprovalPermission } = require('../middleware/roleMiddleware');
 const { upload, documentUpload, logoUpload } = require('../middleware/uploadMiddleware');
 
-const { authLimiter, otpLimiter, uploadLimiter } = require('../middleware/rateLimitMiddleware');
+const { authLimiter, otpLimiter, uploadLimiter, avatarUploadLimiter, documentUploadLimiter } = require('../middleware/rateLimitMiddleware');
 
 // Public auth routes with rate limiting protection
 router.post('/login', authLimiter, authController.login);
@@ -16,9 +16,9 @@ router.get('/locations', authController.getRegistrationLocations);
 router.get('/check-capacity', authController.checkCapacity);
 router.get('/registration-status/:userId', authController.getRegistrationStatus);
 
-// Registration KYC and Avatar upload during registration (rate limited)
-router.post('/upload-avatar', uploadLimiter, upload.single('avatar'), authController.uploadAvatar);
-router.post('/upload-document', uploadLimiter, documentUpload.any(), authController.uploadDocument);
+// Registration KYC and Avatar upload during registration (independent rate limited buckets)
+router.post('/upload-avatar', avatarUploadLimiter, upload.single('avatar'), authController.uploadAvatar);
+router.post('/upload-document', documentUploadLimiter, documentUpload.any(), authController.uploadDocument);
 
 // Password recovery routes
 router.post('/forgot-password', authLimiter, authController.forgotPassword);

@@ -46,7 +46,18 @@ const ForgotPassword = ({ onNavigate }) => {
       width: '100%'
     }}>
       {/* 1. Clean Top Header Bar */}
-      <header className="login-header">
+      <header className="login-header" style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 32px',
+        borderBottom: '1px solid var(--border-normal)',
+        background: 'rgba(255, 255, 255, 0.94)',
+        backdropFilter: 'blur(10px)',
+        position: 'relative',
+        zIndex: 10,
+        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.02)'
+      }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <img 
             src="/assets/forge_badge.png" 
@@ -63,21 +74,25 @@ const ForgotPassword = ({ onNavigate }) => {
           </div>
         </div>
 
-        <button
-          type="button"
-          className="btn btn-secondary btn-sm"
-          onClick={() => onNavigate('login')}
-          style={{
-            padding: '6px 14px',
-            fontSize: '0.8rem',
-            fontWeight: 700,
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '6px'
-          }}
-        >
-          <ArrowLeft size={13} /> Back to Sign In
-        </button>
+        <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+          <button
+            type="button"
+            className="btn btn-secondary btn-sm"
+            onClick={() => onNavigate('login')}
+            style={{
+              padding: '7px 16px',
+              fontSize: '0.82rem',
+              fontWeight: 700,
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              borderRadius: 'var(--radius-sm, 6px)'
+            }}
+          >
+            <ArrowLeft size={14} /> Back to Sign In
+          </button>
+        </div>
       </header>
 
       {/* 2. Full-Screen Window-Fit Body */}

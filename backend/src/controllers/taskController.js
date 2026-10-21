@@ -107,6 +107,11 @@ const isTaskInManagerTerritory = (task, profile) => {
     tDesc.includes('centralized realtime sync test task');
   if (isMockTask) return false;
 
+  // Direct assignment check: If task is directly assigned to this manager, grant access
+  const assignedToId = normalize(task.assignedTo || task.assignedManagerId || task.assignedManager || task.userId || task.assignedAgentId);
+  const myMgrId = normalize(profile.managerId);
+  if (assignedToId && myMgrId && assignedToId === myMgrId) return true;
+
   const tStateId = normalize(task.stateId);
   const tState = normalize(task.state || task.stateName);
   const tDistId = normalize(task.districtId);

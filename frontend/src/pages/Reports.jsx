@@ -154,8 +154,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
 
   // Sync viewScope when isPincodeManager is resolved
   useEffect(() => {
-    if (isPincodeManager && viewScope !== 'self') {
-      setViewScope('self');
+    if (isPincodeManager && viewScope !== 'self' && viewScope !== 'pincode_managers') {
+      setViewScope('pincode_managers');
     }
   }, [isPincodeManager, viewScope]);
 
@@ -166,7 +166,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
       const limitVal = (customLimit === 'all' || customLimit >= 1000) ? 1000 : (parseInt(customLimit, 10) || 15);
       const params = { page, limit: limitVal };
       if (isPincodeManager) {
-        params.scope = 'self';
+        params.scope = viewScope === 'self' ? 'self' : 'pincode_managers';
       } else if (viewScope !== 'all') {
         params.scope = viewScope;
       }
@@ -466,9 +466,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     window.print();
   };
 
-  const totalVisitCount = typeof kpiStats.total === 'number' && kpiStats.total >= 0
-    ? kpiStats.total
-    : (pagination && typeof pagination.total === 'number' ? pagination.total : safeVisits.length);
+  const totalVisitCount = pagination && typeof pagination.total === 'number' && pagination.total >= 0
+    ? pagination.total
+    : (typeof kpiStats.total === 'number' && kpiStats.total >= 0 ? kpiStats.total : safeVisits.length);
   const interestedCount = typeof kpiStats.interested === 'number' && kpiStats.interested >= 0
     ? kpiStats.interested
     : safeVisits.filter(v => v && (v.interestedStatus === 'YES' || v.interestStatus === 'YES')).length;

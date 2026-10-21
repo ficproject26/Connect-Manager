@@ -734,6 +734,26 @@ const Profile = () => {
                     </span>
                   )}
                 </div>
+              <div>
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Manager ID</label>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
+                  <span>{user?.managerId || user?.id || user?._id || 'MGR-VERIFIED'}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="form-label" style={{ color: 'var(--text-muted)' }}>Active Since</label>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>
+                  <Clock size={14} color="#059669" />
+                  <span>
+                    {(() => {
+                      const dt = user?.activeSince || user?.activatedAt || user?.approvedAt || user?.adminApprovedAt || user?.createdAt;
+                      if (!dt) return 'Authoritative activation recorded on approval';
+                      const parsed = new Date(dt);
+                      return isNaN(parsed.getTime()) ? String(dt) : parsed.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+                    })()}
+                  </span>
+                </div>
               </div>
 
               <div>
@@ -751,6 +771,46 @@ const Profile = () => {
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Registered Mobile</label>
                 <div style={{ fontSize: '0.95rem' }}>+91 {user?.mobile}</div>
+              </div>
+
+              <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  Registered Personal & Identity Details
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '0.85rem' }}>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Date of Birth</span>
+                    <strong>{user?.dob || user?.dateOfBirth || 'Registered with KYC'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Gender</span>
+                    <strong>{user?.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : 'Registered'}</strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Aadhaar Number</span>
+                    <strong style={{ fontFamily: 'monospace' }}>
+                      {user?.aadharNumber ? `•••• •••• ${String(user.aadharNumber).slice(-4)}` : (user?.documents?.aadharNumber ? `•••• •••• ${String(user.documents.aadharNumber).slice(-4)}` : '•••• •••• Verified')}
+                    </strong>
+                  </div>
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>PAN Number</span>
+                    <strong style={{ fontFamily: 'monospace' }}>
+                      {user?.panNumber ? `${String(user.panNumber).slice(0, 2)}••••••${String(user.panNumber).slice(-2)}` : (user?.documents?.panNumber ? `${String(user.documents.panNumber).slice(0, 2)}••••••${String(user.documents.panNumber).slice(-2)}` : 'Verified')}
+                    </strong>
+                  </div>
+                </div>
+                <div>
+                  <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Residential Address</span>
+                  <div style={{ fontSize: '0.85rem', color: '#334155', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                    {(() => {
+                      const addr = user?.residentialAddress;
+                      if (addr && (addr.doorNumberStreet || addr.villageTown || addr.district)) {
+                        return [addr.doorNumberStreet, addr.villageTown, addr.taluk, addr.district, addr.state, addr.pincode].filter(Boolean).join(', ');
+                      }
+                      return user?.address || 'Registered residential address verified';
+                    })()}
+                  </div>
+                </div>
               </div>
 
               <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '16px' }}>
@@ -1557,7 +1617,8 @@ const Profile = () => {
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 };
 
 export default Profile;

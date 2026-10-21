@@ -132,6 +132,13 @@ const getLowerLevelManagers = async (req, res) => {
       const pincodeMap = new Map((pincodes || []).map(p => [String(p._id || p.id), p]));
       const pincodeByCodeMap = new Map((pincodes || []).map(p => [String(p.code || p.pincode).trim(), p]));
 
+      const mgrByEmail = new Map();
+      const mgrById = new Map();
+      (allManagers || []).forEach(m => {
+        if (m.email) mgrByEmail.set(norm(m.email), m);
+        if (m._id || m.id) mgrById.set(String(m._id || m.id), m);
+      });
+
       const combined = [...(allUsers || []), ...(allManagers || [])];
       const seen = new Set();
       const uniqueManagers = [];
@@ -150,8 +157,20 @@ const getLowerLevelManagers = async (req, res) => {
         const key = String(u._id || u.id || u.email || u.mobile || '');
         if (!key || seen.has(key)) continue;
         seen.add(key);
-        uniqueManagers.push(u);
+
+        const matchedMgr = mgrByEmail.get(norm(u.email)) || mgrById.get(String(u._id || u.id)) || null;
+        const mergedManager = {
+          ...u,
+          ...(matchedMgr || {}),
+          ...u,
+          bankDetails: u.bankDetails || u.bankAccount || matchedMgr?.bankDetails || matchedMgr?.bankAccount || null,
+          bankAccount: u.bankAccount || u.bankDetails || matchedMgr?.bankAccount || matchedMgr?.bankDetails || null,
+          managerId: u.managerId || matchedMgr?.managerId || null
+        };
+
+        uniqueManagers.push(mergedManager);
       }
+
 
       // Enrich territory details for candidate manager
       const enrichCandidateTerritory = (m) => {

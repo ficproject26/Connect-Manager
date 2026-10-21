@@ -342,6 +342,32 @@ function getEighteenYearsAgoDateString() {
   return d.toISOString().split('T')[0];
 }
 
+// ==============================================================================
+// 10. LOCATION NAME VALIDATION (VILLAGE/TOWN, POST OFFICE, TALUK, DISTRICT, STATE)
+// ==============================================================================
+function validateLocationName(val, isRequired = true, fieldLabel = 'Location Name') {
+  if (val === null || val === undefined || !String(val).trim()) {
+    return isRequired ? `${fieldLabel} is required.` : null;
+  }
+  const clean = String(val).trim();
+  if (clean.length < 2) {
+    return `${fieldLabel} must be at least 2 characters long.`;
+  }
+  if (clean.length > 70) {
+    return `${fieldLabel} must not exceed 70 characters.`;
+  }
+  // Reject numeric-only strings (PDF Page 1 Bug 1)
+  if (/^\d+$/.test(clean) || !/[\p{L}]/u.test(clean)) {
+    return `${fieldLabel} cannot be numeric-only. Please enter a valid location name.`;
+  }
+  // Allowed characters: letters (including regional Unicode), digits (e.g. Sector 4), spaces, hyphens, dots, apostrophes, commas, slashes
+  const validChars = /^[\p{L}\p{M}\p{N}\s.'’\-,/()]+$/u.test(clean);
+  if (!validChars) {
+    return `${fieldLabel} contains invalid characters.`;
+  }
+  return null;
+}
+
 module.exports = {
   BANK_ACCOUNT_LENGTHS,
   resolveBankRule,
@@ -368,5 +394,7 @@ module.exports = {
   validateIfsc,
   calculateAge,
   validateDob,
-  getEighteenYearsAgoDateString
+  getEighteenYearsAgoDateString,
+  validateLocationName
 };
+

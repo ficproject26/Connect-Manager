@@ -48,5 +48,15 @@
     "stateId": "ST-PY",
     "status": "Active",
     "updatedAt": "2026-10-15T12:40:31.123Z"
+  },
+  {
+    "_id": "test_st_1792597364045",
+    "id": "test_st_1792597364045",
+    "stateId": "test_st_1792597364045",
+    "name": "Test State 1792597364045",
+    "code": "T45",
+    "status": "Active",
+    "createdAt": "2026-10-21T15:42:44.045Z",
+    "updatedAt": "2026-10-21T15:42:44.045Z"
   }
 ]

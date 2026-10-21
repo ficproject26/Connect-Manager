@@ -250,7 +250,9 @@ const getDashboardStats = async (req, res) => {
       managersBreakdownText = `${scopedManagers.length} Managers`;
     }
 
-    const activeManagersCount = scopedManagers.filter(u => String(u.status || 'active').toLowerCase() === 'active').length;
+    // Exclude deleted managers from total & active counts
+    scopedManagers = scopedManagers.filter(u => String(u.status || '').toLowerCase() !== 'deleted');
+    const activeManagersCount = scopedManagers.filter(u => ['active', 'approved'].includes(String(u.status || '').toLowerCase()) || u.isApproved === true).length;
 
     // Time calculations strictly in Asia/Kolkata (+05:30) timezone
     const now = new Date();
@@ -429,10 +431,11 @@ const getDashboardStats = async (req, res) => {
       all: calcIssueStats(scopedTasks)
     };
 
-    const issueCounts = issueStatsByPeriod.month;
-    const activeTasksCount = (issueCounts?.open || 0) + (issueCounts?.inProgress || 0) + (issueCounts?.escalated || 0);
+    const allIssueCounts = issueStatsByPeriod.all;
+    const activeTasksCount = (allIssueCounts?.open || 0) + (allIssueCounts?.inProgress || 0) + (allIssueCounts?.escalated || 0);
     kpiMetrics.openIssues = activeTasksCount;
     kpiMetrics.activeTasks = activeTasksCount;
+    const issueCounts = (issueStatsByPeriod.month?.total > 0) ? issueStatsByPeriod.month : issueStatsByPeriod.all;
 
     // Filter audit logs strictly within current calendar day in Asia/Kolkata: [startOfToday, startOfTomorrow)
     const allLogs = (db.auditLogs.cache && db.auditLogs.cache.length > 0)

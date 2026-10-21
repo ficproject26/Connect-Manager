@@ -1746,7 +1746,7 @@
     "aadhaarNumber": "763212345678",
     "panNumber": "KTFJU3245F",
     "createdAt": "2026-10-17T04:32:05.116Z",
-    "updatedAt": "2026-10-21T07:23:26.982Z",
+    "updatedAt": "2026-10-21T11:26:45.638Z",
     "__v": 0,
     "assignedArea": "Tamil Nadu / Kallakurichi",
     "isActive": true,
@@ -2000,9 +2000,9 @@
       "pincode": "605757"
     },
     "fullAddress": "2/43, 2nd cross, Tirukkoyilur Bazaar, PO: Tirukkoyilur, Taluk: Tirukkoyilur, Kallakurichi, Tamil Nadu - 605757",
-    "kycStatus": "Verified",
-    "status": "Active",
-    "rejectionReason": null,
+    "kycStatus": "approved",
+    "status": "approved",
+    "rejectionReason": "reactivate by administrator",
     "remarks": "",
     "registrationFeePaid": false,
     "performanceScore": 0,
@@ -2023,7 +2023,7 @@
     "aadhaarNumber": "345678966566",
     "panNumber": "HGFHG7764B",
     "createdAt": "2026-10-17T10:34:08.985Z",
-    "updatedAt": "2026-10-17T10:52:01.208Z",
+    "updatedAt": "2026-10-21T11:13:53.393Z",
     "__v": 0,
     "assignedArea": "Tamil Nadu / Kallakurichi / Tirukkoilur / 605757",
     "isActive": true,
@@ -2049,7 +2049,14 @@
         "timestamp": "2026-10-17T10:35:08.314Z"
       }
     ],
-    "reviewerReason": null
+    "reviewerReason": null,
+    "isPaid": true,
+    "isSuspended": false,
+    "suspendedAt": "2026-10-21T11:01:07.748Z",
+    "suspendedBy": "6abc986678d7803cf6a444d9",
+    "suspendedByName": "Super Admin",
+    "suspensionReason": "suspend by administrator",
+    "isRevoked": false
   },
   {
     "_id": "test_agent_1792560029505",
