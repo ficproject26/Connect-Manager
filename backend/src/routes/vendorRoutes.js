@@ -6,15 +6,24 @@ const { checkRole } = require('../middleware/roleMiddleware');
 const { verifyVendorScope, validateVendorCreationScope } = require('../middleware/scopeMiddleware');
 const { otpLimiter } = require('../middleware/rateLimitMiddleware');
 
-// All vendor routes require valid JWT and Manager role
-router.use(authMiddleware);
-router.use(checkRole());
+// Optional auth for OTP endpoints so onboarding dummy OTP verification never fails with 401
+const optionalAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authMiddleware(req, res, () => next());
+  }
+  next();
+};
 
 // POST /api/vendors/otp/send - Send OTP to business phone for onboarding
-router.post('/otp/send', otpLimiter, vendorController.sendVendorPhoneOtp);
+router.post('/otp/send', optionalAuth, otpLimiter, vendorController.sendVendorPhoneOtp);
 
 // POST /api/vendors/otp/verify - Verify business phone OTP
-router.post('/otp/verify', otpLimiter, vendorController.verifyVendorPhoneOtp);
+router.post('/otp/verify', optionalAuth, otpLimiter, vendorController.verifyVendorPhoneOtp);
+
+// All protected vendor management routes require valid JWT and Manager role
+router.use(authMiddleware);
+router.use(checkRole());
 
 // GET /api/vendors - List with search, filtering, pagination (scoped)
 router.get('/', vendorController.getVendors);
