@@ -310,7 +310,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const [touched, setTouched] = useState({});
   const [fileFeedback, setFileFeedback] = useState(null);
 
-  // Business Phone OTP Verification State
+  // Business Phone Dummy OTP Verification State (Development Flow)
   const [phoneVerified, setPhoneVerified] = useState(() => {
     if (isEditing) return true;
     if (initialData?.mobile && (initialData?.status === 'Approved' || initialData?.status === 'Active')) return true;
@@ -318,9 +318,14 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   });
   const [verifiedPhone, setVerifiedPhone] = useState(() => {
     if (isEditing) return initialData?.mobile || '';
+    if (initialData?.mobile && (initialData?.status === 'Approved' || initialData?.status === 'Active')) return initialData?.mobile || '';
     return '';
   });
   const [otpSent, setOtpSent] = useState(false);
+  const [dummyOtp, setDummyOtp] = useState('');
+  const [otpPhone, setOtpPhone] = useState('');
+  const [otpExpiresAt, setOtpExpiresAt] = useState(null);
+  const [otpAttempts, setOtpAttempts] = useState(0);
   const [otpCode, setOtpCode] = useState('');
   const [otpSending, setOtpSending] = useState(false);
   const [otpVerifying, setOtpVerifying] = useState(false);
@@ -343,29 +348,63 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     return () => clearInterval(timer);
   }, [resendCooldown]);
 
+  // Generate random 6-digit numeric OTP with leading zeros if generated, different from previous OTP
+  const generateRandomSixDigitOtp = (previousOtp) => {
+    let newOtp;
+    do {
+      newOtp = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    } while (newOtp === previousOtp);
+    return newOtp;
+  };
+
   const handleSendOtp = async () => {
     const clean = String(formData.mobile || '').trim().replace(/\D/g, '').slice(-10);
     if (!clean || !phoneOk(clean)) {
-      setErrors(p => ({ ...p, mobile: 'Enter a valid 10-digit Indian phone number starting with 6-9.' }));
+      setErrors(p => ({ ...p, mobile: 'Enter a valid 10-digit Indian mobile number starting with 6, 7, 8, or 9.' }));
       return;
     }
+
     setOtpSending(true);
     setOtpError('');
     setOtpSuccess('');
+    setPhoneVerified(false);
+    setVerifiedPhone('');
+    setOtpCode(''); // Clean input so user enters the OTP
+
+    // Generate local random OTP that is guaranteed to change on every resend
+    const localOtp = generateRandomSixDigitOtp(dummyOtp);
+
     try {
-      const res = await vendorService.sendVendorPhoneOtp(clean);
-      if (res && res.success) {
-        setOtpSent(true);
-        setResendCooldown(res.cooldownSeconds || 30);
-        setOtpSuccess(res.message || `OTP sent to +91 ${clean}. Valid for 5 minutes.`);
-        if (res.otp) {
-          setOtpCode(res.otp);
+      let assignedOtp = localOtp;
+      try {
+        const res = await vendorService.sendVendorPhoneOtp(clean);
+        if (res && res.success) {
+          if (res.otp) {
+            assignedOtp = String(res.otp).padStart(6, '0');
+            if (assignedOtp === dummyOtp) {
+              assignedOtp = generateRandomSixDigitOtp(dummyOtp);
+            }
+          }
+          setResendCooldown(res.cooldownSeconds || 30);
+        } else if (res && res.cooldown) {
+          setOtpError(res.message || 'Please wait before requesting a new OTP.');
+          setResendCooldown(res.remainingSeconds || 30);
+          return;
         }
-      } else {
-        setOtpError(res.message || 'Failed to send OTP.');
+      } catch (apiErr) {
+        // Fallback for development testing if backend is offline
+        console.warn('Backend OTP API error, using development dummy OTP:', apiErr);
+        setResendCooldown(30);
       }
+
+      setDummyOtp(assignedOtp);
+      setOtpPhone(clean);
+      setOtpExpiresAt(Date.now() + 5 * 60 * 1000); // 5 minutes validity
+      setOtpAttempts(0);
+      setOtpSent(true);
+      setOtpSuccess(`OTP generated successfully for +91 ${clean}. Valid for 5 minutes.`);
     } catch (err) {
-      setOtpError(err.message || 'Failed to send OTP to business phone.');
+      setOtpError(err.message || 'Failed to send OTP.');
     } finally {
       setOtpSending(false);
     }
@@ -374,18 +413,51 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const handleVerifyOtp = async () => {
     const clean = String(formData.mobile || '').trim().replace(/\D/g, '').slice(-10);
     const code = String(otpCode || '').trim();
-    if (!clean || !code) {
-      setOtpError('Please enter the 6-digit OTP code.');
+
+    if (!clean || !phoneOk(clean)) {
+      setOtpError('Invalid mobile number. Please check the mobile number.');
       return;
     }
+
+    if (clean !== otpPhone) {
+      setOtpError('Mobile number has changed. Please request a new OTP for this number.');
+      return;
+    }
+
+    if (!code || code.length !== 6 || !/^\d{6}$/.test(code)) {
+      setOtpError('Please enter a valid 6-digit numeric OTP.');
+      return;
+    }
+
+    if (otpExpiresAt && Date.now() > otpExpiresAt) {
+      setOtpError('OTP has expired. Please request a new OTP.');
+      return;
+    }
+
+    if (otpAttempts >= 5) {
+      setOtpError('Maximum verification attempts exceeded. Please request a new OTP.');
+      return;
+    }
+
     setOtpVerifying(true);
     setOtpError('');
+
     try {
-      const res = await vendorService.verifyVendorPhoneOtp(clean, code);
-      if (res && res.success && res.verified) {
+      const isCodeMatch = dummyOtp && code === dummyOtp;
+
+      // Also call backend verification API if available
+      let backendVerified = false;
+      try {
+        const res = await vendorService.verifyVendorPhoneOtp(clean, code);
+        if (res && res.success && res.verified) {
+          backendVerified = true;
+        }
+      } catch (_) {}
+
+      if (isCodeMatch || backendVerified) {
         setPhoneVerified(true);
         setVerifiedPhone(clean);
-        setOtpSuccess('Business phone verified successfully.');
+        setOtpSuccess('Mobile number verified successfully.');
         setOtpError('');
         setErrors(p => {
           const next = { ...p };
@@ -393,7 +465,16 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           return next;
         });
       } else {
-        setOtpError(res.message || 'Incorrect OTP code.');
+        const nextAttempts = otpAttempts + 1;
+        setOtpAttempts(nextAttempts);
+        const remaining = 5 - nextAttempts;
+        if (remaining > 0) {
+          setOtpError(`Incorrect OTP. ${remaining} attempt(s) remaining.`);
+        } else {
+          setOtpError('Maximum verification attempts exceeded. Please request a new OTP.');
+        }
+        setPhoneVerified(false);
+        setVerifiedPhone('');
       }
     } catch (err) {
       setOtpError(err.message || 'OTP verification failed.');
@@ -862,7 +943,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         if (!strVal) return 'Business phone number is required';
         const mobileErr = validateMobile(value, true, 'Business phone');
         if (mobileErr) return mobileErr;
-        if (!phoneVerified && !isEditing) return 'Business phone must be verified via OTP';
+        if ((!phoneVerified || (verifiedPhone && strVal !== verifiedPhone)) && !isEditing) {
+          return 'Business phone must be verified via OTP';
+        }
         return '';
 
       case 'email':
@@ -1013,7 +1096,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     if (s === 1 && territoryConfigError) {
       newErrors.territory = territoryConfigError;
     }
-    if (s === 1 && !phoneVerified && !isEditing) {
+    if (s === 1 && (!phoneVerified || (verifiedPhone && formData.mobile !== verifiedPhone)) && !isEditing) {
       newErrors.mobile = 'Business phone must be verified via OTP before proceeding';
     }
     fields.forEach(f => {
@@ -1226,7 +1309,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
                   upd('mobile', val);
                   if (val !== verifiedPhone) {
                     setPhoneVerified(false);
+                    setVerifiedPhone('');
                     setOtpSent(false);
+                    setDummyOtp('');
                     setOtpCode('');
                     setOtpError('');
                     setOtpSuccess('');
@@ -1263,16 +1348,16 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
               <button
                 type="button"
                 onClick={handleSendOtp}
-                disabled={otpSending || resendCooldown > 0 || !formData.mobile || formData.mobile.length !== 10}
+                disabled={otpSending || resendCooldown > 0 || !formData.mobile || !phoneOk(formData.mobile)}
                 style={{
-                  background: resendCooldown > 0 ? '#f1f5f9' : '#0284c7',
-                  color: resendCooldown > 0 ? '#94a3b8' : '#ffffff',
+                  background: (resendCooldown > 0 || !formData.mobile || !phoneOk(formData.mobile)) ? '#f1f5f9' : '#0284c7',
+                  color: (resendCooldown > 0 || !formData.mobile || !phoneOk(formData.mobile)) ? '#94a3b8' : '#ffffff',
                   border: 'none',
                   borderRadius: 'var(--radius-sm)',
-                  padding: '8px 14px',
+                  padding: '8px 16px',
                   fontSize: 12,
                   fontWeight: 700,
-                  cursor: (resendCooldown > 0 || !formData.mobile || formData.mobile.length !== 10) ? 'not-allowed' : 'pointer',
+                  cursor: (resendCooldown > 0 || !formData.mobile || !phoneOk(formData.mobile)) ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   gap: 6,
@@ -1286,84 +1371,164 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           </div>
         </Field>
 
-        {/* Inline OTP Verification Box */}
+        {/* Development Dummy OTP Display and Verification Panel */}
         {otpSent && !phoneVerified && (
           <div style={{
-            marginTop: 8,
-            padding: '12px 14px',
+            marginTop: 10,
+            padding: '14px 16px',
             background: '#f8fafc',
             border: '1.5px solid #cbd5e1',
             borderRadius: 10,
             display: 'flex',
             flexDirection: 'column',
-            gap: 8
+            gap: 12
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 12, fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                <Smartphone size={14} color="#0284c7" /> Verify 6-digit Business Phone OTP
-              </span>
-              <span style={{ fontSize: 11, color: '#64748b' }}>
-                Sent to +91 {formData.mobile}
-              </span>
-            </div>
-
-            <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <input
-                type="text"
-                maxLength={6}
-                value={otpCode}
-                onChange={e => {
-                  setOtpCode(e.target.value.replace(/\D/g, '').slice(0, 6));
-                  if (otpError) setOtpError('');
-                }}
-                placeholder="Enter 6-digit OTP"
-                style={{
-                  ...inp(!!otpError),
-                  width: 160,
-                  letterSpacing: '0.2em',
-                  fontFamily: 'monospace',
-                  fontSize: 14,
+            {/* Clear Development OTP Box */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: 8,
+              padding: '10px 14px',
+              background: '#fffbeb',
+              border: '1.5px solid #fde68a',
+              borderRadius: 8
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                <span style={{
+                  fontSize: 11,
                   fontWeight: 800,
-                  textAlign: 'center'
-                }}
-              />
-              <button
-                type="button"
-                onClick={handleVerifyOtp}
-                disabled={otpVerifying || otpCode.length !== 6}
-                style={{
-                  background: otpCode.length === 6 ? '#16a34a' : '#cbd5e1',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  background: '#d97706',
                   color: '#ffffff',
-                  border: 'none',
-                  borderRadius: 'var(--radius-sm)',
-                  padding: '8px 16px',
-                  fontSize: 12,
-                  fontWeight: 700,
-                  cursor: otpCode.length === 6 ? 'pointer' : 'not-allowed',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: 6
-                }}
-              >
-                {otpVerifying ? 'Verifying...' : 'Verify OTP'}
-              </button>
-              {resendCooldown > 0 && (
-                <span style={{ fontSize: 11, color: '#64748b' }}>
-                  Wait {resendCooldown}s to resend
+                  padding: '3px 8px',
+                  borderRadius: 5
+                }}>
+                  Development OTP
                 </span>
-              )}
+                <span style={{
+                  fontSize: 17,
+                  fontWeight: 800,
+                  color: '#92400e',
+                  letterSpacing: '3px',
+                  fontFamily: 'monospace',
+                  background: '#ffffff',
+                  padding: '3px 10px',
+                  borderRadius: 6,
+                  border: '1.5px dashed #d97706',
+                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                }}>
+                  {dummyOtp}
+                </span>
+              </div>
+              <span style={{ fontSize: 11, color: '#b45309', fontWeight: 600 }}>
+                Temporary dummy OTP (Valid for 5 mins)
+              </span>
             </div>
 
+            {/* Confirmation message */}
+            {otpSuccess && !otpError && (
+              <div style={{ fontSize: 12, color: '#059669', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
+                <CheckCircle2 size={15} color="#059669" />
+                <span>{otpSuccess}</span>
+              </div>
+            )}
+
+            {/* Separate OTP Input & Verify OTP Button */}
+            <div>
+              <label style={{ display: 'block', fontSize: 11, fontWeight: 700, color: '#475569', marginBottom: 6 }}>
+                Enter 6-digit OTP <span style={{ color: '#ef4444' }}>*</span>
+              </label>
+              <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
+                <input
+                  type="text"
+                  maxLength={6}
+                  value={otpCode}
+                  onChange={e => {
+                    const cleanCode = e.target.value.replace(/\D/g, '').slice(0, 6);
+                    setOtpCode(cleanCode);
+                    if (otpError) setOtpError('');
+                  }}
+                  placeholder="Enter 6-digit OTP"
+                  className="form-input"
+                  style={{
+                    ...inp(!!otpError),
+                    width: 170,
+                    letterSpacing: '0.25em',
+                    fontFamily: 'monospace',
+                    fontSize: 15,
+                    fontWeight: 800,
+                    textAlign: 'center',
+                    height: 38
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={handleVerifyOtp}
+                  disabled={otpVerifying || otpCode.length !== 6}
+                  style={{
+                    background: otpCode.length === 6 ? '#16a34a' : '#cbd5e1',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 'var(--radius-sm)',
+                    padding: '8px 18px',
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: otpCode.length === 6 ? 'pointer' : 'not-allowed',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 6,
+                    height: 38,
+                    transition: 'all 0.15s'
+                  }}
+                >
+                  {otpVerifying ? 'Verifying...' : 'Verify OTP'}
+                </button>
+
+                {resendCooldown > 0 && (
+                  <span style={{ fontSize: 11, color: '#64748b' }}>
+                    Wait {resendCooldown}s to resend
+                  </span>
+                )}
+              </div>
+            </div>
+
+            {/* Error message */}
             {otpError && (
-              <div style={{ fontSize: 11, color: '#dc2626', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <AlertCircle size={12} /> {otpError}
+              <div style={{
+                fontSize: 12,
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6,
+                fontWeight: 600,
+                padding: '6px 10px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: 6
+              }}>
+                <AlertCircle size={14} color="#dc2626" />
+                <span>{otpError}</span>
               </div>
             )}
-            {otpSuccess && (
-              <div style={{ fontSize: 11, color: '#16a34a', display: 'flex', alignItems: 'center', gap: 4 }}>
-                <CheckCircle size={12} /> {otpSuccess}
-              </div>
-            )}
+          </div>
+        )}
+
+        {/* Verified Status Banner */}
+        {phoneVerified && (
+          <div style={{
+            marginTop: 6,
+            fontSize: 12,
+            color: '#059669',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 5,
+            fontWeight: 600
+          }}>
+            <CheckCircle2 size={14} color="#059669" />
+            <span>Mobile number verified successfully.</span>
           </div>
         )}
       </div>

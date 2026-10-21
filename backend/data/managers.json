@@ -10,10 +10,12 @@
     "adminApprovedByRole": "State Admin",
     "bankDetails": {
       "accountHolderName": "Surya",
-      "bankName": "SBI",
-      "accountNumber": "6234523784523",
-      "ifscCode": "SBIN0074847",
-      "branchName": "Hosur"
+      "bankName": "iuytrfdftyu",
+      "branchName": "iuygftyui",
+      "city": "iuygfgu",
+      "street": null,
+      "accountNumber": "9876543456789",
+      "ifscCode": "SBIN0000123"
     },
     "createdAt": "2026-09-28T07:35:30.154Z",
     "createdByAdmin": "Dhanu",
@@ -38,7 +40,7 @@
     "mobile": "6789456756",
     "name": "Surya",
     "panNumber": "ABCD00787G",
-    "passwordHash": "$2a$12$Xicm9YhNzuHJT.So3xn8juBWCJH9qDyG1CFcpPKW.v6JEYTFQdHcO",
+    "passwordHash": "$2a$12$lvE6E/mZz0DPDJPs54D2aOdrOtg0S9FyTk0nilDTvQyqTISt9Ahfi",
     "phone": "6789456756",
     "pincode": "635126",
     "pincodeId": "6aba0f82af9e0372e50b70d5",
@@ -51,11 +53,16 @@
     "targetAdminName": "Dhanu",
     "targetAdminRole": "State Admin",
     "targetJurisdiction": "PIN: 635126",
-    "updatedAt": "2026-10-14T09:49:52.169Z",
-    "avatarUrl": null,
-    "avatar": null,
-    "profilePhoto": null,
-    "image": null
+    "updatedAt": "2026-10-17T09:03:23.999Z",
+    "bankAccount": {
+      "accountHolderName": "Surya",
+      "bankName": "iuytrfdftyu",
+      "branchName": "iuygftyui",
+      "city": "iuygfgu",
+      "street": null,
+      "accountNumber": "9876543456789",
+      "ifscCode": "SBIN0000123"
+    }
   },
   {
     "_id": "usr_mgr_1790588690346_2iph",
@@ -122,10 +129,12 @@
     "adminApprovedByRole": "District Admin",
     "bankDetails": {
       "accountHolderName": "Iniya",
-      "bankName": "sbi",
+      "bankName": "indian",
+      "branchName": "Hosur",
+      "city": "Hosur",
+      "street": null,
       "accountNumber": "12345678976",
-      "ifscCode": "SBIN0083745",
-      "branchName": "Hosur"
+      "ifscCode": "SBIN0083745"
     },
     "createdAt": "2026-09-28T10:45:19.962Z",
     "createdByAdmin": "Ananya",
@@ -163,9 +172,18 @@
     "targetAdminName": "Ananya",
     "targetAdminRole": "District Admin",
     "targetJurisdiction": "PIN: 560105",
-    "updatedAt": "2026-10-14T04:37:18.443Z",
+    "updatedAt": "2026-10-16T04:13:52.597Z",
     "resetPasswordExpires": "2026-10-10T11:56:46.487Z",
-    "resetPasswordToken": "49c4986e5c5f87653058674cf1c9624271549fb70b82e3ef617d9452de968015"
+    "resetPasswordToken": "49c4986e5c5f87653058674cf1c9624271549fb70b82e3ef617d9452de968015",
+    "bankAccount": {
+      "accountHolderName": "Iniya",
+      "bankName": "indian",
+      "branchName": "Hosur",
+      "city": "Hosur",
+      "street": null,
+      "accountNumber": "12345678976",
+      "ifscCode": "SBIN0083745"
+    }
   },
   {
     "_id": "usr_mgr_1790592719925_4mk9",
@@ -242,9 +260,11 @@
     "bankDetails": {
       "accountHolderName": "Muruga",
       "bankName": "SBI",
-      "accountNumber": "876543456789",
-      "ifscCode": "SBIN0023423",
-      "branchName": "Thalaivasal"
+      "branchName": "Thalaivasal",
+      "city": "oiuytrfghj",
+      "street": null,
+      "accountNumber": "8765434567088890",
+      "ifscCode": "SBIN0023423"
     },
     "createdAt": "2026-09-29T07:18:01.762Z",
     "createdByAdmin": "Maran",
@@ -282,7 +302,16 @@
     "targetAdminName": "Maran",
     "targetAdminRole": "Pincode Admin",
     "targetJurisdiction": "PIN: 636112",
-    "updatedAt": "2026-09-29T14:17:04.493Z"
+    "updatedAt": "2026-10-17T10:14:28.178Z",
+    "bankAccount": {
+      "accountHolderName": "Muruga",
+      "bankName": "SBI",
+      "branchName": "Thalaivasal",
+      "city": "oiuytrfghj",
+      "street": null,
+      "accountNumber": "8765434567088890",
+      "ifscCode": "SBIN0023423"
+    }
   },
   {
     "_id": "usr_mgr_1790689873534_mbrv",
@@ -775,8 +804,26 @@
     "status": "Active",
     "notes": "Synced from Manager registration application",
     "createdAt": "2026-10-12T12:47:47.648Z",
-    "updatedAt": "2026-10-12T12:47:47.648Z",
-    "__v": 0
+    "updatedAt": "2026-10-16T11:15:14.332Z",
+    "__v": 0,
+    "bankAccount": {
+      "accountHolderName": "Superman",
+      "bankName": "HDFC Bank",
+      "branchName": "Madurai Bypass",
+      "city": "Madurai",
+      "street": "Plot 45, North Bypass Road",
+      "accountNumber": "50100456789012",
+      "ifscCode": "HDFC0001234"
+    },
+    "bankDetails": {
+      "accountHolderName": "Superman",
+      "bankName": "HDFC Bank",
+      "branchName": "Madurai Bypass",
+      "city": "Madurai",
+      "street": "Plot 45, North Bypass Road",
+      "accountNumber": "50100456789012",
+      "ifscCode": "HDFC0001234"
+    }
   },
   {
     "_id": "6acdd2c5632077083fe60797",
@@ -1054,5 +1101,111 @@
     "createdAt": "2026-10-14T05:10:01.447Z",
     "updatedAt": "2026-10-14T05:10:01.447Z",
     "__v": 0
+  },
+  {
+    "_id": "6acf6cbc8796e3c5fed7752e",
+    "managerId": "MGR-DIS-20261014-6133",
+    "name": "Sivakarthikeyan",
+    "email": "sivakar@gmail.com",
+    "phone": "7867576387",
+    "altPhone": "",
+    "level": "district",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "Chennai",
+    "assignedDivision": "",
+    "assignedPincode": "",
+    "address": "6545gfdcxzas5465yregf, 4trfdcrt453, PO: 3144444444444444535, Taluk: r53656656, 34156436, 454254, PIN: 635652",
+    "parentAdminId": "6abc986678d7803cf6a444d9",
+    "requestedBy": null,
+    "approvedBy": "6abc986678d7803cf6a444d9",
+    "status": "Active",
+    "notes": "Synced from Manager registration application",
+    "bankDetails": null,
+    "createdAt": "2026-10-14T11:51:24.668Z",
+    "updatedAt": "2026-10-14T11:51:24.668Z",
+    "__v": 0
+  },
+  {
+    "_id": "6acf6ccb8796e3c5fed77532",
+    "managerId": "MGR-PIN-20261014-4057",
+    "name": "Ravi Kumar",
+    "email": "ravikumar@gmail.com",
+    "phone": "9988877776",
+    "altPhone": "",
+    "level": "pincode",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "Dharmapuri",
+    "assignedDivision": "Harur",
+    "assignedPincode": "636901",
+    "address": "oiuytd, oiuytfdxz, PO: poiuytfdx, Taluk: loiuytfdx, loiuytfdx, poiuytfdx, PIN: 636701",
+    "parentAdminId": "6abc986678d7803cf6a444d9",
+    "requestedBy": null,
+    "approvedBy": "6abc986678d7803cf6a444d9",
+    "status": "Active",
+    "notes": "Synced from Manager registration application",
+    "bankDetails": null,
+    "createdAt": "2026-10-14T11:51:39.045Z",
+    "updatedAt": "2026-10-14T11:51:39.045Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad1b61508e2bcecea888dbc",
+    "managerId": "MGR-DIV-20261016-5009",
+    "name": "Aakash",
+    "email": "akash@gmail.com",
+    "phone": "9876543223",
+    "altPhone": "",
+    "level": "division",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "Krishnagiri",
+    "assignedDivision": "Denkanikottai",
+    "assignedPincode": "",
+    "address": "98,hg, kjhgf, PO: jhgfd, Taluk: Salem, Tamilnadu, India, PIN: 678765",
+    "parentAdminId": "6abc986678d7803cf6a444d9",
+    "requestedBy": null,
+    "approvedBy": "6abc986678d7803cf6a444d9",
+    "status": "Active",
+    "notes": "Synced from Manager registration application",
+    "bankDetails": null,
+    "createdAt": "2026-10-16T05:28:53.436Z",
+    "updatedAt": "2026-10-16T05:28:53.436Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad3266b82662c28539c1e25",
+    "managerId": "MGR-DIV-20261017-6411",
+    "name": "Simon",
+    "email": "simon@gmail.com",
+    "phone": "7654339876",
+    "altPhone": "",
+    "level": "division",
+    "assignedState": "Tamil Nadu",
+    "assignedDistrict": "Kallakurichi",
+    "assignedDivision": "Tirukkoilur",
+    "assignedPincode": "",
+    "address": "56,gandhi nagar, 87698t9thuhfj, PO: tjbtorg90450409, Taluk: madurai, Tamilnadu, India, PIN: 879888",
+    "parentAdminId": "6abc986678d7803cf6a444d9",
+    "requestedBy": null,
+    "approvedBy": "6abc986678d7803cf6a444d9",
+    "status": "Active",
+    "notes": "",
+    "bankDetails": null,
+    "createdAt": "2026-10-17T07:40:27.650Z",
+    "updatedAt": "2026-10-17T07:40:27.650Z",
+    "__v": 0
+  },
+  {
+    "_id": "mgr_test_salem_101",
+    "district": "Salem",
+    "email": "salemlead@connect.com",
+    "id": "mgr_test_salem_101",
+    "isDeleted": false,
+    "managerId": "MGR_SALEM_101",
+    "mobile": "9876543210",
+    "name": "Salem Field Operations Lead",
+    "role": "district_manager",
+    "state": "Tamil Nadu",
+    "status": "Active",
+    "updatedAt": "2026-10-21T07:17:34.700Z"
   }
 ]

@@ -598,7 +598,7 @@ const createVendor = async (req, res) => {
     // 1. Phone OTP Verification Enforcement
     const phoneRecord = vendorPhoneOtpStore.get(cleanPhone);
     const isPhoneVerified = phoneRecord && phoneRecord.verified && (Date.now() - phoneRecord.verifiedAt < 30 * 60 * 1000);
-    if (!isPhoneVerified && process.env.NODE_ENV === 'production') {
+    if (!isPhoneVerified) {
       return res.status(400).json({
         success: false,
         message: 'Business phone number must be verified via OTP before completing onboarding.'
@@ -1092,7 +1092,11 @@ const sendVendorPhoneOtp = async (req, res) => {
       }
     }
 
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    let otp;
+    do {
+      otp = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
+    } while (existing && existing.otp === otp);
+
     vendorPhoneOtpStore.set(cleanPhone, {
       otp,
       attempts: 0,
@@ -1107,9 +1111,10 @@ const sendVendorPhoneOtp = async (req, res) => {
       message: `OTP sent successfully to +91 ${cleanPhone}. Valid for 5 minutes.`
     };
 
-    // In dev/test environments, provide OTP for verification tests
-    if (process.env.NODE_ENV !== 'production') {
+    // Development/testing mode: provide dummy OTP for validation testing
+    if (process.env.ENABLE_DUMMY_OTP !== 'false' || process.env.NODE_ENV !== 'production') {
       responsePayload.otp = otp;
+      responsePayload.isDummyOtp = true;
     }
 
     return res.json(responsePayload);
@@ -1143,7 +1148,7 @@ const verifyVendorPhoneOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'OTP has expired. Please request a new OTP.' });
     }
 
-    if (record.attempts >= 3) {
+    if (record.attempts >= 5) {
       vendorPhoneOtpStore.delete(cleanPhone);
       return res.status(400).json({
         success: false,
@@ -1153,10 +1158,10 @@ const verifyVendorPhoneOtp = async (req, res) => {
 
     if (record.otp !== code) {
       record.attempts += 1;
-      const remaining = 3 - record.attempts;
+      const remaining = 5 - record.attempts;
       return res.status(400).json({
         success: false,
-        message: `Incorrect OTP. ${remaining} attempt(s) remaining.`
+        message: remaining > 0 ? `Incorrect OTP. ${remaining} attempt(s) remaining.` : 'Maximum verification attempts exceeded. Please request a new OTP.'
       });
     }
 

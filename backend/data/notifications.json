@@ -1,368 +1,22 @@
 [
   {
-    "_id": "6ab4f6c91311030bfd34477c",
-    "receiver": "6a926325caf3cb00e6b9a590",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "read": true,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-24T10:09:13.315Z",
-    "__v": 0,
+    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
+    "createdAt": "2026-09-26T09:51:19.729Z",
+    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
     "isRead": true,
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
+    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
+    "title": "Task TSK-100003 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-13T09:05:15.918Z",
+    "userId": "user_state_1",
     "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "updatedAt": "2026-10-13T09:56:59.974Z"
-  },
-  {
-    "_id": "6ab4f6df1311030bfd3447a2",
-    "receiver": "6a926325caf3cb00e6b9a590",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "read": true,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-24T10:09:35.811Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
       "usr_mgr_1790580930154_8uge",
       "6ab4c2ec5df0d82cb7a09cac",
       "usr_mgr_1790666281762_1jqk"
     ],
-    "updatedAt": "2026-10-13T09:57:01.775Z"
-  },
-  {
-    "_id": "6ab6178d2555c67bd9bc7198",
-    "receiver": "6a9120a73cbecf25841b8d87",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: today you onboard the 20 vendor",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T06:41:17.320Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:14.839Z"
-  },
-  {
-    "_id": "6ab618da2555c67bd9bc7246",
-    "receiver": "6a9120a73cbecf25841b8d87",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: onboard 20",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T06:46:50.044Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:14.870Z"
-  },
-  {
-    "_id": "6ab624b7c3c80ae7e778e73f",
-    "receiver": "6ab3ca2d7ee04aa0f057fcf1",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 10 visits: tieup",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T07:37:27.071Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:14.900Z"
-  },
-  {
-    "_id": "6ab65d79c3c80ae7e778f58c",
-    "receiver": "6ab5f81fb8654beabd8f91b5",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: 43",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T11:39:37.570Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:14.930Z"
-  },
-  {
-    "_id": "6ab65da3c3c80ae7e778f599",
-    "receiver": "6ab5f81fb8654beabd8f91b5",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: wer",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T11:40:19.009Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:56:57.667Z"
-  },
-  {
-    "_id": "6ab6178d2555c67bd9bc7198",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T06:41:17.320Z",
-    "id": "6ab6178d2555c67bd9bc7198",
-    "message": "You have been assigned a target of 20 visits: today you onboard the 20 vendor",
-    "priority": "high",
-    "read": false,
-    "receiver": "6a9120a73cbecf25841b8d87",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.053Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab618da2555c67bd9bc7246",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T06:46:50.044Z",
-    "id": "6ab618da2555c67bd9bc7246",
-    "message": "You have been assigned a target of 20 visits: onboard 20",
-    "priority": "high",
-    "read": false,
-    "receiver": "6a9120a73cbecf25841b8d87",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.086Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab65d79c3c80ae7e778f58c",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T11:39:37.570Z",
-    "id": "6ab65d79c3c80ae7e778f58c",
-    "message": "You have been assigned a target of 20 visits: 43",
-    "priority": "high",
-    "read": false,
-    "receiver": "6ab5f81fb8654beabd8f91b5",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.117Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab624b7c3c80ae7e778e73f",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T07:37:27.071Z",
-    "id": "6ab624b7c3c80ae7e778e73f",
-    "message": "You have been assigned a target of 10 visits: tieup",
-    "priority": "high",
-    "read": false,
-    "receiver": "6ab3ca2d7ee04aa0f057fcf1",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.147Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab65da3c3c80ae7e778f599",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-25T11:40:19.009Z",
-    "id": "6ab65da3c3c80ae7e778f599",
-    "message": "You have been assigned a target of 20 visits: wer",
-    "priority": "high",
-    "read": false,
-    "receiver": "6ab5f81fb8654beabd8f91b5",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.175Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab749c3c3c80ae7e778f91c",
-    "receiver": "6ab5f81fb8654beabd8f91b5",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: asdfg",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T04:27:47.136Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:56:56.306Z"
-  },
-  {
-    "_id": "6ab754e0c3c80ae7e778fad1",
-    "receiver": "6ab64f46c3c80ae7e778f144",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T05:15:12.681Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:15.235Z"
-  },
-  {
-    "_id": "6ab749c3c3c80ae7e778f91c",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T04:27:47.136Z",
-    "id": "6ab749c3c3c80ae7e778f91c",
-    "message": "You have been assigned a target of 20 visits: asdfg",
-    "priority": "high",
-    "read": false,
-    "receiver": "6ab5f81fb8654beabd8f91b5",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.265Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab754e0c3c80ae7e778fad1",
-    "__v": 0,
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T05:15:12.681Z",
-    "id": "6ab754e0c3c80ae7e778fad1",
-    "message": "You have been assigned a target of 20 visits: Onboarding target",
-    "priority": "high",
-    "read": false,
-    "receiver": "6ab64f46c3c80ae7e778f144",
-    "title": "New Target Assigned",
-    "updatedAt": "2026-10-13T09:05:15.296Z",
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ]
-  },
-  {
-    "_id": "6ab76ac045152c228d463958",
-    "receiver": "6ab3ca2d7ee04aa0f057fcf1",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 2 visits: fvghjk",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T06:48:32.826Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:15.331Z"
-  },
-  {
-    "_id": "6ab76b6345152c228d4639a6",
-    "receiver": "6a9120a73cbecf25841b8d87",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 25 visits: dfghnjm,",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T06:51:15.288Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:15.376Z"
-  },
-  {
-    "_id": "6ab76b6645152c228d4639b0",
-    "receiver": "6a9120a73cbecf25841b8d87",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 2 visits: dxfgchjbmkl",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-09-26T06:51:18.852Z",
-    "__v": 0,
-    "isRead": true,
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "updatedAt": "2026-10-13T09:05:15.408Z"
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
     "_id": "d49b3a56-4669-4e02-9a00-15ea78c39860",
@@ -384,67 +38,6 @@
     "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
-    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
-    "type": "task_updated",
-    "title": "Task TSK-100005 Completed",
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
-    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
-    "userId": "user_state_1",
-    "isRead": true,
-    "createdAt": "2026-09-26T10:17:29.078Z",
-    "updatedAt": "2026-10-13T09:05:15.813Z",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "isResolved": true,
-    "resolvedAt": "2026-10-14T06:59:50.496Z"
-  },
-  {
-    "_id": "NOTIF-1790414127807-0AM4",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-09-26T09:15:27.807Z",
-    "entityId": "task_001",
-    "entityType": "task",
-    "id": "NOTIF-1790414127807-0AM4",
-    "isRead": true,
-    "message": "Task 'undefined' updated to 'In Progress' by Super Admin. Note: Rework initiated on field",
-    "metadata": {
-      "taskId": "task_001",
-      "taskNumber": "TSK-100234",
-      "title": null,
-      "oldStatus": "Assigned",
-      "newStatus": "In Progress",
-      "updatedBy": "Super Admin"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6a8d22c11bc647d92ae36337",
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": null,
-      "district": null,
-      "division": null,
-      "pincode": "560034",
-      "targetUserId": "user_pin_1",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: TSK-100234 is In Progress",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:15.843Z"
-  },
-  {
     "_id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
     "id": "19e18be6-98d1-4edc-a548-46acc9b9a7f5",
     "type": "task_updated",
@@ -455,25 +48,6 @@
     "isRead": true,
     "createdAt": "2026-09-26T10:15:28.017Z",
     "updatedAt": "2026-10-13T09:05:15.883Z",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "isResolved": true,
-    "resolvedAt": "2026-10-14T06:59:50.496Z"
-  },
-  {
-    "_id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "createdAt": "2026-09-26T09:51:19.729Z",
-    "id": "7050b430-187f-448e-b4f0-94a07bf4c8ba",
-    "isRead": true,
-    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100003 as In Progress.",
-    "recordId": "34bac63b-d9f1-4a68-9278-9f5441d5e229",
-    "title": "Task TSK-100003 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-10-13T09:05:15.918Z",
-    "userId": "user_state_1",
     "readBy": [
       "usr_mgr_1790580930154_8uge",
       "6ab4c2ec5df0d82cb7a09cac",
@@ -521,6 +95,25 @@
     "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
+    "_id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "id": "90a463e2-a108-44b1-ba53-b625361fc0de",
+    "type": "task_updated",
+    "title": "Task TSK-100005 Completed",
+    "message": "Ramesh Kumar (TN State Manager) marked task TSK-100005 as Completed.",
+    "recordId": "9b88cd31-a1e7-4449-bccf-fe5bca3e294f",
+    "userId": "user_state_1",
+    "isRead": true,
+    "createdAt": "2026-09-26T10:17:29.078Z",
+    "updatedAt": "2026-10-13T09:05:15.813Z",
+    "readBy": [
+      "usr_mgr_1790580930154_8uge",
+      "6ab4c2ec5df0d82cb7a09cac",
+      "usr_mgr_1790666281762_1jqk"
+    ],
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T06:59:50.496Z"
+  },
+  {
     "_id": "f75e5b76-0878-48b2-900f-4f8061b89721",
     "createdAt": "2026-09-26T14:17:22.238Z",
     "id": "f75e5b76-0878-48b2-900f-4f8061b89721",
@@ -559,168 +152,6 @@
     "resolvedAt": "2026-10-14T06:59:50.496Z"
   },
   {
-    "_id": "NOTIF-1790580241699-1RHE",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-09-28T07:24:01.699Z",
-    "entityId": "6ab4bbe57ee04aa0f0580792",
-    "entityType": "vendor",
-    "id": "NOTIF-1790580241699-1RHE",
-    "isRead": true,
-    "message": "Pincode Admin Ragul approved merchant 'Empire'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "6ab4bbe57ee04aa0f0580792",
-      "vendorName": "Empire",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Ragul",
-      "pincode": "635126"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790580930154_8uge",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Krishnagiri",
-      "division": "Hosur Division",
-      "pincode": "635126",
-      "targetUserId": null,
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: Empire",
-    "type": "vendor_status",
-    "updatedAt": "2026-10-13T09:05:16.970Z"
-  },
-  {
-    "_id": "NOTIF-1790589311649-NBEH",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-09-28T09:55:11.650Z",
-    "entityId": "ven_311361",
-    "entityType": "vendor",
-    "id": "NOTIF-1790589311649-NBEH",
-    "isRead": true,
-    "message": "Food merchant 'Balu' was onboarded in PIN 635126 (Salem) by Murugan. Awaiting Pincode Admin clearance.",
-    "metadata": {
-      "vendorId": "ven_311361",
-      "vendorName": "Balu",
-      "creatorId": "usr_mgr_1790588690346_2iph",
-      "creatorName": "Murugan",
-      "pincode": "635126",
-      "category": "Food"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Salem North",
-      "pincode": "635126",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "New Vendor Onboarded: Balu",
-    "type": "vendor_onboarding",
-    "updatedAt": "2026-10-13T09:05:17.008Z"
-  },
-  {
-    "_id": "NOTIF-1790603729917-YBVD",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-09-28T13:55:29.917Z",
-    "entityId": "6ab6591ec3c80ae7e778f48b",
-    "entityType": "vendor",
-    "id": "NOTIF-1790603729917-YBVD",
-    "isRead": true,
-    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "6ab6591ec3c80ae7e778f48b",
-      "vendorName": "y",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Maran",
-      "pincode": "636112"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Salem Urban Division",
-      "pincode": "636112",
-      "targetUserId": null,
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: y",
-    "type": "vendor_status",
-    "updatedAt": "2026-10-13T09:05:17.042Z"
-  },
-  {
-    "_id": "NOTIF-1790659045582-GA75",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-09-29T05:17:25.582Z",
-    "entityId": "6ab6591ec3c80ae7e778f48b",
-    "entityType": "vendor",
-    "id": "NOTIF-1790659045582-GA75",
-    "isRead": true,
-    "message": "Pincode Admin Maran approved merchant 'y'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "6ab6591ec3c80ae7e778f48b",
-      "vendorName": "y",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Maran",
-      "pincode": "636112"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac",
-      "usr_mgr_1790666281762_1jqk"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Salem Urban Division",
-      "pincode": "636112",
-      "targetUserId": null,
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: y",
-    "type": "vendor_status",
-    "updatedAt": "2026-10-13T09:05:17.077Z"
-  },
-  {
     "_id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
     "createdAt": "2026-09-29T06:03:52.439Z",
     "id": "c2940e4c-ca20-4db7-954b-c4ff531f750a",
@@ -755,654 +186,6 @@
     ],
     "isResolved": true,
     "resolvedAt": "2026-10-14T06:59:50.496Z"
-  },
-  {
-    "_id": "NOTIF-1790852939641-FS2Y",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:08:59.641Z",
-    "entityId": "TSK-1790852939634-LW3ZH",
-    "entityType": "task",
-    "id": "NOTIF-1790852939641-FS2Y",
-    "isRead": true,
-    "message": "Task QCT-52939634 (Medium Priority) was assigned to Muruga. Due: 2026-10-08.",
-    "metadata": {
-      "taskId": "TSK-1790852939634-LW3ZH",
-      "taskNumber": "QCT-52939634",
-      "title": "onboaring",
-      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
-      "assignedManagerName": "Muruga",
-      "createdByName": "Maran",
-      "priority": "Medium"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: onboaring",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:17.846Z"
-  },
-  {
-    "_id": "NOTIF-1790853216580-10XG",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:13:36.580Z",
-    "entityId": "TSK-1790852939634-LW3ZH",
-    "entityType": "task",
-    "id": "NOTIF-1790853216580-10XG",
-    "isRead": true,
-    "message": "Task 'onboaring' updated to 'Accepted' by Muruga. Note: Task transitioned to Accepted",
-    "metadata": {
-      "taskId": "TSK-1790852939634-LW3ZH",
-      "taskNumber": "QCT-52939634",
-      "title": "onboaring",
-      "oldStatus": "Pending Acceptance",
-      "newStatus": "Accepted",
-      "updatedBy": "Muruga"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: QCT-52939634 is Accepted",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:17.885Z"
-  },
-  {
-    "_id": "NOTIF-1790853222634-SCDI",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:13:42.634Z",
-    "entityId": "TSK-1790852939634-LW3ZH",
-    "entityType": "task",
-    "id": "NOTIF-1790853222634-SCDI",
-    "isRead": true,
-    "message": "Task 'onboaring' updated to 'In Progress' by Muruga. Note: Rework initiated on field",
-    "metadata": {
-      "taskId": "TSK-1790852939634-LW3ZH",
-      "taskNumber": "QCT-52939634",
-      "title": "onboaring",
-      "oldStatus": "Accepted",
-      "newStatus": "In Progress",
-      "updatedBy": "Muruga"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: QCT-52939634 is In Progress",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:17.924Z"
-  },
-  {
-    "_id": "NOTIF-1790853341477-UKRK",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:15:41.477Z",
-    "entityId": "TSK-1790852939634-LW3ZH",
-    "entityType": "task",
-    "id": "NOTIF-1790853341477-UKRK",
-    "isRead": true,
-    "message": "Task 'onboaring' updated to 'Completed' by Muruga. Note: Task transitioned to Completed",
-    "metadata": {
-      "taskId": "TSK-1790852939634-LW3ZH",
-      "taskNumber": "QCT-52939634",
-      "title": "onboaring",
-      "oldStatus": "In Progress",
-      "newStatus": "Completed",
-      "updatedBy": "Muruga"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: QCT-52939634 is Completed",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:17.960Z"
-  },
-  {
-    "_id": "NOTIF-1790853363572-9PFP",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:16:03.572Z",
-    "entityId": "TSK-1790852939634-LW3ZH",
-    "entityType": "task",
-    "id": "NOTIF-1790853363572-9PFP",
-    "isRead": true,
-    "message": "Admin Maran requested rework for 'onboaring'. Remarks: Needs correction.",
-    "metadata": {
-      "taskId": "TSK-1790852939634-LW3ZH",
-      "taskNumber": "QCT-52939634",
-      "decision": "rework",
-      "reworkReason": "",
-      "reviewedBy": "Maran"
-    },
-    "priority": "high",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "Rework Requested: QCT-52939634",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:17.995Z"
-  },
-  {
-    "_id": "NOTIF-1790854027222-V2K4",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:27:07.222Z",
-    "entityId": "TSK-1790854027219-VOSMW",
-    "entityType": "task",
-    "id": "NOTIF-1790854027222-V2K4",
-    "isRead": true,
-    "message": "Task QCT-54027219 (High Priority) was assigned to Muruga. Due: 2026-10-02.",
-    "metadata": {
-      "taskId": "TSK-1790854027219-VOSMW",
-      "taskNumber": "QCT-54027219",
-      "title": "Onboarding",
-      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
-      "assignedManagerName": "Muruga",
-      "createdByName": "Maran",
-      "priority": "High"
-    },
-    "priority": "high",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: Onboarding",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:18.030Z"
-  },
-  {
-    "_id": "NOTIF-1790854148750-8T4W",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:29:08.750Z",
-    "entityId": "TSK-1790854027219-VOSMW",
-    "entityType": "task",
-    "id": "NOTIF-1790854148750-8T4W",
-    "isRead": true,
-    "message": "Task 'Onboarding' updated to 'In Progress' by Muruga. Note: Rework initiated on field",
-    "metadata": {
-      "taskId": "TSK-1790854027219-VOSMW",
-      "taskNumber": "QCT-54027219",
-      "title": "Onboarding",
-      "oldStatus": "Assigned",
-      "newStatus": "In Progress",
-      "updatedBy": "Muruga"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: QCT-54027219 is In Progress",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:18.067Z"
-  },
-  {
-    "_id": "NOTIF-1790854207767-LDOA",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:30:07.768Z",
-    "entityId": "TSK-1790854207754-0RYO8",
-    "entityType": "task",
-    "id": "NOTIF-1790854207767-LDOA",
-    "isRead": true,
-    "message": "Task QCT-54207754 (Low Priority) was assigned to Muruga. Due: 2026-10-02.",
-    "metadata": {
-      "taskId": "TSK-1790854207754-0RYO8",
-      "taskNumber": "QCT-54207754",
-      "title": "e3",
-      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
-      "assignedManagerName": "Muruga",
-      "createdByName": "Maran",
-      "priority": "Low"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: e3",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:18.115Z"
-  },
-  {
-    "_id": "NOTIF-1790854347671-KX2E",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-10-01T11:32:27.671Z",
-    "entityId": "TSK-1790854027219-VOSMW",
-    "entityType": "task",
-    "id": "NOTIF-1790854347671-KX2E",
-    "isRead": true,
-    "message": "Task 'Onboarding' updated to 'Completed' by Muruga. Note: Task transitioned to Completed",
-    "metadata": {
-      "taskId": "TSK-1790854027219-VOSMW",
-      "taskNumber": "QCT-54027219",
-      "title": "Onboarding",
-      "oldStatus": "In Progress",
-      "newStatus": "Completed",
-      "updatedBy": "Muruga"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: QCT-54027219 is Completed",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:18.164Z"
-  },
-  {
-    "_id": "NOTIF-1790856481981-AXGL",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-10-01T12:08:01.981Z",
-    "entityId": "ven_481360",
-    "entityType": "vendor",
-    "id": "NOTIF-1790856481981-AXGL",
-    "isRead": true,
-    "message": "Services merchant 'reo' was onboarded in PIN 636112 (Salem) by Muruga. Awaiting Pincode Admin clearance.",
-    "metadata": {
-      "vendorId": "ven_481360",
-      "vendorName": "reo",
-      "creatorId": "usr_mgr_1790666281762_1jqk",
-      "creatorName": "Muruga",
-      "pincode": "636112",
-      "category": "Services"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Attur",
-      "pincode": "636112",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "New Vendor Onboarded: reo",
-    "type": "vendor_onboarding",
-    "updatedAt": "2026-10-13T09:05:18.202Z"
-  },
-  {
-    "_id": "NOTIF-1790856601070-N1CB",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-10-01T12:10:01.070Z",
-    "entityId": "ven_481360",
-    "entityType": "vendor",
-    "id": "NOTIF-1790856601070-N1CB",
-    "isRead": true,
-    "message": "Pincode Admin Maran approved merchant 'reo'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "ven_481360",
-      "vendorName": "reo",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Maran",
-      "pincode": "636112"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Attur",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: reo",
-    "type": "vendor_status",
-    "updatedAt": "2026-10-13T09:05:18.238Z"
-  },
-  {
-    "_id": "NOTIF-1790856611362-FLD8",
-    "actionUrl": "/state-admin/vendors",
-    "category": "vendor",
-    "createdAt": "2026-10-01T12:10:11.362Z",
-    "entityId": "6ab76e3445152c228d463a87",
-    "entityType": "vendor",
-    "id": "NOTIF-1790856611362-FLD8",
-    "isRead": true,
-    "message": "Pincode Admin Maran approved merchant 'harshini'. Sent for central KYC review.",
-    "metadata": {
-      "vendorId": "6ab76e3445152c228d463a87",
-      "vendorName": "harshini",
-      "action": "Accept",
-      "reason": null,
-      "verifiedBy": "Maran",
-      "pincode": "636112"
-    },
-    "priority": "normal",
-    "readBy": [
-      "usr_mgr_1790666281762_1jqk",
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Attur Division",
-      "pincode": "636112",
-      "targetUserId": "REG-20260828-8093",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Vendor Approved: harshini",
-    "type": "vendor_status",
-    "updatedAt": "2026-10-13T09:05:18.272Z"
-  },
-  {
-    "_id": "NOTIF-1790923636071-4V58",
-    "actionUrl": "/state-admin/tasks",
-    "category": "task",
-    "createdAt": "2026-10-02T06:47:16.071Z",
-    "entityId": "TSK-1790854207754-0RYO8",
-    "entityType": "task",
-    "id": "NOTIF-1790923636071-4V58",
-    "isRead": true,
-    "message": "Task 'e3' updated to 'Accepted' by Muruga. Note: Task transitioned to Accepted",
-    "metadata": {
-      "taskId": "TSK-1790854207754-0RYO8",
-      "taskNumber": "QCT-54207754",
-      "title": "e3",
-      "oldStatus": "Pending Acceptance",
-      "newStatus": "Accepted",
-      "updatedBy": "Muruga"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin",
-        "Manager"
-      ]
-    },
-    "title": "Task Update: QCT-54207754 is Accepted",
-    "type": "task_update",
-    "updatedAt": "2026-10-13T09:05:18.306Z"
-  },
-  {
-    "_id": "NOTIF-1790933737588-6DS9",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-02T09:35:37.588Z",
-    "entityId": "TSK-1790933737526-72C6Q",
-    "entityType": "task",
-    "id": "NOTIF-1790933737588-6DS9",
-    "isRead": true,
-    "message": "Task QCT-33737526 (Medium Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-04.",
-    "metadata": {
-      "taskId": "TSK-1790933737526-72C6Q",
-      "taskNumber": "QCT-33737526",
-      "title": "Onboarding issue",
-      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
-      "assignedManagerName": "Muruga",
-      "assignedManagerRole": "Pincode Manager",
-      "assignedManagerLevel": 4,
-      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "createdByName": "Maran",
-      "priority": "Medium"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: Onboarding issue",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:18.340Z",
-    "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
-  },
-  {
-    "_id": "5c73c356-ae9d-4f64-b5f6-e2f22bdba17e",
-    "createdAt": "2026-10-05T07:43:53.028Z",
-    "id": "5c73c356-ae9d-4f64-b5f6-e2f22bdba17e",
-    "isRead": true,
-    "message": "Surya logged field visit for dfghjk (Interested).",
-    "recordId": "75c8df08-04df-452d-b928-838ea70e4067",
-    "title": "New Shop Visit Logged",
-    "type": "shop_visit",
-    "updatedAt": "2026-10-13T09:05:18.379Z",
-    "userId": "usr_mgr_1790580930154_8uge",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "NOTIF-1791186390694-FF2C",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-05T07:46:30.695Z",
-    "entityId": "TSK-1791186390629-H97WF",
-    "entityType": "task",
-    "id": "NOTIF-1791186390694-FF2C",
-    "isRead": true,
-    "message": "Task QCT-86390629 (High Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-06.",
-    "metadata": {
-      "taskId": "TSK-1791186390629-H97WF",
-      "taskNumber": "QCT-86390629",
-      "title": "10 Shops",
-      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
-      "assignedManagerName": "Muruga",
-      "assignedManagerRole": "Pincode Manager",
-      "assignedManagerLevel": 4,
-      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "createdByName": "Maran",
-      "priority": "High"
-    },
-    "priority": "high",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: 10 Shops",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:18.410Z",
-    "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
   },
   {
     "_id": "dd7c9041-6a09-4be7-8d21-f0c5e653c9f7",
@@ -1735,56 +518,6 @@
     ]
   },
   {
-    "_id": "NOTIF-1791202135354-LPJU",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-05T12:08:55.354Z",
-    "entityId": "TSK-1791202135312-CHD1B",
-    "entityType": "task",
-    "id": "NOTIF-1791202135354-LPJU",
-    "isRead": true,
-    "message": "Task QCT-02135312 (High Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-06.",
-    "metadata": {
-      "taskId": "TSK-1791202135312-CHD1B",
-      "taskNumber": "QCT-02135312",
-      "title": "5 tie up",
-      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
-      "assignedManagerName": "Muruga",
-      "assignedManagerRole": "Pincode Manager",
-      "assignedManagerLevel": 4,
-      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "createdByName": "Maran",
-      "priority": "High"
-    },
-    "priority": "high",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Salem",
-      "division": "Thalaivasal",
-      "pincode": "636112",
-      "targetUserId": "usr_mgr_1790666281762_1jqk",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: 5 tie up",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:19.179Z",
-    "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
-  },
-  {
     "_id": "0171213b-e52b-4026-a4f2-7ec28170d96e",
     "createdAt": "2026-10-06T04:18:05.250Z",
     "id": "0171213b-e52b-4026-a4f2-7ec28170d96e",
@@ -1906,101 +639,6 @@
     "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9",
     "isResolved": true,
     "resolvedAt": "2026-10-12T12:13:47.009Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "ae3ba4f2-b87c-411d-b641-7790481391b8",
-    "createdAt": "2026-10-10T05:42:04.561Z",
-    "id": "ae3ba4f2-b87c-411d-b641-7790481391b8",
-    "isRead": true,
-    "message": "Surya logged field visit for Karthick (Not Interested).",
-    "recordId": "be5b35f8-eaff-44d2-aee1-9cdef68dcead",
-    "title": "New Shop Visit Logged",
-    "type": "shop_visit",
-    "updatedAt": "2026-10-13T09:05:19.482Z",
-    "userId": "usr_mgr_1790580930154_8uge",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "NOTIF-1791611184516-589H",
-    "actionUrl": "/manager/tasks",
-    "category": "task",
-    "createdAt": "2026-10-10T05:46:24.516Z",
-    "entityId": "TSK-1791611184289-1RR8L",
-    "entityType": "task",
-    "id": "NOTIF-1791611184516-589H",
-    "isRead": true,
-    "message": "Task QCT-11184289 (Medium Priority) was assigned to Surya (State Manager). Territory: Tamil Nadu → Krishnagiri → 635126. Due: 2026-10-12.",
-    "metadata": {
-      "taskId": "TSK-1791611184289-1RR8L",
-      "taskNumber": "QCT-11184289",
-      "title": "kjhgfcvh",
-      "assignedManagerId": "usr_mgr_1790580930154_8uge",
-      "assignedManagerName": "Surya",
-      "assignedManagerRole": "State Manager",
-      "assignedManagerLevel": 1,
-      "territory": "Tamil Nadu → Krishnagiri → 635126",
-      "state": "Tamil Nadu",
-      "district": "Krishnagiri",
-      "division": "",
-      "pincode": "635126",
-      "createdByName": "Dhanu",
-      "priority": "Medium"
-    },
-    "priority": "normal",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ],
-    "scope": {
-      "state": "Tamil Nadu",
-      "district": "Krishnagiri",
-      "division": "",
-      "pincode": "635126",
-      "targetUserId": "usr_mgr_1790580930154_8uge",
-      "targetRoles": [
-        "Manager",
-        "State Admin",
-        "District Admin",
-        "Division Admin",
-        "Pincode Admin"
-      ]
-    },
-    "title": "New Task Assigned: kjhgfcvh",
-    "type": "task_created",
-    "updatedAt": "2026-10-13T09:05:19.515Z",
-    "isResolved": true,
-    "resolvedAt": "2026-10-12T12:13:47.009Z"
-  },
-  {
-    "_id": "6700123e-6c8e-49f8-a0d7-5c31142a10bb",
-    "createdAt": "2026-10-10T05:51:34.481Z",
-    "id": "6700123e-6c8e-49f8-a0d7-5c31142a10bb",
-    "isRead": true,
-    "message": "Surya marked task QCT-11184289 as Accepted.",
-    "recordId": "TSK-1791611184289-1RR8L",
-    "title": "Task QCT-11184289 Accepted",
-    "type": "task_updated",
-    "updatedAt": "2026-10-13T09:05:19.554Z",
-    "userId": "usr_mgr_1790580930154_8uge",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "7b6b0200-411c-42c5-ad25-95f68dcf9cdc",
-    "createdAt": "2026-10-10T05:51:46.467Z",
-    "id": "7b6b0200-411c-42c5-ad25-95f68dcf9cdc",
-    "isRead": true,
-    "message": "Surya marked task QCT-11184289 as In Progress.",
-    "recordId": "TSK-1791611184289-1RR8L",
-    "title": "Task QCT-11184289 In Progress",
-    "type": "task_updated",
-    "updatedAt": "2026-10-13T09:05:19.588Z",
-    "userId": "usr_mgr_1790580930154_8uge",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -2986,23 +1624,6 @@
     ]
   },
   {
-    "_id": "28537626-65e6-4d15-90f9-9a4071044207",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:54:42.327Z",
-    "id": "28537626-65e6-4d15-90f9-9a4071044207",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "e661c0b2-2e6d-4507-a15b-79e980bc8c05",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:21.687Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "ffa6f81b-9b9d-4572-a51b-8ad82a7027ce",
     "category": "registration_approval",
     "createdAt": "2026-10-13T06:54:56.716Z",
@@ -3041,23 +1662,6 @@
     ]
   },
   {
-    "_id": "683186bf-5ea4-4057-8f10-b9a7c24ec5a6",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:55:12.700Z",
-    "id": "683186bf-5ea4-4057-8f10-b9a7c24ec5a6",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "8b3909e6-3400-45f8-8a59-ef59da1ba9a1",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:21.788Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "d2e8a51e-850b-4862-b132-945f3e6ff234",
     "category": "account_activation",
     "createdAt": "2026-10-13T06:55:14.849Z",
@@ -3090,23 +1694,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:05:21.853Z",
     "userId": "ADM-355A7792",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "9dbebac0-6d60-49fa-a5fe-3f025b385f80",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:57:33.161Z",
-    "id": "9dbebac0-6d60-49fa-a5fe-3f025b385f80",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "fbeb446b-0a80-4bb4-a1b5-a843688d5546",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:21.885Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -3150,23 +1737,6 @@
     ]
   },
   {
-    "_id": "a1a6119b-8be2-4a3d-80ec-3430b3d25dd2",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:58:01.760Z",
-    "id": "a1a6119b-8be2-4a3d-80ec-3430b3d25dd2",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d56dffa3-6fb4-4d1b-bbcf-24e240d271f8",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:22.017Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "6175dd00-ee44-41d4-8e79-e9822fa8d303",
     "category": "account_activation",
     "createdAt": "2026-10-13T06:58:02.986Z",
@@ -3180,23 +1750,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T09:05:22.049Z",
     "userId": "fbeb446b-0a80-4bb4-a1b5-a843688d5546",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "5654fdc5-cf92-48d5-bb52-24780c3da604",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:59:23.591Z",
-    "id": "5654fdc5-cf92-48d5-bb52-24780c3da604",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "a7b574da-5091-4d1a-a71f-e642026957c2",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:22.083Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -3239,23 +1792,6 @@
     ]
   },
   {
-    "_id": "c050ec12-0913-42e5-a7d4-80cfab03c254",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:59:39.360Z",
-    "id": "c050ec12-0913-42e5-a7d4-80cfab03c254",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "18265fe2-3fb2-472b-95f3-38c603272107",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:22.197Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "e58aad4d-6e97-4f14-aa35-6df24e81b149",
     "category": "account_activation",
     "createdAt": "2026-10-13T06:59:39.905Z",
@@ -3293,41 +1829,6 @@
     ]
   },
   {
-    "_id": "ce6375e2-e1ba-4776-8d3c-3c8485be2508",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T06:59:56.079Z",
-    "id": "ce6375e2-e1ba-4776-8d3c-3c8485be2508",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "2c30e4ca-8f5e-4b86-ae93-c1f2efe63166",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:22.896Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "5b27405a-2229-42b2-bc76-8170578d4497",
-    "category": "account_activation",
-    "createdAt": "2026-10-13T06:59:56.650Z",
-    "id": "5b27405a-2229-42b2-bc76-8170578d4497",
-    "isRead": true,
-    "message": "Both Sub-admin approval and KYC compliance clearance have been completed! Your manager dashboard access is now unlocked.",
-    "priority": "high",
-    "read": false,
-    "receiver": "2c30e4ca-8f5e-4b86-ae93-c1f2efe63166",
-    "title": "Manager Account Fully Activated",
-    "type": "account_activation",
-    "updatedAt": "2026-10-13T09:05:22.929Z",
-    "userId": "2c30e4ca-8f5e-4b86-ae93-c1f2efe63166",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "80aec857-2d69-4db4-a95d-932ad1ac6978",
     "category": "registration_approval",
     "createdAt": "2026-10-13T07:02:55.727Z",
@@ -3342,23 +1843,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:05:22.961Z",
     "userId": "ADM-355A7792",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "a7eebb5e-b333-4717-bba1-2e0efd5c046d",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:02:56.778Z",
-    "id": "a7eebb5e-b333-4717-bba1-2e0efd5c046d",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d3142327-93af-45fa-bbd7-98f1e68bf19f",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:22.994Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -3402,23 +1886,6 @@
     ]
   },
   {
-    "_id": "a78348a1-f35f-41da-b965-907cafd5b4f4",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:03:24.568Z",
-    "id": "a78348a1-f35f-41da-b965-907cafd5b4f4",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "70deee70-ea7a-40bf-8dc9-9a2ed866489b",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:23.112Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "3189f68a-1966-4698-89b1-5ea80e5fed4d",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:03:26.696Z",
@@ -3456,23 +1923,6 @@
     ]
   },
   {
-    "_id": "6fac0527-efaa-42e0-8f60-5b350f97d895",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:04:34.538Z",
-    "id": "6fac0527-efaa-42e0-8f60-5b350f97d895",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "145fbfa3-dbd9-4f29-a3cc-7d0d8aeeb389",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:23.213Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "9c1e11ad-756f-4f84-b737-a4d8bb1aad2c",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:04:34.960Z",
@@ -3486,23 +1936,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T09:05:23.245Z",
     "userId": "145fbfa3-dbd9-4f29-a3cc-7d0d8aeeb389",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "fe38f87d-cb97-4e19-bf6f-b66edee70e18",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:04:47.323Z",
-    "id": "fe38f87d-cb97-4e19-bf6f-b66edee70e18",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d1ac7b5e-d4c3-4126-9ccd-83f646c8a4a3",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:23.276Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -3545,23 +1978,6 @@
     ]
   },
   {
-    "_id": "b9878d8f-b4e6-4c27-9cda-aa95df811555",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:05:00.531Z",
-    "id": "b9878d8f-b4e6-4c27-9cda-aa95df811555",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "4343d351-254b-4c28-9a29-e36d16097115",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:23.375Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "83ee4317-b4cf-4fe5-9f0c-9206884fc3f2",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:05:01.080Z",
@@ -3599,23 +2015,6 @@
     ]
   },
   {
-    "_id": "8744d8c8-b280-414c-8e5c-4551c1e68ce8",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:05:14.036Z",
-    "id": "8744d8c8-b280-414c-8e5c-4551c1e68ce8",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "6f168ac6-36a6-4a14-9ec5-72a29f2a3792",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:23.866Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "57bc9923-747b-4463-aef6-7dadeb8ab6be",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:05:14.594Z",
@@ -3648,23 +2047,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:05:23.944Z",
     "userId": "ADM-355A7792",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "2ee3e036-c73a-46d0-996e-d8c22f168489",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:08:03.343Z",
-    "id": "2ee3e036-c73a-46d0-996e-d8c22f168489",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "dd41d36f-973c-4f4f-8689-25e57e913784",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:23.978Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -3708,23 +2090,6 @@
     ]
   },
   {
-    "_id": "fe35c16c-9a5c-478f-8132-8e482fa6f429",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:08:28.569Z",
-    "id": "fe35c16c-9a5c-478f-8132-8e482fa6f429",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "435349e0-216b-4818-922e-59a7c4256787",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.079Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "b778b662-c32b-4cf2-9aff-4c7bbab76aed",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:08:30.432Z",
@@ -3762,23 +2127,6 @@
     ]
   },
   {
-    "_id": "848c8f45-10b9-4862-a60e-9ce934c2290b",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:09:54.260Z",
-    "id": "848c8f45-10b9-4862-a60e-9ce934c2290b",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "5a3715e3-a6a0-46b0-9c32-193053610cad",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.178Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "078bbb96-1b2a-4513-b93f-947d705302a9",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:09:56.341Z",
@@ -3792,23 +2140,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T09:05:24.211Z",
     "userId": "5a3715e3-a6a0-46b0-9c32-193053610cad",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "d22c41d6-527a-48a7-a80f-21e8023bdb32",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:10:22.467Z",
-    "id": "d22c41d6-527a-48a7-a80f-21e8023bdb32",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d8fd1257-710c-4af6-a8da-d390bc72d944",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.243Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -3851,23 +2182,6 @@
     ]
   },
   {
-    "_id": "aa14ba23-a27b-4c99-9ef8-22b6a3f753df",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:10:36.529Z",
-    "id": "aa14ba23-a27b-4c99-9ef8-22b6a3f753df",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "3129b3de-067a-4f62-8054-088b556e6933",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.339Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "699e60fb-27af-401d-bf04-e569dae8cad1",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:10:37.109Z",
@@ -3905,23 +2219,6 @@
     ]
   },
   {
-    "_id": "bbdea7c7-bb7a-480b-990f-aabc7b3f5800",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:10:54.806Z",
-    "id": "bbdea7c7-bb7a-480b-990f-aabc7b3f5800",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "9e2c8858-f6c9-4a1e-84f7-9ed90cd50dd9",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.446Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "b67f6034-7748-4b43-a322-d3864cea3373",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:10:57.532Z",
@@ -3954,23 +2251,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:05:24.514Z",
     "userId": "ADM-355A7792",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "0434e017-fcfb-48d0-a0f3-d3bcd832734b",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:13:46.873Z",
-    "id": "0434e017-fcfb-48d0-a0f3-d3bcd832734b",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "ce2e7fab-be14-4748-a947-44450d34325e",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.547Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -4014,23 +2294,6 @@
     ]
   },
   {
-    "_id": "f9a39420-18b4-4696-bc70-fde5699f06f2",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:14:11.421Z",
-    "id": "f9a39420-18b4-4696-bc70-fde5699f06f2",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "cb71433a-79c1-4cd4-abeb-7a16446faf72",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.646Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "1d2e1ede-9a9d-4687-b5e8-cd4f725907d3",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:14:12.682Z",
@@ -4068,23 +2331,6 @@
     ]
   },
   {
-    "_id": "6be738fb-6c27-4644-a06c-fc1a0b49a2fa",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:15:20.934Z",
-    "id": "6be738fb-6c27-4644-a06c-fc1a0b49a2fa",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "56477f17-66ca-4678-92ea-02cd773364be",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.753Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "8aa7b7ef-1ef1-48b5-9251-699c6b8bc756",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:15:21.356Z",
@@ -4098,23 +2344,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T09:05:24.786Z",
     "userId": "56477f17-66ca-4678-92ea-02cd773364be",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "286cd0fe-3e4d-46b0-ba17-1cab60b4cf86",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:15:33.725Z",
-    "id": "286cd0fe-3e4d-46b0-ba17-1cab60b4cf86",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "4dfea53e-b8a9-4176-acdc-bf340fecaf8e",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.817Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -4157,23 +2386,6 @@
     ]
   },
   {
-    "_id": "9c21ed7b-c4b6-40a2-8116-720015fc76e4",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:15:46.904Z",
-    "id": "9c21ed7b-c4b6-40a2-8116-720015fc76e4",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d2c52c6d-7ab3-40fe-b02f-ccdf0b44575b",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:24.914Z",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
     "_id": "07163440-f848-498d-9d0a-1c32769ae55f",
     "category": "account_activation",
     "createdAt": "2026-10-13T07:15:47.410Z",
@@ -4206,23 +2418,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:05:24.977Z",
     "userId": "ADM-PIN-557374",
-    "readBy": [
-      "6ab4c2ec5df0d82cb7a09cac"
-    ]
-  },
-  {
-    "_id": "17e7e8bd-a6c2-4db4-9be0-6f0e9af95a74",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T07:16:00.354Z",
-    "id": "17e7e8bd-a6c2-4db4-9be0-6f0e9af95a74",
-    "isRead": true,
-    "message": "Sub-admin approval granted for Tester Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "6dac0cdc-2f05-4c09-b86f-2eca603ded2c",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:05:25.012Z",
     "readBy": [
       "6ab4c2ec5df0d82cb7a09cac"
     ]
@@ -4277,34 +2472,6 @@
     "userId": "ADM-355A7792"
   },
   {
-    "_id": "656555f6-7945-4b52-8c10-f3952ecd971d",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:21:05.436Z",
-    "id": "656555f6-7945-4b52-8c10-f3952ecd971d",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "2b0dfc28-be95-488e-8c26-00ea0faf29b6",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:57.937Z"
-  },
-  {
-    "_id": "3f328a75-7182-4934-8d88-030563293853",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:21:06.330Z",
-    "id": "3f328a75-7182-4934-8d88-030563293853",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "2b0dfc28-be95-488e-8c26-00ea0faf29b6",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:57.974Z"
-  },
-  {
     "_id": "5e9e6191-0f49-4a81-b9ed-a3336e2246a2",
     "category": "account_activation",
     "createdAt": "2026-10-13T09:21:07.042Z",
@@ -4352,20 +2519,6 @@
     "userId": "ADM-DIV-E20D71"
   },
   {
-    "_id": "d6288895-79ff-4ded-9bc0-dba02b1d9a2f",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:21:59.427Z",
-    "id": "d6288895-79ff-4ded-9bc0-dba02b1d9a2f",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Ramesh Sundaram (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7c5733a7-a794-4fdc-8e66-ba1758b53733",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.008Z"
-  },
-  {
     "_id": "eeda6e8a-6f6b-4ce2-9a9d-d010f386682d",
     "category": "registration_approval",
     "createdAt": "2026-10-13T09:22:11.598Z",
@@ -4382,34 +2535,6 @@
     "userId": "ADM-DIV-E20D71"
   },
   {
-    "_id": "eaf9f7c9-e8a0-4f44-a794-09cee8efea11",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:22:11.844Z",
-    "id": "eaf9f7c9-e8a0-4f44-a794-09cee8efea11",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Anitha Selvam (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "ff432e59-c08d-4b4f-82ca-e561091bbf18",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.042Z"
-  },
-  {
-    "_id": "eb2864e6-0374-4ed4-a56d-80f23667ef1f",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:22:12.194Z",
-    "id": "eb2864e6-0374-4ed4-a56d-80f23667ef1f",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "ff432e59-c08d-4b4f-82ca-e561091bbf18",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.080Z"
-  },
-  {
     "_id": "362d1a11-37c2-4f7f-b951-67d8ea6698fb",
     "category": "registration_approval",
     "createdAt": "2026-10-13T09:22:24.500Z",
@@ -4424,34 +2549,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:22:24.500Z",
     "userId": "TEST-ADMIN-TN"
-  },
-  {
-    "_id": "73862832-c51b-4908-a953-2652861f6592",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:22:24.715Z",
-    "id": "73862832-c51b-4908-a953-2652861f6592",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Statemanager (state_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "106d5305-da57-4384-8865-806516c2fbeb",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.120Z"
-  },
-  {
-    "_id": "75360e0b-a972-452d-bb6e-b890d76dfcb5",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:22:25.147Z",
-    "id": "75360e0b-a972-452d-bb6e-b890d76dfcb5",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "106d5305-da57-4384-8865-806516c2fbeb",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.163Z"
   },
   {
     "_id": "87efc123-f66d-41d1-84e5-ab914d1bffb3",
@@ -4485,34 +2582,6 @@
     "userId": "ADM-6EA12FEF"
   },
   {
-    "_id": "255c5117-c93c-4d8f-871d-d5a0da61a881",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:22:39.559Z",
-    "id": "255c5117-c93c-4d8f-871d-d5a0da61a881",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Districtmanager (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7c4b7669-2ff1-4129-890a-5b5de7d3db5c",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.194Z"
-  },
-  {
-    "_id": "b0bf4f9e-3354-4faa-9f7b-e5431dc72b15",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:22:39.901Z",
-    "id": "b0bf4f9e-3354-4faa-9f7b-e5431dc72b15",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7c4b7669-2ff1-4129-890a-5b5de7d3db5c",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.227Z"
-  },
-  {
     "_id": "bb0384e4-b2e5-4886-99fd-a01ff719f951",
     "category": "account_activation",
     "createdAt": "2026-10-13T09:22:40.249Z",
@@ -4542,34 +2611,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:22:52.299Z",
     "userId": "ADM-DIV-E20D71"
-  },
-  {
-    "_id": "12855917-4c2e-4496-974d-737f8d6aceeb",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:22:52.555Z",
-    "id": "12855917-4c2e-4496-974d-737f8d6aceeb",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Divisionmanager (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7db91226-d3c9-4380-9e66-488c099a6e5b",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.260Z"
-  },
-  {
-    "_id": "b6bb1e57-6947-4fd4-b48a-3d4a8e88bddb",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:22:52.909Z",
-    "id": "b6bb1e57-6947-4fd4-b48a-3d4a8e88bddb",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7db91226-d3c9-4380-9e66-488c099a6e5b",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.294Z"
   },
   {
     "_id": "fa73a986-3241-4787-9c31-fb65bd81361a",
@@ -4603,34 +2644,6 @@
     "userId": "ADM-PIN-557374"
   },
   {
-    "_id": "bfb57960-a088-43ce-a15e-575128e1a820",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:23:05.964Z",
-    "id": "bfb57960-a088-43ce-a15e-575128e1a820",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Pincodemanager (pincode_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7d1f9a1b-c1f7-4a70-a743-ae64875899c4",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.352Z"
-  },
-  {
-    "_id": "b7c1a882-3e44-4c49-b0c1-3b0fb4fb4c26",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:23:06.339Z",
-    "id": "b7c1a882-3e44-4c49-b0c1-3b0fb4fb4c26",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "7d1f9a1b-c1f7-4a70-a743-ae64875899c4",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.389Z"
-  },
-  {
     "_id": "6aae3001-af2f-42bc-868d-fecf78ef561b",
     "category": "account_activation",
     "createdAt": "2026-10-13T09:23:06.702Z",
@@ -4660,34 +2673,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:24:51.209Z",
     "userId": "ADM-355A7792"
-  },
-  {
-    "_id": "1fa2be84-4f42-422d-8d03-d1ee29996299",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:24:52.015Z",
-    "id": "1fa2be84-4f42-422d-8d03-d1ee29996299",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "83faeb64-4da5-4fe7-92dd-ced9e0c342a0",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.445Z"
-  },
-  {
-    "_id": "ae903a3a-21ba-4868-b786-a3b04e21ef5e",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:24:52.901Z",
-    "id": "ae903a3a-21ba-4868-b786-a3b04e21ef5e",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "83faeb64-4da5-4fe7-92dd-ced9e0c342a0",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.478Z"
   },
   {
     "_id": "23b1f7d3-b37b-4f3f-8ab8-effb8a0ae093",
@@ -4737,20 +2722,6 @@
     "userId": "ADM-DIV-E20D71"
   },
   {
-    "_id": "c3cbfd40-4cc3-475c-995a-0ffac6e25534",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:25:45.187Z",
-    "id": "c3cbfd40-4cc3-475c-995a-0ffac6e25534",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Ramesh Sundaram (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "a469de60-ea40-4805-a4a9-45693a346932",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.512Z"
-  },
-  {
     "_id": "b3bf1ddc-a3d3-48bf-a755-655d1abdfec1",
     "category": "registration_approval",
     "createdAt": "2026-10-13T09:25:59.437Z",
@@ -4767,34 +2738,6 @@
     "userId": "ADM-DIV-E20D71"
   },
   {
-    "_id": "abaedadc-f330-462c-b4d4-224e454007cd",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:25:59.732Z",
-    "id": "abaedadc-f330-462c-b4d4-224e454007cd",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Anitha Selvam (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "ef9acdbf-dfe1-4bc2-b525-aa18de1a029e",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.545Z"
-  },
-  {
-    "_id": "fa60cac5-0b93-4b7a-9a55-a4489d097d76",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:26:00.192Z",
-    "id": "fa60cac5-0b93-4b7a-9a55-a4489d097d76",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "ef9acdbf-dfe1-4bc2-b525-aa18de1a029e",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.577Z"
-  },
-  {
     "_id": "2dbbe276-3ca3-4d75-90ad-fdad1121d3f5",
     "category": "registration_approval",
     "createdAt": "2026-10-13T09:26:14.356Z",
@@ -4809,34 +2752,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:26:14.356Z",
     "userId": "TEST-ADMIN-TN"
-  },
-  {
-    "_id": "bb2351e9-9682-4308-823a-79824ff2d105",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:26:14.577Z",
-    "id": "bb2351e9-9682-4308-823a-79824ff2d105",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Statemanager (state_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "20586886-fef0-4b20-9e3a-2e7e75dfbf22",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.612Z"
-  },
-  {
-    "_id": "836b5c48-4763-4fba-9277-2401ee0ddf4d",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:26:14.989Z",
-    "id": "836b5c48-4763-4fba-9277-2401ee0ddf4d",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "20586886-fef0-4b20-9e3a-2e7e75dfbf22",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.656Z"
   },
   {
     "_id": "1ca44cd1-752b-42ca-86db-0f2b4bb495c2",
@@ -4868,34 +2783,6 @@
     "type": "sub_admin_approval_request",
     "updatedAt": "2026-10-13T09:26:29.272Z",
     "userId": "ADM-6EA12FEF"
-  },
-  {
-    "_id": "24e073f8-f790-43f9-ab1e-8d10d433cebd",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:26:29.522Z",
-    "id": "24e073f8-f790-43f9-ab1e-8d10d433cebd",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Districtmanager (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "9def40d6-a684-4250-b0d1-638634509c50",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.689Z"
-  },
-  {
-    "_id": "428d3036-31c9-46d6-8c49-62f85944f2c1",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:26:29.922Z",
-    "id": "428d3036-31c9-46d6-8c49-62f85944f2c1",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "9def40d6-a684-4250-b0d1-638634509c50",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.722Z"
   },
   {
     "_id": "58291f3e-aa1f-40a8-a848-3f6e2343ed4a",
@@ -4941,34 +2828,6 @@
     "userId": "ADM-DIV-E20D71"
   },
   {
-    "_id": "ba47c012-288f-4fc3-8bbb-6502610ec8f5",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:26:45.435Z",
-    "id": "ba47c012-288f-4fc3-8bbb-6502610ec8f5",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Divisionmanager (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "f7379eb2-448e-41a2-bdcf-89bb928c95dd",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.755Z"
-  },
-  {
-    "_id": "999e0bde-370d-4ec9-9619-2b0b66a5e2eb",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:26:46.150Z",
-    "id": "999e0bde-370d-4ec9-9619-2b0b66a5e2eb",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "f7379eb2-448e-41a2-bdcf-89bb928c95dd",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:58.804Z"
-  },
-  {
     "_id": "f62cc58d-37b6-4bae-8dc0-7a59e206b16e",
     "category": "account_activation",
     "createdAt": "2026-10-13T09:26:47.042Z",
@@ -5000,34 +2859,6 @@
     "userId": "ADM-PIN-557374"
   },
   {
-    "_id": "5d475c68-2de1-4a13-8aeb-c633600826b5",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T09:27:03.504Z",
-    "id": "5d475c68-2de1-4a13-8aeb-c633600826b5",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Pincodemanager (pincode_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "960b3998-492d-48bb-aa0c-1c402d28b4a0",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T09:52:58.837Z"
-  },
-  {
-    "_id": "90955d94-b01d-4e04-a2d7-9980359df161",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T09:27:03.955Z",
-    "id": "90955d94-b01d-4e04-a2d7-9980359df161",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "960b3998-492d-48bb-aa0c-1c402d28b4a0",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T09:52:43.436Z"
-  },
-  {
     "_id": "b002dd6e-f237-4aa1-bf48-08f2b1c94485",
     "category": "account_activation",
     "createdAt": "2026-10-13T09:27:04.364Z",
@@ -5055,34 +2886,6 @@
     "userId": "599bef8d-4392-43bd-b015-ac5371e15842"
   },
   {
-    "_id": "57e5e52b-4df2-464c-9aec-5d48fd063d40",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:09:07.660Z",
-    "id": "57e5e52b-4df2-464c-9aec-5d48fd063d40",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "690ce211-a9ee-49c0-8e10-d375b92d191b",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:42.893Z"
-  },
-  {
-    "_id": "7b8328e8-c986-4a45-b04d-4d7ad0f4250b",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:09:10.916Z",
-    "id": "7b8328e8-c986-4a45-b04d-4d7ad0f4250b",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "690ce211-a9ee-49c0-8e10-d375b92d191b",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:42.947Z"
-  },
-  {
     "_id": "bf35f310-7b29-4be3-83bb-81b4a4d8c0ff",
     "category": "account_activation",
     "createdAt": "2026-10-13T12:09:13.507Z",
@@ -5096,34 +2899,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T12:09:13.940Z",
     "userId": "690ce211-a9ee-49c0-8e10-d375b92d191b"
-  },
-  {
-    "_id": "5bb0bba6-bf8f-40f7-8e5c-63392a4eb6d7",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:11:23.652Z",
-    "id": "5bb0bba6-bf8f-40f7-8e5c-63392a4eb6d7",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "71512b2f-5b33-4477-ab22-42d7543a4545",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:42.981Z"
-  },
-  {
-    "_id": "51d7b988-3698-4976-93dc-f05c913e5dbd",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:11:26.311Z",
-    "id": "51d7b988-3698-4976-93dc-f05c913e5dbd",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "71512b2f-5b33-4477-ab22-42d7543a4545",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.013Z"
   },
   {
     "_id": "70a5e1fe-02d0-490b-91b5-5db02b6b56d0",
@@ -5141,76 +2916,6 @@
     "userId": "71512b2f-5b33-4477-ab22-42d7543a4545"
   },
   {
-    "_id": "89682d6a-a6e4-4c30-ba9e-572d874aa566",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:12:13.698Z",
-    "id": "89682d6a-a6e4-4c30-ba9e-572d874aa566",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Ramesh Sundaram (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "4934d852-916d-47ee-8d63-6833071f8490",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.057Z"
-  },
-  {
-    "_id": "92fad0ce-739e-48f0-aa5e-506d06321219",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:12:28.998Z",
-    "id": "92fad0ce-739e-48f0-aa5e-506d06321219",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Anitha Selvam (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "80237293-9212-461a-890f-38ba99746af9",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.091Z"
-  },
-  {
-    "_id": "fdd944c5-a512-4ad3-a3b9-2716ce36d7fb",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:12:29.824Z",
-    "id": "fdd944c5-a512-4ad3-a3b9-2716ce36d7fb",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "80237293-9212-461a-890f-38ba99746af9",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.125Z"
-  },
-  {
-    "_id": "13e4f157-1523-4a39-9528-933d798524a9",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:12:44.878Z",
-    "id": "13e4f157-1523-4a39-9528-933d798524a9",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Statemanager (state_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "62845798-b37f-4265-8788-b233dabf3630",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.159Z"
-  },
-  {
-    "_id": "c004300a-646d-4e0c-a352-2b01a50dc539",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:12:45.723Z",
-    "id": "c004300a-646d-4e0c-a352-2b01a50dc539",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "62845798-b37f-4265-8788-b233dabf3630",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.206Z"
-  },
-  {
     "_id": "df958f99-d82f-4693-9c6a-ca43bde29c4b",
     "category": "account_activation",
     "createdAt": "2026-10-13T12:12:46.466Z",
@@ -5224,34 +2929,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T12:12:46.892Z",
     "userId": "62845798-b37f-4265-8788-b233dabf3630"
-  },
-  {
-    "_id": "ecc3d462-ae40-4eb6-ac76-09e03e70b47d",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:13:00.510Z",
-    "id": "ecc3d462-ae40-4eb6-ac76-09e03e70b47d",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Districtmanager (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "65db1e2a-5690-47c8-9496-022847ddba9c",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.239Z"
-  },
-  {
-    "_id": "8c7693cb-0cba-43b8-8c63-133830537585",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:13:00.956Z",
-    "id": "8c7693cb-0cba-43b8-8c63-133830537585",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "65db1e2a-5690-47c8-9496-022847ddba9c",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.276Z"
   },
   {
     "_id": "a6bdb7fb-a8fa-40e5-9081-512157a02774",
@@ -5269,34 +2946,6 @@
     "userId": "65db1e2a-5690-47c8-9496-022847ddba9c"
   },
   {
-    "_id": "b98ad3ff-cde5-44e1-81d0-df5a8e4d15ce",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:13:21.544Z",
-    "id": "b98ad3ff-cde5-44e1-81d0-df5a8e4d15ce",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Divisionmanager (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "cbb50bd6-08b2-4c24-b437-0cab65b2df7b",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.309Z"
-  },
-  {
-    "_id": "67a6495b-2f42-4e83-8db1-66535d547e91",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:13:24.822Z",
-    "id": "67a6495b-2f42-4e83-8db1-66535d547e91",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "cbb50bd6-08b2-4c24-b437-0cab65b2df7b",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.342Z"
-  },
-  {
     "_id": "586fc9a9-973c-406a-9b2c-e758cc67468e",
     "category": "account_activation",
     "createdAt": "2026-10-13T12:13:25.925Z",
@@ -5310,34 +2959,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T12:13:26.598Z",
     "userId": "cbb50bd6-08b2-4c24-b437-0cab65b2df7b"
-  },
-  {
-    "_id": "65291af8-2fcf-4854-b0a9-65aa85b2e51e",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:13:46.195Z",
-    "id": "65291af8-2fcf-4854-b0a9-65aa85b2e51e",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Pincodemanager (pincode_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "40150c49-d50b-4256-9c99-a0040c7763b9",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.379Z"
-  },
-  {
-    "_id": "00ba5a5c-0c82-4f40-8959-fffa2f009535",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:13:47.722Z",
-    "id": "00ba5a5c-0c82-4f40-8959-fffa2f009535",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "40150c49-d50b-4256-9c99-a0040c7763b9",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.414Z"
   },
   {
     "_id": "cb53391f-e063-4f4d-97f9-5f187789b831",
@@ -5355,34 +2976,6 @@
     "userId": "40150c49-d50b-4256-9c99-a0040c7763b9"
   },
   {
-    "_id": "20b19468-4f6b-4e93-ac30-5226401c3dd5",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:39:55.092Z",
-    "id": "20b19468-4f6b-4e93-ac30-5226401c3dd5",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "0b9995c7-7f5f-4104-9e8f-8dfe8496351c",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.447Z"
-  },
-  {
-    "_id": "ef66f97a-a0dc-4c76-ac11-fffb683937e3",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:39:56.038Z",
-    "id": "ef66f97a-a0dc-4c76-ac11-fffb683937e3",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "0b9995c7-7f5f-4104-9e8f-8dfe8496351c",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.482Z"
-  },
-  {
     "_id": "f7532dc1-4877-4d23-a792-b3400232a703",
     "category": "account_activation",
     "createdAt": "2026-10-13T12:39:56.804Z",
@@ -5396,76 +2989,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T12:39:57.147Z",
     "userId": "0b9995c7-7f5f-4104-9e8f-8dfe8496351c"
-  },
-  {
-    "_id": "dcc67682-3bb7-4785-87e3-62bbab679c1d",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:40:35.664Z",
-    "id": "dcc67682-3bb7-4785-87e3-62bbab679c1d",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Ramesh Sundaram (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "055940f0-9e82-468a-aa6c-4c8a4b76431d",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.517Z"
-  },
-  {
-    "_id": "c64cca59-6ea2-4d71-ad0d-f883600b2bbd",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:40:48.621Z",
-    "id": "c64cca59-6ea2-4d71-ad0d-f883600b2bbd",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Anitha Selvam (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "259a44f5-aae7-49fc-8dae-39200f2ec7fb",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.551Z"
-  },
-  {
-    "_id": "ba99cf76-6513-4d5e-99c9-a476e46dd22d",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:40:49.015Z",
-    "id": "ba99cf76-6513-4d5e-99c9-a476e46dd22d",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Anitha Selvam (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "259a44f5-aae7-49fc-8dae-39200f2ec7fb",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.596Z"
-  },
-  {
-    "_id": "08dee728-090a-4bf4-a2d4-5a4c95a4ae5a",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:41:01.789Z",
-    "id": "08dee728-090a-4bf4-a2d4-5a4c95a4ae5a",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Statemanager (state_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d02cb5ae-3fe7-4416-8556-331136adab0f",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.629Z"
-  },
-  {
-    "_id": "00b254bd-81fc-47af-baf3-afd6e41c70a7",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:41:02.177Z",
-    "id": "00b254bd-81fc-47af-baf3-afd6e41c70a7",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Statemanager (state_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "d02cb5ae-3fe7-4416-8556-331136adab0f",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.663Z"
   },
   {
     "_id": "133facb3-d64c-4fe4-b3e2-176f93ada376",
@@ -5483,34 +3006,6 @@
     "userId": "d02cb5ae-3fe7-4416-8556-331136adab0f"
   },
   {
-    "_id": "4c7d3545-ae2f-465f-a05e-d90a3dbd2815",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:41:15.124Z",
-    "id": "4c7d3545-ae2f-465f-a05e-d90a3dbd2815",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Districtmanager (district_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "91818e9e-0b4a-4753-b0b9-3b8474e8b107",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.696Z"
-  },
-  {
-    "_id": "0abd43a0-43d7-4eab-a97e-2b13cec11c5e",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:41:15.508Z",
-    "id": "0abd43a0-43d7-4eab-a97e-2b13cec11c5e",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Districtmanager (district_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "91818e9e-0b4a-4753-b0b9-3b8474e8b107",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.730Z"
-  },
-  {
     "_id": "e7ac96fa-b52d-4175-bd66-84e004602e84",
     "category": "account_activation",
     "createdAt": "2026-10-13T12:41:15.905Z",
@@ -5526,34 +3021,6 @@
     "userId": "91818e9e-0b4a-4753-b0b9-3b8474e8b107"
   },
   {
-    "_id": "5df21871-fcdc-4d0e-b70b-8a87c5476b50",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:41:28.654Z",
-    "id": "5df21871-fcdc-4d0e-b70b-8a87c5476b50",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Divisionmanager (division_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "843d9a14-33d0-4eb8-9f49-8865b0f54f2c",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.764Z"
-  },
-  {
-    "_id": "140c1598-fa17-44ea-a474-b6d7f9eaa1fb",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:41:29.050Z",
-    "id": "140c1598-fa17-44ea-a474-b6d7f9eaa1fb",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Divisionmanager (division_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "843d9a14-33d0-4eb8-9f49-8865b0f54f2c",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:43.798Z"
-  },
-  {
     "_id": "b8ed5d4f-44bb-46c3-a998-04ea5bc668d5",
     "category": "account_activation",
     "createdAt": "2026-10-13T12:41:29.449Z",
@@ -5567,34 +3034,6 @@
     "type": "account_activation",
     "updatedAt": "2026-10-13T12:41:29.783Z",
     "userId": "843d9a14-33d0-4eb8-9f49-8865b0f54f2c"
-  },
-  {
-    "_id": "bde68f8b-dafe-4ae0-b0e2-d48789e4917d",
-    "category": "main_admin_approval",
-    "createdAt": "2026-10-13T12:41:50.333Z",
-    "id": "bde68f8b-dafe-4ae0-b0e2-d48789e4917d",
-    "isRead": true,
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (Sub-Admin) for Multistage Pincodemanager (pincode_manager). Pending Main Admin review.",
-    "priority": "high",
-    "read": false,
-    "recordId": "c260e10e-9b88-4b3a-9529-a039ae5977a9",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "type": "main_admin_request",
-    "updatedAt": "2026-10-13T13:08:43.832Z"
-  },
-  {
-    "_id": "cfa92c7f-f94e-4a69-971e-a0e17ecb5ce2",
-    "category": "kyc_approval",
-    "createdAt": "2026-10-13T12:41:50.732Z",
-    "id": "cfa92c7f-f94e-4a69-971e-a0e17ecb5ce2",
-    "isRead": true,
-    "message": "Both Sub-admin and Main Admin approvals granted for Multistage Pincodemanager (pincode_manager). Documents are queued for KYC compliance verification.",
-    "priority": "high",
-    "read": false,
-    "recordId": "c260e10e-9b88-4b3a-9529-a039ae5977a9",
-    "title": "Manager Registration Ready for KYC Clearance",
-    "type": "kyc_request",
-    "updatedAt": "2026-10-13T13:08:34.354Z"
   },
   {
     "_id": "c4abec39-6ee1-4cc1-bdd2-16c441294239",
@@ -5645,7 +3084,9 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-14T06:28:30.070Z",
-    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:13.563Z"
   },
   {
     "_id": "fc1a5ea1-6e54-4185-9e99-1e67f0f556ca",
@@ -5669,33 +3110,9 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-14T06:28:30.102Z",
-    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
-  },
-  {
-    "_id": "6acf0a4f1b214fe0fa181de1",
-    "receiver": "6acdc6a7cd3c3b1568359c71",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 2 visits: Today target",
-    "read": false,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-10-14T04:51:27.727Z",
-    "__v": 0,
-    "isRead": true,
-    "updatedAt": "2026-10-14T05:30:24.687Z"
-  },
-  {
-    "_id": "6acf0ebe1b214fe0fa181f29",
-    "receiver": "6acdc6a7cd3c3b1568359c71",
-    "title": "New Target Assigned",
-    "message": "You have been assigned a target of 1 visits: today task",
-    "read": true,
-    "priority": "high",
-    "category": "target_assigned",
-    "createdAt": "2026-10-14T05:10:22.572Z",
-    "__v": 0,
-    "isRead": true,
-    "updatedAt": "2026-10-14T05:30:24.740Z"
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:15.228Z"
   },
   {
     "_id": "047d288a-9298-4178-8ed7-a740aea14d88",
@@ -5719,43 +3136,49 @@
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
     "updatedAt": "2026-10-14T06:28:30.135Z",
-    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:17.253Z"
   },
   {
     "_id": "8979b18b-0a09-4bec-a232-ec7b74cec6f3",
     "createdAt": "2026-10-14T06:53:36.024Z",
     "id": "8979b18b-0a09-4bec-a232-ec7b74cec6f3",
-    "isRead": false,
+    "isRead": true,
     "message": "Dinesh Kathiravan logged field visit for store16 (Not Interested).",
     "recordId": "10f75f5a-e066-4a28-977f-ba662921c922",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T06:53:36.024Z",
+    "updatedAt": "2026-10-14T10:32:21.358Z",
     "userId": "b4677612-7b51-4696-badd-45305a812229"
   },
   {
     "_id": "282c0f22-8435-4d75-a03a-2117b5f7369e",
     "createdAt": "2026-10-14T06:59:17.141Z",
     "id": "282c0f22-8435-4d75-a03a-2117b5f7369e",
-    "isRead": false,
+    "isRead": true,
     "message": "Dinesh Kathiravan logged field visit for store17 (Interested).",
     "recordId": "ac98a181-fbad-499c-b955-c123a4173229",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T06:59:17.141Z",
-    "userId": "b4677612-7b51-4696-badd-45305a812229"
+    "updatedAt": "2026-10-14T10:32:21.411Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:18.867Z"
   },
   {
     "_id": "1151e17c-1a68-4e49-9152-003c913544d9",
     "createdAt": "2026-10-14T07:12:08.914Z",
     "id": "1151e17c-1a68-4e49-9152-003c913544d9",
-    "isRead": false,
+    "isRead": true,
     "message": "Dinesh Kathiravan logged field visit for store18 (Interested).",
     "recordId": "2334adab-5f37-4601-b420-2b4e16482edd",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T07:12:08.914Z",
-    "userId": "b4677612-7b51-4696-badd-45305a812229"
+    "updatedAt": "2026-10-14T10:32:21.445Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:20.514Z"
   },
   {
     "_id": "349e8a17-b7a6-4e1a-af7e-306c666fc139",
@@ -5773,94 +3196,1773 @@
     "_id": "b9b6de1a-c09d-4cd8-b8af-663d8d149c4e",
     "createdAt": "2026-10-14T07:26:10.394Z",
     "id": "b9b6de1a-c09d-4cd8-b8af-663d8d149c4e",
-    "isRead": false,
+    "isRead": true,
     "message": "Dinesh Kathiravan logged field visit for Store20 (Interested).",
     "recordId": "3b28e7bb-9a56-42d3-9f27-d340418c4dce",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T07:26:10.394Z",
-    "userId": "b4677612-7b51-4696-badd-45305a812229"
+    "updatedAt": "2026-10-14T10:32:21.477Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:22.837Z"
   },
   {
     "_id": "85d6aa6d-f69f-4728-b0c0-f2cf310bfea6",
     "createdAt": "2026-10-14T07:44:09.949Z",
     "id": "85d6aa6d-f69f-4728-b0c0-f2cf310bfea6",
-    "isRead": false,
+    "isRead": true,
     "message": "Dinesh Kathiravan logged field visit for store30 (Interested).",
     "recordId": "6d527299-090e-4ce6-ad21-9615ec420de4",
     "title": "New Shop Visit Logged",
     "type": "shop_visit",
-    "updatedAt": "2026-10-14T07:44:09.949Z",
+    "updatedAt": "2026-10-14T10:32:21.509Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229",
+    "isResolved": true,
+    "resolvedAt": "2026-10-14T11:48:25.347Z"
+  },
+  {
+    "_id": "1b8e5e5b-d3a8-4e2b-be1e-80dd5990dc0d",
+    "createdAt": "2026-10-14T09:48:23.007Z",
+    "id": "1b8e5e5b-d3a8-4e2b-be1e-80dd5990dc0d",
+    "isRead": true,
+    "message": "Surya marked task QCT-71140947 as In Progress.",
+    "recordId": "TSK-1791971140947-452HG",
+    "title": "Task QCT-71140947 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:40.700Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "b009d76e-2b87-4263-84b0-76a1ba845c78",
+    "createdAt": "2026-10-14T09:56:03.707Z",
+    "id": "b009d76e-2b87-4263-84b0-76a1ba845c78",
+    "isRead": true,
+    "message": "Surya marked task QCT-71140947 as Completed.",
+    "recordId": "TSK-1791971140947-452HG",
+    "title": "Task QCT-71140947 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:40.796Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "962fd348-aaed-4045-b02c-adc21bf184eb",
+    "createdAt": "2026-10-14T10:06:21.555Z",
+    "id": "962fd348-aaed-4045-b02c-adc21bf184eb",
+    "isRead": true,
+    "message": "Surya marked task QCT-72298811 as In Progress.",
+    "recordId": "TSK-1791972298811-B48F5",
+    "title": "Task QCT-72298811 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:40.908Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "6149857b-3860-46ad-bf05-518bb83a2f2c",
+    "createdAt": "2026-10-14T10:07:59.363Z",
+    "id": "6149857b-3860-46ad-bf05-518bb83a2f2c",
+    "isRead": true,
+    "message": "Surya marked task QCT-72432294 as In Progress.",
+    "recordId": "TSK-1791972432294-8H5AZ",
+    "title": "Task QCT-72432294 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:40.984Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "8bed42a6-8c8b-4cd7-86ac-502b2966e652",
+    "createdAt": "2026-10-14T10:08:32.232Z",
+    "id": "8bed42a6-8c8b-4cd7-86ac-502b2966e652",
+    "isRead": true,
+    "message": "Surya marked task QCT-72348353 as Accepted.",
+    "recordId": "TSK-1791972348353-UJX3W",
+    "title": "Task QCT-72348353 Accepted",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:41.017Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "3aaf989f-ca44-43a3-b076-717b714333ed",
+    "createdAt": "2026-10-14T10:08:39.533Z",
+    "id": "3aaf989f-ca44-43a3-b076-717b714333ed",
+    "isRead": true,
+    "message": "Surya marked task QCT-72348353 as In Progress.",
+    "recordId": "TSK-1791972348353-UJX3W",
+    "title": "Task QCT-72348353 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:41.050Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "7841886e-95f2-4cd5-b8be-c735cbce7836",
+    "createdAt": "2026-10-14T10:09:19.550Z",
+    "id": "7841886e-95f2-4cd5-b8be-c735cbce7836",
+    "isRead": true,
+    "message": "Surya marked task QCT-71333502 as Rejected.",
+    "recordId": "TSK-1791971333502-R4K0S",
+    "title": "Task QCT-71333502 Rejected",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T10:15:41.082Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "3fff45eb-09fc-4403-adf9-1d2a87ab3ac1",
+    "createdAt": "2026-10-14T10:10:46.901Z",
+    "id": "3fff45eb-09fc-4403-adf9-1d2a87ab3ac1",
+    "isRead": true,
+    "message": "Surya logged field visit for soori (Interested).",
+    "recordId": "32d96664-dcba-4565-9d35-55bad8dd9382",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T10:15:41.113Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "d7f0baea-709b-4b47-9a8c-ad8169cd904e",
+    "createdAt": "2026-10-14T10:17:27.130Z",
+    "id": "d7f0baea-709b-4b47-9a8c-ad8169cd904e",
+    "isRead": true,
+    "message": "Surya marked task QCT-72432294 as Completed.",
+    "recordId": "TSK-1791972432294-8H5AZ",
+    "title": "Task QCT-72432294 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-14T11:19:05.782Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "1b86016f-c56f-49e6-8b7b-2dc0516ffd9d",
+    "createdAt": "2026-10-14T10:27:10.252Z",
+    "id": "1b86016f-c56f-49e6-8b7b-2dc0516ffd9d",
+    "isRead": true,
+    "message": "Muruga marked task QCT-86390629 as In Progress.",
+    "recordId": "TSK-1791186390629-H97WF",
+    "title": "Task QCT-86390629 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:49:44.010Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "a3c1ea19-7b58-4b3b-b3c6-0fd10a9ea27f",
+    "createdAt": "2026-10-14T10:29:16.984Z",
+    "id": "a3c1ea19-7b58-4b3b-b3c6-0fd10a9ea27f",
+    "isRead": true,
+    "message": "Muruga marked task QCT-33737526 as In Progress.",
+    "recordId": "TSK-1790933737526-72C6Q",
+    "title": "Task QCT-33737526 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:50:06.137Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "ae904d03-23ad-44ef-b8f2-b54510f87de4",
+    "createdAt": "2026-10-14T10:37:17.621Z",
+    "id": "ae904d03-23ad-44ef-b8f2-b54510f87de4",
+    "isRead": true,
+    "message": "Muruga marked task QCT-52939634 as In Progress.",
+    "recordId": "TSK-1790852939634-LW3ZH",
+    "title": "Task QCT-52939634 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:50:06.172Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "6a708fad-277f-4be6-a005-e69d313b1921",
+    "createdAt": "2026-10-14T10:45:05.684Z",
+    "id": "6a708fad-277f-4be6-a005-e69d313b1921",
+    "isRead": true,
+    "message": "Muruga marked task QCT-74683276 as In Progress.",
+    "recordId": "TSK-1791974683276-7UC7Q",
+    "title": "Task QCT-74683276 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T06:57:26.729Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "4913b418-b22e-43d6-9fbd-52e0cc018c68",
+    "createdAt": "2026-10-14T10:52:14.244Z",
+    "id": "4913b418-b22e-43d6-9fbd-52e0cc018c68",
+    "isRead": true,
+    "message": "Muruga marked task QCT-74683276 as Completed.",
+    "recordId": "TSK-1791974683276-7UC7Q",
+    "title": "Task QCT-74683276 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:50:06.205Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "e6372fbc-a741-4e45-bf89-6b628c2545f4",
+    "createdAt": "2026-10-14T10:53:49.116Z",
+    "id": "e6372fbc-a741-4e45-bf89-6b628c2545f4",
+    "isRead": true,
+    "message": "Muruga marked task QCT-86390629 as Completed.",
+    "recordId": "TSK-1791186390629-H97WF",
+    "title": "Task QCT-86390629 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:50:06.237Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "b6660917-7344-46b7-a849-0d6808400310",
+    "createdAt": "2026-10-14T10:55:43.167Z",
+    "id": "b6660917-7344-46b7-a849-0d6808400310",
+    "isRead": true,
+    "message": "Muruga marked task QCT-52939634 as Completed.",
+    "recordId": "TSK-1790852939634-LW3ZH",
+    "title": "Task QCT-52939634 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:50:06.271Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "27c7ce11-b1f8-41cb-9313-df39715e5e3f",
+    "createdAt": "2026-10-14T12:04:57.347Z",
+    "id": "27c7ce11-b1f8-41cb-9313-df39715e5e3f",
+    "isRead": true,
+    "message": "iniya logged field visit for store25 (Interested).",
+    "recordId": "ffe9100f-1af4-4df3-8f6b-77f8f1bae291",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-14T12:56:55.626Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "109990c6-3634-4595-b913-55833c138900",
+    "category": "account_activation",
+    "createdAt": "2026-10-14T13:41:51.080Z",
+    "id": "109990c6-3634-4595-b913-55833c138900",
+    "isRead": false,
+    "message": "All mandatory onboarding approvals (Sub-admin, Main Admin, and KYC Compliance) are complete! Your manager dashboard access is now unlocked.",
+    "priority": "high",
+    "read": false,
+    "receiver": "60e78928-43fe-4a2f-86f3-e56f52149093",
+    "title": "Manager Account Fully Activated",
+    "type": "account_activation",
+    "updatedAt": "2026-10-14T13:41:51.406Z",
+    "userId": "60e78928-43fe-4a2f-86f3-e56f52149093"
+  },
+  {
+    "_id": "7f739bb0-7cc6-491f-a8d8-6b75581cdfbc",
+    "category": "account_activation",
+    "createdAt": "2026-10-14T13:43:43.545Z",
+    "id": "7f739bb0-7cc6-491f-a8d8-6b75581cdfbc",
+    "isRead": false,
+    "message": "All mandatory onboarding approvals (Sub-admin, Main Admin, and KYC Compliance) are complete! Your manager dashboard access is now unlocked.",
+    "priority": "high",
+    "read": false,
+    "receiver": "4c3bddac-8bce-4b26-a650-a811a127f5bf",
+    "title": "Manager Account Fully Activated",
+    "type": "account_activation",
+    "updatedAt": "2026-10-14T13:43:43.855Z",
+    "userId": "4c3bddac-8bce-4b26-a650-a811a127f5bf"
+  },
+  {
+    "_id": "fffd11b6-2dd0-43d7-83ac-f7de88c28c50",
+    "createdAt": "2026-10-15T04:47:20.741Z",
+    "id": "fffd11b6-2dd0-43d7-83ac-f7de88c28c50",
+    "isRead": true,
+    "message": "Javeed logged field visit for Manvannan (Interested).",
+    "recordId": "45e1b881-842b-47fd-aca1-16a883e7886f",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T05:01:55.268Z",
+    "userId": "aa2901bf-3f22-4b4d-ba14-55f1d23ec0c9"
+  },
+  {
+    "_id": "bd6d1688-05ce-42ca-850f-7be105258378",
+    "createdAt": "2026-10-15T05:41:28.233Z",
+    "id": "bd6d1688-05ce-42ca-850f-7be105258378",
+    "isRead": true,
+    "message": "Surya marked task QCT-72348353 as Completed.",
+    "recordId": "TSK-1791972348353-UJX3W",
+    "title": "Task QCT-72348353 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T05:48:05.122Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "f4e36c3a-f481-43d2-b8d5-5de8b7bb128d",
+    "createdAt": "2026-10-15T06:50:55.738Z",
+    "id": "f4e36c3a-f481-43d2-b8d5-5de8b7bb128d",
+    "isRead": true,
+    "message": "Dinesh Kathiravan logged field visit for kanthi  sweets (Interested).",
+    "recordId": "d033fd70-d0e0-4566-81cc-c2f9481e4b38",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T12:36:47.819Z",
     "userId": "b4677612-7b51-4696-badd-45305a812229"
   },
   {
-    "_id": "e9b2e5aa-60ec-4ef6-951c-e3ed0643712c",
-    "id": "e9b2e5aa-60ec-4ef6-951c-e3ed0643712c",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (super_admin) for Pipeline Test Manager (pincode_manager). Pending Main Admin review.",
-    "category": "main_admin_approval",
-    "type": "main_admin_request",
-    "read": false,
-    "isRead": false,
-    "priority": "high",
-    "recordId": "6b1eb3d0-902c-4fb9-b811-3ce1e9bc7183",
-    "createdAt": "2026-10-14T09:46:59.203Z",
-    "updatedAt": "2026-10-14T09:46:59.207Z"
+    "_id": "7994c4cb-0b91-4a0d-8e9b-28996f7e298b",
+    "createdAt": "2026-10-15T06:59:00.247Z",
+    "id": "7994c4cb-0b91-4a0d-8e9b-28996f7e298b",
+    "isRead": true,
+    "message": "Muruga marked task QCT-33737526 as Completed.",
+    "recordId": "TSK-1790933737526-72C6Q",
+    "title": "Task QCT-33737526 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:50:06.303Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
-    "_id": "0a513ca6-4742-4e6e-940d-a85963f80776",
-    "id": "0a513ca6-4742-4e6e-940d-a85963f80776",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (super_admin) for Pipeline Test Manager (pincode_manager). Pending Main Admin review.",
-    "category": "main_admin_approval",
-    "type": "main_admin_request",
-    "read": false,
-    "isRead": false,
-    "priority": "high",
-    "recordId": "876a1261-754a-4ddc-8218-aea16e1031b0",
-    "createdAt": "2026-10-14T09:47:21.568Z",
-    "updatedAt": "2026-10-14T09:47:21.571Z"
+    "_id": "1394d652-8b8d-4a8f-b53d-0c135493554e",
+    "createdAt": "2026-10-15T07:00:19.222Z",
+    "id": "1394d652-8b8d-4a8f-b53d-0c135493554e",
+    "isRead": true,
+    "message": "Muruga marked task QCT-54027219 as Completed.",
+    "recordId": "TSK-1790854027219-VOSMW",
+    "title": "Task QCT-54027219 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-15T12:49:33.154Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
   },
   {
-    "_id": "c6db1ec2-91dd-4259-af68-f92fd515e6aa",
-    "id": "c6db1ec2-91dd-4259-af68-f92fd515e6aa",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (super_admin) for Pipeline Test Manager (pincode_manager). Pending Main Admin review.",
-    "category": "main_admin_approval",
-    "type": "main_admin_request",
-    "read": false,
-    "isRead": false,
-    "priority": "high",
-    "recordId": "5812bc7e-9cf5-4f62-935d-95e542036966",
-    "createdAt": "2026-10-14T09:47:51.160Z",
-    "updatedAt": "2026-10-14T09:47:51.164Z"
+    "_id": "a08418db-c5c4-4984-b9de-81bef58fec43",
+    "createdAt": "2026-10-15T07:02:25.849Z",
+    "id": "a08418db-c5c4-4984-b9de-81bef58fec43",
+    "isRead": true,
+    "message": "Dinesh Kathiravan logged field visit for sri (Interested).",
+    "recordId": "9b5cf1f3-0f0f-4478-b051-0d359415b786",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T12:36:47.853Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
   },
   {
-    "_id": "4ef80b48-793b-4efb-ac0f-c213b7c64f64",
-    "id": "4ef80b48-793b-4efb-ac0f-c213b7c64f64",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (super_admin) for Pipeline Test Manager (pincode_manager). Pending Main Admin review.",
-    "category": "main_admin_approval",
-    "type": "main_admin_request",
-    "read": false,
-    "isRead": false,
-    "priority": "high",
-    "recordId": "49ebd342-61cd-4c5c-9de4-8c92db956c7e",
-    "createdAt": "2026-10-14T09:49:05.585Z",
-    "updatedAt": "2026-10-14T09:49:05.588Z"
+    "_id": "e2cfbc7f-b565-4e52-bbd5-6707d7ea1766",
+    "createdAt": "2026-10-15T07:26:23.278Z",
+    "id": "e2cfbc7f-b565-4e52-bbd5-6707d7ea1766",
+    "isRead": true,
+    "message": "Ironman logged field visit for new (Interested).",
+    "recordId": "7a40636b-dc9f-4580-801d-62ae3b5b841d",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-17T05:31:37.269Z",
+    "userId": "7d124090-0c56-4806-95e5-0fcd4427b292"
   },
   {
-    "_id": "4def8432-de05-441d-bc8f-110d472e39c2",
-    "id": "4def8432-de05-441d-bc8f-110d472e39c2",
-    "title": "Manager Registration Ready for Main Admin Clearance",
-    "message": "Sub-admin territorial approval granted by Sub-Admin Reviewer (super_admin) for Pipeline Test Manager (pincode_manager). Pending Main Admin review.",
-    "category": "main_admin_approval",
-    "type": "main_admin_request",
-    "read": false,
+    "_id": "a8444296-47cd-4308-90a4-c31a88b1be0c",
+    "createdAt": "2026-10-15T07:29:40.269Z",
+    "id": "a8444296-47cd-4308-90a4-c31a88b1be0c",
+    "isRead": true,
+    "message": "Surya logged field visit for ksr shop (Interested).",
+    "recordId": "675835f9-62c1-461b-ba8d-7d342ae5aefa",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T07:40:39.291Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "0b1db159-37c1-4442-ad0a-f8c5d4f5671c",
+    "createdAt": "2026-10-15T07:30:57.247Z",
+    "id": "0b1db159-37c1-4442-ad0a-f8c5d4f5671c",
+    "isRead": true,
+    "message": "Dinesh Kathiravan logged field visit for karthisweets (Interested).",
+    "recordId": "d5bd49c5-25ac-4777-8877-1d91d3fad50b",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T12:36:47.886Z",
+    "userId": "b4677612-7b51-4696-badd-45305a812229"
+  },
+  {
+    "_id": "16ed2f53-ea16-4de1-baaf-c8d1b91f4d9b",
+    "createdAt": "2026-10-15T09:53:35.320Z",
+    "id": "16ed2f53-ea16-4de1-baaf-c8d1b91f4d9b",
     "isRead": false,
+    "message": "Murugan logged field visit for Abdul (Interested).",
+    "recordId": "27f1627b-e75f-4a5f-801b-000e67018eea",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T09:53:35.320Z",
+    "userId": "usr_mgr_1790588690346_2iph"
+  },
+  {
+    "_id": "662da5a2-0f1f-4024-b7e2-4c0de6206a02",
+    "createdAt": "2026-10-15T11:42:22.722Z",
+    "id": "662da5a2-0f1f-4024-b7e2-4c0de6206a02",
+    "isRead": true,
+    "message": "Muruga logged field visit for Forge India Connect Pvt.Ltd (Interested).",
+    "recordId": "3138bf76-5b85-47f6-af04-43cd022d56c5",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-15T12:49:30.810Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "11722599-44f3-44f6-b49a-958054f18df1",
+    "createdAt": "2026-10-16T04:17:54.049Z",
+    "id": "11722599-44f3-44f6-b49a-958054f18df1",
+    "isRead": true,
+    "message": "Surya logged field visit for super supermart (Interested).",
+    "recordId": "2e07782b-e66e-4506-b3e7-20e6ba1fefbe",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-16T06:43:40.280Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "NOTIF-1792143974473-YMS5",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-16T09:46:14.473Z",
+    "entityId": "TSK-1792143974430-ZO3N1",
+    "entityType": "task",
+    "id": "NOTIF-1792143974473-YMS5",
+    "isRead": true,
+    "message": "Task QCT-43974430 (Medium Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-21.",
+    "metadata": {
+      "taskId": "TSK-1792143974430-ZO3N1",
+      "taskNumber": "QCT-43974430",
+      "title": "Fetch kyc documents",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "assignedManagerRole": "Pincode Manager",
+      "assignedManagerLevel": 4,
+      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "createdByName": "Dhanu",
+      "priority": "Medium"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: Fetch kyc documents",
+    "type": "task_created",
+    "updatedAt": "2026-10-16T09:51:02.752Z"
+  },
+  {
+    "_id": "33e05de2-60ae-44b5-82b9-89ec3963273e",
+    "createdAt": "2026-10-16T09:52:12.705Z",
+    "id": "33e05de2-60ae-44b5-82b9-89ec3963273e",
+    "isRead": true,
+    "message": "iniya logged field visit for Dinesh K (Interested).",
+    "recordId": "8a90be6c-3a6b-404c-8b10-a1993accc6f0",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-21T04:07:35.454Z",
+    "userId": "usr_mgr_1790592319962_fx3y"
+  },
+  {
+    "_id": "32e6dd4e-2bcb-4a20-ad02-9eb34de35482",
+    "createdAt": "2026-10-16T10:06:49.953Z",
+    "id": "32e6dd4e-2bcb-4a20-ad02-9eb34de35482",
+    "isRead": true,
+    "message": "Muruga logged field visit for hari (Interested).",
+    "recordId": "425315db-d296-4658-9818-7342609d907f",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-16T10:27:26.123Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "0c3487a0-0221-41a4-8b40-a0568e8589a0",
+    "category": "main_admin_approval",
+    "createdAt": "2026-10-16T11:12:24.248Z",
+    "id": "0c3487a0-0221-41a4-8b40-a0568e8589a0",
+    "isRead": true,
+    "message": "Sub-admin territorial approval granted by Central Admin Reviewer (admin) for Kavitha Ramasamy (district_manager). Pending Main Admin review.",
     "priority": "high",
-    "recordId": "bdf907d6-160b-4304-b305-21e35369919e",
-    "createdAt": "2026-10-14T09:49:52.172Z",
-    "updatedAt": "2026-10-14T09:49:52.175Z"
+    "read": false,
+    "recordId": "d7a59613-680d-4c73-b625-fc1ead148c14",
+    "title": "Manager Registration Ready for Main Admin Clearance",
+    "type": "main_admin_request",
+    "updatedAt": "2026-10-16T11:51:05.008Z"
+  },
+  {
+    "_id": "04a13d67-6654-47a6-a3d8-a14d562c2d0c",
+    "category": "kyc_approval",
+    "createdAt": "2026-10-16T11:12:25.451Z",
+    "id": "04a13d67-6654-47a6-a3d8-a14d562c2d0c",
+    "isRead": true,
+    "message": "Both Sub-admin and Main Admin approvals granted for Kavitha Ramasamy (district_manager). Documents are queued for KYC compliance verification.",
+    "priority": "high",
+    "read": false,
+    "recordId": "d7a59613-680d-4c73-b625-fc1ead148c14",
+    "title": "Manager Registration Ready for KYC Clearance",
+    "type": "kyc_request",
+    "updatedAt": "2026-10-16T11:51:06.767Z"
+  },
+  {
+    "_id": "bd593fff-0134-48cf-acf6-73f8e69c1909",
+    "category": "account_activation",
+    "createdAt": "2026-10-16T11:12:26.274Z",
+    "id": "bd593fff-0134-48cf-acf6-73f8e69c1909",
+    "isRead": false,
+    "message": "All mandatory onboarding approvals (Sub-admin, Main Admin, and KYC Compliance) are complete! Your manager dashboard access is now unlocked.",
+    "priority": "high",
+    "read": false,
+    "receiver": "d7a59613-680d-4c73-b625-fc1ead148c14",
+    "title": "Manager Account Fully Activated",
+    "type": "account_activation",
+    "updatedAt": "2026-10-16T11:12:26.618Z",
+    "userId": "d7a59613-680d-4c73-b625-fc1ead148c14"
+  },
+  {
+    "_id": "0930ce6e-4d1a-4f0b-a49f-dbd1001b0053",
+    "createdAt": "2026-10-17T04:06:05.427Z",
+    "id": "0930ce6e-4d1a-4f0b-a49f-dbd1001b0053",
+    "isRead": true,
+    "message": "Surya marked task QCT-72298811 as Completed.",
+    "recordId": "TSK-1791972298811-B48F5",
+    "title": "Task QCT-72298811 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-17T07:05:10.715Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "NOTIF-1792219679374-Y5QD",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-17T06:47:59.374Z",
+    "entityId": "TSK-1792219679331-JXT68",
+    "entityType": "task",
+    "id": "NOTIF-1792219679374-Y5QD",
+    "isRead": true,
+    "message": "Task QCT-19679331 (High Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: Flexible.",
+    "metadata": {
+      "taskId": "TSK-1792219679331-JXT68",
+      "taskNumber": "QCT-19679331",
+      "title": "Velaya paaru da",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "assignedManagerRole": "Pincode Manager",
+      "assignedManagerLevel": 4,
+      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "createdByName": "Maran",
+      "priority": "High"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: Velaya paaru da",
+    "type": "task_created",
+    "updatedAt": "2026-10-17T06:52:36.108Z"
+  },
+  {
+    "_id": "001e0421-26a0-4fa6-914d-a758f525c0cf",
+    "createdAt": "2026-10-17T07:22:11.336Z",
+    "id": "001e0421-26a0-4fa6-914d-a758f525c0cf",
+    "isRead": true,
+    "message": "Muruga logged field visit for jai (Interested).",
+    "recordId": "cb8ba236-bbc4-45ca-8f5e-73002a292d22",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-17T07:28:37.875Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "77d7321b-61b5-4530-b0a3-a2a2f4de21fa",
+    "createdAt": "2026-10-17T09:26:16.763Z",
+    "id": "77d7321b-61b5-4530-b0a3-a2a2f4de21fa",
+    "isRead": true,
+    "message": "Surya logged field visit for subramaniayan gwjjwecnnejkewekbwekeekfueuejbekbwejkw (Interested).",
+    "recordId": "0df7f7af-a396-4246-af71-4ed76a018408",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-17T11:28:48.630Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "dce8866a-db02-4919-a459-e347153ca261",
+    "createdAt": "2026-10-17T09:30:10.108Z",
+    "id": "dce8866a-db02-4919-a459-e347153ca261",
+    "isRead": true,
+    "message": "Surya logged field visit for munish (Interested).",
+    "recordId": "38350e83-a44d-4aa9-b627-3b4c5594b57c",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-17T11:28:48.714Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "5e01f016-3b56-4cac-9d95-39ad7ea52727",
+    "createdAt": "2026-10-17T09:30:30.576Z",
+    "id": "5e01f016-3b56-4cac-9d95-39ad7ea52727",
+    "isRead": true,
+    "message": "Surya logged field visit for giri (Interested).",
+    "recordId": "3190e5a3-4f6c-401f-86f5-566aefe9f205",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-17T11:28:48.747Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "46870a1b-07c0-457c-b414-1367d6f3f42a",
+    "createdAt": "2026-10-17T09:32:02.672Z",
+    "id": "46870a1b-07c0-457c-b414-1367d6f3f42a",
+    "isRead": true,
+    "message": "Ravi Kumar logged field visit for testiing (Interested).",
+    "recordId": "029a9820-b904-4f3e-aa6b-bb442bfe58bd",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-21T04:50:40.116Z",
+    "userId": "6e17511f-4864-4f3f-b780-bc79317981f4"
+  },
+  {
+    "_id": "3469eddb-2e5d-4fbf-8a1c-bc8678643a2d",
+    "createdAt": "2026-10-17T09:32:21.335Z",
+    "id": "3469eddb-2e5d-4fbf-8a1c-bc8678643a2d",
+    "isRead": true,
+    "message": "Surya logged field visit for faizan (Interested).",
+    "recordId": "db57eca0-b167-447b-84bb-adc35a0f5070",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-17T11:28:48.778Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "67dcf7ca-54e9-4c82-8a92-a423ed4c08a1",
+    "createdAt": "2026-10-21T04:44:58.624Z",
+    "id": "67dcf7ca-54e9-4c82-8a92-a423ed4c08a1",
+    "isRead": true,
+    "message": "Surya marked task QCT-75571513 as In Progress.",
+    "recordId": "TSK-1791975571513-QXXMA",
+    "title": "Task QCT-75571513 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T04:47:15.759Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "562885f9-ed2b-4de0-aa3f-cdbaf9cc2a44",
+    "createdAt": "2026-10-21T04:45:25.589Z",
+    "id": "562885f9-ed2b-4de0-aa3f-cdbaf9cc2a44",
+    "isRead": true,
+    "message": "Surya marked task QCT-80906737 as In Progress.",
+    "recordId": "TSK-1791980906737-Y8VWM",
+    "title": "Task QCT-80906737 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T06:00:47.109Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "c272d5db-cb67-4cfb-96f4-865ac353fbf9",
+    "createdAt": "2026-10-21T04:50:00.142Z",
+    "id": "c272d5db-cb67-4cfb-96f4-865ac353fbf9",
+    "isRead": true,
+    "message": "Muruga marked task QCT-19679331 as In Progress.",
+    "recordId": "TSK-1792219679331-JXT68",
+    "title": "Task QCT-19679331 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T05:10:51.172Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "95cd56d2-1987-47d4-9d6f-28b8c4019e5c",
+    "createdAt": "2026-10-21T04:51:21.672Z",
+    "id": "95cd56d2-1987-47d4-9d6f-28b8c4019e5c",
+    "isRead": true,
+    "message": "Muruga marked task QCT-78313716 as In Progress.",
+    "recordId": "TSK-1791978313716-TAFO4",
+    "title": "Task QCT-78313716 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T05:10:51.202Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "e111cba4-229c-4a69-bb93-eaed842cb3b0",
+    "createdAt": "2026-10-21T04:51:48.704Z",
+    "id": "e111cba4-229c-4a69-bb93-eaed842cb3b0",
+    "isRead": true,
+    "message": "Surya logged field visit for sking (Interested).",
+    "recordId": "cec49326-a374-449c-a405-e40b821c713f",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-21T06:00:43.963Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "3373675f-14fa-4fa5-b256-3f41a423c5e4",
+    "createdAt": "2026-10-21T04:55:42.192Z",
+    "id": "3373675f-14fa-4fa5-b256-3f41a423c5e4",
+    "isRead": true,
+    "message": "Muruga marked task QCT-43974430 as Accepted.",
+    "recordId": "TSK-1792143974430-ZO3N1",
+    "title": "Task QCT-43974430 Accepted",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T05:10:51.212Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "f313507e-e24e-4835-b5a1-962c6ddcbee4",
+    "createdAt": "2026-10-21T04:55:46.588Z",
+    "id": "f313507e-e24e-4835-b5a1-962c6ddcbee4",
+    "isRead": true,
+    "message": "Muruga marked task QCT-43974430 as In Progress.",
+    "recordId": "TSK-1792143974430-ZO3N1",
+    "title": "Task QCT-43974430 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T05:10:51.220Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "NOTIF-1792559307225-2B13",
+    "actionUrl": "/manager/tasks",
+    "category": "task",
+    "createdAt": "2026-10-21T05:08:27.225Z",
+    "entityId": "TSK-1792559307184-PWXYU",
+    "entityType": "task",
+    "id": "NOTIF-1792559307225-2B13",
+    "isRead": true,
+    "message": "Task QCT-59307184 (High Priority) was assigned to Muruga (Pincode Manager). Territory: Tamil Nadu → Salem → Thalaivasal → 636112. Due: 2026-10-27.",
+    "metadata": {
+      "taskId": "TSK-1792559307184-PWXYU",
+      "taskNumber": "QCT-59307184",
+      "title": "5 vendors",
+      "assignedManagerId": "usr_mgr_1790666281762_1jqk",
+      "assignedManagerName": "Muruga",
+      "assignedManagerRole": "Pincode Manager",
+      "assignedManagerLevel": 4,
+      "territory": "Tamil Nadu → Salem → Thalaivasal → 636112",
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "createdByName": "Maran",
+      "priority": "High"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Thalaivasal",
+      "pincode": "636112",
+      "targetUserId": "usr_mgr_1790666281762_1jqk",
+      "targetRoles": [
+        "Manager",
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin"
+      ]
+    },
+    "title": "New Task Assigned: 5 vendors",
+    "type": "task_created",
+    "updatedAt": "2026-10-21T05:10:51.230Z"
+  },
+  {
+    "_id": "e1e381bd-66f8-45ae-a4ca-5e13a2c29176",
+    "createdAt": "2026-10-21T05:09:39.330Z",
+    "id": "e1e381bd-66f8-45ae-a4ca-5e13a2c29176",
+    "isRead": true,
+    "message": "Muruga marked task QCT-19679331 as Completed.",
+    "recordId": "TSK-1792219679331-JXT68",
+    "title": "Task QCT-19679331 Completed",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T05:10:51.242Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "86adac20-72cd-420b-903a-5bb64ba9c414",
+    "createdAt": "2026-10-21T05:10:07.536Z",
+    "id": "86adac20-72cd-420b-903a-5bb64ba9c414",
+    "isRead": true,
+    "message": "Muruga marked task QCT-59307184 as In Progress.",
+    "recordId": "TSK-1792559307184-PWXYU",
+    "title": "Task QCT-59307184 In Progress",
+    "type": "task_updated",
+    "updatedAt": "2026-10-21T05:10:51.253Z",
+    "userId": "usr_mgr_1790666281762_1jqk"
+  },
+  {
+    "_id": "5752dc66-553f-43dc-8b72-162906192d59",
+    "createdAt": "2026-10-21T05:57:22.719Z",
+    "id": "5752dc66-553f-43dc-8b72-162906192d59",
+    "isRead": true,
+    "message": "Surya logged field visit for Tea (Interested).",
+    "recordId": "4febbcd7-4d63-4363-901b-5081d9c16e5c",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-21T05:57:42.076Z",
+    "userId": "usr_mgr_1790580930154_8uge"
+  },
+  {
+    "_id": "NOTIF-1792563963294-DDJZ",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:26:03.294Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792563963294-DDJZ",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T06:59:11.759Z"
+  },
+  {
+    "_id": "NOTIF-1792563963565-NVYD",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:26:03.565Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792563963565-NVYD",
+    "isRead": true,
+    "message": "Status updated from 'Suspended' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Suspended",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T06:31:33.910Z"
+  },
+  {
+    "_id": "NOTIF-1792563963689-SKT2",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:26:03.689Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792563963689-SKT2",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.596Z"
+  },
+  {
+    "_id": "NOTIF-1792564312307-MSL6",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:31:52.307Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564312307-MSL6",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.606Z"
+  },
+  {
+    "_id": "NOTIF-1792564312555-25PR",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:31:52.555Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564312555-25PR",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.614Z"
+  },
+  {
+    "_id": "NOTIF-1792564312818-BTBI",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:31:52.818Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564312818-BTBI",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.623Z"
+  },
+  {
+    "_id": "NOTIF-1792564699591-34MN",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:38:19.591Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564699591-34MN",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.631Z"
+  },
+  {
+    "_id": "NOTIF-1792564699821-NY0Y",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:38:19.821Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564699821-NY0Y",
+    "isRead": true,
+    "message": "Status updated from 'Suspended' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Suspended",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.639Z"
+  },
+  {
+    "_id": "NOTIF-1792564699965-5EFW",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:38:19.965Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564699965-5EFW",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.648Z"
+  },
+  {
+    "_id": "NOTIF-1792564759191-5HBP",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:39:19.191Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564759191-5HBP",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.656Z"
+  },
+  {
+    "_id": "NOTIF-1792564759451-2JGX",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:39:19.451Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564759451-2JGX",
+    "isRead": true,
+    "message": "Status updated from 'Suspended' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Suspended",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.665Z"
+  },
+  {
+    "_id": "NOTIF-1792564759699-7539",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T06:39:19.699Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792564759699-7539",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.674Z"
+  },
+  {
+    "_id": "NOTIF-1792566438330-KIQW",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:07:18.330Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792566438330-KIQW",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.682Z"
+  },
+  {
+    "_id": "NOTIF-1792566438511-B2Q3",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:07:18.511Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792566438511-B2Q3",
+    "isRead": true,
+    "message": "Status updated from 'Suspended' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Suspended",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.690Z"
+  },
+  {
+    "_id": "NOTIF-1792566438686-UIWC",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:07:18.686Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792566438686-UIWC",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:12:53.698Z"
+  },
+  {
+    "_id": "NOTIF-1792566538047-0CM0",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:08:58.051Z",
+    "entityId": "ven_537908",
+    "entityType": "vendor",
+    "id": "NOTIF-1792566538047-0CM0",
+    "isRead": true,
+    "message": "Groceries merchant 'Kavitha Organic Store' was onboarded in PIN 636001 (Salem) by Kavitha Manager. Awaiting Pincode Admin clearance.",
+    "metadata": {
+      "vendorId": "ven_537908",
+      "vendorName": "Kavitha Organic Store",
+      "creatorId": "usr_mgr_salem_test",
+      "creatorName": "Kavitha Manager",
+      "pincode": "636001",
+      "category": "Groceries"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem North",
+      "pincode": "636001",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "New Vendor Onboarded: Kavitha Organic Store",
+    "type": "vendor_onboarding",
+    "updatedAt": "2026-10-21T07:12:53.707Z"
+  },
+  {
+    "_id": "NOTIF-1792566981166-AIHR",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:16:21.166Z",
+    "entityId": "ven_981039",
+    "entityType": "vendor",
+    "id": "NOTIF-1792566981166-AIHR",
+    "isRead": true,
+    "message": "Groceries merchant 'Kavitha Organic Store' was onboarded in PIN 636001 (Salem) by Kavitha Manager. Awaiting Pincode Admin clearance.",
+    "metadata": {
+      "vendorId": "ven_981039",
+      "vendorName": "Kavitha Organic Store",
+      "creatorId": "usr_mgr_salem_test",
+      "creatorName": "Kavitha Manager",
+      "pincode": "636001",
+      "category": "Groceries"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem North",
+      "pincode": "636001",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "New Vendor Onboarded: Kavitha Organic Store",
+    "type": "vendor_onboarding",
+    "updatedAt": "2026-10-21T07:33:30.729Z"
+  },
+  {
+    "_id": "NOTIF-1792567009116-0JVE",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:16:49.116Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567009116-0JVE",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:33:30.740Z"
+  },
+  {
+    "_id": "NOTIF-1792567009263-GYTI",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:16:49.263Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567009263-GYTI",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:33:30.749Z"
+  },
+  {
+    "_id": "NOTIF-1792567009416-FSZ3",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:16:49.416Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567009416-FSZ3",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:33:30.760Z"
+  },
+  {
+    "_id": "NOTIF-1792567055500-T6QZ",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:17:35.501Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567055500-T6QZ",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Suspended' by Salem District Admin. Notes: Temporary compliance check",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Suspended",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "high",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Suspended",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:33:30.769Z"
+  },
+  {
+    "_id": "NOTIF-1792567055656-EM24",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:17:35.656Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567055656-EM24",
+    "isRead": true,
+    "message": "Status updated from 'Suspended' to 'Active' by Salem District Admin. Notes: Compliance satisfied",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Suspended",
+      "newStatus": "Active",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Active",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:33:30.778Z"
+  },
+  {
+    "_id": "NOTIF-1792567055801-7V8K",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:17:35.801Z",
+    "entityId": "vnd_test_salem_202",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567055801-7V8K",
+    "isRead": true,
+    "message": "Status updated from 'Active' to 'Deleted' by Salem District Admin. Notes: Business ceased operations",
+    "metadata": {
+      "vendorId": "vnd_test_salem_202",
+      "vendorName": "Salem Electronics Store",
+      "oldStatus": "Active",
+      "newStatus": "Deleted",
+      "updatedBy": "Salem District Admin",
+      "updatedByRole": "district_admin"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem West",
+      "pincode": "636001",
+      "targetUserId": "-",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "Vendor Status: Salem Electronics Store is now Deleted",
+    "type": "vendor_status",
+    "updatedAt": "2026-10-21T07:33:30.787Z"
+  },
+  {
+    "_id": "NOTIF-1792567115501-0J8P",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:18:35.501Z",
+    "entityId": "ven_115399",
+    "entityType": "vendor",
+    "id": "NOTIF-1792567115501-0J8P",
+    "isRead": true,
+    "message": "Groceries merchant 'Kavitha Organic Store' was onboarded in PIN 636001 (Salem) by Kavitha Manager. Awaiting Pincode Admin clearance.",
+    "metadata": {
+      "vendorId": "ven_115399",
+      "vendorName": "Kavitha Organic Store",
+      "creatorId": "usr_mgr_salem_test",
+      "creatorName": "Kavitha Manager",
+      "pincode": "636001",
+      "category": "Groceries"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem North",
+      "pincode": "636001",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "New Vendor Onboarded: Kavitha Organic Store",
+    "type": "vendor_onboarding",
+    "updatedAt": "2026-10-21T07:33:26.476Z"
+  },
+  {
+    "_id": "92146e83-7263-4a01-a445-4899573b3335",
+    "createdAt": "2026-10-21T07:27:06.768Z",
+    "id": "92146e83-7263-4a01-a445-4899573b3335",
+    "isRead": false,
+    "message": "Ravi Kumar logged field visit for hellosir (Interested).",
+    "recordId": "3515a9c5-04cb-4213-a258-4fe867306ab8",
+    "title": "New Shop Visit Logged",
+    "type": "shop_visit",
+    "updatedAt": "2026-10-21T07:27:06.768Z",
+    "userId": "6e17511f-4864-4f3f-b780-bc79317981f4"
+  },
+  {
+    "_id": "NOTIF-1792568377729-7G28",
+    "actionUrl": "/state-admin/vendors",
+    "category": "vendor",
+    "createdAt": "2026-10-21T07:39:37.729Z",
+    "entityId": "ven_377628",
+    "entityType": "vendor",
+    "id": "NOTIF-1792568377729-7G28",
+    "isRead": false,
+    "message": "Groceries merchant 'Kavitha Organic Store' was onboarded in PIN 636001 (Salem) by Kavitha Manager. Awaiting Pincode Admin clearance.",
+    "metadata": {
+      "vendorId": "ven_377628",
+      "vendorName": "Kavitha Organic Store",
+      "creatorId": "usr_mgr_salem_test",
+      "creatorName": "Kavitha Manager",
+      "pincode": "636001",
+      "category": "Groceries"
+    },
+    "priority": "normal",
+    "readBy": [],
+    "scope": {
+      "state": "Tamil Nadu",
+      "district": "Salem",
+      "division": "Salem North",
+      "pincode": "636001",
+      "targetRoles": [
+        "State Admin",
+        "District Admin",
+        "Division Admin",
+        "Pincode Admin",
+        "Manager"
+      ]
+    },
+    "title": "New Vendor Onboarded: Kavitha Organic Store",
+    "type": "vendor_onboarding",
+    "updatedAt": "2026-10-21T07:39:37.729Z"
   }
 ]
