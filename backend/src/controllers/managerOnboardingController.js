@@ -173,17 +173,26 @@ const submitVendorOnboarding = async (req, res) => {
     } = req.body;
 
     if (!fieldVisitId) {
-      return res.status(400).json({ success: false, message: 'fieldVisitId is required.' });
+      const vendorController = require('./vendorController');
+      return vendorController.createVendor(req, res);
     }
 
-    const fieldVisit = await db.managerOnboardings.findById(fieldVisitId);
+    let fieldVisit = await db.managerOnboardings.findById(fieldVisitId);
     if (!fieldVisit) {
-      return res.status(404).json({ success: false, message: 'Field visit record not found.' });
+      fieldVisit = await db.shopVisits.findById(fieldVisitId);
     }
-    if (String(fieldVisit.managerId) !== String(user.id || user._id)) {
+    if (!fieldVisit) {
+      const vendorController = require('./vendorController');
+      return vendorController.createVendor(req, res);
+    }
+
+    const visitManagerId = String(fieldVisit.managerId || fieldVisit.recordedById || '');
+    const currentUserId = String(user.id || user._id || '');
+    if (visitManagerId && currentUserId && visitManagerId !== currentUserId) {
       return res.status(403).json({ success: false, message: 'You can only submit onboarding for your own field visits.' });
     }
-    if (fieldVisit.interestStatus !== 'YES') {
+    const isInterested = String(fieldVisit.interestStatus || fieldVisit.interestedStatus || '').toUpperCase() === 'YES';
+    if (!isInterested) {
       return res.status(400).json({ success: false, message: 'Cannot create vendor onboarding for a non-interested merchant.' });
     }
 
@@ -315,11 +324,28 @@ const submitVendorOnboarding = async (req, res) => {
       updatedAt:        new Date().toISOString()
     });
 
-    await db.managerOnboardings.findByIdAndUpdate(fieldVisitId, {
-      vendorOnboardingId: onboarding._id,
-      status:    'VENDOR_ONBOARDING_IN_PROGRESS',
-      updatedAt: new Date().toISOString()
-    });
+    try {
+      const isMo = await db.managerOnboardings.findById(fieldVisitId);
+      if (isMo) {
+        await db.managerOnboardings.findByIdAndUpdate(fieldVisitId, {
+          vendorOnboardingId: onboarding._id,
+          status:    'VENDOR_ONBOARDING_IN_PROGRESS',
+          updatedAt: new Date().toISOString()
+        });
+      }
+    } catch (_) {}
+
+    try {
+      const isSv = await db.shopVisits.findById(fieldVisitId);
+      if (isSv) {
+        await db.shopVisits.findByIdAndUpdate(fieldVisitId, {
+          vendorId: String(onboarding._id),
+          onboardingStatus: 'INCOMPLETE',
+          status: 'Onboarding In Progress',
+          updatedAt: new Date().toISOString()
+        });
+      }
+    } catch (_) {}
 
     await recordAudit({
       actorId: user.id, actorName: user.name, actorRole: user.role,

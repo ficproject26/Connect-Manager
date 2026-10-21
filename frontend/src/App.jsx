@@ -417,13 +417,13 @@ function AppInner() {
 
                       let res;
                       try {
-                        res = await managerOnboardingService.submitVendorOnboarding(payload);
-                      } catch (err) {
-                        if (err.status === 404 || (err.message && err.message.includes('404'))) {
-                          res = await vendorService.createVendor(payload);
+                        if (pendingFieldVisitId) {
+                          res = await managerOnboardingService.submitVendorOnboarding(payload);
                         } else {
-                          throw err;
+                          res = await vendorService.createVendor(payload);
                         }
+                      } catch (err) {
+                        res = await vendorService.createVendor(payload);
                       }
 
                       if (res && (res.success || res.status === 'success')) {

@@ -1471,6 +1471,11 @@ export const managerOnboardingService = {
       category: data.category || data.businessCategory || 'Products'
     };
 
+    // If no fieldVisitId, direct vendor onboarding uses vendorService.createVendor
+    if (!data.fieldVisitId) {
+      return await vendorService.createVendor(formattedData);
+    }
+
     try {
       const res = await fetch(`${API_BASE}/manager-onboarding/submit`, {
         method: 'POST',
@@ -1478,15 +1483,12 @@ export const managerOnboardingService = {
         body: JSON.stringify(formattedData)
       });
       if (res.ok) return await res.json();
-      if (res.status === 404) {
+      if (res.status === 404 || res.status === 400) {
         return await vendorService.createVendor(formattedData);
       }
       return handleResponse(res);
     } catch (err) {
-      if (err.status === 404 || (err.message && err.message.includes('404'))) {
-        return await vendorService.createVendor(formattedData);
-      }
-      throw err;
+      return await vendorService.createVendor(formattedData);
     }
   },
 
