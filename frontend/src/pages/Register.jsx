@@ -192,6 +192,13 @@ export default function Register({
   const [signatureFile, setSignatureFile] = useState(null);
   const [signaturePreview, setSignaturePreview] = useState(null);
 
+  // Cached server-uploaded document URLs (prevents repeat uploads and rate-limit exhaustion)
+  const [uploadedAadharUrl, setUploadedAadharUrl] = useState(null);
+  const [uploadedPanUrl, setUploadedPanUrl] = useState(null);
+  const [uploadedBankUrl, setUploadedBankUrl] = useState(null);
+  const [uploadedSignatureUrl, setUploadedSignatureUrl] = useState(null);
+  const [uploadedAvatarUrl, setUploadedAvatarUrl] = useState(initialUser?.avatarUrl || null);
+
   // Declaration Acceptance
   const [declarationAccepted, setDeclarationAccepted] = useState(false);
 
@@ -486,6 +493,7 @@ export default function Register({
     setAvatarFile(null);
     if (avatarPreview) URL.revokeObjectURL(avatarPreview);
     setAvatarPreview(null);
+    setUploadedAvatarUrl(null);
   };
 
   // Handle KYC Document & Signature selection
@@ -525,15 +533,19 @@ export default function Register({
     if (type === 'aadhar') {
       setAadharFile(file);
       setAadharPreview(previewUrl || file.name);
+      setUploadedAadharUrl(null);
     } else if (type === 'pan') {
       setPanFile(file);
       setPanPreview(previewUrl || file.name);
+      setUploadedPanUrl(null);
     } else if (type === 'bank') {
       setBankFile(file);
       setBankPreview(previewUrl || file.name);
+      setUploadedBankUrl(null);
     } else if (type === 'signature') {
       setSignatureFile(file);
       setSignaturePreview(previewUrl || file.name);
+      setUploadedSignatureUrl(null);
     }
     setError('');
   };
@@ -543,18 +555,22 @@ export default function Register({
       if (aadharPreview && aadharPreview.startsWith('blob:')) URL.revokeObjectURL(aadharPreview);
       setAadharFile(null);
       setAadharPreview(null);
+      setUploadedAadharUrl(null);
     } else if (type === 'pan') {
       if (panPreview && panPreview.startsWith('blob:')) URL.revokeObjectURL(panPreview);
       setPanFile(null);
       setPanPreview(null);
+      setUploadedPanUrl(null);
     } else if (type === 'bank') {
       if (bankPreview && bankPreview.startsWith('blob:')) URL.revokeObjectURL(bankPreview);
       setBankFile(null);
       setBankPreview(null);
+      setUploadedBankUrl(null);
     } else if (type === 'signature') {
       if (signaturePreview && signaturePreview.startsWith('blob:')) URL.revokeObjectURL(signaturePreview);
       setSignatureFile(null);
       setSignaturePreview(null);
+      setUploadedSignatureUrl(null);
     }
   };
 
@@ -721,71 +737,100 @@ export default function Register({
     setLoading(true);
 
     try {
-      // 1. Upload avatar if selected
-      let uploadedAvatarUrl = null;
-      if (avatarFile) {
+      // 1. Upload avatar if selected (reuse if already uploaded)
+      let finalAvatarUrl = uploadedAvatarUrl;
+      if (avatarFile && !finalAvatarUrl) {
         try {
           const uploadRes = await authService.uploadAvatar(avatarFile);
-          if (uploadRes.success && uploadRes.avatarUrl) {
-            uploadedAvatarUrl = uploadRes.avatarUrl;
+          if (uploadRes.success && (uploadRes.avatarUrl || uploadRes.file?.url)) {
+            finalAvatarUrl = uploadRes.avatarUrl || uploadRes.file?.url;
+            setUploadedAvatarUrl(finalAvatarUrl);
           }
         } catch (uploadErr) {
           console.warn('Avatar upload failed, proceeding without photo:', uploadErr);
         }
       }
 
-      // 2. Upload Mandatory KYC Documents & Signature (Strict - no mock fallbacks)
-      let aadharUrl = null;
-      let panUrl = null;
-      let bankUrl = null;
-      let signatureUrl = null;
+      // 2. Upload Mandatory KYC Documents & Signature (cached to avoid repeat rate-limit burn)
+      let aadharUrl = uploadedAadharUrl;
+      let panUrl = uploadedPanUrl;
+      let bankUrl = uploadedBankUrl;
+      let signatureUrl = uploadedSignatureUrl;
 
-      try {
-        const res = await authService.uploadDocument(aadharFile);
-        if (!res.success || !res.file?.url) {
-          throw new Error(res.message || 'Aadhaar Card upload failed');
+      if (!aadharUrl && aadharFile) {
+        try {
+          const res = await authService.uploadDocument(aadharFile);
+          if (!res.success || !res.file?.url) {
+            throw new Error(res.message || 'Aadhaar Card upload failed');
+          }
+          aadharUrl = res.file.url;
+          setUploadedAadharUrl(aadharUrl);
+        } catch (e) {
+          const isRateLimit = e.message && (e.message.toLowerCase().includes('rate limit') || e.message.toLowerCase().includes('too many') || e.message.includes('429'));
+          setError(isRateLimit
+            ? 'Server upload rate limit reached. Please wait 1–2 minutes before submitting again (your form data and documents are saved).'
+            : `Aadhaar Card upload failed: ${e.message || 'Please check file and try again.'}`);
+          setLoading(false);
+          setIsSubmitting(false);
+          return;
         }
-        aadharUrl = res.file.url;
-      } catch (e) {
-        setError(`Aadhaar Card upload failed: ${e.message || 'Please check file and try again.'}`);
-        setLoading(false);
-        return;
       }
 
-      try {
-        const res = await authService.uploadDocument(panFile);
-        if (!res.success || !res.file?.url) {
-          throw new Error(res.message || 'PAN Card upload failed');
+      if (!panUrl && panFile) {
+        try {
+          const res = await authService.uploadDocument(panFile);
+          if (!res.success || !res.file?.url) {
+            throw new Error(res.message || 'PAN Card upload failed');
+          }
+          panUrl = res.file.url;
+          setUploadedPanUrl(panUrl);
+        } catch (e) {
+          const isRateLimit = e.message && (e.message.toLowerCase().includes('rate limit') || e.message.toLowerCase().includes('too many') || e.message.includes('429'));
+          setError(isRateLimit
+            ? 'Server upload rate limit reached. Please wait 1–2 minutes before submitting again (your form data and documents are saved).'
+            : `PAN Card upload failed: ${e.message || 'Please check file and try again.'}`);
+          setLoading(false);
+          setIsSubmitting(false);
+          return;
         }
-        panUrl = res.file.url;
-      } catch (e) {
-        setError(`PAN Card upload failed: ${e.message || 'Please check file and try again.'}`);
-        setLoading(false);
-        return;
       }
 
-      try {
-        const res = await authService.uploadDocument(bankFile);
-        if (!res.success || !res.file?.url) {
-          throw new Error(res.message || 'Bank Passbook upload failed');
+      if (!bankUrl && bankFile) {
+        try {
+          const res = await authService.uploadDocument(bankFile);
+          if (!res.success || !res.file?.url) {
+            throw new Error(res.message || 'Bank Passbook upload failed');
+          }
+          bankUrl = res.file.url;
+          setUploadedBankUrl(bankUrl);
+        } catch (e) {
+          const isRateLimit = e.message && (e.message.toLowerCase().includes('rate limit') || e.message.toLowerCase().includes('too many') || e.message.includes('429'));
+          setError(isRateLimit
+            ? 'Server upload rate limit reached. Please wait 1–2 minutes before submitting again (your form data and documents are saved).'
+            : `Bank Passbook upload failed: ${e.message || 'Please check file and try again.'}`);
+          setLoading(false);
+          setIsSubmitting(false);
+          return;
         }
-        bankUrl = res.file.url;
-      } catch (e) {
-        setError(`Bank Passbook upload failed: ${e.message || 'Please check file and try again.'}`);
-        setLoading(false);
-        return;
       }
 
-      try {
-        const res = await authService.uploadDocument(signatureFile);
-        if (!res.success || !res.file?.url) {
-          throw new Error(res.message || 'Digital Signature upload failed');
+      if (!signatureUrl && signatureFile) {
+        try {
+          const res = await authService.uploadDocument(signatureFile);
+          if (!res.success || !res.file?.url) {
+            throw new Error(res.message || 'Digital Signature upload failed');
+          }
+          signatureUrl = res.file.url;
+          setUploadedSignatureUrl(signatureUrl);
+        } catch (e) {
+          const isRateLimit = e.message && (e.message.toLowerCase().includes('rate limit') || e.message.toLowerCase().includes('too many') || e.message.includes('429'));
+          setError(isRateLimit
+            ? 'Server upload rate limit reached. Please wait 1–2 minutes before submitting again (your form data and documents are saved).'
+            : `Digital Signature upload failed: ${e.message || 'Please check file and try again.'}`);
+          setLoading(false);
+          setIsSubmitting(false);
+          return;
         }
-        signatureUrl = res.file.url;
-      } catch (e) {
-        setError(`Digital Signature upload failed: ${e.message || 'Please check file and try again.'}`);
-        setLoading(false);
-        return;
       }
 
       // 3. Submit Registration
@@ -838,7 +883,7 @@ export default function Register({
         districtId: districtId || null,
         divisionId: divisionId || null,
         pincodeId: pincodeId || null,
-        avatarUrl: uploadedAvatarUrl,
+        avatarUrl: finalAvatarUrl || uploadedAvatarUrl,
         bankDetails: {
           accountHolderName: bankDetails.accountHolderName.trim(),
           bankName: bankDetails.bankName.trim(),

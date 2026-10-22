@@ -206,12 +206,56 @@ export const authService = {
     const token = getAuthToken();
     const headers = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/auth/upload-avatar`, {
-      method: 'POST',
-      headers,
-      body: formData
-    });
-    return handleResponse(res);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/upload-avatar`, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+
+      // If rate limited (429) or server error, failover to /uploads/avatar
+      if (res.status === 429 || res.status >= 500) {
+        try {
+          const fallbackRes = await fetch(`${API_BASE}/uploads/avatar`, {
+            method: 'POST',
+            headers,
+            body: formData
+          });
+          if (fallbackRes.ok) {
+            const data = await fallbackRes.json();
+            return {
+              success: true,
+              message: 'Avatar uploaded successfully',
+              avatarUrl: data.file?.url || data.avatarUrl || data.url
+            };
+          }
+        } catch (_) {}
+      }
+
+      return handleResponse(res);
+    } catch (err) {
+      try {
+        const fallbackRes = await fetch(`${API_BASE}/uploads/avatar`, {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+        if (fallbackRes.ok) {
+          const data = await fallbackRes.json();
+          return {
+            success: true,
+            message: 'Avatar uploaded successfully',
+            avatarUrl: data.file?.url || data.avatarUrl || data.url
+          };
+        }
+      } catch (_) {}
+      throw err;
+    }
   },
 
   async uploadDocument(file) {
@@ -220,12 +264,46 @@ export const authService = {
     const token = getAuthToken();
     const headers = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch(`${API_BASE}/auth/upload-document`, {
-      method: 'POST',
-      headers,
-      body: formData
-    });
-    return handleResponse(res);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/upload-document`, {
+        method: 'POST',
+        headers,
+        body: formData
+      });
+
+      if (res.ok) {
+        return await res.json();
+      }
+
+      // If rate limited (429) or server error, failover to independent /uploads/document endpoint
+      if (res.status === 429 || res.status >= 500) {
+        try {
+          const fallbackRes = await fetch(`${API_BASE}/uploads/document`, {
+            method: 'POST',
+            headers,
+            body: formData
+          });
+          if (fallbackRes.ok) {
+            return await fallbackRes.json();
+          }
+        } catch (_) {}
+      }
+
+      return handleResponse(res);
+    } catch (err) {
+      try {
+        const fallbackRes = await fetch(`${API_BASE}/uploads/document`, {
+          method: 'POST',
+          headers,
+          body: formData
+        });
+        if (fallbackRes.ok) {
+          return await fallbackRes.json();
+        }
+      } catch (_) {}
+      throw err;
+    }
   },
 
   async getMe() {
