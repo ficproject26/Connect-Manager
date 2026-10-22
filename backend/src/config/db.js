@@ -122,26 +122,6 @@ class Collection {
           : { maxTimeMS: 8000 };
         const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
         if (docs && docs.length > 0) {
-          if (['states', 'districts', 'divisions', 'pincodes'].includes(this.name) && this.cache && this.cache.length > 0) {
-            const cacheMatches = this._filterCache(cleanQuery);
-            const seen = new Set();
-            const merged = [];
-            for (const d of docs) {
-              const key = String(d._id || d.id || d.code || d.name);
-              seen.add(key);
-              merged.push(d);
-            }
-            for (const c of cacheMatches) {
-              const key = String(c._id || c.id || c.code || c.name);
-              if (!seen.has(key)) {
-                seen.add(key);
-                merged.push(c);
-              }
-            }
-            if (!this._queryCache) this._queryCache = {};
-            this._queryCache[cacheKey] = { time: now, data: merged };
-            return merged;
-          }
           if (!this._queryCache) this._queryCache = {};
           this._queryCache[cacheKey] = { time: now, data: docs };
           return docs;
@@ -155,18 +135,10 @@ class Collection {
             return mgrDocs;
           }
         }
-        // If Mongo returned 0 records but local cache has records, check local cache fallback
-        if (this.cache && this.cache.length > 0) {
-          const cacheMatches = this._filterCache(cleanQuery);
-          if (cacheMatches.length > 0) {
-            if (!this._queryCache) this._queryCache = {};
-            this._queryCache[cacheKey] = { time: now, data: cacheMatches };
-            return cacheMatches;
-          }
-        }
+        // When MongoDB is connected and returns 0 records, return genuine empty array from current DB
         if (!this._queryCache) this._queryCache = {};
-        this._queryCache[cacheKey] = { time: now, data: docs || [] };
-        return docs || [];
+        this._queryCache[cacheKey] = { time: now, data: [] };
+        return [];
       } catch (e) {
         console.warn(`[Manager MongoDB] find error in '${this.name}':`, e.message);
       }
@@ -242,12 +214,13 @@ class Collection {
             return doc;
           }
         }
+        return null;
       } catch (e) {
         console.warn(`[Manager MongoDB] findOne error in '${this.name}':`, e.message);
       }
     }
 
-    // Fallback to cache if Mongo is offline
+    // Fallback to cache ONLY if Mongo connection is completely offline
     let found = this._filterCache(cleanQuery)[0];
 
     if (!found && this.name === 'users' && db && db.managers) {
@@ -288,6 +261,7 @@ class Collection {
             return doc;
           }
         }
+        return null;
       } catch (e) {
         console.warn(`[Manager MongoDB] findById error in '${this.name}':`, e.message);
       }
