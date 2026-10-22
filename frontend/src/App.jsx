@@ -185,6 +185,7 @@ function AppInner() {
   const [visitedPages, setVisitedPages] = useState(() => new Set(['dashboard', initialNav.page]));
   const [authPage, setAuthPage] = useState('login'); // 'login' | 'forgot-password' | 'reset-password'
   const [navParams, setNavParams] = useState(initialNav.initialParams);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [onboardModalOpen, setOnboardModalOpen] = useState(false);
   const [fieldVisitModalOpen, setFieldVisitModalOpen] = useState(false);
   const [pendingFieldVisitId, setPendingFieldVisitId] = useState(null);
