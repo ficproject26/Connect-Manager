@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { shopVisitService, reportService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
@@ -111,16 +111,18 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
   const [categoryFilter, setCategoryFilter] = useState('All');
   const [selectedVisit, setSelectedVisit] = useState(null);
 
+  const prevInitialTabRef = useRef(initialTab);
   useEffect(() => {
     if (filterParams?.search) {
       setSearchVisit(filterParams.search);
       setSearchReport(filterParams.search);
     }
-    if (initialTab) {
+    if (initialTab && prevInitialTabRef.current !== initialTab) {
+      prevInitialTabRef.current = initialTab;
       if (initialTab === 'shop-visits' || initialTab === 'visits') setActiveTab('visits');
       if (initialTab === 'team_reports' || initialTab === 'reports') setActiveTab('team_reports');
     }
-  }, [filterParams, initialTab]);
+  }, [filterParams?.search, initialTab]);
 
   // --- SUBMITTED TEAM REPORTS STATE ---
   const [submittedReports, setSubmittedReports] = useState([]);
@@ -1773,7 +1775,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                               {getDisplayValue(rpt.district, 'District')} {rpt.division ? `• ${getDisplayValue(rpt.division)}` : ''}
                             </div>
                             <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: 2 }}>
-                              {rpt.pincode ? `PIN: ${getDisplayValue(rpt.pincode)}` : getDisplayValue(rpt.state, 'Tamil Nadu')}
+                              {rpt.pincode ? `PIN: ${getDisplayValue(rpt.pincode)}` : getDisplayValue(rpt.state, user?.stateName || user?.state || 'Assigned Territory')}
                             </div>
                           </td>
 
@@ -2492,7 +2494,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     {getDisplayValue(selectedVisit.district) !== '-' ? getDisplayValue(selectedVisit.district) : getDisplayValue(selectedVisit.division) !== '-' ? getDisplayValue(selectedVisit.division) : getDisplayValue(selectedVisit.state, 'Assigned Territory')}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 4 }}>
-                    <span>State: {getDisplayValue(selectedVisit.state, 'Tamil Nadu')}</span>
+                    <span>State: {getDisplayValue(selectedVisit.state, user?.stateName || user?.state || 'Assigned State')}</span>
                     {selectedVisit.pincodeCode && <span>• PIN: {getDisplayValue(selectedVisit.pincodeCode)}</span>}
                   </div>
                 </div>

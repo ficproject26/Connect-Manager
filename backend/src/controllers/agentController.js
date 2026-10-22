@@ -144,8 +144,14 @@ const normalizeAgent = (a) => {
   if (division) coverage += ` > ${division}`;
   if (pincode) coverage += ` (${pincode})`;
 
+  const agentId = a.agentId || a.agentCode || a.id || a._id;
+  const agentCode = a.agentCode || a.agentId || a.id || a._id;
+
   return {
     ...a,
+    id: agentId,
+    agentId,
+    agentCode,
     level: computedLevel,
     roleLevel: computedLevel,
     role: typeof a.role === 'string' ? a.role : `${computedLevel}_agent`,
@@ -161,6 +167,9 @@ const normalizeAgent = (a) => {
     district,
     division,
     area: String(a.area || division || district || state || 'Jurisdiction Area'),
+    assignedArea: String(a.assignedArea || a.area || division || district || state || 'Jurisdiction Area'),
+    assignedTerritory: coverage,
+    jurisdiction: coverage,
     jurisdictionCoverage: coverage
   };
 };
@@ -191,10 +200,15 @@ const getAgents = async (req, res) => {
         // Scope filtering
         if (!isAgentInScope(a, user)) return false;
 
+        // Exclude pending KYC agents - manager directory strictly surfaces Active & Suspended agents
+        const aStatus = String(a.status || 'Active').toLowerCase();
+        if (['pending kyc', 'kyc pending', 'pending_kyc', 'pending'].includes(aStatus)) {
+          return false;
+        }
+
         // Status filter
         if (status && status !== 'All') {
           const s = status.toLowerCase();
-          const aStatus = String(a.status || 'Active').toLowerCase();
           if (s === 'active' && aStatus !== 'active' && aStatus !== 'approved') return false;
           if (s !== 'active' && aStatus !== s) return false;
         }

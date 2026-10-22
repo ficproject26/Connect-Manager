@@ -79,7 +79,7 @@ class Collection {
     this.cache = data;
     this._invalidateQueryCache();
     try {
-      fs.writeFileSync(this.filePath, JSON.stringify(data, null, 2), 'utf-8');
+      fs.promises.writeFile(this.filePath, JSON.stringify(data), 'utf-8').catch(() => {});
     } catch (e) {}
   }
 
@@ -88,20 +88,20 @@ class Collection {
     this._mongoDb = mongoDb;
     try {
       this._mongoCol = mongoDb.collection(this.mongoName);
-      const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
-        ? { projection: { kycDocs: 0, kyc: 0 }, maxTimeMS: 5000 } 
-        : { maxTimeMS: 5000 };
-      const docs = await this._mongoCol.find({}, projection).toArray();
-      if (docs && docs.length > 0) {
-        this._write(docs);
-        console.log(`[Manager MongoDB] Loaded ${docs.length} documents for '${this.name}' (${this.mongoName}) from MongoDB Atlas.`);
-      } else {
-        console.log(`[Manager MongoDB] Connected to '${this.mongoName}' (0 records) in MongoDB Atlas.`);
-      }
       this._isReady = true;
+
+      // Only prime local store if cache is empty and it is a small reference dataset
+      const isSmallRef = ['states', 'districts', 'settings'].includes(this.name);
+      if ((!this.cache || this.cache.length === 0) && isSmallRef) {
+        const findOptions = { maxTimeMS: 5000 };
+        const docs = await this._mongoCol.find({}, findOptions).toArray();
+        if (docs && docs.length > 0) {
+          this._write(docs);
+        }
+      }
       this._invalidateQueryCache();
     } catch (err) {
-      console.warn(`[Manager MongoDB] Sync warning for '${this.name}':`, err.message);
+      console.warn(`[Manager MongoDB] Sync notice for '${this.name}':`, err.message);
     }
   }
 
@@ -110,25 +110,45 @@ class Collection {
     const now = Date.now();
     const cacheKey = JSON.stringify(cleanQuery);
 
-    // Serve from micro-cache (< 3.5 seconds) to avoid redundant public internet hops
-    if (this._queryCache && this._queryCache[cacheKey] && (now - this._queryCache[cacheKey].time < 3500)) {
+    // Serve from micro-cache (< 4.5 seconds) to avoid redundant public internet roundtrips
+    if (this._queryCache && this._queryCache[cacheKey] && (now - this._queryCache[cacheKey].time < 4500)) {
       return this._queryCache[cacheKey].data;
     }
 
     if (this._mongoCol) {
       try {
         const findOptions = (this.mongoName === 'users' || this.mongoName === 'agents') 
-          ? { projection: { kycDocs: 0, kyc: 0 }, maxTimeMS: 4000 } 
-          : { maxTimeMS: 4000 };
+          ? { projection: { kycDocs: 0, kyc: 0 }, maxTimeMS: 8000 } 
+          : { maxTimeMS: 8000 };
         const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
         if (docs && docs.length > 0) {
+          if (['states', 'districts', 'divisions', 'pincodes'].includes(this.name) && this.cache && this.cache.length > 0) {
+            const cacheMatches = this._filterCache(cleanQuery);
+            const seen = new Set();
+            const merged = [];
+            for (const d of docs) {
+              const key = String(d._id || d.id || d.code || d.name);
+              seen.add(key);
+              merged.push(d);
+            }
+            for (const c of cacheMatches) {
+              const key = String(c._id || c.id || c.code || c.name);
+              if (!seen.has(key)) {
+                seen.add(key);
+                merged.push(c);
+              }
+            }
+            if (!this._queryCache) this._queryCache = {};
+            this._queryCache[cacheKey] = { time: now, data: merged };
+            return merged;
+          }
           if (!this._queryCache) this._queryCache = {};
           this._queryCache[cacheKey] = { time: now, data: docs };
           return docs;
         }
         // Fallback for users: if querying role manager and nothing found, check managers collection
         if (this.name === 'users' && this._mongoDb) {
-          const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, projection).toArray();
+          const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, findOptions).toArray();
           if (mgrDocs && mgrDocs.length > 0) {
             if (!this._queryCache) this._queryCache = {};
             this._queryCache[cacheKey] = { time: now, data: mgrDocs };
@@ -546,7 +566,8 @@ const db = {
   agents: new Collection('agents', 'agents'),
   notifications: new Collection('notifications', 'notifications'),
   settings: new Collection('settings', 'settings'),
-  tickets: new Collection('tickets', 'tickets')
+  tickets: new Collection('tickets', 'tickets'),
+  securitySessions: new Collection('security_sessions', 'securitysessions')
 };
 
 
@@ -574,16 +595,22 @@ function initDatabase() {
           mongoDb.collection('managers').createIndex({ email: 1 }),
           mongoDb.collection('managers').createIndex({ role: 1, status: 1 }),
           mongoDb.collection('vendors').createIndex({ status: 1, kycStatus: 1 }),
+          mongoDb.collection('vendors').createIndex({ districtId: 1, status: 1 }),
+          mongoDb.collection('vendors').createIndex({ divisionId: 1, status: 1 }),
           mongoDb.collection('vendors').createIndex({ pincode: 1 }),
+          mongoDb.collection('vendors').createIndex({ registrationId: 1 }),
           mongoDb.collection('tasks').createIndex({ status: 1, createdAt: -1 }),
           mongoDb.collection('tasks').createIndex({ assignedTo: 1 }),
+          mongoDb.collection('tasks').createIndex({ assignedManagerId: 1, status: 1 }),
           mongoDb.collection('agents').createIndex({ status: 1 }),
           mongoDb.collection('notifications').createIndex({ userId: 1, isRead: 1 }),
           mongoDb.collection('pincodes').createIndex({ code: 1 }),
           mongoDb.collection('districts').createIndex({ stateId: 1 }),
           mongoDb.collection('divisions').createIndex({ districtId: 1 }),
           mongoDb.collection('manageronboardings').createIndex({ managerId: 1, status: 1 }),
-          mongoDb.collection('manageronboardings').createIndex({ pincodeId: 1, status: 1 })
+          mongoDb.collection('manageronboardings').createIndex({ pincodeId: 1, status: 1 }),
+          mongoDb.collection('auditlogs').createIndex({ createdAt: -1 }),
+          mongoDb.collection('fieldvisits').createIndex({ vendorId: 1 })
         ]);
         console.log('⚡ [Manager Database] Performance indexes verified in MongoDB Atlas.');
       } catch (idxErr) {}

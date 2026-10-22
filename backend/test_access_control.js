@@ -52,8 +52,17 @@ async function runTests() {
     }
   }
 
+const db = require('./src/config/db');
+const seedData = require('./src/seed/seed');
+
   const serverInstance = app.listen(PORT, async () => {
     try {
+      if (db.initDatabase) await db.initDatabase();
+      const testUser = await db.users.findOne({ email: 'state.mgr1@example.com' });
+      if (!testUser) {
+        await seedData();
+      }
+
       // 1. Authenticate Managers across all levels
       console.log('--- 1. Manager Authentication (4 State, 2 District, 2 Division, 2 Pincode) ---');
       const stateLogin1 = await request('POST', '/api/auth/login', { identifier: 'state.mgr1@example.com', password: 'Password@123' });

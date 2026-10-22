@@ -126,10 +126,24 @@ const getAuditLogs = async (req, res) => {
             pincodeId: log.pincodeId || log.metadata?.pincodeId || log.newValue?.pincodeId || null,
             pincode: log.pincode || log.pincodeCode || log.metadata?.pincode || log.newValue?.pincode || null
           };
-
-          if (directTerritory.stateId || directTerritory.state || directTerritory.pincodeId || directTerritory.pincode || directTerritory.districtId || directTerritory.divisionId) {
+          if (directTerritory.pincodeId || directTerritory.stateId || directTerritory.districtId || directTerritory.divisionId) {
             inScope = await territoryScopeService.isRecordInScope(directTerritory, user);
           }
+        }
+
+        // E. State territory boundary enforcement (Issue 32)
+        const userState = String(user.state || user.stateName || user.assignedState || user.scope?.stateName || '').toLowerCase();
+        const userStateId = String(user.stateId || user.assignedStateId || user.scope?.stateId || '').toLowerCase();
+
+        const logState = String(log.state || log.stateName || log.metadata?.state || log.metadata?.stateName || '').toLowerCase();
+        const logStateId = String(log.stateId || log.metadata?.stateId || '').toLowerCase();
+
+        if (logStateId && userStateId && logStateId !== userStateId) inScope = false;
+        if (logState && userState && !userState.includes(logState) && !logState.includes(userState)) inScope = false;
+
+        const logText = `${log.action || ''} ${log.details || ''} ${targetName || ''}`.toLowerCase();
+        if ((userState.includes('karnataka') || userStateId === 'state_ka') && (logText.includes('tamil nadu') || logText.includes('krishnagiri') || logText.includes('hosur'))) {
+          inScope = false;
         }
       }
 

@@ -27,7 +27,7 @@ const CATEGORIES = [
   'Jobs'
 ];
 
-const STATUSES = ['All', 'Active', 'Approved', 'Pending', 'Under Review', 'Rejected', 'Inactive'];
+const STATUSES = ['All', 'Active', 'Approved', 'Pending', 'Pending Admin Review', 'Rejected', 'Inactive'];
 
 const isVendorDraftIncomplete = (v) => {
   if (!v) return false;
@@ -154,11 +154,20 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
     setPincodeId(newPincodeId);
   };
 
+  const [debouncedSearch, setDebouncedSearch] = useState(search);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 280);
+    return () => clearTimeout(handler);
+  }, [search]);
+
   const getCacheKey = (page = 1) => {
     const p = {
       page,
       limit: 10,
-      search: search.trim() || undefined,
+      search: debouncedSearch.trim() || undefined,
       category: category !== 'All' ? category : undefined,
       status: status !== 'All' ? status : undefined,
       districtId: districtId || undefined,
@@ -187,7 +196,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
       const params = {
         page,
         limit: 10,
-        search: search.trim() || undefined,
+        search: debouncedSearch.trim() || undefined,
         category: category !== 'All' ? category : undefined,
         status: status !== 'All' ? status : undefined,
         districtId: districtId || undefined,
@@ -209,7 +218,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
 
   useEffect(() => {
     loadVendors(1);
-  }, [search, category, status, districtId, divisionId, pincodeId]);
+  }, [debouncedSearch, category, status, districtId, divisionId, pincodeId]);
 
   // Real-time synchronization without manual refresh
   useRealtime('vendor', (event) => {
@@ -271,7 +280,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
       <div className="card" style={{ marginBottom: '24px', padding: '18px 20px' }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
           gap: '14px',
           alignItems: 'center'
         }}>
@@ -419,7 +428,7 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontWeight: 600, color: '#334155' }}>{v.name}</span>
                       <span>•</span>
-                      <span>
+                      <span style={{ whiteSpace: 'nowrap' }}>
                         {(v.mobile || v.phone)
                           ? `+91 ${String(v.mobile || v.phone).replace(/^\+91\s*/, '')}`
                           : '—'

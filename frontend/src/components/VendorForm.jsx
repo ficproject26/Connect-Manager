@@ -371,38 +371,21 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     setVerifiedPhone('');
     setOtpCode(''); // Clean input so user enters the OTP
 
-    // Generate local random OTP that is guaranteed to change on every resend
-    const localOtp = generateRandomSixDigitOtp(dummyOtp);
-
     try {
-      let assignedOtp = localOtp;
-      try {
-        const res = await vendorService.sendVendorPhoneOtp(clean);
-        if (res && res.success) {
-          if (res.otp) {
-            assignedOtp = String(res.otp).padStart(6, '0');
-            if (assignedOtp === dummyOtp) {
-              assignedOtp = generateRandomSixDigitOtp(dummyOtp);
-            }
-          }
-          setResendCooldown(res.cooldownSeconds || 30);
-        } else if (res && res.cooldown) {
-          setOtpError(res.message || 'Please wait before requesting a new OTP.');
-          setResendCooldown(res.remainingSeconds || 30);
-          return;
-        }
-      } catch (apiErr) {
-        // Fallback for development testing if backend is offline
-        console.warn('Backend OTP API error, using development dummy OTP:', apiErr);
-        setResendCooldown(30);
+      const res = await vendorService.sendVendorPhoneOtp(clean);
+      if (res && res.success) {
+        setResendCooldown(res.cooldownSeconds || 30);
+        setOtpPhone(clean);
+        setOtpExpiresAt(Date.now() + 5 * 60 * 1000); // 5 minutes validity
+        setOtpAttempts(0);
+        setOtpSent(true);
+        setOtpSuccess(res.message || `OTP sent successfully to +91 ${clean}. Valid for 5 minutes.`);
+      } else if (res && res.cooldown) {
+        setOtpError(res.message || 'Please wait before requesting a new OTP.');
+        setResendCooldown(res.remainingSeconds || 30);
+      } else {
+        setOtpError(res?.message || 'Failed to send OTP.');
       }
-
-      setDummyOtp(assignedOtp);
-      setOtpPhone(clean);
-      setOtpExpiresAt(Date.now() + 5 * 60 * 1000); // 5 minutes validity
-      setOtpAttempts(0);
-      setOtpSent(true);
-      setOtpSuccess(`OTP generated successfully for +91 ${clean}. Valid for 5 minutes.`);
     } catch (err) {
       setOtpError(err.message || 'Failed to send OTP.');
     } finally {
@@ -443,18 +426,8 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     setOtpError('');
 
     try {
-      const isCodeMatch = dummyOtp && code === dummyOtp;
-
-      // Also call backend verification API if available
-      let backendVerified = false;
-      try {
-        const res = await vendorService.verifyVendorPhoneOtp(clean, code);
-        if (res && res.success && res.verified) {
-          backendVerified = true;
-        }
-      } catch (_) {}
-
-      if (isCodeMatch || backendVerified) {
+      const res = await vendorService.verifyVendorPhoneOtp(clean, code);
+      if (res && res.success && res.verified) {
         setPhoneVerified(true);
         setVerifiedPhone(clean);
         setOtpSuccess('Mobile number verified successfully.');
@@ -469,7 +442,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         setOtpAttempts(nextAttempts);
         const remaining = 5 - nextAttempts;
         if (remaining > 0) {
-          setOtpError(`Incorrect OTP. ${remaining} attempt(s) remaining.`);
+          setOtpError(`Incorrect or expired OTP. ${remaining} attempt(s) remaining.`);
         } else {
           setOtpError('Maximum verification attempts exceeded. Please request a new OTP.');
         }
@@ -477,7 +450,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         setVerifiedPhone('');
       }
     } catch (err) {
-      setOtpError(err.message || 'OTP verification failed.');
+      setOtpError(err.message || 'Failed to verify OTP. Please try again.');
     } finally {
       setOtpVerifying(false);
     }
@@ -1444,51 +1417,6 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
             flexDirection: 'column',
             gap: 12
           }}>
-            {/* Clear Development OTP Box */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: 8,
-              padding: '10px 14px',
-              background: '#fffbeb',
-              border: '1.5px solid #fde68a',
-              borderRadius: 8
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                <span style={{
-                  fontSize: 11,
-                  fontWeight: 800,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  background: '#d97706',
-                  color: '#ffffff',
-                  padding: '3px 8px',
-                  borderRadius: 5
-                }}>
-                  Development OTP
-                </span>
-                <span style={{
-                  fontSize: 17,
-                  fontWeight: 800,
-                  color: '#92400e',
-                  letterSpacing: '3px',
-                  fontFamily: 'monospace',
-                  background: '#ffffff',
-                  padding: '3px 10px',
-                  borderRadius: 6,
-                  border: '1.5px dashed #d97706',
-                  boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-                }}>
-                  {dummyOtp}
-                </span>
-              </div>
-              <span style={{ fontSize: 11, color: '#b45309', fontWeight: 600 }}>
-                Temporary dummy OTP (Valid for 5 mins)
-              </span>
-            </div>
-
             {/* Confirmation message */}
             {otpSuccess && !otpError && (
               <div style={{ fontSize: 12, color: '#059669', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>

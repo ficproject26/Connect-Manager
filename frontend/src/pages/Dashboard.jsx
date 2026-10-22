@@ -80,7 +80,7 @@ const Dashboard = ({ onNavigate }) => {
   // Live Stats fetcher
   useEffect(() => {
     fetchDashboardMetrics();
-  }, [user]);
+  }, [user?.id || user?._id]);
 
   // Real-time synchronization: refresh dashboard metrics when tasks, vendors, or agents change
   useRealtime('*', (event) => {
@@ -493,12 +493,12 @@ const Dashboard = ({ onNavigate }) => {
               </div>
               <div>
                 <div className="kpi-main-title">Active Outlets</div>
-                <div className="kpi-main-value">{kpis.totalShops.toLocaleString()}</div>
+                <div className="kpi-main-value">{(kpis.activeShops !== undefined ? kpis.activeShops : kpis.totalShops).toLocaleString()}</div>
               </div>
             </div>
           </div>
           <div className="kpi-card-footer">
-            <span>{kpis.activeShops.toLocaleString()} Active | {kpis.inactiveShops.toLocaleString()} Inactive</span>
+            <span>{(kpis.activeShops ?? 0).toLocaleString()} Active | {(kpis.inactiveShops ?? 0).toLocaleString()} Inactive</span>
           </div>
         </div>
 
@@ -538,7 +538,7 @@ const Dashboard = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* KPI 6: Open Issues */}
+        {/* KPI 6: Open Issues / Active Tasks */}
         <div className="forge-kpi-card" onClick={() => onNavigate('tasks')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -547,9 +547,12 @@ const Dashboard = ({ onNavigate }) => {
               </div>
               <div>
                 <div className="kpi-main-title">Active Tasks</div>
-                <div className="kpi-main-value">{kpis.openIssues}</div>
+                <div className="kpi-main-value">{kpis.activeTasks ?? kpis.openIssues}</div>
               </div>
             </div>
+          </div>
+          <div className="kpi-card-footer">
+            <span>{kpis.activeTasks ?? kpis.openIssues} Pending Action</span>
           </div>
         </div>
       </section>
@@ -727,12 +730,6 @@ const Dashboard = ({ onNavigate }) => {
                 <option value="div">Divisions</option>
               )}
               <option value="pin">Pincodes</option>
-              {userLevel === 2 && (
-                <option value="dist">District Summary</option>
-              )}
-              {userLevel === 3 && (
-                <option value="div">Division Summary</option>
-              )}
             </select>
           </div>
 
@@ -826,8 +823,8 @@ const Dashboard = ({ onNavigate }) => {
                   <th style={{ minWidth: '140px', textAlign: 'left' }}>Manager</th>
                   <th style={{ minWidth: '110px', textAlign: 'left' }}>Level</th>
                   <th style={{ minWidth: '110px', textAlign: 'left' }}>Territory</th>
-                  <th style={{ width: '75px', textAlign: 'center' }}>Vendors</th>
-                  <th style={{ width: '75px', textAlign: 'center' }}>Tie-ups</th>
+                  <th style={{ minWidth: '85px', textAlign: 'center', whiteSpace: 'nowrap' }}>Vendors</th>
+                  <th style={{ minWidth: '85px', textAlign: 'center', whiteSpace: 'nowrap' }}>Tie-ups</th>
                   <th style={{ minWidth: '100px', textAlign: 'center' }}>Status</th>
                 </tr>
               </thead>

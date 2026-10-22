@@ -13,7 +13,12 @@ import {
   Eye, 
   Check, 
   Sliders,
-  Sparkles
+  Sparkles,
+  Laptop,
+  Smartphone,
+  Globe,
+  LogOut,
+  Clock
 } from 'lucide-react';
 import { settingsService } from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -36,6 +41,13 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState(null);
 
+  // Active Sessions & Timeout Governance State (Issue 29)
+  const [sessions, setSessions] = useState([]);
+  const [loadingSessions, setLoadingSessions] = useState(false);
+  const [inactivityTimeout, setInactivityTimeout] = useState(30);
+  const [updatingTimeout, setUpdatingTimeout] = useState(false);
+  const [sessionActionMsg, setSessionActionMsg] = useState('');
+
   useEffect(() => {
     if (currentTheme) {
       setTheme(currentTheme);
@@ -48,6 +60,66 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
     document.documentElement.setAttribute('data-theme', newTheme);
     if (onToggleTheme) {
       onToggleTheme(newTheme);
+    }
+  };
+
+  const loadSessions = async () => {
+    try {
+      setLoadingSessions(true);
+      const res = await settingsService.getActiveSessions();
+      if (res?.success) {
+        setSessions(res.sessions || []);
+        if (res.inactivityTimeout) {
+          setInactivityTimeout(res.inactivityTimeout);
+        }
+      }
+    } catch (err) {
+      console.warn('Failed to fetch active sessions:', err);
+    } finally {
+      setLoadingSessions(false);
+    }
+  };
+
+  useEffect(() => {
+    loadSessions();
+  }, []);
+
+  const handleTimeoutChange = async (e) => {
+    const val = parseInt(e.target.value, 10);
+    setInactivityTimeout(val);
+    try {
+      setUpdatingTimeout(true);
+      await settingsService.updateInactivityTimeout(val);
+      setSessionActionMsg(`Inactivity timeout updated to ${val} minutes.`);
+      setTimeout(() => setSessionActionMsg(''), 3500);
+    } catch (err) {
+      console.error('Failed to update inactivity timeout:', err);
+    } finally {
+      setUpdatingTimeout(false);
+    }
+  };
+
+  const handleRevokeSession = async (sessionId) => {
+    try {
+      await settingsService.revokeSession(sessionId);
+      setSessionActionMsg('Session terminated successfully.');
+      setTimeout(() => setSessionActionMsg(''), 3500);
+      loadSessions();
+    } catch (err) {
+      console.error('Failed to revoke session:', err);
+    }
+  };
+
+  const handleRevokeAllOther = async () => {
+    const current = sessions.find(s => s.isCurrent);
+    const curId = current?._id || current?.id;
+    try {
+      await settingsService.revokeAllOtherSessions(curId);
+      setSessionActionMsg('All other sessions have been logged out.');
+      setTimeout(() => setSessionActionMsg(''), 3500);
+      loadSessions();
+    } catch (err) {
+      console.error('Failed to revoke other sessions:', err);
     }
   };
 
@@ -400,24 +472,182 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
           </div>
         </div>
 
-        {/* Section 4: Security, Session & RBAC Policy */}
+        {/* Section 4: Security, Session & RBAC Policy (Issue 29) */}
         <div className="card" style={{ width: '100%', marginTop: 0 }}>
-          <div className="card-header" style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Shield size={18} color="#0ea5e9" />
-            <h3 style={{ fontSize: '1.02rem', fontWeight: 700, margin: 0 }}>
-              Security & Session Governance
-            </h3>
+          <div className="card-header" style={{ padding: '14px 20px', borderBottom: '1px solid var(--border-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Shield size={18} color="#0ea5e9" />
+              <h3 style={{ fontSize: '1.02rem', fontWeight: 700, margin: 0 }}>
+                Security & Session Governance
+              </h3>
+            </div>
+            
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Clock size={14} color="var(--text-muted)" />
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>Inactivity Timeout:</span>
+              <select
+                value={inactivityTimeout}
+                onChange={handleTimeoutChange}
+                disabled={updatingTimeout}
+                style={{
+                  padding: '5px 10px',
+                  borderRadius: '6px',
+                  border: '1px solid var(--border-subtle)',
+                  background: 'var(--surface-subtle)',
+                  fontSize: '0.8rem',
+                  fontWeight: 700,
+                  color: 'var(--text-main)',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value={15}>15 Minutes</option>
+                <option value={30}>30 Minutes (Recommended)</option>
+                <option value={60}>60 Minutes</option>
+                <option value={120}>2 Hours</option>
+              </select>
+            </div>
           </div>
-          <div className="card-body" style={{ padding: '20px', fontSize: '0.84rem', color: 'var(--text-muted)', lineHeight: 1.6 }}>
-            <p style={{ marginBottom: '8px' }}>
-              • <strong>JWT Expiry:</strong> 8 hours with automatic session renewal on active portal interactions.
-            </p>
-            <p style={{ marginBottom: '8px' }}>
-              • <strong>Data Masking:</strong> Sensitive identifiers (PAN, Aadhaar & Bank Account numbers) are automatically masked by default in all directory lists and vendor tables.
-            </p>
-            <p>
-              • <strong>Geographic Enforcement:</strong> Direct API calls outside your authorized territory are intercepted and rejected server-side with HTTP 403 Forbidden.
-            </p>
+
+          <div className="card-body" style={{ padding: '20px' }}>
+            {sessionActionMsg && (
+              <div style={{
+                padding: '8px 12px',
+                background: '#dcfce7',
+                color: '#15803d',
+                borderRadius: '6px',
+                fontSize: '0.8rem',
+                fontWeight: 600,
+                marginBottom: '14px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px'
+              }}>
+                <CheckCircle2 size={14} />
+                <span>{sessionActionMsg}</span>
+              </div>
+            )}
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+              <div>
+                <span style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-main)' }}>Active Login Sessions</span>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginLeft: '8px' }}>
+                  ({sessions.length} active device{sessions.length === 1 ? '' : 's'})
+                </span>
+              </div>
+
+              {sessions.filter(s => !s.isCurrent).length > 0 && (
+                <button
+                  type="button"
+                  onClick={handleRevokeAllOther}
+                  style={{
+                    background: '#fef2f2',
+                    border: '1px solid #fecaca',
+                    color: '#dc2626',
+                    padding: '5px 10px',
+                    borderRadius: '6px',
+                    fontSize: '0.75rem',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}
+                >
+                  <LogOut size={12} /> Log Out All Other Devices
+                </button>
+              )}
+            </div>
+
+            {loadingSessions ? (
+              <div style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                <Loader2 size={16} className="animate-spin" style={{ display: 'inline-block', verticalAlign: 'middle', marginRight: 8 }} />
+                Loading active sessions...
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {sessions.map((sess, idx) => (
+                  <div
+                    key={sess._id || sess.id || idx}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '10px 14px',
+                      borderRadius: '8px',
+                      background: 'var(--surface-subtle)',
+                      border: '1px solid var(--border-subtle)',
+                      flexWrap: 'wrap',
+                      gap: '8px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                      <div style={{
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '6px',
+                        background: sess.isCurrent ? '#e0f2fe' : '#f1f5f9',
+                        color: sess.isCurrent ? '#0284c7' : '#64748b',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}>
+                        {String(sess.device || '').toLowerCase().includes('phone') || String(sess.device || '').toLowerCase().includes('mobile') ? (
+                          <Smartphone size={16} />
+                        ) : (
+                          <Laptop size={16} />
+                        )}
+                      </div>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontWeight: 700, fontSize: '0.84rem', color: 'var(--text-main)' }}>
+                            {sess.device || 'Workstation'} &bull; {sess.browser || 'Web Browser'}
+                          </span>
+                          {sess.isCurrent && (
+                            <span style={{
+                              background: '#dcfce7',
+                              color: '#15803d',
+                              fontSize: '0.68rem',
+                              fontWeight: 700,
+                              padding: '2px 6px',
+                              borderRadius: '4px'
+                            }}>
+                              Current Session
+                            </span>
+                          )}
+                        </div>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                          IP: {sess.ipAddress || '127.0.0.1'} &bull; {sess.location || 'Assigned Territory'} &bull; Active {sess.lastActive ? new Date(sess.lastActive).toLocaleTimeString() : 'Just now'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {!sess.isCurrent && (
+                      <button
+                        type="button"
+                        onClick={() => handleRevokeSession(sess._id || sess.id)}
+                        style={{
+                          background: 'none',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: '6px',
+                          padding: '4px 8px',
+                          fontSize: '0.74rem',
+                          color: '#dc2626',
+                          fontWeight: 600,
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Revoke
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)', fontSize: '0.78rem', color: 'var(--text-muted)', lineHeight: 1.5 }}>
+              <span>• <strong>JWT Expiry:</strong> 8 hours with automatic session renewal on active portal interactions.</span>
+              <span style={{ marginLeft: '12px' }}>• <strong>Data Masking:</strong> Sensitive identifiers (PAN, Aadhaar & Bank Details) are masked across all directories.</span>
+            </div>
           </div>
         </div>
       </div>

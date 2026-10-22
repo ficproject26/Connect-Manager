@@ -867,7 +867,8 @@ export default function Register({
 
   // Live Registration Status Polling / Refresh
   const handleRefreshStatus = async () => {
-    const targetId = registeredUser?.id || registeredUser?._id || registeredUser?.managerId || registeredUser?.email;
+    const targetUser = registeredUser || initialUser;
+    const targetId = targetUser?.id || targetUser?._id || targetUser?.managerId || targetUser?.email;
     if (!targetId) return;
     setRefreshingStatus(true);
     setError('');
@@ -876,7 +877,7 @@ export default function Register({
       const res = await authService.getRegistrationStatus(targetId);
       if (res.success && res.data) {
         const updated = {
-          ...registeredUser,
+          ...(targetUser || {}),
           ...res.data,
           status: res.data.overallRegistrationStatus || res.data.status,
           subAdminApprovalStatus: res.data.subAdminApprovalStatus,
@@ -992,10 +993,10 @@ export default function Register({
               }}>
                 <Shield size={12} /> Territorial Allocation Pipeline &bull; Real-time Verification
               </div>
-              <h1 className="hero-greeting-title" style={{ fontSize: '1.45rem' }}>
-                Manager Registration &bull; <span className="hero-greeting-name">Jurisdiction Authorization</span>
+              <h1 className="hero-greeting-title" style={{ fontSize: '1.45rem', textShadow: '0 1px 3px rgba(255,255,255,0.9), 0 0 1px rgba(255,255,255,0.9)', color: '#0f172a' }}>
+                Manager Registration &bull; <span className="hero-greeting-name" style={{ color: '#0369a1', textShadow: '0 1px 3px rgba(255,255,255,0.9)' }}>Jurisdiction Authorization</span>
               </h1>
-              <p className="hero-greeting-sub" style={{ fontSize: '0.85rem' }}>
+              <p className="hero-greeting-sub" style={{ fontSize: '0.85rem', color: '#1e293b', fontWeight: 600, textShadow: '0 1px 2px rgba(255,255,255,0.9)' }}>
                 Apply for official State, District, Division, or PIN Code Manager authorization with real-time vacancy verification.
               </p>
             </div>
@@ -2678,7 +2679,7 @@ export default function Register({
                             const err = validateName(bankDetails.accountHolderName, true, 'Account Holder Name');
                             setFieldErrors(prev => ({ ...prev, accountHolderName: err || '' }));
                           }}
-                          maxLength={100}
+                          maxLength={50}
                         />
                       </div>
                       {(bankErrors.accountHolderName || fieldErrors.accountHolderName) && (
@@ -2702,7 +2703,7 @@ export default function Register({
                           style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.bankName || fieldErrors.bankName) ? '#ef4444' : undefined }}
                           value={bankDetails.bankName}
                           onChange={(e) => {
-                            setBankDetails(prev => ({ ...prev, bankName: e.target.value }));
+                            setBankDetails(prev => ({ ...prev, bankName: formatName(e.target.value) }));
                             if (bankErrors.bankName) setBankErrors(prev => ({ ...prev, bankName: '' }));
                             if (fieldErrors.bankName) setFieldErrors(prev => ({ ...prev, bankName: '' }));
                           }}
@@ -2711,7 +2712,7 @@ export default function Register({
                               setFieldErrors(prev => ({ ...prev, bankName: 'Bank Name is required.' }));
                             }
                           }}
-                          maxLength={100}
+                          maxLength={50}
                         />
                       </div>
                       {(bankErrors.bankName || fieldErrors.bankName) && (
@@ -2738,7 +2739,7 @@ export default function Register({
                           style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.branchName || fieldErrors.branchName) ? '#ef4444' : undefined }}
                           value={bankDetails.branchName}
                           onChange={(e) => {
-                            setBankDetails(prev => ({ ...prev, branchName: e.target.value }));
+                            setBankDetails(prev => ({ ...prev, branchName: formatName(e.target.value) }));
                             if (bankErrors.branchName) setBankErrors(prev => ({ ...prev, branchName: '' }));
                             if (fieldErrors.branchName) setFieldErrors(prev => ({ ...prev, branchName: '' }));
                           }}
@@ -2747,7 +2748,7 @@ export default function Register({
                               setFieldErrors(prev => ({ ...prev, branchName: 'Bank Branch is required.' }));
                             }
                           }}
-                          maxLength={100}
+                          maxLength={50}
                         />
                       </div>
                       {(bankErrors.branchName || fieldErrors.branchName) && (
@@ -2771,7 +2772,7 @@ export default function Register({
                           style={{ height: '38px', paddingLeft: '30px', fontSize: '0.84rem', borderColor: (bankErrors.city || fieldErrors.city) ? '#ef4444' : undefined }}
                           value={bankDetails.city}
                           onChange={(e) => {
-                            setBankDetails(prev => ({ ...prev, city: e.target.value }));
+                            setBankDetails(prev => ({ ...prev, city: formatName(e.target.value) }));
                             if (bankErrors.city) setBankErrors(prev => ({ ...prev, city: '' }));
                             if (fieldErrors.city) setFieldErrors(prev => ({ ...prev, city: '' }));
                           }}
@@ -2780,7 +2781,7 @@ export default function Register({
                               setFieldErrors(prev => ({ ...prev, city: 'Bank City is required.' }));
                             }
                           }}
-                          maxLength={80}
+                          maxLength={50}
                         />
                       </div>
                       {(bankErrors.city || fieldErrors.city) && (

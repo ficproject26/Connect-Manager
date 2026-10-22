@@ -10,14 +10,17 @@ async function getMongoDb() {
   if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
     throw new Error('CRITICAL CONFIGURATION ERROR: MONGODB_URI environment variable is required in production.');
   }
-  const uri = process.env.MONGODB_URI || 'mongodb+srv://Connect-app:Connect123@cluster0.fzj1k5l.mongodb.net/test?retryWrites=true&w=majority';
+  const uri = process.env.MONGODB_URI || 'mongodb+srv://Connect-App:Dhanush123@cluster0.riukwbj.mongodb.net/test?retryWrites=true&w=majority';
   try {
     if (!client) {
       client = new MongoClient(uri, {
         serverSelectionTimeoutMS: 5000,
-        connectTimeoutMS: 5000,
-        socketTimeoutMS: 8000,
-        maxIdleTimeMS: 15000
+        connectTimeoutMS: 10000,
+        socketTimeoutMS: 30000,
+        maxIdleTimeMS: 60000,
+        minPoolSize: 5,
+        maxPoolSize: 50,
+        waitQueueTimeoutMS: 5000
       });
       await client.connect();
     }

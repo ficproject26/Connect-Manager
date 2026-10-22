@@ -203,8 +203,12 @@ export const authService = {
   async uploadAvatar(file) {
     const formData = new FormData();
     formData.append('avatar', file);
+    const token = getAuthToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(`${API_BASE}/auth/upload-avatar`, {
       method: 'POST',
+      headers,
       body: formData
     });
     return handleResponse(res);
@@ -213,8 +217,12 @@ export const authService = {
   async uploadDocument(file) {
     const formData = new FormData();
     formData.append('document', file);
+    const token = getAuthToken();
+    const headers = {};
+    if (token) headers['Authorization'] = `Bearer ${token}`;
     const res = await fetch(`${API_BASE}/auth/upload-document`, {
       method: 'POST',
+      headers,
       body: formData
     });
     return handleResponse(res);
@@ -858,28 +866,54 @@ export const vendorService = {
   }
 };
 
+const locationFetchCache = new Map();
+const locationInFlight = new Map();
+
+async function fetchCachedLocation(url) {
+  const now = Date.now();
+  if (locationFetchCache.has(url)) {
+    const entry = locationFetchCache.get(url);
+    if (now - entry.time < 15 * 60 * 1000) {
+      return entry.data;
+    }
+  }
+  if (locationInFlight.has(url)) {
+    return locationInFlight.get(url);
+  }
+  const promise = (async () => {
+    try {
+      const res = await fetch(url, { headers: getAuthHeaders() });
+      const data = await handleResponse(res);
+      if (data && (data.success || Array.isArray(data))) {
+        locationFetchCache.set(url, { time: Date.now(), data });
+      }
+      return data;
+    } finally {
+      locationInFlight.delete(url);
+    }
+  })();
+  locationInFlight.set(url, promise);
+  return promise;
+}
+
 export const locationService = {
   async getStates() {
-    const res = await fetch(`${API_BASE}/states`, { headers: getAuthHeaders() });
-    return handleResponse(res);
+    return fetchCachedLocation(`${API_BASE}/states`);
   },
 
   async getDistricts(stateId) {
     const query = stateId ? `?stateId=${stateId}` : '';
-    const res = await fetch(`${API_BASE}/districts${query}`, { headers: getAuthHeaders() });
-    return handleResponse(res);
+    return fetchCachedLocation(`${API_BASE}/districts${query}`);
   },
 
   async getDivisions(districtId) {
     const query = districtId ? `?districtId=${districtId}` : '';
-    const res = await fetch(`${API_BASE}/divisions${query}`, { headers: getAuthHeaders() });
-    return handleResponse(res);
+    return fetchCachedLocation(`${API_BASE}/divisions${query}`);
   },
 
   async getPincodes(divisionId) {
     const query = divisionId ? `?divisionId=${divisionId}` : '';
-    const res = await fetch(`${API_BASE}/pincodes${query}`, { headers: getAuthHeaders() });
-    return handleResponse(res);
+    return fetchCachedLocation(`${API_BASE}/pincodes${query}`);
   }
 };
 
@@ -1436,6 +1470,40 @@ export const settingsService = {
       body: JSON.stringify(data)
     });
     return handleResponse(res);
+  },
+
+  async getActiveSessions() {
+    const res = await fetch(`${API_BASE}/settings/sessions`, {
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  async revokeSession(sessionId) {
+    const res = await fetch(`${API_BASE}/settings/sessions/revoke`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ sessionId })
+    });
+    return handleResponse(res);
+  },
+
+  async revokeAllOtherSessions(currentSessionId) {
+    const res = await fetch(`${API_BASE}/settings/sessions/revoke-others`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ currentSessionId })
+    });
+    return handleResponse(res);
+  },
+
+  async updateInactivityTimeout(timeoutMinutes) {
+    const res = await fetch(`${API_BASE}/settings/inactivity-timeout`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ timeoutMinutes })
+    });
+    return handleResponse(res);
   }
 };
 
@@ -1591,5 +1659,3 @@ export const issueService = {
     return handleResponse(res);
   }
 };
-
-

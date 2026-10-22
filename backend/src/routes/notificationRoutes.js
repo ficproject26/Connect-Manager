@@ -104,11 +104,45 @@ router.get('/stream', async (req, res) => {
 router.use(authMiddleware);
 router.use(checkRole());
 
+const isNotifInUserStateScope = (n, user) => {
+  if (!user) return true;
+  const userRole = String(user.role || '').toLowerCase();
+  const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(userRole) || user.email === 'admin@example.com';
+  if (isGlobalAdmin) return true;
+
+  // If notification explicitly targeted this user
+  if (n.userId && String(n.userId) === String(user.id || user._id)) return true;
+  // If targeted to someone else
+  if (n.userId && String(n.userId) !== String(user.id || user._id)) return false;
+
+  const userStateId = String(user.stateId || user.assignedStateId || user.scope?.stateId || '').toLowerCase();
+  const userState = String(user.state || user.stateName || user.assignedState || user.scope?.stateName || '').toLowerCase();
+  const notifStateId = String(n.stateId || n.metadata?.stateId || '').toLowerCase();
+  const notifState = String(n.state || n.stateName || n.metadata?.state || '').toLowerCase();
+
+  if (notifStateId && userStateId && notifStateId !== userStateId) return false;
+  if (notifState && userState && !userState.includes(notifState) && !notifState.includes(userState)) return false;
+
+  // Content state cross-contamination check
+  const text = `${n.title || ''} ${n.message || ''}`.toLowerCase();
+  if (userState.includes('karnataka') || userStateId === 'state_ka') {
+    if (text.includes('tamil nadu') || text.includes('krishnagiri') || text.includes('hosur') || text.includes('chennai')) {
+      return false;
+    }
+  } else if (userState.includes('tamil nadu') || userStateId === 'state_tn') {
+    if (text.includes('karnataka') || text.includes('bengaluru') || text.includes('bangalore') || text.includes('mysuru')) {
+      return false;
+    }
+  }
+
+  return true;
+};
+
 // GET /api/notifications/unread-count - Unread count from database
 router.get('/unread-count', async (req, res) => {
   try {
     const allNotifs = await db.notifications.find();
-    const unreadCount = allNotifs.filter(n => !n.isRead && (!n.userId || String(n.userId) === String(req.user.id))).length;
+    const unreadCount = allNotifs.filter(n => !n.isRead && isNotifInUserStateScope(n, req.user)).length;
     res.json({ success: true, unreadCount });
   } catch (err) {
     res.status(500).json({ success: false, message: 'Failed to count notifications' });
@@ -120,7 +154,7 @@ router.get('/', async (req, res) => {
   try {
     const allNotifs = await db.notifications.find();
     const userNotifications = allNotifs
-      .filter(n => !n.userId || String(n.userId) === String(req.user.id))
+      .filter(n => isNotifInUserStateScope(n, req.user))
       .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     res.json({ success: true, notifications: userNotifications });
   } catch (err) {

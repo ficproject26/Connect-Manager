@@ -316,13 +316,39 @@ const FieldManagers = () => {
         gap: '4px',
         whiteSpace: 'nowrap'
       }}>
-        <ArrowDownRight size={12} /> Under Jurisdiction
+        Under Jurisdiction
       </span>
     );
   };
 
   const getJurisdictionFormatted = (m) => {
-    if (m.pincodeCode || m.pincode) {
+    const role = String(m.role || '').toLowerCase();
+    const isStateMgr = role.includes('state');
+    const isDistMgr = role.includes('district');
+    const isDivMgr = role.includes('division') || role.includes('divisional');
+    const isPinMgr = role.includes('pincode') || role.includes('pin_');
+
+    if (isDistMgr) {
+      return (
+        <div>
+          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{getDisplayValue(m.districtName || m.district, 'District')}</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginLeft: '4px' }}>
+            • All Pincodes ({getDisplayValue(m.stateName || m.state, 'State')})
+          </span>
+        </div>
+      );
+    }
+    if (isDivMgr) {
+      return (
+        <div>
+          <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>{getDisplayValue(m.divisionName || m.division, 'Division')}</span>
+          <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', marginLeft: '4px' }}>
+            • All Pincodes ({getDisplayValue(m.districtName || m.district, '')})
+          </span>
+        </div>
+      );
+    }
+    if (isPinMgr || m.pincodeCode || m.pincode) {
       return (
         <div>
           <span style={{ fontWeight: 700, color: 'var(--text-main)' }}>PIN {getDisplayValue(m.pincodeCode || m.pincode)}</span>
@@ -966,7 +992,11 @@ const FieldManagers = () => {
                   </div>
                   <div>
                     <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>PIN Code:</span>
-                    <strong>{selectedManager.pincodeCode ? `${selectedManager.pincodeCode} (${selectedManager.pincodeArea || ''})` : 'All Pincodes'}</strong>
+                    <strong>
+                      {(String(selectedManager.role || '').toLowerCase().includes('district') || String(selectedManager.role || '').toLowerCase().includes('division') || String(selectedManager.role || '').toLowerCase().includes('state'))
+                        ? 'All Pincodes'
+                        : (selectedManager.pincodeCode ? `${selectedManager.pincodeCode} (${selectedManager.pincodeArea || ''})` : 'All Pincodes')}
+                    </strong>
                   </div>
                 </div>
               </div>
@@ -978,76 +1008,18 @@ const FieldManagers = () => {
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.82rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
                       <Mail size={14} color="#64748b" />
                       <span>{selectedManager.email}</span>
                     </div>
-                    <button
-                      onClick={() => handleCopy(selectedManager.email, 'modal_email')}
-                      style={{
-                        background: copiedField === 'modal_email' ? '#dcfce7' : '#f1f5f9',
-                        border: copiedField === 'modal_email' ? '1px solid #86efac' : '1px solid #e2e8f0',
-                        borderRadius: '6px',
-                        padding: '4px 10px',
-                        fontSize: '0.75rem',
-                        cursor: 'pointer',
-                        color: copiedField === 'modal_email' ? '#15803d' : '#475569',
-                        fontWeight: 600,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {copiedField === 'modal_email' ? (
-                        <>
-                          <CheckCircle2 size={13} color="#16a34a" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={13} color="#64748b" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.82rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.82rem' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
                       <Phone size={14} color="#64748b" />
                       <span>+91 {selectedManager.mobile}</span>
                     </div>
-                    <button
-                      onClick={() => handleCopy(selectedManager.mobile, 'modal_phone')}
-                      style={{
-                        background: copiedField === 'modal_phone' ? '#dcfce7' : '#f1f5f9',
-                        border: copiedField === 'modal_phone' ? '1px solid #86efac' : '1px solid #e2e8f0',
-                        borderRadius: '6px',
-                        padding: '4px 10px',
-                        fontSize: '0.75rem',
-                        cursor: 'pointer',
-                        color: copiedField === 'modal_phone' ? '#15803d' : '#475569',
-                        fontWeight: 600,
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        transition: 'all 0.15s ease'
-                      }}
-                    >
-                      {copiedField === 'modal_phone' ? (
-                        <>
-                          <CheckCircle2 size={13} color="#16a34a" />
-                          <span>Copied!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={13} color="#64748b" />
-                          <span>Copy</span>
-                        </>
-                      )}
-                    </button>
                   </div>
                 </div>
               </div>

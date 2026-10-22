@@ -138,7 +138,7 @@ const AuditLogs = ({ onNavigate }) => {
       ? (user.division || user.divisionName ? `${user.division || user.divisionName} Division` : 'Assigned Division')
       : user?.role === 'district_manager'
         ? (user.district || user.districtName ? `${user.district || user.districtName} District` : 'Assigned District')
-        : (user?.state || user?.stateName || 'Tamil Nadu State');
+        : (user?.state || user?.stateName || user?.scope?.stateName ? `${user?.state || user?.stateName || user?.scope?.stateName} State` : 'Assigned State');
 
   return (
     <div>

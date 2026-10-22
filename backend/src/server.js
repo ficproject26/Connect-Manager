@@ -10,6 +10,7 @@ const { apiLimiter } = require('./middleware/rateLimitMiddleware');
 
 dotenv.config({ path: path.join(__dirname, '..', '.env') });
 
+const compression = require('compression');
 const app = express();
 const PORT = process.env.PORT || 8005;
 
@@ -18,6 +19,15 @@ app.set('trust proxy', 1);
 
 // Remove Express fingerprinting
 app.disable('x-powered-by');
+
+// Response Compression (reduces JSON payload size by up to 80%)
+app.use(compression({
+  threshold: 1024,
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
 
 // Security Headers Middleware
 app.use((req, res, next) => {
@@ -89,9 +99,9 @@ app.use(cors({
   maxAge: 86400
 }));
 
-// Request Body Limits (DoS protection against memory exhaustion)
-app.use(express.json({ limit: '5mb' }));
-app.use(express.urlencoded({ limit: '5mb', extended: true }));
+// Request Body Limits (supports multi-visit report submissions without 413 errors)
+app.use(express.json({ limit: '25mb' }));
+app.use(express.urlencoded({ limit: '25mb', extended: true }));
 
 // Global Input Sanitization against NoSQL injection & prototype pollution
 app.use(sanitizeInput);

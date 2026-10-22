@@ -525,27 +525,7 @@ const AgentDirectory = ({ onNavigate }) => {
           </select>
         )}
 
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          style={{
-            padding: '9px 12px',
-            fontSize: '0.84rem',
-            borderRadius: '8px',
-            border: '1px solid var(--border)',
-            background: '#ffffff',
-            outline: 'none',
-            color: 'var(--text-main)',
-            fontWeight: 600,
-            cursor: 'pointer'
-          }}
-        >
-          <option value="All">All Statuses</option>
-          <option value="Active">Active</option>
-          <option value="Pending KYC">Pending KYC</option>
-        </select>
-
-        {(search || levelFilter !== 'All' || statusFilter !== 'All') && (
+        {(search || levelFilter !== 'All') && (
           <button
             onClick={() => {
               setSearch('');
@@ -980,17 +960,29 @@ const AgentDirectory = ({ onNavigate }) => {
                   <div style={{ fontSize: '0.86rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
                     {selectedAgent.jurisdiction}
                   </div>
+                  {selectedAgent.assignedArea && selectedAgent.assignedArea !== selectedAgent.jurisdiction && (
+                    <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: '2px' }}>
+                      Coverage: {selectedAgent.assignedArea}
+                    </div>
+                  )}
                 </div>
                 <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Coverage Area</div>
-                  <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)', marginTop: '2px' }}>
-                    {selectedAgent.assignedArea}
-                  </div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Supervisor</div>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)', marginTop: '2px' }}>
-                    {selectedAgent.supervisorName || 'Hierarchy Lead'}
+                  <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Agent Level</div>
+                  <div style={{ marginTop: '4px' }}>
+                    <span style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      fontSize: '0.75rem',
+                      fontWeight: 700,
+                      background: '#eff6ff',
+                      color: '#1d4ed8',
+                      border: '1px solid #bfdbfe'
+                    }}>
+                      Level {selectedAgent.level || 1} • {selectedAgent.levelTitle || 'Field Agent'}
+                    </span>
                   </div>
                 </div>
                 <div>

@@ -60,6 +60,20 @@ async function seedData() {
       status: 'active'
     },
     {
+      _id: 'user_state_4',
+      name: 'State Manager Four',
+      email: 'state.mgr4@example.com',
+      mobile: '9888800008',
+      passwordHash: passHash,
+      role: 'state_manager',
+      level: 1,
+      stateId: 'state_ka',
+      districtId: null,
+      divisionId: null,
+      pincodeId: null,
+      status: 'active'
+    },
+    {
       _id: 'user_dist_1',
       name: 'Priya Sharma',
       email: 'dist.mgr1@example.com',

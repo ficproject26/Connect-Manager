@@ -153,13 +153,27 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
     setSubmitError('');
 
     try {
+      const sanitizedVisits = periodVisits.map(v => {
+        const copy = { ...v };
+        if (typeof copy.storefrontPhoto === 'string' && copy.storefrontPhoto.startsWith('data:') && copy.storefrontPhoto.length > 2048) {
+          copy.storefrontPhoto = copy.storefrontPhoto.slice(0, 100) + '...[binary_truncated]';
+        }
+        if (Array.isArray(copy.photos)) {
+          copy.photos = copy.photos.map(p => (typeof p === 'string' && p.startsWith('data:') && p.length > 2048) ? p.slice(0, 100) + '...[binary_truncated]' : p);
+        }
+        if (typeof copy.voiceNote === 'string' && copy.voiceNote.startsWith('data:') && copy.voiceNote.length > 2048) {
+          copy.voiceNote = '[voice_note_recorded]';
+        }
+        return copy;
+      });
+
       const payload = {
         periodLabel: `${periodTitle} (${dateRangeLabel})`,
         dateRange: dateRangeLabel,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         summary,
-        shopVisits: periodVisits,
+        shopVisits: sanitizedVisits,
         tasks: periodTasks
       };
 

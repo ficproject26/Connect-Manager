@@ -15,6 +15,18 @@ router.get('/', settingsController.getSettings);
 // PUT /api/settings
 router.put('/', settingsController.updateSettings);
 
+// GET /api/settings/sessions
+router.get('/sessions', settingsController.getActiveSessions);
+
+// POST /api/settings/sessions/revoke
+router.post('/sessions/revoke', settingsController.revokeSession);
+
+// POST /api/settings/sessions/revoke-others
+router.post('/sessions/revoke-others', settingsController.revokeAllOtherSessions);
+
+// PUT /api/settings/inactivity-timeout
+router.put('/inactivity-timeout', settingsController.updateInactivityTimeout);
+
 // GET /api/settings/bank-details
 router.get('/bank-details', authController.getBankDetails);
 

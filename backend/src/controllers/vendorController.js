@@ -45,6 +45,47 @@ const locationMemoryLookup = {
   pincodes: new Map()
 };
 
+// High-speed in-memory manager & user lookup caches to eliminate N+1 database queries
+const userManagerMemoryLookup = new Map();
+const pincodeAdminMemoryLookup = new Map();
+
+const resolveManagerDoc = async (id) => {
+  if (!id) return null;
+  const strId = String(id);
+  if (userManagerMemoryLookup.has(strId)) {
+    return userManagerMemoryLookup.get(strId);
+  }
+  let mgr = (await db.users.findById(id).catch(() => null)) ||
+            (await db.managers.findById(id).catch(() => null));
+  if (!mgr) {
+    mgr = (await db.users.findOne({ $or: [{ id }, { managerId: id }] }).catch(() => null)) ||
+          (await db.managers.findOne({ $or: [{ id }, { managerId: id }] }).catch(() => null));
+  }
+  if (mgr) {
+    userManagerMemoryLookup.set(strId, mgr);
+    if (mgr.managerId) userManagerMemoryLookup.set(String(mgr.managerId), mgr);
+  }
+  return mgr;
+};
+
+const resolvePincodeAdminDoc = async (pincodeId, pincodeCode) => {
+  const key = `${pincodeId || ''}_${pincodeCode || ''}`;
+  if (pincodeAdminMemoryLookup.has(key)) {
+    return pincodeAdminMemoryLookup.get(key);
+  }
+  const pincodeAdmin = await db.users.findOne({
+    role: { $in: ['pincode_admin', 'pincode_manager', 'sub_admin'] },
+    $or: [
+      ...(pincodeId ? [{ pincodeId: String(pincodeId) }] : []),
+      ...(pincodeCode ? [{ pincode: String(pincodeCode) }] : [])
+    ]
+  }).catch(() => null);
+  if (pincodeAdmin) {
+    pincodeAdminMemoryLookup.set(key, pincodeAdmin);
+  }
+  return pincodeAdmin;
+};
+
 const resolveLocationDoc = async (collection, id) => {
   if (!id) return null;
   const strId = String(id);
@@ -172,22 +213,12 @@ const populateVendorManagers = async (vendor) => {
   if (!vendor) return vendor;
 
   const assigningManagerId = vendor.assignedManagerId || vendor.assignedTo || vendor.assignedManager || vendor.createdBy;
-  let assigningManager = null;
-  if (assigningManagerId) {
-    assigningManager = (await db.users.findById(assigningManagerId).catch(() => null)) ||
-                       (await db.managers.findById(assigningManagerId).catch(() => null));
-    if (!assigningManager) {
-      assigningManager = (await db.users.findOne({ $or: [{ id: assigningManagerId }, { managerId: assigningManagerId }] }).catch(() => null)) ||
-                         (await db.managers.findOne({ $or: [{ id: assigningManagerId }, { managerId: assigningManagerId }] }).catch(() => null));
-    }
-  }
+  const assigningManager = assigningManagerId ? await resolveManagerDoc(assigningManagerId) : null;
 
   const fieldSupervisorId = vendor.fieldSupervisorId || vendor.supervisorId;
-  let fieldSupervisor = null;
-  if (fieldSupervisorId && String(fieldSupervisorId) !== String(assigningManagerId)) {
-    fieldSupervisor = (await db.users.findById(fieldSupervisorId).catch(() => null)) ||
-                      (await db.managers.findById(fieldSupervisorId).catch(() => null));
-  }
+  const fieldSupervisor = (fieldSupervisorId && String(fieldSupervisorId) !== String(assigningManagerId))
+    ? await resolveManagerDoc(fieldSupervisorId)
+    : null;
 
   const assignedFieldManager = assigningManager ? {
     id: assigningManager._id || assigningManager.id,
@@ -215,18 +246,11 @@ const populateVendorManagers = async (vendor) => {
   } : null);
 
   // Dynamic Pincode Admin resolution
-  let pincodeAdmin = null;
   const pincodeId = vendor.pincodeId;
   const pincodeCode = vendor.pincode || vendor.pincodeCode;
-  if (pincodeId || pincodeCode) {
-    pincodeAdmin = await db.users.findOne({
-      role: { $in: ['pincode_admin', 'pincode_manager', 'sub_admin'] },
-      $or: [
-        ...(pincodeId ? [{ pincodeId: String(pincodeId) }] : []),
-        ...(pincodeCode ? [{ pincode: String(pincodeCode) }] : [])
-      ]
-    }).catch(() => null);
-  }
+  const pincodeAdmin = (pincodeId || pincodeCode)
+    ? await resolvePincodeAdminDoc(pincodeId, pincodeCode)
+    : null;
 
   const assignedPincodeAdminName = vendor.assignedPincodeAdminName ||
     vendor.pincodeAdminApproval?.decidedBy ||
@@ -364,6 +388,12 @@ const getVendors = async (req, res) => {
 
     // Apply granular filters
     let filtered = scopedVendors.filter(v => {
+      // Issue 19: Exclude vendors onboarded by Agents from Manager Directory
+      const onboardedByRole = String(v.onboardedByType || v.createdByType || v.source || v.registeredBy?.role || '').toLowerCase();
+      if (onboardedByRole === 'agent' || onboardedByRole === 'field_agent' || (v.agentId && !v.assignedManagerId)) {
+        return false;
+      }
+
       // 1. Search filter: matches vendor name, business name, registration ID, or mobile
       if (search && search.trim()) {
         const q = search.trim().toLowerCase();
@@ -390,7 +420,16 @@ const getVendors = async (req, res) => {
         } else if (sQuery === 'active') {
           if (vStatus !== 'active' && vOp !== 'active') return false;
         } else if (sQuery === 'pending') {
-          if (vStatus !== 'pending' && !vApproval.includes('pending')) return false;
+          if (vStatus !== 'pending' && !vApproval.includes('pending') && vStatus !== 'under review' && vStatus !== 'under_review' && !vApproval.includes('review')) return false;
+        } else if (sQuery === 'pending admin review' || sQuery === 'pending_pincode_approval' || sQuery === 'pending_admin_review') {
+          const isPendingAdminReview = vStatus === 'pending_pincode_approval' || 
+            vApproval === 'pending_pincode_approval' || 
+            vStatus === 'pending_admin_review' ||
+            vApproval === 'pending_admin_review' ||
+            v.pincodeAdminApproval?.status === 'Pending' ||
+            v.status === 'PENDING_PINCODE_APPROVAL' ||
+            v.approvalStatus === 'PENDING_PINCODE_APPROVAL';
+          if (!isPendingAdminReview) return false;
         } else if (sQuery === 'under review') {
           if (vStatus !== 'under review' && vStatus !== 'under_review' && !vApproval.includes('review')) return false;
         } else if (sQuery === 'rejected') {
@@ -1183,17 +1222,23 @@ const sendVendorPhoneOtp = async (req, res) => {
       verified: false
     });
 
+    if (db.otpverifications) {
+      try {
+        await db.otpverifications.deleteMany({ phone: cleanPhone });
+        await db.otpverifications.insertOne({
+          phone: cleanPhone,
+          otp,
+          expiresAt: new Date(Date.now() + VENDOR_OTP_EXPIRY_MS),
+          createdAt: new Date()
+        });
+      } catch (_) {}
+    }
+
     const responsePayload = {
       success: true,
       cooldownSeconds: 30,
       message: `OTP sent successfully to +91 ${cleanPhone}. Valid for 5 minutes.`
     };
-
-    // Development/testing mode: provide dummy OTP for validation testing
-    if (process.env.ENABLE_DUMMY_OTP !== 'false' || process.env.NODE_ENV !== 'production') {
-      responsePayload.otp = otp;
-      responsePayload.isDummyOtp = true;
-    }
 
     return res.json(responsePayload);
   } catch (err) {
@@ -1213,7 +1258,22 @@ const verifyVendorPhoneOtp = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Business phone number and 6-digit OTP are required.' });
     }
 
-    const record = vendorPhoneOtpStore.get(cleanPhone);
+    let record = vendorPhoneOtpStore.get(cleanPhone);
+    if (!record && db.otpverifications) {
+      try {
+        const dbRecord = await db.otpverifications.findOne({ phone: cleanPhone });
+        if (dbRecord) {
+          record = {
+            otp: String(dbRecord.otp),
+            attempts: 0,
+            expiresAt: new Date(dbRecord.expiresAt).getTime(),
+            verified: false
+          };
+          vendorPhoneOtpStore.set(cleanPhone, record);
+        }
+      } catch (_) {}
+    }
+
     if (!record) {
       return res.status(400).json({
         success: false,

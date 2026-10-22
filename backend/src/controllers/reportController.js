@@ -81,21 +81,35 @@ const getDashboardStats = async (req, res) => {
       const divisions = await db.divisions.find({ stateId: user.stateId });
       const pincodes = await db.pincodes.find({ stateId: user.stateId });
 
-      const stateManagers = await db.users.find({
-        role: 'state_manager',
-        stateId: user.stateId
-      });
+      const [rawUsers, rawManagers] = await Promise.all([
+        db.users.find({}),
+        db.managers ? db.managers.find({}) : []
+      ]);
+      const seenMgrs = new Set();
+      const allUsers = [];
+      for (const u of [...rawUsers, ...rawManagers]) {
+        if (!u) continue;
+        const key = String(u.id || u._id || u.managerId || u.email || u.mobile || '');
+        if (key && !seenMgrs.has(key)) {
+          seenMgrs.add(key);
+          allUsers.push(u);
+        }
+      }
 
-      const allUsers = await db.users.find();
+      const stateManagers = allUsers.filter(u =>
+        u.role === 'state_manager' &&
+        (!user.stateId || u.stateId === user.stateId || u.state === user.state)
+      );
+
       const lowerManagers = allUsers.filter(u => 
-        u.stateId === user.stateId && 
+        (!user.stateId || u.stateId === user.stateId || u.state === user.state) && 
         ['district_manager', 'division_manager', 'pincode_manager'].includes(u.role)
       );
 
       roleSpecificData = {
-        stateName: state?.name || user.state || 'Tamil Nadu',
+        stateName: state?.name || user.state || user.assignedState || 'Karnataka',
         totalStateManagers: stateManagers.length,
-        stateManagersList: stateManagers.map(m => ({ id: m._id, name: m.name, email: m.email, mobile: m.mobile })),
+        stateManagersList: stateManagers.map(m => ({ id: m._id || m.id, name: m.name, email: m.email, mobile: m.mobile })),
         totalLowerManagers: lowerManagers.length,
         totalDistricts: districts.length,
         totalDivisions: divisions.length,
@@ -208,7 +222,20 @@ const getDashboardStats = async (req, res) => {
     }
 
     // Detailed manager counts based on jurisdiction scope
-    const allUsers = await db.users.find();
+    const [rawAllUsers, rawAllManagers] = await Promise.all([
+      db.users.find({}),
+      db.managers ? db.managers.find({}) : []
+    ]);
+    const seenAllMgrs = new Set();
+    const allUsers = [];
+    for (const u of [...rawAllUsers, ...rawAllManagers]) {
+      if (!u) continue;
+      const key = String(u.id || u._id || u.managerId || u.email || u.mobile || '');
+      if (key && !seenAllMgrs.has(key)) {
+        seenAllMgrs.add(key);
+        allUsers.push(u);
+      }
+    }
     let scopedManagers = [];
     let managersBreakdownText = '';
 
@@ -290,12 +317,13 @@ const getDashboardStats = async (req, res) => {
       pendingVendors: statusCounts.pending + statusCounts.underReview,
       totalShops: vendors.length,
       activeShops: statusCounts.active,
-      inactiveShops: statusCounts.inactive + statusCounts.rejected,
+      inactiveShops: Math.max(0, vendors.length - statusCounts.active),
       totalTieups: statusCounts.active,
       todayTieups: todayTieups,
       weekTieups: weekTieups,
       verifiedVendors: statusCounts.active,
-      openIssues: statusCounts.pending + statusCounts.underReview + (statusCounts.rejected > 0 ? 1 : 0),
+      openIssues: 0,
+      activeTasks: 0,
       kycPending: statusCounts.pending + statusCounts.underReview,
       pendingKYC: statusCounts.pending + statusCounts.underReview,
       vendorRequests: statusCounts.pending,
@@ -352,11 +380,12 @@ const getDashboardStats = async (req, res) => {
       if (['resolved', 'closed', 'completed'].includes(status)) return 'resolved';
       if (['escalated'].includes(status) || priority === 'urgent') return 'escalated';
       if (['in progress', 'in_progress', 'progress', 'accepted'].includes(status)) return 'inProgress';
+      if (['cancelled', 'rejected', 'inactive'].includes(status)) return 'closed';
       return 'open'; // 'pending', 'pending acceptance', 'assigned', 'open', etc.
     };
 
     const calcIssueStats = (taskList) => {
-      let open = 0, inProgress = 0, escalated = 0, resolved = 0;
+      let open = 0, inProgress = 0, escalated = 0, resolved = 0, closed = 0;
       let pending = 0, accepted = 0, completed = 0;
 
       taskList.forEach(t => {
@@ -364,6 +393,7 @@ const getDashboardStats = async (req, res) => {
         if (cat === 'resolved') resolved++;
         else if (cat === 'escalated') escalated++;
         else if (cat === 'inProgress') inProgress++;
+        else if (cat === 'closed') closed++;
         else open++;
 
         const st = (t.status || '').toLowerCase().trim();
@@ -580,7 +610,7 @@ const getLeaderboardData = async (req, res) => {
         }
         return '';
       };
-      const callerState = resolveStateName(user) || 'tamil nadu';
+      const callerState = resolveStateName(user) || '';
 
       const mgrMap = new Map();
       (allManagers || []).forEach(m => {

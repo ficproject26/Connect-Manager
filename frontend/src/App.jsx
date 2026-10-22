@@ -3,30 +3,56 @@ import { useAuth } from './context/AuthContext';
 import Sidebar from './components/Sidebar';
 import Navbar from './components/Navbar';
 
-// Pages
+// Primary Core Pages
 import Login from './pages/Login';
-import Register from './pages/Register';
-import ForgotPassword from './pages/ForgotPassword';
-import ResetPassword from './pages/ResetPassword';
 import Dashboard from './pages/Dashboard';
-import Vendors from './pages/Vendors';
-import VendorRequests from './pages/VendorRequests';
-import Tasks from './pages/Tasks';
-import Issues from './pages/Issues';
-import Leaderboard from './pages/Leaderboard';
-import Notifications from './pages/Notifications';
-import AddVendor from './pages/AddVendor';
-import VendorForm from './components/VendorForm';
-import VendorDetails from './pages/VendorDetails';
-import Reports from './pages/Reports';
-import AuditLogs from './pages/AuditLogs';
-import Profile from './pages/Profile';
-import Settings from './pages/Settings';
-import FieldManagers from './pages/FieldManagers';
-import AgentDirectory from './pages/AgentDirectory';
-import ShopVisits from './pages/ShopVisits';
-import FieldShopVisitModal from './components/FieldShopVisitModal';
+
+// Lazy-loaded routes for optimal initial bundle size and route-level code splitting
+const Register = React.lazy(() => import('./pages/Register'));
+const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
+const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
+const Vendors = React.lazy(() => import('./pages/Vendors'));
+const VendorRequests = React.lazy(() => import('./pages/VendorRequests'));
+const Tasks = React.lazy(() => import('./pages/Tasks'));
+const Issues = React.lazy(() => import('./pages/Issues'));
+const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
+const Notifications = React.lazy(() => import('./pages/Notifications'));
+const AddVendor = React.lazy(() => import('./pages/AddVendor'));
+const VendorForm = React.lazy(() => import('./components/VendorForm'));
+const VendorDetails = React.lazy(() => import('./pages/VendorDetails'));
+const Reports = React.lazy(() => import('./pages/Reports'));
+const AuditLogs = React.lazy(() => import('./pages/AuditLogs'));
+const Profile = React.lazy(() => import('./pages/Profile'));
+const Settings = React.lazy(() => import('./pages/Settings'));
+const FieldManagers = React.lazy(() => import('./pages/FieldManagers'));
+const AgentDirectory = React.lazy(() => import('./pages/AgentDirectory'));
+const ShopVisits = React.lazy(() => import('./pages/ShopVisits'));
+const FieldShopVisitModal = React.lazy(() => import('./components/FieldShopVisitModal'));
 import { managerOnboardingService, vendorService, shopVisitService } from './services/api';
+
+const PageFallback = () => (
+  <div style={{
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: '320px',
+    width: '100%',
+    color: '#94a3b8',
+    padding: '40px 20px'
+  }}>
+    <div style={{
+      width: 32,
+      height: 32,
+      border: '3px solid rgba(59, 130, 246, 0.2)',
+      borderTopColor: '#3b82f6',
+      borderRadius: '50%',
+      animation: 'spin 0.8s linear infinite',
+      marginBottom: 12
+    }} />
+    <span style={{ fontSize: '0.825rem', fontWeight: 600, color: 'var(--text-muted, #94a3b8)' }}>Loading view...</span>
+  </div>
+);
 
 
 class GlobalErrorBoundary extends React.Component {
@@ -259,20 +285,30 @@ function AppInner() {
   if (!isAuthenticated) {
     if (authPage === 'register') {
       return (
-        <Register
-          onNavigate={navigateAuth}
-          initialUser={navParams.user}
-          initialFlowState={navParams.flowState}
-          initialToken={navParams.token}
-          initialRejectionReason={navParams.rejectionReason}
-        />
+        <React.Suspense fallback={<PageFallback />}>
+          <Register
+            onNavigate={navigateAuth}
+            initialUser={navParams.user}
+            initialFlowState={navParams.flowState}
+            initialToken={navParams.token}
+            initialRejectionReason={navParams.rejectionReason}
+          />
+        </React.Suspense>
       );
     }
     if (authPage === 'forgot-password') {
-      return <ForgotPassword onNavigate={navigateAuth} />;
+      return (
+        <React.Suspense fallback={<PageFallback />}>
+          <ForgotPassword onNavigate={navigateAuth} />
+        </React.Suspense>
+      );
     }
     if (authPage === 'reset-password') {
-      return <ResetPassword onNavigate={navigateAuth} token={navParams.token} />;
+      return (
+        <React.Suspense fallback={<PageFallback />}>
+          <ResetPassword onNavigate={navigateAuth} token={navParams.token} />
+        </React.Suspense>
+      );
     }
     return <Login onNavigate={navigateAuth} />;
   }
@@ -296,11 +332,12 @@ function AppInner() {
         />
 
         <main className="content-body">
-          {visitedPages.has('dashboard') && (
-            <div style={{ display: currentPage === 'dashboard' ? 'block' : 'none', width: '100%' }}>
-              <Dashboard onNavigate={navigate} />
-            </div>
-          )}
+          <React.Suspense fallback={<PageFallback />}>
+            {visitedPages.has('dashboard') && (
+              <div style={{ display: currentPage === 'dashboard' ? 'block' : 'none', width: '100%' }}>
+                <Dashboard onNavigate={navigate} />
+              </div>
+            )}
           {/* VendorRequests page removed */}
           {visitedPages.has('vendors') && (
             <div style={{ display: currentPage === 'vendors' ? 'block' : 'none', width: '100%' }}>
@@ -487,6 +524,7 @@ function AppInner() {
               <Settings onNavigate={navigate} currentTheme={theme} onToggleTheme={setTheme} />
             </div>
           )}
+          </React.Suspense>
         </main>
       </div>
     </div>

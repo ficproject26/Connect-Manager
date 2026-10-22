@@ -18,6 +18,17 @@ class TerritoryScopeService {
     this._pincodes = [];
     this._lastSync = 0;
     this._syncPromise = null;
+    this._maps = {
+      stateById: new Map(),
+      stateByName: new Map(),
+      distById: new Map(),
+      distByName: new Map(),
+      divById: new Map(),
+      divByName: new Map(),
+      divByCleanName: new Map(),
+      pinById: new Map(),
+      pinByCode: new Map()
+    };
   }
 
   async _ensureSync() {
@@ -42,6 +53,19 @@ class TerritoryScopeService {
         this._divisions = divisions || [];
         this._pincodes = pincodes || [];
         this._lastSync = Date.now();
+
+        // Build high-speed lookup maps once per sync
+        this._maps = {
+          stateById: new Map(this._states.map(s => [String(s._id || s.id), s])),
+          stateByName: new Map(this._states.map(s => [norm(s.name), s])),
+          distById: new Map(this._districts.map(d => [String(d._id || d.id), d])),
+          distByName: new Map(this._districts.map(d => [norm(d.name), d])),
+          divById: new Map(this._divisions.map(d => [String(d._id || d.id), d])),
+          divByName: new Map(this._divisions.map(d => [norm(d.name), d])),
+          divByCleanName: new Map(this._divisions.map(d => [normClean(d.name), d])),
+          pinById: new Map(this._pincodes.map(p => [String(p._id || p.id), p])),
+          pinByCode: new Map(this._pincodes.map(p => [norm(p.code || p.pincode), p]))
+        };
       } catch (err) {
         console.warn('[TerritoryScopeService] Sync warning:', err.message);
       } finally {
@@ -61,18 +85,17 @@ class TerritoryScopeService {
     if (!record) return {};
     await this._ensureSync();
 
-    const stateById = new Map(this._states.map(s => [String(s._id || s.id), s]));
-    const stateByName = new Map(this._states.map(s => [norm(s.name), s]));
-
-    const distById = new Map(this._districts.map(d => [String(d._id || d.id), d]));
-    const distByName = new Map(this._districts.map(d => [norm(d.name), d]));
-
-    const divById = new Map(this._divisions.map(d => [String(d._id || d.id), d]));
-    const divByName = new Map(this._divisions.map(d => [norm(d.name), d]));
-    const divByCleanName = new Map(this._divisions.map(d => [normClean(d.name), d]));
-
-    const pinById = new Map(this._pincodes.map(p => [String(p._id || p.id), p]));
-    const pinByCode = new Map(this._pincodes.map(p => [norm(p.code || p.pincode), p]));
+    const {
+      stateById,
+      stateByName,
+      distById,
+      distByName,
+      divById,
+      divByName,
+      divByCleanName,
+      pinById,
+      pinByCode
+    } = this._maps;
 
     let pinDoc = null;
     let divDoc = null;
@@ -343,18 +366,18 @@ class TerritoryScopeService {
     // 2. Specific role tabs
     if (scope === 'state_managers') {
       if (userLevel > 1 && !isGlobalAdmin) return false; // District, Division, Pincode managers CANNOT see state managers tab
-      return reportLevel === 1;
+      return reportLevel === 1 && (isGlobalAdmin || inTerritory);
     }
     if (scope === 'district_managers') {
       if (userLevel > 2 && !isGlobalAdmin) return false; // Division, Pincode managers CANNOT see district managers tab
-      return reportLevel === 2;
+      return reportLevel === 2 && (isGlobalAdmin || inTerritory);
     }
     if (scope === 'division_managers') {
       if (userLevel > 3 && !isGlobalAdmin) return false; // Pincode managers CANNOT see division managers tab
-      return reportLevel === 3;
+      return reportLevel === 3 && (isGlobalAdmin || inTerritory);
     }
     if (scope === 'pincode_managers') {
-      return reportLevel === 4;
+      return reportLevel === 4 && (isGlobalAdmin || inTerritory);
     }
 
     // 3. "All Reports" Tab (scope === 'all' or empty)
@@ -652,13 +675,38 @@ class TerritoryScopeService {
       }
 
       return Array.from(divisionMap.values())
-        .filter(d => d.totalVendors > 0 || d.shopVisits > 0 || userLevel >= 3)
+        .filter(d => d.totalVendors > 0 || d.shopVisits > 0 || candidateDivisions.length <= 15 || userLevel >= 2)
         .sort((a, b) => (b.totalVendors + b.shopVisits) - (a.totalVendors + a.shopVisits));
     }
 
     if (filter === 'pin') {
       // Aggregate by Pincode
       const pincodeMap = new Map();
+
+      // Seed candidate pincodes in user's authorized scope
+      let candidatePincodes = this._pincodes;
+      if (userLevel === 1 && resUser.stateId) {
+        candidatePincodes = candidatePincodes.filter(p => String(p.stateId) === String(resUser.stateId));
+      } else if (userLevel === 2 && resUser.districtId) {
+        candidatePincodes = candidatePincodes.filter(p => String(p.districtId) === String(resUser.districtId));
+      } else if (userLevel === 3 && resUser.divisionId) {
+        candidatePincodes = candidatePincodes.filter(p => String(p.divisionId) === String(resUser.divisionId));
+      } else if (userLevel === 4 && (resUser.pincodeCode || resUser.pincodeId)) {
+        candidatePincodes = candidatePincodes.filter(p => String(p.code || p.pincode) === String(resUser.pincodeCode) || String(p._id || p.id) === String(resUser.pincodeId));
+      }
+
+      candidatePincodes.slice(0, 50).forEach(p => {
+        const key = String(p.code || p.pincode || p._id || p.id);
+        pincodeMap.set(key, {
+          pincodeId: String(p._id || p.id || key),
+          pincodeCode: String(p.code || p.pincode || key),
+          areaName: p.areaName || p.area || p.name || '',
+          totalVendors: 0,
+          activeVendors: 0,
+          tieUps: 0,
+          shopVisits: 0
+        });
+      });
 
       scopedVendors.forEach(v => {
         const pCode = v._resolved.pincodeCode;
@@ -727,6 +775,7 @@ class TerritoryScopeService {
       }
 
       return Array.from(pincodeMap.values())
+        .filter(p => p.totalVendors > 0 || p.shopVisits > 0 || candidatePincodes.length <= 15 || userLevel >= 3)
         .sort((a, b) => (b.totalVendors + b.shopVisits) - (a.totalVendors + a.shopVisits));
     }
 

@@ -118,9 +118,6 @@ const Login = ({ onNavigate }) => {
       setOtpSent(true);
       setOtpCooldown(res.cooldownSeconds || 30);
       setOtpMessage(res.message || 'OTP sent successfully.');
-      if (res.otp) {
-        setOtp(res.otp);
-      }
     } catch (err) {
       setError(err.message || 'Failed to send OTP.');
     } finally {
@@ -143,9 +140,6 @@ const Login = ({ onNavigate }) => {
       const res = await authService.sendOtp(cleanPhone);
       setOtpCooldown(res.cooldownSeconds || 30);
       setOtpMessage(res.message || 'A new verification OTP has been sent successfully.');
-      if (res.otp) {
-        setOtp(res.otp);
-      }
     } catch (err) {
       setError(err.message || 'Failed to resend OTP.');
     } finally {
