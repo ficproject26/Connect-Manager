@@ -7,27 +7,51 @@ import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 
-// Lazy-loaded routes for optimal initial bundle size and route-level code splitting
-const Register = React.lazy(() => import('./pages/Register'));
-const ForgotPassword = React.lazy(() => import('./pages/ForgotPassword'));
-const ResetPassword = React.lazy(() => import('./pages/ResetPassword'));
-const Vendors = React.lazy(() => import('./pages/Vendors'));
-const VendorRequests = React.lazy(() => import('./pages/VendorRequests'));
-const Tasks = React.lazy(() => import('./pages/Tasks'));
-const Issues = React.lazy(() => import('./pages/Issues'));
-const Leaderboard = React.lazy(() => import('./pages/Leaderboard'));
-const Notifications = React.lazy(() => import('./pages/Notifications'));
-const AddVendor = React.lazy(() => import('./pages/AddVendor'));
-const VendorForm = React.lazy(() => import('./components/VendorForm'));
-const VendorDetails = React.lazy(() => import('./pages/VendorDetails'));
-const Reports = React.lazy(() => import('./pages/Reports'));
-const AuditLogs = React.lazy(() => import('./pages/AuditLogs'));
-const Profile = React.lazy(() => import('./pages/Profile'));
-const Settings = React.lazy(() => import('./pages/Settings'));
-const FieldManagers = React.lazy(() => import('./pages/FieldManagers'));
-const AgentDirectory = React.lazy(() => import('./pages/AgentDirectory'));
-const ShopVisits = React.lazy(() => import('./pages/ShopVisits'));
-const FieldShopVisitModal = React.lazy(() => import('./components/FieldShopVisitModal'));
+// Resilient dynamic import that automatically reloads the page once on version/chunk deployment mismatch
+const lazyWithRetry = (factory) =>
+  React.lazy(async () => {
+    try {
+      return await factory();
+    } catch (err) {
+      const isChunkError = err && (
+        err.name === 'ChunkLoadError' ||
+        /dynamically imported module/i.test(err.message || '') ||
+        /failed to fetch/i.test(err.message || '')
+      );
+      if (isChunkError) {
+        const lastReload = Number(sessionStorage.getItem('last_chunk_reload') || 0);
+        const now = Date.now();
+        if (now - lastReload > 10000) {
+          sessionStorage.setItem('last_chunk_reload', String(now));
+          window.location.reload();
+          return new Promise(() => {});
+        }
+      }
+      throw err;
+    }
+  });
+
+// Lazy-loaded routes with automatic reload resilience against stale production chunk hashes
+const Register = lazyWithRetry(() => import('./pages/Register'));
+const ForgotPassword = lazyWithRetry(() => import('./pages/ForgotPassword'));
+const ResetPassword = lazyWithRetry(() => import('./pages/ResetPassword'));
+const Vendors = lazyWithRetry(() => import('./pages/Vendors'));
+const VendorRequests = lazyWithRetry(() => import('./pages/VendorRequests'));
+const Tasks = lazyWithRetry(() => import('./pages/Tasks'));
+const Issues = lazyWithRetry(() => import('./pages/Issues'));
+const Leaderboard = lazyWithRetry(() => import('./pages/Leaderboard'));
+const Notifications = lazyWithRetry(() => import('./pages/Notifications'));
+const AddVendor = lazyWithRetry(() => import('./pages/AddVendor'));
+const VendorForm = lazyWithRetry(() => import('./components/VendorForm'));
+const VendorDetails = lazyWithRetry(() => import('./pages/VendorDetails'));
+const Reports = lazyWithRetry(() => import('./pages/Reports'));
+const AuditLogs = lazyWithRetry(() => import('./pages/AuditLogs'));
+const Profile = lazyWithRetry(() => import('./pages/Profile'));
+const Settings = lazyWithRetry(() => import('./pages/Settings'));
+const FieldManagers = lazyWithRetry(() => import('./pages/FieldManagers'));
+const AgentDirectory = lazyWithRetry(() => import('./pages/AgentDirectory'));
+const ShopVisits = lazyWithRetry(() => import('./pages/ShopVisits'));
+const FieldShopVisitModal = lazyWithRetry(() => import('./components/FieldShopVisitModal'));
 import { managerOnboardingService, vendorService, shopVisitService } from './services/api';
 
 const PageFallback = () => (
@@ -68,10 +92,29 @@ class GlobalErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
     console.error('Manager GlobalErrorBoundary caught runtime error:', error, errorInfo);
     this.setState({ errorInfo });
+    const isChunkError = error && (
+      error.name === 'ChunkLoadError' ||
+      /dynamically imported module/i.test(error.message || '') ||
+      /failed to fetch/i.test(error.message || '')
+    );
+    if (isChunkError) {
+      const lastReload = Number(sessionStorage.getItem('last_boundary_reload') || 0);
+      const now = Date.now();
+      if (now - lastReload > 10000) {
+        sessionStorage.setItem('last_boundary_reload', String(now));
+        window.location.reload();
+      }
+    }
   }
 
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error && (
+        this.state.error.name === 'ChunkLoadError' ||
+        /dynamically imported module/i.test(this.state.error.message || '') ||
+        /failed to fetch/i.test(this.state.error.message || '')
+      );
+
       return (
         <div style={{
           minHeight: '100vh',
@@ -87,19 +130,23 @@ class GlobalErrorBoundary extends React.Component {
             maxWidth: '650px',
             width: '100%',
             backgroundColor: '#1e293b',
-            border: '1px solid rgba(239, 68, 68, 0.4)',
+            border: isChunkError ? '1px solid rgba(59, 130, 246, 0.4)' : '1px solid rgba(239, 68, 68, 0.4)',
             borderRadius: '16px',
             padding: '24px 30px',
             boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#f87171', borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '16px' }}>
-              <span style={{ fontSize: '20px' }}>⚠️</span>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>Manager Portal Runtime Notice</h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: isChunkError ? '#60a5fa' : '#f87171', borderBottom: '1px solid #334155', paddingBottom: '12px', marginBottom: '16px' }}>
+              <span style={{ fontSize: '20px' }}>{isChunkError ? '🔄' : '⚠️'}</span>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0 }}>
+                {isChunkError ? 'Portal Update Available' : 'Manager Portal Runtime Notice'}
+              </h2>
             </div>
-            <p style={{ fontSize: '0.88rem', color: '#fca5a5', fontWeight: 600, margin: '0 0 16px 0' }}>
-              {this.state.error?.toString()}
+            <p style={{ fontSize: '0.88rem', color: isChunkError ? '#93c5fd' : '#fca5a5', fontWeight: 600, margin: '0 0 16px 0' }}>
+              {isChunkError
+                ? 'A new version of the Manager Portal was deployed. Please reload the page to load the latest application components.'
+                : this.state.error?.toString()}
             </p>
-            {this.state.errorInfo?.componentStack && (
+            {this.state.errorInfo?.componentStack && !isChunkError && (
               <pre style={{
                 fontSize: '0.75rem',
                 color: '#cbd5e1',
