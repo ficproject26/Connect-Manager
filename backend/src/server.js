@@ -189,6 +189,16 @@ app.use((err, req, res, next) => {
 });
 
 async function startServer() {
+  try {
+    console.log('[Manager Backend] Initializing MongoDB connection...');
+    if (db.initDatabase) {
+      await db.initDatabase();
+    }
+  } catch (err) {
+    console.error('FATAL: Database initialization failed during startup:', err.message);
+    process.exit(1);
+  }
+
   const server = http.createServer(app);
   realtimeWebSocketServer.attach(server);
 
@@ -199,10 +209,6 @@ async function startServer() {
     console.log(`Realtime WS: ws://localhost:${PORT}/ws`);
     console.log('=============================================');
   });
-
-  if (db.initDatabase) {
-    db.initDatabase().catch(e => console.warn('[Manager Database] Init error:', e.message));
-  }
 }
 
 if (require.main === module) {

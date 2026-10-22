@@ -10,7 +10,9 @@ async function getMongoDb() {
   if (process.env.NODE_ENV === 'production' && !process.env.MONGODB_URI) {
     throw new Error('CRITICAL CONFIGURATION ERROR: MONGODB_URI environment variable is required in production.');
   }
-  const uri = process.env.MONGODB_URI || 'mongodb+srv://Connect-App:Dhanush123@cluster0.riukwbj.mongodb.net/connect_db?retryWrites=true&w=majority';
+  const uri = process.env.MONGODB_URI || 'mongodb+srv://Connect-App:Dhanush123@cluster0.riukwbj.mongodb.net/connect_manager_fresh?retryWrites=true&w=majority';
+  const targetDbName = process.env.DB_NAME || (uri.match(/mongodb(?:\+srv)?:\/\/[^\/]+\/([^?]+)/) ? uri.match(/mongodb(?:\+srv)?:\/\/[^\/]+\/([^?]+)/)[1] : 'connect_manager_fresh');
+
   try {
     if (!client) {
       client = new MongoClient(uri, {
@@ -23,11 +25,11 @@ async function getMongoDb() {
       });
       await client.connect();
     }
-    db = client.db();
+    db = client.db(targetDbName);
     return db;
   } catch (err) {
-    console.warn('[Manager MongoDB] Atlas connection error:', err.message);
-    return null;
+    console.error('[Manager MongoDB] Atlas connection error:', err.message);
+    throw err;
   }
 }
 

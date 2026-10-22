@@ -1,15 +1,9 @@
-const fs = require('fs');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const { v4: uuidv4 } = require('uuid');
 const { ObjectId } = require('mongodb');
 const { getMongoDb } = require('./mongo');
 const eventPublisher = require('../events/eventPublisher');
-
-const DATA_DIR = path.join(__dirname, '..', '..', 'data');
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
 
 function sanitizeQuery(query) {
   if (!query || typeof query !== 'object') return {};
@@ -48,246 +42,101 @@ class Collection {
   constructor(name, mongoCollectionName = null) {
     this.name = name;
     this.mongoName = mongoCollectionName || name;
-    this.filePath = path.join(DATA_DIR, `${name}.json`);
     this._mongoCol = null;
     this._mongoDb = null;
     this._isReady = false;
-    this.cache = [];
-    this._queryCache = {};
-    this._load();
-  }
-
-  _invalidateQueryCache() {
-    this._queryCache = {};
-  }
-
-  _load() {
-    try {
-      if (fs.existsSync(this.filePath)) {
-        const content = fs.readFileSync(this.filePath, 'utf-8');
-        this.cache = JSON.parse(content || '[]');
-      } else {
-        this.cache = [];
-      }
-    } catch (err) {
-      this.cache = [];
-    }
-    this._invalidateQueryCache();
-  }
-
-  _write(data) {
-    this.cache = data;
-    this._invalidateQueryCache();
-    try {
-      fs.promises.writeFile(this.filePath, JSON.stringify(data), 'utf-8').catch(() => {});
-    } catch (e) {}
   }
 
   async initMongo(mongoDb) {
     if (!mongoDb) return;
     this._mongoDb = mongoDb;
-    try {
-      this._mongoCol = mongoDb.collection(this.mongoName);
-      this._isReady = true;
+    this._mongoCol = mongoDb.collection(this.mongoName);
+    this._isReady = true;
+  }
 
-      // Only prime local store if cache is empty and it is a small reference dataset
-      const isSmallRef = ['states', 'districts', 'settings'].includes(this.name);
-      if ((!this.cache || this.cache.length === 0) && isSmallRef) {
-        const findOptions = { maxTimeMS: 5000 };
-        const docs = await this._mongoCol.find({}, findOptions).toArray();
-        if (docs && docs.length > 0) {
-          this._write(docs);
-        }
-      }
-      this._invalidateQueryCache();
-    } catch (err) {
-      console.warn(`[Manager MongoDB] Sync notice for '${this.name}':`, err.message);
+  async _ensureReady() {
+    if (!this._mongoCol) {
+      await initDatabase();
+    }
+    if (!this._mongoCol) {
+      throw new Error(`Database connection not initialized: Collection '${this.name}' is unavailable.`);
     }
   }
 
-  async find(query = {}) {
+  async find(query = {}, options = {}) {
+    await this._ensureReady();
     const cleanQuery = sanitizeQuery(query);
-    const now = Date.now();
-    const cacheKey = JSON.stringify(cleanQuery);
-
-    // Serve from micro-cache (< 4.5 seconds) to avoid redundant public internet roundtrips
-    if (this._queryCache && this._queryCache[cacheKey] && (now - this._queryCache[cacheKey].time < 4500)) {
-      return this._queryCache[cacheKey].data;
+    const findOptions = { maxTimeMS: 15000, ...options };
+    if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
+      findOptions.projection = { kycDocs: 0, kyc: 0 };
     }
 
-    if (this._mongoCol) {
-      try {
-        const findOptions = (this.mongoName === 'users' || this.mongoName === 'agents') 
-          ? { projection: { kycDocs: 0, kyc: 0 }, maxTimeMS: 8000 } 
-          : { maxTimeMS: 8000 };
-        const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
-        if (docs && docs.length > 0) {
-          if (!this._queryCache) this._queryCache = {};
-          this._queryCache[cacheKey] = { time: now, data: docs };
-          return docs;
-        }
-        // Fallback for users: if querying role manager and nothing found, check managers collection
-        if (this.name === 'users' && this._mongoDb) {
-          const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, findOptions).toArray();
-          if (mgrDocs && mgrDocs.length > 0) {
-            if (!this._queryCache) this._queryCache = {};
-            this._queryCache[cacheKey] = { time: now, data: mgrDocs };
-            return mgrDocs;
-          }
-        }
-        // When MongoDB is connected and returns 0 records, return genuine empty array from current DB
-        if (!this._queryCache) this._queryCache = {};
-        this._queryCache[cacheKey] = { time: now, data: [] };
-        return [];
-      } catch (e) {
-        console.warn(`[Manager MongoDB] find error in '${this.name}':`, e.message);
+    const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
+    if (docs && docs.length > 0) {
+      return docs;
+    }
+
+    // Fallback for users: if querying role manager and nothing found, check managers collection
+    if (this.name === 'users' && this._mongoDb) {
+      const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, findOptions).toArray();
+      if (mgrDocs && mgrDocs.length > 0) {
+        return mgrDocs;
       }
     }
 
-    // Fallback to cache if MongoDB is unreachable
-    const fallbackDocs = this._filterCache(cleanQuery);
-    if (!this._queryCache) this._queryCache = {};
-    this._queryCache[cacheKey] = { time: now, data: fallbackDocs };
-    return fallbackDocs;
+    // Single source of truth: return genuine empty array from MongoDB
+    return [];
   }
 
-  _matchField(item, key, val) {
-    if (val && typeof val === 'object' && val.$in) {
-      const inList = val.$in.map(v => String(v instanceof ObjectId ? v.toString() : v));
-      const itemVal = String(item[key] || '');
-      return inList.includes(itemVal);
-    }
-    if (val && typeof val === 'object' && val.$regex) {
-      const re = val.$regex instanceof RegExp ? val.$regex : new RegExp(val.$regex, val.$options || 'i');
-      return re.test(String(item[key] || ''));
-    }
-    if (val instanceof RegExp) {
-      return val.test(String(item[key] || ''));
-    }
-    return item[key] === val || String(item[key] || '') === String(val || '');
-  }
-
-  _filterCache(cleanQuery) {
-    const records = this.cache || [];
-    if (!cleanQuery || Object.keys(cleanQuery).length === 0) return records;
-
-    return records.filter(item => {
-      if (cleanQuery.$or && Array.isArray(cleanQuery.$or)) {
-        const matchesOr = cleanQuery.$or.some(subQuery => {
-          return Object.entries(subQuery).every(([k, v]) => this._matchField(item, k, v));
-        });
-        if (!matchesOr) return false;
-      }
-
-      for (const [key, val] of Object.entries(cleanQuery)) {
-        if (key === '$or') continue;
-        if (!this._matchField(item, key, val)) return false;
-      }
-      return true;
-    });
-  }
-
-  async findOne(query = {}) {
+  async findOne(query = {}, options = {}) {
+    await this._ensureReady();
     const cleanQuery = sanitizeQuery(query);
-    if (this._mongoCol) {
-      try {
-        const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
-          ? { projection: { kycDocs: 0, kyc: 0 } } 
-          : {};
-        let doc = await this._mongoCol.findOne(cleanQuery, projection);
-        if (doc) {
-          const strId = String(doc._id || doc.id);
-          const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
-          if (idx >= 0) this.cache[idx] = doc;
-          else this.cache.push(doc);
-          return doc;
-        }
-
-        // For users collection: also check 'managers' collection in MongoDB Atlas
-        if (this.name === 'users' && this._mongoDb) {
-          doc = await this._mongoDb.collection('managers').findOne(cleanQuery, projection);
-          if (doc) {
-            const strId = String(doc._id || doc.id);
-            const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
-            if (idx >= 0) this.cache[idx] = doc;
-            else this.cache.push(doc);
-            return doc;
-          }
-        }
-        return null;
-      } catch (e) {
-        console.warn(`[Manager MongoDB] findOne error in '${this.name}':`, e.message);
-      }
+    const findOptions = { ...options };
+    if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
+      findOptions.projection = { kycDocs: 0, kyc: 0 };
     }
 
-    // Fallback to cache ONLY if Mongo connection is completely offline
-    let found = this._filterCache(cleanQuery)[0];
+    let doc = await this._mongoCol.findOne(cleanQuery, findOptions);
+    if (doc) return doc;
 
-    if (!found && this.name === 'users' && db && db.managers) {
-      found = db.managers._filterCache(cleanQuery)[0];
+    // For users collection: also check 'managers' collection in MongoDB
+    if (this.name === 'users' && this._mongoDb) {
+      doc = await this._mongoDb.collection('managers').findOne(cleanQuery, findOptions);
+      if (doc) return doc;
     }
 
-    return found || null;
+    return null;
   }
 
-  async findById(id) {
+  async findById(id, options = {}) {
     if (!id) return null;
+    await this._ensureReady();
     const strId = String(id);
-    if (this._mongoCol) {
+    const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
+    if (/^[0-9a-fA-F]{24}$/.test(strId)) {
       try {
-        const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
-        if (/^[0-9a-fA-F]{24}$/.test(strId)) {
-          try {
-            orConditions.push({ _id: new ObjectId(strId) });
-          } catch (e) {}
-        }
-        const projection = (this.mongoName === 'users' || this.mongoName === 'agents') 
-          ? { projection: { kycDocs: 0, kyc: 0 } } 
-          : {};
-        let doc = await this._mongoCol.findOne({ $or: orConditions }, projection);
-        if (doc) {
-          const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
-          if (idx >= 0) this.cache[idx] = doc;
-          else this.cache.push(doc);
-          return doc;
-        }
-
-        if (this.name === 'users' && this._mongoDb) {
-          doc = await this._mongoDb.collection('managers').findOne({ $or: orConditions }, projection);
-          if (doc) {
-            const idx = (this.cache || []).findIndex(i => String(i._id || i.id) === strId);
-            if (idx >= 0) this.cache[idx] = doc;
-            else this.cache.push(doc);
-            return doc;
-          }
-        }
-        return null;
-      } catch (e) {
-        console.warn(`[Manager MongoDB] findById error in '${this.name}':`, e.message);
-      }
+        orConditions.push({ _id: new ObjectId(strId) });
+      } catch (e) {}
     }
 
-    const records = this.cache || [];
-    let found = records.find(item => 
-      String(item._id || item.id || '') === strId || 
-      String(item.code || '') === strId || 
-      String(item.pincodeId || '') === strId || 
-      String(item.managerId || '') === strId
-    );
-
-    if (!found && this.name === 'users' && db.managers && db.managers.cache) {
-      found = db.managers.cache.find(item => 
-        String(item._id || item.id || '') === strId || 
-        String(item.code || '') === strId || 
-        String(item.pincodeId || '') === strId || 
-        String(item.managerId || '') === strId
-      );
+    const findOptions = { ...options };
+    if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
+      findOptions.projection = { kycDocs: 0, kyc: 0 };
     }
 
-    return found || null;
+    let doc = await this._mongoCol.findOne({ $or: orConditions }, findOptions);
+    if (doc) return doc;
+
+    if (this.name === 'users' && this._mongoDb) {
+      doc = await this._mongoDb.collection('managers').findOne({ $or: orConditions }, findOptions);
+      if (doc) return doc;
+    }
+
+    return null;
   }
 
   async insertOne(doc) {
+    await this._ensureReady();
     const genId = doc._id ? String(doc._id) : (doc.id ? String(doc.id) : uuidv4());
     const newDoc = {
       _id: genId,
@@ -299,33 +148,20 @@ class Collection {
     newDoc._id = String(newDoc._id);
     newDoc.id = String(newDoc.id);
 
-    const records = this.cache || [];
-    const idx = records.findIndex(i => String(i._id || i.id) === newDoc._id);
-    if (idx >= 0) {
-      records[idx] = newDoc;
-    } else {
-      records.push(newDoc);
-    }
-    this._write(records);
+    // Write directly to MongoDB and await completion
+    await this._mongoCol.updateOne(
+      { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
+      { $set: newDoc },
+      { upsert: true }
+    );
 
-    if (this._mongoCol) {
-      try {
-        await this._mongoCol.updateOne(
-          { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
-          { $set: newDoc },
-          { upsert: true }
-        );
-        // If inserting manager into users, sync to managers collection too
-        if (this.name === 'users' && this._mongoDb && (newDoc.role || '').includes('manager')) {
-          await this._mongoDb.collection('managers').updateOne(
-            { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
-            { $set: newDoc },
-            { upsert: true }
-          ).catch(() => {});
-        }
-      } catch (err) {
-        console.error(`[Manager MongoDB] Insert error in ${this.name}:`, err.message);
-      }
+    // If inserting manager into users, sync to managers collection too
+    if (this.name === 'users' && this._mongoDb && (newDoc.role || '').includes('manager')) {
+      await this._mongoDb.collection('managers').updateOne(
+        { $or: [{ _id: newDoc._id }, { id: newDoc.id }] },
+        { $set: newDoc },
+        { upsert: true }
+      ).catch(e => console.warn('[Manager MongoDB] Sync to managers warning:', e.message));
     }
 
     if (this._isReady) {
@@ -349,6 +185,8 @@ class Collection {
   }
 
   async insertMany(docs) {
+    if (!docs || !Array.isArray(docs) || docs.length === 0) return [];
+    await this._ensureReady();
     const newDocs = docs.map(doc => {
       const genId = doc._id ? String(doc._id) : (doc.id ? String(doc.id) : uuidv4());
       return {
@@ -360,109 +198,67 @@ class Collection {
       };
     });
 
-    const records = this.cache || [];
-    for (const d of newDocs) {
-      const idx = records.findIndex(i => String(i._id || i.id) === d._id);
-      if (idx >= 0) {
-        records[idx] = { ...records[idx], ...d };
-      } else {
-        records.push(d);
-      }
-    }
-    this._write(records);
-
-    if (this._mongoCol && newDocs.length > 0) {
-      Promise.all(newDocs.map(d =>
-        this._mongoCol.updateOne(
-          { $or: [{ _id: d._id }, { id: d.id }] },
-          { $set: d },
-          { upsert: true }
-        )
-      )).catch(err => {
-        console.error(`[Manager MongoDB] Async insertMany error in ${this.name}:`, err.message);
-      });
-    }
+    // Write directly to MongoDB and await completion
+    await Promise.all(newDocs.map(d =>
+      this._mongoCol.updateOne(
+        { $or: [{ _id: d._id }, { id: d.id }] },
+        { $set: d },
+        { upsert: true }
+      )
+    ));
 
     return newDocs;
   }
 
   async updateOne(query, update) {
+    await this._ensureReady();
     const cleanQuery = sanitizeQuery(query);
-    const records = this.cache || [];
-    const index = records.findIndex(item => {
-      for (const [key, val] of Object.entries(cleanQuery)) {
-        if (item[key] !== val) return false;
-      }
-      return true;
-    });
-
     const patch = update.$set ? update.$set : update;
-    let updated = null;
-    if (index !== -1) {
-      updated = {
-        ...records[index],
+    const updatePayload = {
+      $set: {
         ...patch,
         updatedAt: new Date().toISOString()
-      };
-      records[index] = updated;
-      this._write(records);
+      }
+    };
+
+    const res = await this._mongoCol.updateOne(cleanQuery, updatePayload);
+    if (res.matchedCount === 0) {
+      return null;
     }
 
-    if (this._mongoCol) {
-      this._mongoCol.updateOne(cleanQuery, { $set: { ...patch, updatedAt: new Date().toISOString() } })
-        .catch(err => {
-          console.error(`[Manager MongoDB] updateOne error in ${this.name}:`, err.message);
-        });
+    if (this.name === 'users' && this._mongoDb) {
+      await this._mongoDb.collection('managers').updateOne(cleanQuery, updatePayload).catch(() => {});
     }
 
-    return updated;
+    return await this.findOne(cleanQuery);
   }
 
   async findByIdAndUpdate(id, update) {
     if (!id) return null;
+    await this._ensureReady();
     const strId = String(id);
     const patch = update.$set ? update.$set : update;
-    let updated = null;
-
-    if (this._mongoCol) {
+    const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
+    if (/^[0-9a-fA-F]{24}$/.test(strId)) {
       try {
-        const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
-        if (/^[0-9a-fA-F]{24}$/.test(strId)) {
-          try {
-            orConditions.push({ _id: new ObjectId(strId) });
-          } catch (e) {}
-        }
-        await this._mongoCol.updateOne(
-          { $or: orConditions },
-          { $set: { ...patch, updatedAt: new Date().toISOString() } }
-        );
-        updated = await this.findById(id);
-
-        if (this.name === 'users' && this._mongoDb) {
-          await this._mongoDb.collection('managers').updateOne(
-            { $or: orConditions },
-            { $set: { ...patch, updatedAt: new Date().toISOString() } }
-          ).catch(() => {});
-        }
-      } catch (err) {
-        console.error(`[Manager MongoDB] findByIdAndUpdate error in ${this.name}:`, err.message);
-      }
+        orConditions.push({ _id: new ObjectId(strId) });
+      } catch (e) {}
     }
 
-    const records = this.cache || [];
-    const index = records.findIndex(item => String(item._id || item.id) === strId);
-    if (index !== -1) {
-      records[index] = {
-        ...records[index],
+    const updatePayload = {
+      $set: {
         ...patch,
         updatedAt: new Date().toISOString()
-      };
-      updated = updated || records[index];
-      this._write(records);
-    } else if (updated) {
-      records.push(updated);
-      this._write(records);
+      }
+    };
+
+    await this._mongoCol.updateOne({ $or: orConditions }, updatePayload);
+
+    if (this.name === 'users' && this._mongoDb) {
+      await this._mongoDb.collection('managers').updateOne({ $or: orConditions }, updatePayload).catch(() => {});
     }
+
+    const updated = await this.findById(id);
 
     if (this._isReady && updated) {
       eventPublisher.publishEntityEvent({
@@ -485,46 +281,41 @@ class Collection {
   }
 
   async deleteOne(query) {
+    await this._ensureReady();
     const cleanQuery = sanitizeQuery(query);
-    const records = this.cache || [];
-    const filtered = records.filter(item => {
-      for (const [key, val] of Object.entries(cleanQuery)) {
-        if (item[key] === val) return false;
-      }
-      return true;
-    });
-    this._write(filtered);
-
-    if (this._mongoCol) {
-      try {
-        await this._mongoCol.deleteOne(cleanQuery);
-        if (this.name === 'users' && this._mongoDb) {
-          await this._mongoDb.collection('managers').deleteOne(cleanQuery);
-        }
-      } catch (err) {
-        console.error(`[Manager MongoDB] deleteOne error in ${this.name}:`, err.message);
-      }
+    const res = await this._mongoCol.deleteOne(cleanQuery);
+    if (this.name === 'users' && this._mongoDb) {
+      await this._mongoDb.collection('managers').deleteOne(cleanQuery).catch(() => {});
     }
+    return { deletedCount: res.deletedCount || 0 };
+  }
 
-    return { deletedCount: records.length - filtered.length };
+  async deleteMany(query = {}) {
+    await this._ensureReady();
+    const cleanQuery = sanitizeQuery(query);
+    const res = await this._mongoCol.deleteMany(cleanQuery);
+    if (this.name === 'users' && this._mongoDb) {
+      await this._mongoDb.collection('managers').deleteMany(cleanQuery).catch(() => {});
+    }
+    return { deletedCount: res.deletedCount || 0 };
   }
 
   async count(query = {}) {
-    const items = await this.find(query);
-    return items.length;
+    await this._ensureReady();
+    const cleanQuery = sanitizeQuery(query);
+    return await this._mongoCol.countDocuments(cleanQuery);
   }
 
   async clear() {
-    this._write([]);
-    if (this._mongoCol) {
-      try {
-        await this._mongoCol.deleteMany({});
-      } catch (e) {}
+    await this._ensureReady();
+    await this._mongoCol.deleteMany({});
+    if (this.name === 'users' && this._mongoDb) {
+      await this._mongoDb.collection('managers').deleteMany({}).catch(() => {});
     }
   }
 }
 
-const db = {
+const staticCollections = {
   users: new Collection('users', 'users'),
   managers: new Collection('managers', 'managers'),
   states: new Collection('states', 'states'),
@@ -541,23 +332,49 @@ const db = {
   notifications: new Collection('notifications', 'notifications'),
   settings: new Collection('settings', 'settings'),
   tickets: new Collection('tickets', 'tickets'),
-  securitySessions: new Collection('security_sessions', 'securitysessions')
+  securitySessions: new Collection('security_sessions', 'securitysessions'),
+  kycRecords: new Collection('kyc_records', 'kyc_records'),
+  managerrequests: new Collection('managerrequests', 'managerrequests'),
+  otpverifications: new Collection('otpverifications', 'otpverifications')
 };
 
+let activeMongoDb = null;
+
+// Proxy handler to allow dynamic collection access for any unforeseen collection
+const db = new Proxy(staticCollections, {
+  get(target, prop) {
+    if (prop in target) {
+      return target[prop];
+    }
+    if (typeof prop === 'string' && prop !== 'then' && prop !== 'inspect' && prop !== 'nodeType') {
+      const col = new Collection(prop, prop.toLowerCase());
+      if (activeMongoDb) {
+        col.initMongo(activeMongoDb);
+      }
+      target[prop] = col;
+      return col;
+    }
+    return target[prop];
+  }
+});
 
 let initPromise = null;
-function initDatabase() {
+
+async function initDatabase() {
   if (initPromise) return initPromise;
+
   initPromise = (async () => {
     try {
       const mongoDb = await getMongoDb();
       if (!mongoDb) {
-        console.warn('[Manager Database] MongoDB Atlas not reachable, using local store.');
-        return false;
+        throw new Error('Could not connect to MongoDB Atlas instance.');
       }
-      const collections = Object.values(db).filter(c => c && typeof c.initMongo === 'function');
+      activeMongoDb = mongoDb;
+
+      const collections = Object.values(staticCollections).filter(c => c && typeof c.initMongo === 'function');
       await Promise.all(collections.map(col => col.initMongo(mongoDb)));
-      console.log('✅ [Manager Database] All Manager collections linked directly to MongoDB Atlas single source of truth.');
+
+      console.log(`✅ [Manager Database] Connected directly to MongoDB '${mongoDb.databaseName}' as single source of truth.`);
 
       // Ensure performance indexes in MongoDB Atlas
       try {
@@ -587,18 +404,20 @@ function initDatabase() {
           mongoDb.collection('fieldvisits').createIndex({ vendorId: 1 })
         ]);
         console.log('⚡ [Manager Database] Performance indexes verified in MongoDB Atlas.');
-      } catch (idxErr) {}
+      } catch (idxErr) {
+        console.warn('[Manager Database] Index creation warning:', idxErr.message);
+      }
 
       return true;
     } catch (err) {
-      console.error('[Manager Database] Init error:', err.message);
-      return false;
+      initPromise = null;
+      console.error('❌ [Manager Database] MongoDB initialization error:', err.message);
+      throw err;
     }
   })();
+
   return initPromise;
 }
-
-initDatabase().catch(e => console.warn('[Manager Database] Auto-init:', e.message));
 
 db.initDatabase = initDatabase;
 module.exports = db;
