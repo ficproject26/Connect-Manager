@@ -124,13 +124,13 @@ app.get('/api/health', (req, res) => {
     status: 'online',
     timestamp: new Date().toISOString(),
     service: 'Agent Manager Portal Backend API',
-    database: db.getDatabaseName ? db.getDatabaseName() : 'connect_manager_fresh'
+    database: db.getDatabaseName ? db.getDatabaseName() : (process.env.DB_NAME || 'connect_manager_fresh')
   });
 });
 
 app.get('/api/health/db', async (req, res) => {
   try {
-    const dbName = db.getDatabaseName ? db.getDatabaseName() : 'connect_manager_fresh';
+    const dbName = db.getDatabaseName ? db.getDatabaseName() : (process.env.DB_NAME || 'connect_manager_fresh');
     const [usersCount, vendorsCount, tasksCount, agentsCount] = await Promise.all([
       db.users.count().catch(() => 0),
       db.vendors.count().catch(() => 0),
