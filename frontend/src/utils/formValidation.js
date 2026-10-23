@@ -237,9 +237,12 @@ export const validatePasswordMatch = (password, confirmPassword) => {
 // ==============================================================================
 
 export const cleanAadhaar = (aadhaar) => {
-  if (!aadhaar) return '';
-  return String(aadhaar).replace(/\D/g, '');
+  if (aadhaar === null || aadhaar === undefined) return '';
+  if (typeof aadhaar !== 'string' && typeof aadhaar !== 'number') return '';
+  return String(aadhaar).trim().replace(/[\s-]/g, '');
 };
+
+export const cleanAadhar = cleanAadhaar;
 
 export const maskAadhaar = (aadhaar) => {
   const clean = cleanAadhaar(aadhaar);

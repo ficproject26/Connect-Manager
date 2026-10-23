@@ -190,25 +190,46 @@ function validatePasswordMatch(password, confirmPassword) {
 // ==============================================================================
 // Exactly 12 numeric digits
 function cleanAadhaar(aadhaar) {
-  return aadhaar ? String(aadhaar).trim().replace(/\s/g, '') : '';
+  if (aadhaar === null || aadhaar === undefined) return '';
+  if (typeof aadhaar !== 'string' && typeof aadhaar !== 'number') return '';
+  return String(aadhaar).trim().replace(/[\s-]/g, '');
 }
 
+const cleanAadhar = cleanAadhaar;
+
 function validateAadhaar(aadhaar, isRequired = false) {
-  const clean = cleanAadhaar(aadhaar);
+  if (aadhaar === null || aadhaar === undefined || (typeof aadhaar === 'string' && !aadhaar.trim())) {
+    return isRequired ? 'Aadhaar number is required.' : null;
+  }
+  if (typeof aadhaar !== 'string' && typeof aadhaar !== 'number') {
+    return 'Aadhaar number must contain numeric digits only.';
+  }
+  const rawStr = String(aadhaar).trim();
+  if (/[^\d\s-]/.test(rawStr)) {
+    return 'Aadhaar number must contain numeric digits only.';
+  }
+  const clean = cleanAadhaar(rawStr);
   if (!clean) {
     return isRequired ? 'Aadhaar number is required.' : null;
   }
-  if (!/^\d{12}$/.test(clean)) {
+  if (!/^\d+$/.test(clean)) {
+    return 'Aadhaar number must contain numeric digits only.';
+  }
+  if (clean.length !== 12) {
     return 'Aadhaar number must be exactly 12 numeric digits.';
   }
   return null;
 }
+
+const validateAadhar = validateAadhaar;
 
 function maskAadhaar(aadhaar) {
   const clean = cleanAadhaar(aadhaar);
   if (!clean || clean.length < 4) return clean || '';
   return `•••• •••• ${clean.slice(-4)}`;
 }
+
+const maskAadhar = maskAadhaar;
 
 // ==============================================================================
 // 6. PAN CARD VALIDATION
@@ -381,8 +402,11 @@ module.exports = {
   validatePassword,
   validatePasswordMatch,
   cleanAadhaar,
+  cleanAadhar,
   validateAadhaar,
+  validateAadhar,
   maskAadhaar,
+  maskAadhar,
   cleanPan,
   validatePan,
   maskPan,

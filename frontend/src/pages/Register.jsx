@@ -47,7 +47,9 @@ import {
   validatePassword,
   validatePasswordMatch,
   cleanAadhaar,
+  cleanAadhar,
   validateAadhaar,
+  validateAadhar,
   cleanPan,
   validatePan,
   cleanAccountNumber,
@@ -171,8 +173,8 @@ export default function Register({
 
   const maskAadhaar = (num) => {
     if (!num) return null;
-    const clean = String(num).replace(/\D/g, '');
-    if (clean.length < 4) return '•••• •••• ••••';
+    const clean = cleanAadhaar(num);
+    if (!clean || clean.length < 4) return '•••• •••• ••••';
     return `•••• •••• ${clean.slice(-4)}`;
   };
 
@@ -534,6 +536,14 @@ export default function Register({
       setAadharFile(file);
       setAadharPreview(previewUrl || file.name);
       setUploadedAadharUrl(null);
+      const aadhaarErr = validateAadhaar(aadharNumber, true);
+      if (aadhaarErr) {
+        setAadharError(aadhaarErr);
+        setFieldErrors(prev => ({ ...prev, aadharNumber: aadhaarErr, aadharFile: '' }));
+      } else {
+        setAadharError('');
+        setFieldErrors(prev => ({ ...prev, aadharFile: '' }));
+      }
     } else if (type === 'pan') {
       setPanFile(file);
       setPanPreview(previewUrl || file.name);
@@ -556,6 +566,7 @@ export default function Register({
       setAadharFile(null);
       setAadharPreview(null);
       setUploadedAadharUrl(null);
+      setFieldErrors(prev => ({ ...prev, aadharFile: 'Aadhaar Card document upload is mandatory.' }));
     } else if (type === 'pan') {
       if (panPreview && panPreview.startsWith('blob:')) URL.revokeObjectURL(panPreview);
       setPanFile(null);
@@ -653,11 +664,21 @@ export default function Register({
       }
     } else if (step === 4) {
       const aadharErr = validateAadhaar(aadharNumber, true);
-      if (aadharErr) errors.aadharNumber = aadharErr;
+      if (aadharErr) {
+        errors.aadharNumber = aadharErr;
+        setAadharError(aadharErr);
+      } else {
+        setAadharError('');
+      }
       if (!aadharFile) errors.aadharFile = 'Aadhaar Card document upload is mandatory.';
 
       const panErr = validatePan(panNumber, true);
-      if (panErr) errors.panNumber = panErr;
+      if (panErr) {
+        errors.panNumber = panErr;
+        setPanError(panErr);
+      } else {
+        setPanError('');
+      }
       if (!panFile) errors.panFile = 'PAN Card document upload is mandatory.';
 
       if (!bankFile) errors.bankFile = 'Bank Passbook / Cheque document upload is mandatory.';
@@ -726,6 +747,27 @@ export default function Register({
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
+    }
+
+    // Explicit safety check on Aadhaar & PAN validation before final submission
+    const finalAadhaarErr = validateAadhaar(aadharNumber, true);
+    if (finalAadhaarErr) {
+      setAadharError(finalAadhaarErr);
+      setFieldErrors(prev => ({ ...prev, aadharNumber: finalAadhaarErr }));
+      setCurrentStep(4);
+      setError(finalAadhaarErr);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
+    const finalPanErr = validatePan(panNumber, true);
+    if (finalPanErr) {
+      setPanError(finalPanErr);
+      setFieldErrors(prev => ({ ...prev, panNumber: finalPanErr }));
+      setCurrentStep(4);
+      setError(finalPanErr);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
     }
 
     if (capacityInfo && capacityInfo.isFull && role !== 'pincode_manager') {
@@ -834,6 +876,10 @@ export default function Register({
       }
 
       // 3. Submit Registration
+      const cleanAadhaarNumber = cleanAadhaar(aadharNumber);
+      const cleanPanNumber = cleanPan(panNumber);
+      const cleanAadhar = cleanAadhaarNumber; // alias ensuring safe reference
+
       const regPayload = {
         name: name.trim(),
         email: email.trim().toLowerCase(),
@@ -860,11 +906,11 @@ export default function Register({
         },
         password,
         role,
-        aadharNumber: cleanAadhar,
-        panNumber: cleanPan,
+        aadharNumber: cleanAadhaarNumber,
+        panNumber: cleanPanNumber,
         documents: {
-          aadharNumber: cleanAadhar,
-          panNumber: cleanPan,
+          aadharNumber: cleanAadhaarNumber,
+          panNumber: cleanPanNumber,
           aadharUrl,
           panUrl,
           bankUrl,
@@ -2257,8 +2303,10 @@ export default function Register({
                   <div className="responsive-grid-4">
                     {/* 1. Aadhaar Card Upload */}
                     <div style={{
-                      border: aadharFile ? '1.5px solid #10b981' : (fieldErrors.aadharFile || fieldErrors.aadharNumber ? '1.5px solid #ef4444' : '1px solid var(--border-normal)'),
-                      background: aadharFile ? '#f0fdf4' : '#ffffff',
+                      border: (aadharError || fieldErrors.aadharNumber || fieldErrors.aadharFile)
+                        ? '1.5px solid #ef4444'
+                        : (aadharFile && !validateAadhaar(aadharNumber, true) ? '1.5px solid #10b981' : '1px solid var(--border-normal)'),
+                      background: (aadharFile && !validateAadhaar(aadharNumber, true) && !fieldErrors.aadharFile && !fieldErrors.aadharNumber && !aadharError) ? '#f0fdf4' : '#ffffff',
                       borderRadius: 'var(--radius-md)',
                       padding: '12px',
                       display: 'flex',
@@ -2308,22 +2356,52 @@ export default function Register({
 
                       {/* Aadhaar Number Input */}
                       <div style={{ margin: '4px 0' }}>
-                        <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155', display: 'block', marginBottom: '3px' }}>
-                          Aadhaar Number (12 Digits) *
-                        </label>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '3px' }}>
+                          <label style={{ fontSize: '0.72rem', fontWeight: 700, color: '#334155' }}>
+                            Aadhaar Number (12 Digits) *
+                          </label>
+                          {Boolean(aadharNumber && !validateAadhaar(aadharNumber, true)) && (
+                            <span style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                              <Check size={11} /> Valid Format
+                            </span>
+                          )}
+                        </div>
                         <input
                           type="text"
-                          maxLength={12}
-                          placeholder="12-digit Aadhaar"
+                          maxLength={16}
+                          placeholder="12-digit Aadhaar (e.g. 1234 5678 9012)"
                           value={aadharNumber}
                           onChange={(e) => {
-                            const val = e.target.value.replace(/\D/g, '').slice(0, 12);
+                            const val = e.target.value;
                             setAadharNumber(val);
-                            if (aadharError && val.length === 12) setAadharError('');
-                            if (fieldErrors.aadharNumber && val.length === 12) setFieldErrors(prev => ({ ...prev, aadharNumber: '' }));
+                            const clean = cleanAadhaar(val);
+                            if (!val.trim()) {
+                              if (aadharError || fieldErrors.aadharNumber) {
+                                const err = 'Aadhaar number is required.';
+                                setAadharError(err);
+                                setFieldErrors(prev => ({ ...prev, aadharNumber: err }));
+                              }
+                            } else {
+                              const err = validateAadhaar(val, false);
+                              if (!err && clean.length === 12) {
+                                setAadharError('');
+                                setFieldErrors(prev => ({ ...prev, aadharNumber: '' }));
+                              } else if (aadharError || fieldErrors.aadharNumber) {
+                                const fullErr = validateAadhaar(val, true);
+                                setAadharError(fullErr || '');
+                                setFieldErrors(prev => ({ ...prev, aadharNumber: fullErr || '' }));
+                              } else if (/[^\d\s-]/.test(val) || clean.length > 12) {
+                                const charErr = validateAadhaar(val, false);
+                                if (charErr) {
+                                  setAadharError(charErr);
+                                  setFieldErrors(prev => ({ ...prev, aadharNumber: charErr }));
+                                }
+                              }
+                            }
                           }}
                           onBlur={() => {
                             const err = validateAadhaar(aadharNumber, true);
+                            setAadharError(err || '');
                             setFieldErrors(prev => ({ ...prev, aadharNumber: err || '' }));
                           }}
                           style={{
@@ -2332,7 +2410,9 @@ export default function Register({
                             padding: '0 8px',
                             fontSize: '0.78rem',
                             borderRadius: '6px',
-                            border: (aadharError || fieldErrors.aadharNumber) ? '1.5px solid #ef4444' : '1px solid #cbd5e1',
+                            border: (aadharError || fieldErrors.aadharNumber)
+                              ? '1.5px solid #ef4444'
+                              : (Boolean(aadharNumber && !validateAadhaar(aadharNumber, true)) ? '1.5px solid #10b981' : '1px solid #cbd5e1'),
                             background: '#ffffff',
                             fontWeight: 600,
                             letterSpacing: '0.5px'
@@ -2341,6 +2421,11 @@ export default function Register({
                         {(aadharError || fieldErrors.aadharNumber) && (
                           <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
                             {aadharError || fieldErrors.aadharNumber}
+                          </span>
+                        )}
+                        {fieldErrors.aadharFile && (
+                          <span style={{ fontSize: '0.65rem', color: '#ef4444', fontWeight: 600, display: 'block', marginTop: '2px' }}>
+                            {fieldErrors.aadharFile}
                           </span>
                         )}
                       </div>
@@ -3020,10 +3105,26 @@ export default function Register({
                       <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                         <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: 600 }}>KYC VERIFICATION DOCUMENTS</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px', fontSize: '0.76rem', color: '#334155' }}>
-                          <div>• Aadhaar: <strong>{maskAadhaar(aadharNumber)}</strong> {aadharFile ? `(📄 ${aadharFile.name})` : '⚠️ Missing'}</div>
-                          <div>• PAN Card: <strong>{maskPan(panNumber)}</strong> {panFile ? `(📄 ${panFile.name})` : '⚠️ Missing'}</div>
-                          <div>• Bank Passbook: {bankFile ? `(📄 ${bankFile.name})` : '⚠️ Missing'}</div>
-                          <div>• Digital Signature: {signatureFile ? `(📄 ${signatureFile.name})` : '⚠️ Missing'}</div>
+                          <div>
+                            • Aadhaar:{' '}
+                            {validateAadhaar(aadharNumber, true) ? (
+                              <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ {validateAadhaar(aadharNumber, true)}</span>
+                            ) : (
+                              <strong>{maskAadhaar(aadharNumber) || '—'}</strong>
+                            )}{' '}
+                            {aadharFile ? `(📄 ${aadharFile.name})` : <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ Missing</span>}
+                          </div>
+                          <div>
+                            • PAN Card:{' '}
+                            {validatePan(panNumber, true) ? (
+                              <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ {validatePan(panNumber, true)}</span>
+                            ) : (
+                              <strong>{maskPan(panNumber) || '—'}</strong>
+                            )}{' '}
+                            {panFile ? `(📄 ${panFile.name})` : <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ Missing</span>}
+                          </div>
+                          <div>• Bank Passbook: {bankFile ? `(📄 ${bankFile.name})` : <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ Missing</span>}</div>
+                          <div>• Digital Signature: {signatureFile ? `(📄 ${signatureFile.name})` : <span style={{ color: '#ef4444', fontWeight: 600 }}>⚠️ Missing</span>}</div>
                         </div>
                       </div>
 

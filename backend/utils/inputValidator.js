@@ -226,9 +226,12 @@ const validatePasswordMatch = (password, confirmPassword) => {
 // ==============================================================================
 
 const cleanAadhaar = (aadhaar) => {
-  if (!aadhaar) return '';
-  return String(aadhaar).replace(/\D/g, '');
+  if (aadhaar === null || aadhaar === undefined) return '';
+  if (typeof aadhaar !== 'string' && typeof aadhaar !== 'number') return '';
+  return String(aadhaar).trim().replace(/[\s-]/g, '');
 };
+
+const cleanAadhar = cleanAadhaar;
 
 const maskAadhaar = (aadhaar) => {
   const clean = cleanAadhaar(aadhaar);
@@ -529,6 +532,7 @@ module.exports = {
   validatePasswordPolicy,
   validatePasswordMatch,
   cleanAadhaar,
+  cleanAadhar,
   maskAadhaar,
   validateAadhaar,
   cleanPAN,
