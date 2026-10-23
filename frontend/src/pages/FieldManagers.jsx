@@ -91,6 +91,24 @@ const FieldManagers = () => {
     }
   }, [permittedRoleOptions, roleFilter]);
 
+  const isOperationalActiveManager = (m) => {
+    if (!m) return false;
+    const st = normalizeString(m.status).toLowerCase();
+    const ost = normalizeString(m.overallRegistrationStatus).toLowerCase();
+    const kyc = normalizeString(m.kycStatus || m.kycVerificationStatus).toLowerCase();
+
+    if (st !== 'active' && st !== 'approved') return false;
+    if (ost && ost !== 'active' && ost !== 'approved') return false;
+    if (m.isActive === false || m.isApproved === false) return false;
+
+    if (st.includes('pending') || st.includes('review') || st.includes('reject')) return false;
+    if (ost.includes('pending') || ost.includes('review') || ost.includes('reject')) return false;
+
+    if (kyc && !['verified', 'approved'].includes(kyc) && m.isKycVerified !== true) return false;
+
+    return true;
+  };
+
   const applyManagerData = (res) => {
     if (!res) return;
     const currentId = String(user?.id || user?._id || '');
@@ -99,9 +117,9 @@ const FieldManagers = () => {
     const resSubs = Array.isArray(res.subordinates) ? res.subordinates : (Array.isArray(res.data) ? res.data : []);
     const rawAll = resAll || [...resPeers, ...resSubs];
     const safeRawAll = Array.isArray(rawAll) ? rawAll : [];
-    const all = safeRawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId && m.relation !== 'supervisor');
-    const peers = (resPeers.length > 0 ? resPeers : all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
-    const subordinates = (resSubs.length > 0 ? resSubs : all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId);
+    const all = safeRawAll.filter(m => !m.isSelf && String(m.id || m._id) !== currentId && m.relation !== 'supervisor' && isOperationalActiveManager(m));
+    const peers = (resPeers.length > 0 ? resPeers : all.filter(m => m.relation === 'peer')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId && isOperationalActiveManager(m));
+    const subordinates = (resSubs.length > 0 ? resSubs : all.filter(m => m.relation === 'subordinate')).filter(m => !m.isSelf && String(m.id || m._id) !== currentId && isOperationalActiveManager(m));
 
     setAllManagers(all);
     setPeersList(peers);
@@ -264,6 +282,36 @@ const FieldManagers = () => {
       );
     }
     return <span>{getDisplayValue(role, 'Manager')}</span>;
+  };
+
+  const getStatusBadge = (status) => {
+    const s = normalizeString(status).toLowerCase();
+    if (s === 'active' || s === 'approved') {
+      return (
+        <span className="status-badge active" style={{ fontSize: '0.72rem', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+          <span className="status-dot"></span> Active
+        </span>
+      );
+    }
+    if (s === 'suspended') {
+      return (
+        <span className="status-badge suspended" style={{ fontSize: '0.72rem', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+          <span className="status-dot"></span> Suspended
+        </span>
+      );
+    }
+    if (s.includes('pending') || s.includes('review')) {
+      return (
+        <span className="status-badge pending" style={{ fontSize: '0.72rem', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap', background: '#fef3c7', color: '#92400e', border: '1px solid #fde68a' }}>
+          <span className="status-dot" style={{ background: '#d97706' }}></span> Under Review
+        </span>
+      );
+    }
+    return (
+      <span className="status-badge inactive" style={{ fontSize: '0.72rem', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
+        <span className="status-dot"></span> {getDisplayValue(status, 'Inactive')}
+      </span>
+    );
   };
 
   const getRelationBadge = (m) => {
@@ -697,9 +745,7 @@ const FieldManagers = () => {
                     {getJurisdictionFormatted(m)}
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <span className="status-badge active" style={{ fontSize: '0.72rem', padding: '3px 9px', display: 'inline-flex', alignItems: 'center', gap: '4px', whiteSpace: 'nowrap' }}>
-                      <span className="status-dot"></span> Active
-                    </span>
+                    {getStatusBadge(m.status)}
                   </td>
                   <td style={{ textAlign: 'center', paddingRight: '20px' }}>
                     <button
@@ -829,9 +875,7 @@ const FieldManagers = () => {
                 </div>
 
                 <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="status-badge active" style={{ fontSize: '0.7rem', padding: '2px 6px' }}>
-                    <span className="status-dot"></span> Active
-                  </span>
+                  {getStatusBadge(m.status)}
 
                   <button
                     onClick={() => setSelectedManager(m)}
@@ -966,9 +1010,7 @@ const FieldManagers = () => {
               <div style={{ display: 'flex', gap: '6px', marginBottom: '16px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {getRelationBadge(selectedManager)}
                 {getRoleBadge(selectedManager.role)}
-                <span className="status-badge active" style={{ fontSize: '0.72rem', padding: '3px 8px' }}>
-                  <span className="status-dot"></span> Active
-                </span>
+                {getStatusBadge(selectedManager.status)}
               </div>
 
               {/* Jurisdiction Details Box */}

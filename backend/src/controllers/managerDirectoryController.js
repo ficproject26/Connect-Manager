@@ -57,6 +57,33 @@ const isMockRecord = (m) => {
   return false;
 };
 
+// Validate that candidate manager has completed all onboarding steps, passed KYC verification, and received Admin approval
+const isFullyActivatedManager = (m) => {
+  if (!m) return false;
+  const st = norm(m.status);
+  const ost = norm(m.overallRegistrationStatus);
+  const kyc = norm(m.kycStatus || m.kycVerificationStatus);
+  const mainAdminSt = norm(m.mainAdminApprovalStatus);
+  const subAdminSt = norm(m.subAdminApprovalStatus);
+
+  // Must have active/approved status
+  if (st !== 'active' && st !== 'approved') return false;
+  if (ost && ost !== 'active' && ost !== 'approved') return false;
+  if (m.isActive === false || m.isApproved === false) return false;
+
+  // Strictly disallow any pending, under-review, or rejected lifecycle flags
+  if (st.includes('pending') || st.includes('review') || st.includes('reject')) return false;
+  if (ost.includes('pending') || ost.includes('review') || ost.includes('reject')) return false;
+  if (mainAdminSt.includes('pending') || mainAdminSt.includes('waiting') || mainAdminSt.includes('reject')) return false;
+  if (subAdminSt.includes('pending') || subAdminSt.includes('reject')) return false;
+
+  // KYC verification must be confirmed
+  const isKycVerified = kyc === 'verified' || kyc === 'approved' || m.isKycVerified === true;
+  if (!isKycVerified) return false;
+
+  return true;
+};
+
 const getLowerLevelManagers = async (req, res) => {
   try {
     const user = req.user;
@@ -144,21 +171,15 @@ const getLowerLevelManagers = async (req, res) => {
       const uniqueManagers = [];
       for (const u of combined) {
         if (!u || !isManagerAccount(u) || isMockRecord(u)) continue;
-        // Strictly exclude pending registrations and unapproved applicants from active Manager Directory
-        const st = norm(u.status);
-        const ost = norm(u.overallRegistrationStatus);
-        const isApproved = u.isApproved === true || st === 'active' || st === 'approved';
-        if (!isApproved) continue;
-        if (st.includes('pending') || st.includes('review') || st.includes('reject') ||
-            ost.includes('pending') || ost.includes('review') || ost.includes('reject')) {
-          continue;
-        }
+        if (!isFullyActivatedManager(u)) continue;
 
         const key = String(u._id || u.id || u.email || u.mobile || '');
         if (!key || seen.has(key)) continue;
         seen.add(key);
 
         const matchedMgr = mgrByEmail.get(norm(u.email)) || mgrById.get(String(u._id || u.id)) || null;
+        if (matchedMgr && !isFullyActivatedManager(matchedMgr)) continue;
+
         const mergedManager = {
           ...u,
           ...(matchedMgr || {}),
@@ -167,6 +188,8 @@ const getLowerLevelManagers = async (req, res) => {
           bankAccount: u.bankAccount || u.bankDetails || matchedMgr?.bankAccount || matchedMgr?.bankDetails || null,
           managerId: u.managerId || matchedMgr?.managerId || null
         };
+
+        if (!isFullyActivatedManager(mergedManager)) continue;
 
         uniqueManagers.push(mergedManager);
       }

@@ -420,9 +420,9 @@ const login = async (req, res) => {
         return res.status(403).json({ success: false, code: 'REGISTRATION_REJECTED', message: 'Manager registration was rejected. Please contact your administrator.' });
       }
 
-      const isApproved = (statusLower === 'active' || statusLower === 'approved') && user.isActive !== false;
+      const isApproved = (statusLower === 'active' || statusLower === 'approved') && user.isActive !== false && user.isApproved !== false;
       const rawKycStatus = String(user.kycStatus || user.kycVerificationStatus || '').toLowerCase();
-      const isKycApproved = rawKycStatus === 'approved' || rawKycStatus === 'verified' || user.isKycVerified === true || !user.kycStatus;
+      const isKycApproved = rawKycStatus === 'approved' || rawKycStatus === 'verified' || user.isKycVerified === true || (statusLower === 'active' && user.isApproved === true && !user.kycStatus);
 
       if (!isApproved || !isKycApproved) {
         if (statusLower === 'kyc_pending' || statusLower === 'kyc_review' || rawKycStatus === 'pending' || rawKycStatus === 'pending_verification' || rawKycStatus === 'under_verification') {

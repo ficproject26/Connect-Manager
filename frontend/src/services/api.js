@@ -793,7 +793,7 @@ export const managerService = {
     return this.getManagerDirectory(params, currentUser);
   },
   async getManagerDirectory(params = {}, currentUser = null) {
-    const query = new URLSearchParams(params);
+    const query = new URLSearchParams({ status: 'active', ...params });
     let data = null;
     try {
       const res = await fetch(`${API_BASE}/managers?${query.toString()}`, {

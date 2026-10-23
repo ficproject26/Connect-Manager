@@ -64,12 +64,47 @@ const authMiddleware = async (req, res, next) => {
         });
       }
 
-      if (!isApprovedStatus(user.status) || user.isActive === false) {
+      const rawStatus = String(user.status || '').toLowerCase().trim();
+      const rawKyc = String(user.kycStatus || user.kycVerificationStatus || '').toLowerCase().trim();
+      const rawMainAdmin = String(user.mainAdminApprovalStatus || '').toLowerCase().trim();
+
+      if (!isApprovedStatus(user.status) || user.isActive === false || user.isApproved === false) {
         return res.status(403).json({
           success: false,
           code: 'APPROVAL_REQUIRED',
           approvalStatus: user.status,
           message: 'Your Manager application is under review or pending verification. Access to manager APIs is restricted until approved.'
+        });
+      }
+
+      // Enforce KYC verification check
+      if (rawKyc === 'pending' || rawKyc === 'pending_verification' || rawKyc === 'under_verification' || rawStatus === 'pending_kyc_verification' || rawStatus === 'kyc_pending') {
+        return res.status(403).json({
+          success: false,
+          code: 'KYC_PENDING',
+          approvalStatus: user.status,
+          kycStatus: user.kycStatus,
+          message: 'Your application has passed Admin review and is pending KYC verification. Access is locked until verified.'
+        });
+      }
+
+      if (rawKyc === 'rejected' || rawStatus === 'kyc_rejected') {
+        return res.status(403).json({
+          success: false,
+          code: 'KYC_REJECTED',
+          approvalStatus: user.status,
+          kycStatus: user.kycStatus,
+          message: 'Your KYC verification was rejected. Please contact support.'
+        });
+      }
+
+      // Enforce Main Admin approval check
+      if (rawMainAdmin === 'pending' || rawMainAdmin === 'waiting_subadmin' || rawStatus.includes('pending_main_admin') || rawStatus.includes('pending_sub_admin')) {
+        return res.status(403).json({
+          success: false,
+          code: 'APPROVAL_REQUIRED',
+          approvalStatus: user.status,
+          message: 'Your Manager application is awaiting Admin review. Access to manager APIs is restricted until approved.'
         });
       }
     }
