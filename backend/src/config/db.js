@@ -64,47 +64,62 @@ class Collection {
   }
 
   async find(query = {}, options = {}) {
-    await this._ensureReady();
-    const cleanQuery = sanitizeQuery(query);
-    const findOptions = { maxTimeMS: 15000, ...options };
-    if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
-      findOptions.projection = { kycDocs: 0, kyc: 0 };
-    }
+    try {
+      await this._ensureReady();
+      const cleanQuery = sanitizeQuery(query);
+      const findOptions = { maxTimeMS: 15000, ...options };
+      if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
+        findOptions.projection = { kycDocs: 0, kyc: 0 };
+      }
 
-    const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
-    return docs || [];
+      const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
+      return docs || [];
+    } catch (e) {
+      console.warn(`[Manager Database] find unavailable for '${this.name}':`, e.message);
+      return [];
+    }
   }
 
   async findOne(query = {}, options = {}) {
-    await this._ensureReady();
-    const cleanQuery = sanitizeQuery(query);
-    const findOptions = { ...options };
-    if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
-      findOptions.projection = { kycDocs: 0, kyc: 0 };
-    }
+    try {
+      await this._ensureReady();
+      const cleanQuery = sanitizeQuery(query);
+      const findOptions = { ...options };
+      if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
+        findOptions.projection = { kycDocs: 0, kyc: 0 };
+      }
 
-    const doc = await this._mongoCol.findOne(cleanQuery, findOptions);
-    return doc || null;
+      const doc = await this._mongoCol.findOne(cleanQuery, findOptions);
+      return doc || null;
+    } catch (e) {
+      console.warn(`[Manager Database] findOne unavailable for '${this.name}':`, e.message);
+      return null;
+    }
   }
 
   async findById(id, options = {}) {
     if (!id) return null;
-    await this._ensureReady();
-    const strId = String(id);
-    const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
-    if (/^[0-9a-fA-F]{24}$/.test(strId)) {
-      try {
-        orConditions.push({ _id: new ObjectId(strId) });
-      } catch (e) {}
-    }
+    try {
+      await this._ensureReady();
+      const strId = String(id);
+      const orConditions = [{ _id: id }, { id: id }, { _id: strId }, { id: strId }];
+      if (/^[0-9a-fA-F]{24}$/.test(strId)) {
+        try {
+          orConditions.push({ _id: new ObjectId(strId) });
+        } catch (e) {}
+      }
 
-    const findOptions = { ...options };
-    if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
-      findOptions.projection = { kycDocs: 0, kyc: 0 };
-    }
+      const findOptions = { ...options };
+      if ((this.mongoName === 'users' || this.mongoName === 'agents') && !options.projection) {
+        findOptions.projection = { kycDocs: 0, kyc: 0 };
+      }
 
-    const doc = await this._mongoCol.findOne({ $or: orConditions }, findOptions);
-    return doc || null;
+      const doc = await this._mongoCol.findOne({ $or: orConditions }, findOptions);
+      return doc || null;
+    } catch (e) {
+      console.warn(`[Manager Database] findById unavailable for '${this.name}':`, e.message);
+      return null;
+    }
   }
 
   async insertOne(doc) {

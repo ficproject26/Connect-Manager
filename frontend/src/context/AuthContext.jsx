@@ -238,6 +238,16 @@ export const AuthProvider = ({ children }) => {
         // Approval required or blocked
         logout();
         setPendingUser(normalizeUser(err.data.user));
+      } else if (
+        err.status === 401 ||
+        err.status === 404 ||
+        err?.message?.toLowerCase().includes('unauthorized') ||
+        err?.message?.toLowerCase().includes('invalid') ||
+        err?.message?.toLowerCase().includes('not found') ||
+        err?.message?.toLowerCase().includes('expired')
+      ) {
+        // Confirmed invalid or expired session -> clear stale local authentication state
+        logout();
       } else {
         console.warn('[AuthContext] initAuth network warning:', err?.message);
       }

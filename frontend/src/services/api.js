@@ -39,6 +39,7 @@ async function handleResponse(res) {
     if (res.status === 401) {
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('agent_mgr_token');
+        localStorage.removeItem('agent_mgr_user');
       }
     }
     const errorMsg = data.message || `Request failed with status ${res.status}`;
