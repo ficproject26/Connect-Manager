@@ -4,7 +4,7 @@ const { MongoClient } = require('mongodb');
 const handler = require('../../api/auth/bank-details');
 
 const JWT_SECRET = 'agent_manager_secret_key_2026';
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Connect-App:Dhanush123@cluster0.riukwbj.mongodb.net/connect_db?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI ;
 
 // Helper to simulate Vercel serverless request
 function invokeHandler(method, headers, body) {

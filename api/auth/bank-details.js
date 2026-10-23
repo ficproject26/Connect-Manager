@@ -11,7 +11,7 @@ const {
   validateIfsc
 } = require('../../backend/src/utils/validation');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://Connect-App:Dhanush123@cluster0.riukwbj.mongodb.net/connect_db?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
 const JWT_SECRETS = [
   process.env.JWT_SECRET,
   'agent_manager_secret_key_2026',

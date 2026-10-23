@@ -49,7 +49,7 @@ class CacheManager {
     // 2. Check Redis if connected
     if (redisBroker.isRedisConnected && redisBroker.pubClient) {
       try {
-        const raw = await redisBroker.pubClient.get(`cache:${key}`);
+        const raw = await redisBroker.pubClient.get(`cache:fresh:${key}`);
         if (raw) {
           const parsed = JSON.parse(raw);
           this.memoryCache.set(key, parsed);
@@ -81,7 +81,7 @@ class CacheManager {
     // Store in Redis with TTL if connected
     if (redisBroker.isRedisConnected && redisBroker.pubClient) {
       try {
-        await redisBroker.pubClient.setex(`cache:${key}`, ttlSeconds, JSON.stringify(value));
+        await redisBroker.pubClient.setex(`cache:fresh:${key}`, ttlSeconds, JSON.stringify(value));
       } catch (err) {}
     }
 
@@ -175,7 +175,7 @@ class CacheManager {
 
     if (redisBroker.isRedisConnected && redisBroker.pubClient) {
       try {
-        const redisPattern = `cache:${pattern}`;
+        const redisPattern = `cache:fresh:${pattern}`;
         // Use non-blocking SCAN stream in ioredis to prevent locking Redis thread
         if (typeof redisBroker.pubClient.scanStream === 'function') {
           const stream = redisBroker.pubClient.scanStream({
@@ -232,6 +232,16 @@ class CacheManager {
 
   async invalidatePattern(pattern) {
     return this.purgeLocalPattern(pattern, true);
+  }
+
+  async clearAll() {
+    this.memoryCache.clear();
+    this.inFlight.clear();
+    for (const timer of this.ttlTimers.values()) {
+      clearTimeout(timer);
+    }
+    this.ttlTimers.clear();
+    await this.purgeLocalPattern('*', true);
   }
 
   getStats() {

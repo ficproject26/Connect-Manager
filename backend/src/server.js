@@ -118,13 +118,38 @@ app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads'), {
   }
 }));
 
-// Health check
+// Health check reporting active database
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    service: 'Agent Manager Portal Backend API'
+    service: 'Agent Manager Portal Backend API',
+    database: db.getDatabaseName ? db.getDatabaseName() : 'connect_manager_fresh'
   });
+});
+
+app.get('/api/health/db', async (req, res) => {
+  try {
+    const dbName = db.getDatabaseName ? db.getDatabaseName() : 'connect_manager_fresh';
+    const [usersCount, vendorsCount, tasksCount, agentsCount] = await Promise.all([
+      db.users.count().catch(() => 0),
+      db.vendors.count().catch(() => 0),
+      db.tasks.count().catch(() => 0),
+      db.agents.count().catch(() => 0)
+    ]);
+    res.json({
+      success: true,
+      database: dbName,
+      counts: {
+        users: usersCount,
+        vendors: vendorsCount,
+        tasks: tasksCount,
+        agents: agentsCount
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
 });
 
 // Routes (Manager Portal Scope)

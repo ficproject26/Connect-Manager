@@ -48,6 +48,8 @@ function getActiveUserIdSync() {
   }
 }
 
+const STORAGE_PREFIX = 'mgr_fresh_';
+
 export class CacheClient {
   constructor() {
     this.store = new Map(); // key -> { data, fetchedAt, staleAt, gcAt }
@@ -55,6 +57,9 @@ export class CacheClient {
     this.listeners = new Map(); // key -> Set<callback>
     this.patternListeners = new Set(); // Set<{ pattern, callback }>
     this.currentUserId = getActiveUserIdSync();
+
+    // Immediately purge obsolete legacy cached records from old database runs
+    this.purgeObsoleteLegacyStorage();
 
     // Instant frame-0 hydration from sessionStorage
     if (this.currentUserId) {
@@ -68,10 +73,27 @@ export class CacheClient {
     }
   }
 
+  purgeObsoleteLegacyStorage() {
+    if (typeof window === 'undefined' || !window.sessionStorage) return;
+    try {
+      const toRemove = [];
+      for (let i = 0; i < sessionStorage.length; i++) {
+        const k = sessionStorage.key(i);
+        if (k && (k.startsWith('mgr_c1_') || k.startsWith('mgr_old_'))) {
+          toRemove.push(k);
+        }
+      }
+      toRemove.forEach(k => sessionStorage.removeItem(k));
+      if (toRemove.length > 0) {
+        console.log(`🧹 [CacheClient] Purged ${toRemove.length} obsolete legacy cached records.`);
+      }
+    } catch (e) {}
+  }
+
   hydrateFromStorage(userId) {
     if (!userId || typeof window === 'undefined' || !window.sessionStorage) return;
     try {
-      const prefix = `mgr_c1_${userId}_`;
+      const prefix = `${STORAGE_PREFIX}${userId}_`;
       const now = Date.now();
       for (let i = 0; i < sessionStorage.length; i++) {
         const sKey = sessionStorage.key(i);
@@ -132,7 +154,7 @@ export class CacheClient {
         this.store.delete(key);
         if (this.currentUserId && typeof window !== 'undefined' && window.sessionStorage) {
           try {
-            sessionStorage.removeItem(`mgr_c1_${this.currentUserId}_${key}`);
+            sessionStorage.removeItem(`${STORAGE_PREFIX}${this.currentUserId}_${key}`);
           } catch (e) {}
         }
       }
@@ -167,7 +189,7 @@ export class CacheClient {
     // Frame-0 recovery backing in sessionStorage
     if (this.currentUserId && typeof window !== 'undefined' && window.sessionStorage) {
       try {
-        sessionStorage.setItem(`mgr_c1_${this.currentUserId}_${key}`, JSON.stringify(entry));
+        sessionStorage.setItem(`${STORAGE_PREFIX}${this.currentUserId}_${key}`, JSON.stringify(entry));
       } catch (e) {}
     }
 
@@ -311,7 +333,7 @@ export class CacheClient {
         const toRemove = [];
         for (let i = 0; i < sessionStorage.length; i++) {
           const k = sessionStorage.key(i);
-          if (k && k.startsWith('mgr_c1_')) {
+          if (k && (k.startsWith(STORAGE_PREFIX) || k.startsWith('mgr_c1_') || k.startsWith('mgr_old_'))) {
             toRemove.push(k);
           }
         }

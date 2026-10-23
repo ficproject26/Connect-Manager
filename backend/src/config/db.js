@@ -2,7 +2,7 @@ const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
 const { v4: uuidv4 } = require('uuid');
 const { ObjectId } = require('mongodb');
-const { getMongoDb } = require('./mongo');
+const { getMongoDb, getDatabaseName, TARGET_DB_NAME } = require('./mongo');
 const eventPublisher = require('../events/eventPublisher');
 
 function sanitizeQuery(query) {
@@ -72,20 +72,7 @@ class Collection {
     }
 
     const docs = await this._mongoCol.find(cleanQuery, findOptions).toArray();
-    if (docs && docs.length > 0) {
-      return docs;
-    }
-
-    // Fallback for users: if querying role manager and nothing found, check managers collection
-    if (this.name === 'users' && this._mongoDb) {
-      const mgrDocs = await this._mongoDb.collection('managers').find(cleanQuery, findOptions).toArray();
-      if (mgrDocs && mgrDocs.length > 0) {
-        return mgrDocs;
-      }
-    }
-
-    // Single source of truth: return genuine empty array from MongoDB
-    return [];
+    return docs || [];
   }
 
   async findOne(query = {}, options = {}) {
@@ -96,16 +83,8 @@ class Collection {
       findOptions.projection = { kycDocs: 0, kyc: 0 };
     }
 
-    let doc = await this._mongoCol.findOne(cleanQuery, findOptions);
-    if (doc) return doc;
-
-    // For users collection: also check 'managers' collection in MongoDB
-    if (this.name === 'users' && this._mongoDb) {
-      doc = await this._mongoDb.collection('managers').findOne(cleanQuery, findOptions);
-      if (doc) return doc;
-    }
-
-    return null;
+    const doc = await this._mongoCol.findOne(cleanQuery, findOptions);
+    return doc || null;
   }
 
   async findById(id, options = {}) {
@@ -124,15 +103,8 @@ class Collection {
       findOptions.projection = { kycDocs: 0, kyc: 0 };
     }
 
-    let doc = await this._mongoCol.findOne({ $or: orConditions }, findOptions);
-    if (doc) return doc;
-
-    if (this.name === 'users' && this._mongoDb) {
-      doc = await this._mongoDb.collection('managers').findOne({ $or: orConditions }, findOptions);
-      if (doc) return doc;
-    }
-
-    return null;
+    const doc = await this._mongoCol.findOne({ $or: orConditions }, findOptions);
+    return doc || null;
   }
 
   async insertOne(doc) {
@@ -408,6 +380,8 @@ async function initDatabase() {
         console.warn('[Manager Database] Index creation warning:', idxErr.message);
       }
 
+
+
       return true;
     } catch (err) {
       initPromise = null;
@@ -420,4 +394,6 @@ async function initDatabase() {
 }
 
 db.initDatabase = initDatabase;
+db.getDatabaseName = getDatabaseName;
 module.exports = db;
+
