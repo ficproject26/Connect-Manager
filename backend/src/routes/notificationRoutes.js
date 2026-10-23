@@ -124,13 +124,25 @@ const isNotifInUserStateScope = (n, user) => {
   if (notifState && userState && !userState.includes(notifState) && !notifState.includes(userState)) return false;
 
   // Content state cross-contamination check
-  const text = `${n.title || ''} ${n.message || ''}`.toLowerCase();
+  const text = `${n.title || ''} ${n.message || ''} ${n.entityName || ''} ${n.details || ''}`.toLowerCase();
+  const tnLocations = [
+    'tamil nadu', 'kallakurichi', 'salem', 'dharmapuri', 'chennai', 'krishnagiri',
+    'hosur', 'coimbatore', 'madurai', 'tiruchirappalli', 'trichy', 'vellore',
+    'erode', 'tirupur', 'thanjavur', 'dindigul', 'tirunelveli', 'thoothukudi',
+    'cuddalore', 'kanchipuram', 'tiruvannamalai'
+  ];
+  const kaLocations = [
+    'karnataka', 'bengaluru', 'bangalore', 'mysuru', 'mysore', 'hubli', 'dharwad',
+    'mangalore', 'mangaluru', 'belgaum', 'belagavi', 'gulbarga', 'kalaburagi',
+    'davangere', 'bellary', 'ballari', 'shimoga', 'shivamogga', 'tumkur', 'tumakuru'
+  ];
+
   if (userState.includes('karnataka') || userStateId === 'state_ka') {
-    if (text.includes('tamil nadu') || text.includes('krishnagiri') || text.includes('hosur') || text.includes('chennai')) {
+    if (tnLocations.some(loc => text.includes(loc))) {
       return false;
     }
-  } else if (userState.includes('tamil nadu') || userStateId === 'state_tn') {
-    if (text.includes('karnataka') || text.includes('bengaluru') || text.includes('bangalore') || text.includes('mysuru')) {
+  } else if (userState.includes('tamil nadu') || userStateId === 'state_tn' || userStateId === '6aa10f70ca0932e6eaec1f5c') {
+    if (kaLocations.some(loc => text.includes(loc))) {
       return false;
     }
   }

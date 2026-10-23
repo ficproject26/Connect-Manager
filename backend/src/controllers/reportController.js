@@ -849,10 +849,14 @@ const submitReport = async (req, res) => {
       managerId: user.id,
       managerName: user.name,
       managerRole: user.role,
-      stateId: user.stateId || 'state_ka',
+      stateId: user.stateId || (user.state === 'Karnataka' ? 'state_ka' : '6aa10f70ca0932e6eaec1f5c'),
+      state: user.stateName || user.state || (user.stateId === 'state_ka' ? 'Karnataka' : (user.stateId === 'state_tn' || user.stateId === '6aa10f70ca0932e6eaec1f5c' ? 'Tamil Nadu' : null)),
       districtId: user.districtId || null,
+      district: user.districtName || user.district || null,
       divisionId: user.divisionId || null,
+      division: user.divisionName || user.division || null,
       pincodeId: user.pincodeId || null,
+      pincode: user.pincodeCode || user.pincode || null,
       submittedAt: new Date().toISOString()
     });
 
@@ -885,9 +889,10 @@ const getSubmittedReports = async (req, res) => {
     const user = req.user;
     const { district, division, pincode, managerRole, search } = req.query;
 
-    const [allReports, allUsers, districts, divisions, pincodes] = await Promise.all([
+    const [allReports, allUsers, allManagers, districts, divisions, pincodes] = await Promise.all([
       db.submittedReports.find(),
       db.users.find(),
+      db.managers ? db.managers.find() : [],
       db.districts.find(user.stateId ? { stateId: user.stateId } : {}),
       db.divisions.find(user.districtId ? { districtId: user.districtId } : {}),
       db.pincodes.find(user.divisionId ? { divisionId: user.divisionId } : {})
@@ -895,9 +900,11 @@ const getSubmittedReports = async (req, res) => {
 
     // Build author lookup map for authoritative role and jurisdiction resolution
     const userMap = new Map();
-    allUsers.forEach(u => {
+    [...allUsers, ...allManagers].forEach(u => {
+      if (!u) return;
       if (u.id) userMap.set(String(u.id), u);
       if (u._id) userMap.set(String(u._id), u);
+      if (u.managerId) userMap.set(String(u.managerId), u);
       if (u.email) userMap.set(String(u.email).toLowerCase(), u);
       if (u.name) userMap.set(String(u.name).toLowerCase(), u);
     });
@@ -910,18 +917,19 @@ const getSubmittedReports = async (req, res) => {
       if (author && (!mRole || mRole === 'manager' || mRole === 'Admin')) {
         mRole = author.role || mRole;
       }
+      const authorState = author?.state || author?.stateName || (author?.stateId === 'state_ka' ? 'Karnataka' : (author?.stateId === 'state_tn' || author?.stateId === '6aa10f70ca0932e6eaec1f5c' ? 'Tamil Nadu' : null));
       return {
         ...r,
         managerRole: mRole || r.managerRole || (author ? author.role : ''),
         managerName: r.managerName || (author ? author.name : ''),
         stateId: r.stateId || (author ? author.stateId : null),
-        state: r.state || (author ? author.state : null),
+        state: r.state || authorState || null,
         districtId: r.districtId || (author ? author.districtId : null),
-        district: r.district || (author ? author.district : null),
+        district: r.district || (author ? (author.districtName || author.district) : null),
         divisionId: r.divisionId || (author ? author.divisionId : null),
-        division: r.division || (author ? author.division : null),
+        division: r.division || (author ? (author.divisionName || author.division) : null),
         pincodeId: r.pincodeId || (author ? author.pincodeId : null),
-        pincode: r.pincode || (author ? author.pincode : null)
+        pincode: r.pincode || (author ? (author.pincodeCode || author.pincode) : null)
       };
     });
 

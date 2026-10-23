@@ -248,7 +248,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             assignedDate: t.assignedDate || t.createdAt,
             completedDate: t.completedDate || t.completionDetails?.completedAt || null,
             lastUpdate: t.lastUpdate || t.updatedAt || null,
-            state: t.state || 'Tamil Nadu',
+            state: t.state || user?.stateName || user?.state || '',
             district: t.district || '',
             division: t.division || '',
             pincode: t.pincode || '',
@@ -1460,19 +1460,19 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
                 <div className="responsive-grid-2" style={{ gap: '10px', fontSize: '0.78rem' }}>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>State / Jurisdiction</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.state || selectedTask.raw?.state, 'Tamil Nadu')}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.state || selectedTask.raw?.state, user?.stateName || user?.state || '—')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>District</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.district || selectedTask.raw?.district, 'Krishnagiri')}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.district || selectedTask.raw?.district, '—')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Division</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.division || selectedTask.raw?.division, 'Central')}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.division || selectedTask.raw?.division, '—')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Pincode</span>
-                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.pincode || selectedTask.raw?.pincode, '635109')}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.pincode || selectedTask.raw?.pincode, '—')}</strong>
                   </div>
                   <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Date</span>

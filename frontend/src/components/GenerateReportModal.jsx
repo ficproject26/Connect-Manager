@@ -155,14 +155,13 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
     try {
       const sanitizedVisits = periodVisits.map(v => {
         const copy = { ...v };
-        if (typeof copy.storefrontPhoto === 'string' && copy.storefrontPhoto.startsWith('data:') && copy.storefrontPhoto.length > 2048) {
-          copy.storefrontPhoto = copy.storefrontPhoto.slice(0, 100) + '...[binary_truncated]';
-        }
-        if (Array.isArray(copy.photos)) {
-          copy.photos = copy.photos.map(p => (typeof p === 'string' && p.startsWith('data:') && p.length > 2048) ? p.slice(0, 100) + '...[binary_truncated]' : p);
-        }
-        if (typeof copy.voiceNote === 'string' && copy.voiceNote.startsWith('data:') && copy.voiceNote.length > 2048) {
-          copy.voiceNote = '[voice_note_recorded]';
+        for (const key of Object.keys(copy)) {
+          const val = copy[key];
+          if (typeof val === 'string' && val.startsWith('data:') && val.length > 512) {
+            copy[key] = val.slice(0, 100) + '...[binary_truncated]';
+          } else if (Array.isArray(val)) {
+            copy[key] = val.map(item => (typeof item === 'string' && item.startsWith('data:') && item.length > 512) ? item.slice(0, 100) + '...[binary_truncated]' : item);
+          }
         }
         return copy;
       });

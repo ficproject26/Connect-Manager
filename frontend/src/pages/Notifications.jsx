@@ -178,10 +178,30 @@ const Notifications = ({ onNavigate }) => {
     return `${days}d ago`;
   };
 
+  const userState = String(user?.state || user?.stateName || user?.scope?.stateName || '').toLowerCase();
+  const userStateId = String(user?.stateId || user?.scope?.stateId || '').toLowerCase();
+  const isKaUser = userState.includes('karnataka') || userStateId === 'state_ka';
+  const isTnUser = userState.includes('tamil nadu') || userStateId === 'state_tn' || userStateId === '6aa10f70ca0932e6eaec1f5c';
+
+  const tnLocations = [
+    'tamil nadu', 'kallakurichi', 'salem', 'dharmapuri', 'chennai', 'krishnagiri',
+    'hosur', 'coimbatore', 'madurai', 'tiruchirappalli', 'trichy', 'vellore',
+    'erode', 'tirupur', 'thanjavur', 'dindigul', 'tirunelveli', 'thoothukudi'
+  ];
+  const kaLocations = [
+    'karnataka', 'bengaluru', 'bangalore', 'mysuru', 'mysore', 'hubli', 'dharwad',
+    'mangalore', 'mangaluru', 'belgaum', 'belagavi', 'gulbarga', 'kalaburagi'
+  ];
+
   const filtered = notifications.filter(n => {
     if (activeTab === 'unread' && n.isRead) return false;
     if (activeTab === 'vendor' && !(n.type?.startsWith('vendor') || n.entityType === 'vendor')) return false;
     if (activeTab === 'task' && !(n.type?.startsWith('task') || n.type?.startsWith('qc') || n.entityType === 'task')) return false;
+
+    // Cross-state isolation
+    const txt = `${n.title || ''} ${n.message || ''} ${n.details || ''}`.toLowerCase();
+    if (isKaUser && tnLocations.some(loc => txt.includes(loc))) return false;
+    if (isTnUser && kaLocations.some(loc => txt.includes(loc))) return false;
 
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();

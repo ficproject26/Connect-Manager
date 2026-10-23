@@ -4,6 +4,7 @@ const {
   isAllowedManagerRole,
   isAdminRole,
   isPendingStatus,
+  isApprovedStatus,
   isRejectedOrBlockedStatus
 } = require('./roleMiddleware');
 
@@ -50,19 +51,27 @@ const authMiddleware = async (req, res, next) => {
     }
 
     // STRICT ACCOUNT STATUS VERIFICATION:
-    // Block explicitly rejected, suspended, or deactivated accounts.
-    // For pending registration accounts (whose isActive may be false until approved),
-    // let them pass to checkRole() where code: 'APPROVAL_REQUIRED' is enforced.
-    if (isRejectedOrBlockedStatus(user.status) || (user.isActive === false && !isPendingStatus(user.status))) {
-      return res.status(403).json({ 
-        success: false, 
-        code: 'ACCOUNT_BLOCKED',
-        approvalStatus: user.status,
-        rejectionReason: user.rejectionReason || null,
-        message: user.rejectionReason 
-          ? `User account is restricted: ${user.rejectionReason}`
-          : 'User account is inactive, rejected, or suspended.' 
-      });
+    if (!isAdmin) {
+      if (isRejectedOrBlockedStatus(user.status)) {
+        return res.status(403).json({ 
+          success: false, 
+          code: 'ACCOUNT_BLOCKED',
+          approvalStatus: user.status,
+          rejectionReason: user.rejectionReason || null,
+          message: user.rejectionReason 
+            ? `User account is restricted: ${user.rejectionReason}`
+            : 'User account is inactive, rejected, or suspended.' 
+        });
+      }
+
+      if (!isApprovedStatus(user.status) || user.isActive === false) {
+        return res.status(403).json({
+          success: false,
+          code: 'APPROVAL_REQUIRED',
+          approvalStatus: user.status,
+          message: 'Your Manager application is under review or pending verification. Access to manager APIs is restricted until approved.'
+        });
+      }
     }
 
     // Extract base territory identifiers from user, scope, territory, and decoded token

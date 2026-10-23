@@ -212,7 +212,7 @@ const formatManagerRole = (role) => {
 const populateVendorManagers = async (vendor) => {
   if (!vendor) return vendor;
 
-  const assigningManagerId = vendor.assignedManagerId || vendor.assignedTo || vendor.assignedManager || vendor.createdBy;
+  const assigningManagerId = vendor.assignedManagerId || vendor.assignedTo || vendor.assignedManager || vendor.createdBy || (typeof vendor.onboardedBy === 'string' ? vendor.onboardedBy : (vendor.onboardedBy?._id || vendor.onboardedBy?.id)) || (typeof vendor.addedBy === 'string' ? vendor.addedBy : (vendor.addedBy?._id || vendor.addedBy?.id));
   const assigningManager = assigningManagerId ? await resolveManagerDoc(assigningManagerId) : null;
 
   const fieldSupervisorId = vendor.fieldSupervisorId || vendor.supervisorId;
@@ -434,6 +434,8 @@ const getVendors = async (req, res) => {
           if (vStatus !== 'under review' && vStatus !== 'under_review' && !vApproval.includes('review')) return false;
         } else if (sQuery === 'rejected') {
           if (vStatus !== 'rejected' && !vApproval.includes('rejected')) return false;
+        } else if (sQuery === 'suspended') {
+          if (vStatus !== 'suspended' && vApproval !== 'suspended' && vOp !== 'suspended' && v.isSuspended !== true) return false;
         } else if (sQuery === 'inactive') {
           if (vStatus !== 'inactive' && vOp !== 'inactive') return false;
         } else {
@@ -536,6 +538,7 @@ const getVendorById = async (req, res) => {
     const isDraftIncomplete = isVendorIncompleteDraft(withManagers);
     const responseData = {
       ...withManagers,
+      onboardedBy: withManagers.onboardedBy || withManagers.assignedFieldManager || withManagers.registeredBy || null,
       isEligibleForResume: isDraftIncomplete,
       hasIncompleteDraft: isDraftIncomplete,
       panNumber: showFull ? withManagers.panNumber : maskPan(withManagers.panNumber),
@@ -825,6 +828,13 @@ const createVendor = async (req, res) => {
       businessLicense: businessLicense || null,
       storefrontPhoto: primaryStorefront,
       shopPhoto: primaryStorefront,
+      alternatePhone: cleanAltPhone || null,
+      altPhone: cleanAltPhone || null,
+      agentName: formattedAgentName || null,
+      coPartnerName: formattedCoPartner || null,
+      copartnerName: formattedCoPartner || null,
+      shopLogo: logo || null,
+      onboardedBy: registeredByObj,
       accountHolderName: formattedHolderName,
       accountNumber: cleanAccNum,
       ifsc: cleanIfscCode,
@@ -1007,7 +1017,13 @@ const updateVendor = async (req, res) => {
       logo: updates.logo !== undefined ? updates.logo : vendor.logo,
       businessLicense: updates.businessLicense !== undefined ? updates.businessLicense : vendor.businessLicense,
       storefrontPhoto: updates.storefrontPhoto !== undefined ? updates.storefrontPhoto : vendor.storefrontPhoto,
-      shopPhoto: updates.shopPhoto !== undefined ? updates.shopPhoto : vendor.shopPhoto
+      shopPhoto: updates.shopPhoto !== undefined ? updates.shopPhoto : vendor.shopPhoto,
+      alternatePhone: updates.alternatePhone !== undefined ? updates.alternatePhone : (vendor.alternatePhone || vendor.altPhone || null),
+      altPhone: updates.alternatePhone !== undefined ? updates.alternatePhone : (vendor.altPhone || vendor.alternatePhone || null),
+      agentName: updates.agentName !== undefined ? updates.agentName : (vendor.agentName || null),
+      coPartnerName: updates.coPartnerName !== undefined ? updates.coPartnerName : (vendor.coPartnerName || vendor.copartnerName || null),
+      copartnerName: updates.coPartnerName !== undefined ? updates.coPartnerName : (vendor.copartnerName || vendor.coPartnerName || null),
+      shopLogo: (updates.shopLogo !== undefined ? updates.shopLogo : updates.logo) !== undefined ? (updates.shopLogo || updates.logo) : (vendor.shopLogo || vendor.logo || null)
     };
 
     const previousSnapshot = {

@@ -1486,6 +1486,31 @@ button, input, select, textarea {
   border: 1px solid #fecaca;
 }
 
+.status-badge.suspended {
+  background-color: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.status-badge.approved {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+
+.status-badge.pending-admin-review,
+.status-badge.pending_pincode_approval {
+  background-color: #eff6ff;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+}
+
+.status-badge.inactive {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+}
+
 .status-dot {
   width: 5px;
   height: 5px;
@@ -2068,5 +2093,51 @@ html, body {
 [data-theme='dark'] .table td {
   border-color: var(--border-normal);
   color: #e2e8f0;
+}
+
+[data-theme='dark'] select option {
+  background-color: #0f172a !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .tab-btn.active,
+[data-theme='dark'] .nav-tab.active,
+[data-theme='dark'] .btn-primary,
+[data-theme='dark'] .filter-pill.active {
+  color: #ffffff !important;
+}
+
+[data-theme='dark'] .table-container,
+[data-theme='dark'] .data-table {
+  background-color: var(--bg-card) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme='dark'] .data-table th {
+  background-color: #0f172a !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .data-table td {
+  border-color: #334155 !important;
+  color: #f1f5f9 !important;
+}
+
+[data-theme='dark'] .card-header {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+  color: #f8fafc !important;
+}
+
+[data-theme='dark'] .btn-secondary {
+  background-color: #1e293b !important;
+  color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+
+[data-theme='dark'] .btn-secondary:hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
 }
 

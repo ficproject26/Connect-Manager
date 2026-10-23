@@ -862,7 +862,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     cursor: 'pointer'
                   }}
                 >
-                  <option value="All">All Interest Statuses</option>
+                  <option value="All">All Status</option>
                   <option value="YES">Interested</option>
                   <option value="NO">Not Interested</option>
                 </select>
@@ -1772,10 +1772,16 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                           {/* 3. Jurisdiction */}
                           <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
                             <div style={{ fontSize: '0.84rem', color: '#0f172a', fontWeight: 700 }}>
-                              {getDisplayValue(rpt.district, 'District')} {rpt.division ? `• ${getDisplayValue(rpt.division)}` : ''}
+                              {rpt.district ? (
+                                `${rpt.district}${rpt.division ? ` • ${rpt.division}` : ''}`
+                              ) : rpt.state ? (
+                                `${rpt.state} (Statewide)`
+                              ) : (
+                                `${user?.stateName || user?.state || 'State'} (Statewide)`
+                              )}
                             </div>
                             <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: 2 }}>
-                              {rpt.pincode ? `PIN: ${getDisplayValue(rpt.pincode)}` : getDisplayValue(rpt.state, user?.stateName || user?.state || 'Assigned Territory')}
+                              {rpt.pincode ? `PIN: ${rpt.pincode}` : (rpt.state || user?.stateName || user?.state || 'Assigned Territory')}
                             </div>
                           </td>
 
@@ -1989,7 +1995,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     </h4>
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4 }}>
-                    Jurisdiction: {getDisplayValue(selectedSubmittedReport.district, 'District')} {selectedSubmittedReport.division ? `• ${getDisplayValue(selectedSubmittedReport.division)}` : ''} {selectedSubmittedReport.pincode ? `• PIN: ${getDisplayValue(selectedSubmittedReport.pincode)}` : ''}
+                    Jurisdiction: {selectedSubmittedReport.district ? `${selectedSubmittedReport.district}${selectedSubmittedReport.division ? ` • ${selectedSubmittedReport.division}` : ''}${selectedSubmittedReport.pincode ? ` • PIN: ${selectedSubmittedReport.pincode}` : ''}` : `${selectedSubmittedReport.state || user?.stateName || user?.state || 'State'} (Statewide)`}
                   </div>
                 </div>
 

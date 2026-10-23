@@ -204,10 +204,13 @@ const AgentDirectory = ({ onNavigate }) => {
   const isStateManager = managerRole.includes('state');
 
   // Hierarchical Scoping Rules:
-  // Hierarchical Scoping Rules:
-  // agents returned by agentService.getAgents are already strictly scoped to the manager's authorized territory
+  // Show only Active and Suspended agents, removing all other agents (e.g. Pending KYC)
   const hierarchicalAgents = useMemo(() => {
-    return Array.isArray(agents) ? agents : [];
+    const list = Array.isArray(agents) ? agents : [];
+    return list.filter(agent => {
+      const st = String(agent.status || '').toLowerCase().trim();
+      return st === 'active' || st === 'suspended';
+    });
   }, [agents]);
 
   const filteredAgents = useMemo(() => {
@@ -969,20 +972,32 @@ const AgentDirectory = ({ onNavigate }) => {
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>Agent Level</div>
                   <div style={{ marginTop: '4px' }}>
-                    <span style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '3px 8px',
-                      borderRadius: '12px',
-                      fontSize: '0.75rem',
-                      fontWeight: 700,
-                      background: '#eff6ff',
-                      color: '#1d4ed8',
-                      border: '1px solid #bfdbfe'
-                    }}>
-                      Level {selectedAgent.level || 1} • {selectedAgent.levelTitle || 'Field Agent'}
-                    </span>
+                    {(() => {
+                      const l = resolveLevelStr(selectedAgent.level, selectedAgent.role);
+                      let label = 'Pincode Agent';
+                      let color = '#b45309';
+                      let bg = '#fef3c7';
+                      let border = '#fde68a';
+                      if (l.includes('state')) { label = 'State Agent'; color = '#7e22ce'; bg = '#f3e8ff'; border = '#d8b4fe'; }
+                      else if (l.includes('district')) { label = 'District Agent'; color = '#1d4ed8'; bg = '#eff6ff'; border = '#bfdbfe'; }
+                      else if (l.includes('division') || l.includes('divisional')) { label = 'Division Agent'; color = '#047857'; bg = '#ecfdf5'; border = '#a7f3d0'; }
+                      return (
+                        <span style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '0.75rem',
+                          fontWeight: 700,
+                          background: bg,
+                          color: color,
+                          border: `1px solid ${border}`
+                        }}>
+                          {label}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
                 <div>
@@ -993,7 +1008,7 @@ const AgentDirectory = ({ onNavigate }) => {
                 </div>
               </div>
 
-              <div className="responsive-grid-3" style={{
+              <div className="responsive-grid-2" style={{
                 gap: '10px',
                 marginBottom: '16px'
               }}>
@@ -1004,12 +1019,6 @@ const AgentDirectory = ({ onNavigate }) => {
                 <div style={{ background: '#f8fafc', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>VENDORS</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2563eb', marginTop: '2px' }}>{selectedAgent.vendorOnboardings || 0}</div>
-                </div>
-                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
-                  <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>COMMISSION</div>
-                  <div style={{ fontSize: '1.05rem', fontWeight: 800, color: '#059669', marginTop: '4px', fontFamily: 'monospace' }}>
-                    ₹{(selectedAgent.commissionEarned || 0).toLocaleString()}
-                  </div>
                 </div>
               </div>
 

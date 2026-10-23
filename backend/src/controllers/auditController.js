@@ -131,19 +131,37 @@ const getAuditLogs = async (req, res) => {
           }
         }
 
-        // E. State territory boundary enforcement (Issue 32)
+        // E. State territory boundary enforcement (Issue 32 & Issue 13)
         const userState = String(user.state || user.stateName || user.assignedState || user.scope?.stateName || '').toLowerCase();
         const userStateId = String(user.stateId || user.assignedStateId || user.scope?.stateId || '').toLowerCase();
 
-        const logState = String(log.state || log.stateName || log.metadata?.state || log.metadata?.stateName || '').toLowerCase();
-        const logStateId = String(log.stateId || log.metadata?.stateId || '').toLowerCase();
+        const logState = String(log.state || log.stateName || log.metadata?.state || log.metadata?.stateName || targetVendor?.state || targetUser?.state || targetVisit?.state || '').toLowerCase();
+        const logStateId = String(log.stateId || log.metadata?.stateId || targetVendor?.stateId || targetUser?.stateId || targetVisit?.stateId || '').toLowerCase();
 
         if (logStateId && userStateId && logStateId !== userStateId) inScope = false;
         if (logState && userState && !userState.includes(logState) && !logState.includes(userState)) inScope = false;
 
-        const logText = `${log.action || ''} ${log.details || ''} ${targetName || ''}`.toLowerCase();
-        if ((userState.includes('karnataka') || userStateId === 'state_ka') && (logText.includes('tamil nadu') || logText.includes('krishnagiri') || logText.includes('hosur'))) {
-          inScope = false;
+        const tnLocations = [
+          'tamil nadu', 'kallakurichi', 'salem', 'dharmapuri', 'chennai', 'krishnagiri',
+          'hosur', 'coimbatore', 'madurai', 'tiruchirappalli', 'trichy', 'vellore',
+          'erode', 'tirupur', 'thanjavur', 'dindigul', 'tirunelveli', 'thoothukudi',
+          'cuddalore', 'kanchipuram', 'tiruvannamalai'
+        ];
+        const kaLocations = [
+          'karnataka', 'bengaluru', 'bangalore', 'mysuru', 'mysore', 'hubli', 'dharwad',
+          'mangalore', 'mangaluru', 'belgaum', 'belagavi', 'gulbarga', 'kalaburagi',
+          'davangere', 'bellary', 'ballari', 'shimoga', 'shivamogga', 'tumkur', 'tumakuru'
+        ];
+
+        const logText = `${log.action || ''} ${log.details || ''} ${targetName || ''} ${JSON.stringify(log.newValue || {})} ${JSON.stringify(log.previousValue || {})}`.toLowerCase();
+        if ((userState.includes('karnataka') || userStateId === 'state_ka')) {
+          if (tnLocations.some(loc => logText.includes(loc))) {
+            inScope = false;
+          }
+        } else if ((userState.includes('tamil nadu') || userStateId === 'state_tn' || userStateId === '6aa10f70ca0932e6eaec1f5c')) {
+          if (kaLocations.some(loc => logText.includes(loc))) {
+            inScope = false;
+          }
         }
       }
 

@@ -179,7 +179,7 @@ const Dashboard = ({ onNavigate }) => {
   };
 
   // Location Scope Variables derived authoritatively from user session
-  const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.stateName || user?.state || 'Tamil Nadu';
+  const stateName = user?.scope?.stateName || user?.scope?.regionName || user?.stateName || user?.state || (user?.role?.includes('state') ? 'State Operations' : 'Assigned Territory');
   const districtName = userLevel >= 2 ? (user?.scope?.districtName || user?.districtName || user?.district || null) : null;
   const divisionName = userLevel >= 3 ? (user?.scope?.divisionName || user?.divisionName || user?.division || null) : null;
   const pincodeCode = userLevel >= 4 ? (user?.scope?.pincodeCode || user?.pincodeCode || user?.pincode || null) : null;
@@ -1173,8 +1173,7 @@ const Dashboard = ({ onNavigate }) => {
                 { id: 'all', label: 'All Activities' },
                 { id: 'vendor', label: 'Vendors' },
                 { id: 'tieup', label: 'Tie-ups' },
-                { id: 'escalation', label: 'Escalations' },
-                { id: 'report', label: 'Reports' }
+                { id: 'escalation', label: 'Escalations' }
               ].map(cat => (
                 <button
                   key={cat.id}

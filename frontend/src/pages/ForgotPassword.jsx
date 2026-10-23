@@ -229,12 +229,12 @@ const ForgotPassword = ({ onNavigate }) => {
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 700, marginBottom: '4px' }}>
                       <CheckCircle2 size={18} />
-                      Reset Token Issued
+                      Request Submitted
                     </div>
-                    <div>If your email is registered in our records, a secure password reset token has been generated.</div>
+                    <div>If the email address exists in our system, password reset instructions have been dispatched. Please check your inbox.</div>
                   </div>
 
-                  {demoToken && (
+                  {demoToken && Boolean(typeof import.meta !== 'undefined' && import.meta.env?.DEV) && (
                     <div style={{
                       background: '#f8fafc',
                       border: '1px solid #cbd5e1',
@@ -243,7 +243,7 @@ const ForgotPassword = ({ onNavigate }) => {
                       marginBottom: '18px'
                     }}>
                       <div style={{ fontSize: '0.72rem', fontWeight: 700, color: '#475569', textTransform: 'uppercase', marginBottom: '4px' }}>
-                        Generated Reset Token:
+                        Development Reset Token:
                       </div>
                       <code style={{ fontSize: '0.8rem', color: '#4338ca', wordBreak: 'break-all', display: 'block', padding: '6px 8px', background: '#eef2ff', borderRadius: '4px' }}>
                         {demoToken}

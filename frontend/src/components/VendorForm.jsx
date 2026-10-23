@@ -6,7 +6,7 @@ import {
   FileText, CreditCard, CheckCircle,
   ChevronRight, ChevronLeft, Eye, EyeOff, X,
   Camera, BadgeCheck, Image as ImageIcon, Clock, Sparkles, Trash2,
-  ShieldCheck, Smartphone, Send, RefreshCw
+  ShieldCheck, Smartphone, Send, RefreshCw, Bookmark
 } from 'lucide-react';
 
 const CATEGORIES = [
@@ -235,10 +235,20 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     territoryConfigError = 'Manager account does not have an assigned Pincode. Cannot onboard vendor without assigned pincode.';
   }
 
+  const draftStorageKey = `vendor_onboarding_draft_${prefill?.fieldVisitId || prefill?._id || prefill?.mobile || user?.id || 'default'}`;
+
   const getBlank = () => {
+    let savedDraft = null;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(draftStorageKey);
+        if (raw) savedDraft = JSON.parse(raw);
+      } catch (_) {}
+    }
+
     const prefillData = prefill || {};
     const initData = initialData || {};
-    const effectivePrefill = { ...prefillData, ...initData };
+    const effectivePrefill = { ...(savedDraft || {}), ...prefillData, ...initData };
     const prefillShop = effectivePrefill.shopName || effectivePrefill.businessName || '';
     const prefillCat = effectivePrefill.businessCategory || effectivePrefill.category || CATEGORIES[0];
     const prefillDocs = effectivePrefill.storefrontPhoto
@@ -299,6 +309,14 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const [step, setStep] = useState(() => {
     if (initialData?.step) return Number(initialData.step);
     if (prefill?.step) return Number(prefill.step);
+    let savedDraft = null;
+    if (typeof localStorage !== 'undefined') {
+      try {
+        const raw = localStorage.getItem(draftStorageKey);
+        if (raw) savedDraft = JSON.parse(raw);
+      } catch (_) {}
+    }
+    if (savedDraft?.step) return Number(savedDraft.step);
     const eff = { ...(prefill || {}), ...(initialData || {}) };
     if (eff.bankName || eff.accountNumber || eff.ifsc) return 4;
     if (eff.panNumber || eff.aadhaarNumber) return 3;
@@ -309,6 +327,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   const [errors, setErrors] = useState({});
   const [touched, setTouched] = useState({});
   const [fileFeedback, setFileFeedback] = useState(null);
+  const [draftSaving, setDraftSaving] = useState(false);
 
   // Business Phone Dummy OTP Verification State (Development Flow)
   const [phoneVerified, setPhoneVerified] = useState(() => {
@@ -323,6 +342,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
   });
   const [otpSent, setOtpSent] = useState(false);
   const [dummyOtp, setDummyOtp] = useState('');
+  const [devTestOtp, setDevTestOtp] = useState('');
   const [otpPhone, setOtpPhone] = useState('');
   const [otpExpiresAt, setOtpExpiresAt] = useState(null);
   const [otpAttempts, setOtpAttempts] = useState(0);
@@ -379,6 +399,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         setOtpExpiresAt(Date.now() + 5 * 60 * 1000); // 5 minutes validity
         setOtpAttempts(0);
         setOtpSent(true);
+        if (res.otp) setDevTestOtp(res.otp);
         setOtpSuccess(res.message || `OTP sent successfully to +91 ${clean}. Valid for 5 minutes.`);
       } else if (res && res.cooldown) {
         setOtpError(res.message || 'Please wait before requesting a new OTP.');
@@ -1012,17 +1033,21 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         }
         return '';
 
-      case 'accountHolderName':
-        if (strVal) return validateName(strVal, false, 'Account Holder Name') || '';
+      case 'businessLicense':
+        if (!allData.businessLicense) return 'Business license / proof document is required';
         return '';
+
+      case 'accountHolderName':
+        if (!strVal) return 'Account Holder Name is required';
+        return validateName(strVal, true, 'Account Holder Name') || '';
 
       case 'accountNumber':
-        if (strVal) return validateAccountNumber(strVal, false, allData.bankName) || '';
-        return '';
+        if (!strVal) return 'Account Number is required';
+        return validateAccountNumber(strVal, true, allData.bankName) || '';
 
       case 'ifsc':
-        if (strVal) return validateIfsc(strVal, false) || '';
-        return '';
+        if (!strVal) return 'IFSC Code is required';
+        return validateIfsc(strVal, true) || '';
 
       case 'declaration':
         if (!value) return 'Please accept the declaration to proceed';
@@ -1064,9 +1089,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
           ...(!isEditing ? ['password', 'confirmPassword'] : [])
         ];
       case 3:
-        return ['panNumber', 'aadhaarNumber', 'gstNumber'];
+        return ['panNumber', 'aadhaarNumber', 'gstNumber', 'businessLicense'];
       case 4:
-        return ['accountNumber', 'ifsc'];
+        return ['accountHolderName', 'accountNumber', 'ifsc'];
       case 5:
         return ['declaration'];
       default:
@@ -1118,6 +1143,32 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     setErrors({});
     setGlobalError('');
     setStep(s => s - 1);
+  };
+
+  const handleSaveDraft = () => {
+    try {
+      setDraftSaving(true);
+      const serializableData = {
+        ...formData,
+        step,
+        savedAt: new Date().toISOString()
+      };
+      if (serializableData.logo instanceof File) serializableData.logo = null;
+      if (serializableData.businessLicense instanceof File) serializableData.businessLicense = null;
+      if (Array.isArray(serializableData.businessImages)) {
+        serializableData.businessImages = serializableData.businessImages.filter(img => !(img instanceof File));
+      }
+      localStorage.setItem(draftStorageKey, JSON.stringify(serializableData));
+      setFileFeedback({
+        type: 'success',
+        message: 'Onboarding draft saved successfully. You can safely return and resume later.'
+      });
+      setTimeout(() => setFileFeedback(null), 3500);
+    } catch (_) {
+      setGlobalError('Could not save draft locally.');
+    } finally {
+      setDraftSaving(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -1273,6 +1324,11 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         pincode: isPincodeLocked ? userPincodeCode : (pincodes.find(p => String(p._id || p.id) === String(formData.pincodeId))?.code || formData.pincode)
       };
       await onSubmit(payload);
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem(draftStorageKey);
+        }
+      } catch (_) {}
     } catch (err) {
       setGlobalError(err.message || 'Failed to submit');
     } finally {
@@ -1422,6 +1478,40 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
               <div style={{ fontSize: 12, color: '#059669', display: 'flex', alignItems: 'center', gap: 6, fontWeight: 600 }}>
                 <CheckCircle2 size={15} color="#059669" />
                 <span>{otpSuccess}</span>
+              </div>
+            )}
+
+            {/* Test-Only Development OTP Helper (strictly excluded in production) */}
+            {Boolean((typeof import.meta !== 'undefined' && import.meta.env?.DEV) && devTestOtp) && (
+              <div style={{
+                fontSize: 11,
+                background: '#eef2ff',
+                border: '1px solid #c7d2fe',
+                borderRadius: 6,
+                padding: '5px 10px',
+                color: '#4338ca',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                width: 'fit-content'
+              }}>
+                <span>Dev Test OTP: <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{devTestOtp}</strong></span>
+                <button
+                  type="button"
+                  onClick={() => setOtpCode(devTestOtp)}
+                  style={{
+                    background: '#4f46e5',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: 4,
+                    padding: '2px 8px',
+                    fontSize: 10,
+                    fontWeight: 700,
+                    cursor: 'pointer'
+                  }}
+                >
+                  Auto-fill
+                </button>
               </div>
             )}
 
@@ -1975,7 +2065,9 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
       <Field label="MSME Status"><select name="msmeStatus" value={formData.msmeStatus||'Not Registered'} onChange={onChange} onBlur={handleBlur} className="form-select" style={inp()}><option>Registered</option><option>Not Registered</option><option>Applied</option></select></Field>
       <div style={{gridColumn:'1/-1'}}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-          <label className="form-label" style={{ margin: 0 }}>Business License / Document</label>
+          <label className="form-label" style={{ margin: 0 }}>
+            Business License / Proof Document <span style={{ color: '#ef4444' }}>*</span>
+          </label>
           {formData.businessLicense && (
             <button
               type="button"
@@ -2013,13 +2105,18 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
               </>
             ) : (
               <>
-                <div style={{fontSize:12,fontWeight:600,color:'var(--primary)'}}>Click to upload business document</div>
+                <div style={{fontSize:12,fontWeight:600,color:'var(--primary)'}}>Click to upload business document *</div>
                 <div style={{fontSize:11,color:'var(--text-muted)'}}>PDF, JPG, PNG up to 5MB</div>
               </>
             )}
           </div>
           <input ref={licenseRef} type="file" accept=".pdf,image/*" style={{display:'none'}} onChange={onLicense}/>
         </div>
+        {errors.businessLicense && (
+          <p style={{fontSize:11,color:'#ef4444',marginTop:4,display:'flex',alignItems:'center',gap:4}}>
+            <AlertCircle size={11}/>{errors.businessLicense}
+          </p>
+        )}
       </div>
       <div style={{gridColumn:'1/-1'}}>
         <label className="form-label">Additional KYC Documents (PDF or Images, max 5MB)</label>
@@ -2074,13 +2171,32 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
   const step4=(
     <div className="responsive-grid-2" style={{ gap: 16 }}>
-      <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={e=>upd('accountHolderName', formatName(e.target.value))} onBlur={handleBlur} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
+      <div style={{
+        gridColumn: '1 / -1',
+        padding: '12px 14px',
+        background: '#f0f9ff',
+        border: '1px solid #bae6fd',
+        borderRadius: 8,
+        fontSize: '0.78rem',
+        color: '#0369a1',
+        lineHeight: 1.5,
+        display: 'flex',
+        alignItems: 'flex-start',
+        gap: 10
+      }}>
+        <ShieldCheck size={18} color="#0284c7" style={{ flexShrink: 0, marginTop: 2 }} />
+        <div>
+          <strong style={{ display: 'block', marginBottom: 2, color: '#0c4a6e' }}>Bank Account Verification Terms & Rules</strong>
+          Please ensure the account holder name matches the registered business or owner name. Payouts and commercial settlements will be routed directly to this verified bank account. Enter a valid 9 to 18 digit account number and a valid 11-character RBI IFSC code.
+        </div>
+      </div>
+      <div style={{gridColumn:'1/-1'}}><Field label="Account Holder Name" required error={errors.accountHolderName}><input type="text" name="accountHolderName" value={formData.accountHolderName} onChange={e=>upd('accountHolderName', formatName(e.target.value))} onBlur={handleBlur} placeholder="e.g. Spice Route Bistro LLP" className="form-input" style={inp(!!errors.accountHolderName)}/></Field></div>
       <Field label="Bank Name" error={errors.bankName}><input type="text" name="bankName" value={formData.bankName} onChange={onChange} onBlur={handleBlur} placeholder="e.g. HDFC Bank" className="form-input" style={inp(!!errors.bankName)}/></Field>
       <Field label="Bank Branch" error={errors.bankBranch}><input type="text" name="bankBranch" value={formData.bankBranch||''} onChange={onChange} onBlur={handleBlur} placeholder="Branch name" className="form-input" style={inp(!!errors.bankBranch)}/></Field>
       <Field label="Bank Street (Optional)"><input type="text" name="bankStreet" value={formData.bankStreet||''} onChange={onChange} onBlur={handleBlur} placeholder="Street address" className="form-input" style={inp()}/></Field>
       <Field label="Bank City (Optional)"><input type="text" name="bankCity" value={formData.bankCity||''} onChange={onChange} onBlur={handleBlur} placeholder="City" className="form-input" style={inp()}/></Field>
-      <Field label="Account Number" error={errors.accountNumber}><input type="text" name="accountNumber" value={formData.accountNumber} maxLength={18} onChange={e=>upd('accountNumber',cleanAccountNumber(e.target.value).slice(0,18))} onBlur={handleBlur} placeholder="Bank Account Number" className="form-input" style={{...inp(!!errors.accountNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
-      <Field label="IFSC Code" error={errors.ifsc}><input type="text" name="ifsc" value={formData.ifsc} maxLength={11} onChange={e=>upd('ifsc',cleanIfsc(e.target.value).slice(0,11))} onBlur={handleBlur} placeholder="e.g. HDFC0001234" className="form-input" style={{...inp(!!errors.ifsc),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <Field label="Account Number" required error={errors.accountNumber}><input type="text" name="accountNumber" value={formData.accountNumber} maxLength={18} onChange={e=>upd('accountNumber',cleanAccountNumber(e.target.value).slice(0,18))} onBlur={handleBlur} placeholder="Bank Account Number" className="form-input" style={{...inp(!!errors.accountNumber),fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
+      <Field label="IFSC Code" required error={errors.ifsc}><input type="text" name="ifsc" value={formData.ifsc} maxLength={11} onChange={e=>upd('ifsc',cleanIfsc(e.target.value).slice(0,11))} onBlur={handleBlur} placeholder="e.g. HDFC0001234" className="form-input" style={{...inp(!!errors.ifsc),textTransform:'uppercase',fontFamily:'monospace',fontWeight:700,letterSpacing:'0.08em'}}/></Field>
     </div>
   );
 
@@ -2128,8 +2244,11 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
         <div className="card-header"><h3 style={{fontSize:'1rem',fontWeight:700,margin:0}}>Step {step} of {STEPS.length} — {STEPS[step-1].label}</h3></div>
         <div className="card-body">{stepContent[step-1]}</div>
       </div>
-      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-        <button type="button" className="btn btn-secondary" onClick={step===1?onCancel:prev} style={{display:'flex',alignItems:'center',gap:6}}><ChevronLeft size={15}/>{step===1?'Cancel':'Back'}</button>
+      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:10}}>
+        <div style={{display:'flex',alignItems:'center',gap:8}}>
+          <button type="button" className="btn btn-secondary" onClick={step===1?onCancel:prev} style={{display:'flex',alignItems:'center',gap:6}}><ChevronLeft size={15}/>{step===1?'Cancel':'Back'}</button>
+          <button type="button" className="btn btn-secondary" onClick={handleSaveDraft} disabled={draftSaving} style={{display:'flex',alignItems:'center',gap:6,background:'#f8fafc',borderColor:'#cbd5e1',color:'#334155'}} title="Save incomplete draft locally"><Bookmark size={14}/>{draftSaving?'Saving...':'Save Draft'}</button>
+        </div>
         <div style={{display:'flex',alignItems:'center',gap:6}}>{STEPS.map(s=>(<div key={s.id} style={{borderRadius:999,transition:'all 0.3s',width:s.id===step?20:8,height:8,background:s.id===step?'var(--primary)':s.id<step?'#7c3aed':'var(--border)'}}/>))}</div>
         {step<5?(<button type="button" className="btn btn-primary" onClick={next} style={{display:'flex',alignItems:'center',gap:6}}>Next <ChevronRight size={15}/></button>):(<button type="button" className="btn btn-primary" onClick={handleSubmit} disabled={submitting} style={{display:'flex',alignItems:'center',gap:6,background:submitting?undefined:'linear-gradient(135deg,#059669,#10b981)',borderColor:'transparent'}}>{submitting?'Saving...':<><BadgeCheck size={15}/>{isEditing?'Update Vendor':'Register Business'}</>}</button>)}
       </div>

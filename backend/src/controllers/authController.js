@@ -415,6 +415,31 @@ const login = async (req, res) => {
       return res.status(403).json({ success: false, code: 'ACCOUNT_BLOCKED', message: 'Account is inactive. Please contact your administrator.' });
     }
 
+    if (!isGlobalAdmin) {
+      if (statusLower === 'rejected') {
+        return res.status(403).json({ success: false, code: 'REGISTRATION_REJECTED', message: 'Manager registration was rejected. Please contact your administrator.' });
+      }
+
+      const isApproved = (statusLower === 'active' || statusLower === 'approved') && user.isActive !== false;
+      const rawKycStatus = String(user.kycStatus || user.kycVerificationStatus || '').toLowerCase();
+      const isKycApproved = rawKycStatus === 'approved' || rawKycStatus === 'verified' || user.isKycVerified === true || !user.kycStatus;
+
+      if (!isApproved || !isKycApproved) {
+        if (statusLower === 'kyc_pending' || statusLower === 'kyc_review' || rawKycStatus === 'pending' || rawKycStatus === 'pending_verification' || rawKycStatus === 'under_verification') {
+          return res.status(403).json({
+            success: false,
+            code: 'KYC_PENDING',
+            message: 'Your application has passed Admin review and is pending final KYC verification. You will gain access once verified.'
+          });
+        }
+        return res.status(403).json({
+          success: false,
+          code: 'APPROVAL_PENDING',
+          message: 'Your Manager application is under review. You will be able to log in once approved by Main Admin.'
+        });
+      }
+    }
+
     // Populate geographic and regional scope for response
     const stateObj = user.stateId ? await db.states.findById(user.stateId) : null;
     const districtObj = user.districtId ? await db.districts.findById(user.districtId) : null;
@@ -3121,6 +3146,8 @@ module.exports = {
   subAdminApproval,
   mainAdminApproval,
   kycApproval,
+  simulateApproval: subAdminApproval,
+  simulateKyc: kycApproval,
   getRegistrationStatus,
   getRegistrationLocations,
   uploadAvatar,

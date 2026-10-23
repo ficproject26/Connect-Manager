@@ -303,7 +303,6 @@ export default function Register({
     }
   }, []);
 
-  // Messages & Loading
   const [loading, setLoading] = useState(false);
   const [refreshingStatus, setRefreshingStatus] = useState(false);
   const [error, setError] = useState('');

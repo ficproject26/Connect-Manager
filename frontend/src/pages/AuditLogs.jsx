@@ -12,7 +12,22 @@ const AuditLogs = ({ onNavigate }) => {
   const fetchLogs = async () => {
     try {
       const res = await auditService.getAuditLogs();
-      if (res.success) setLogs(res.data);
+      if (res.success && Array.isArray(res.data)) {
+        const uState = String(user?.state || user?.stateName || user?.scope?.stateName || '').toLowerCase();
+        const uStateId = String(user?.stateId || user?.scope?.stateId || '').toLowerCase();
+        const isKa = uState.includes('karnataka') || uStateId === 'state_ka';
+        const isTn = uState.includes('tamil nadu') || uStateId === 'state_tn' || uStateId === '6aa10f70ca0932e6eaec1f5c';
+        const tnLocs = ['tamil nadu', 'kallakurichi', 'salem', 'dharmapuri', 'chennai', 'krishnagiri', 'hosur', 'coimbatore', 'madurai'];
+        const kaLocs = ['karnataka', 'bengaluru', 'bangalore', 'mysuru', 'hubli'];
+
+        const scoped = res.data.filter(l => {
+          const txt = `${l.action || ''} ${l.targetName || ''} ${JSON.stringify(l.newValue || {})} ${JSON.stringify(l.previousValue || {})}`.toLowerCase();
+          if (isKa && tnLocs.some(loc => txt.includes(loc))) return false;
+          if (isTn && kaLocs.some(loc => txt.includes(loc))) return false;
+          return true;
+        });
+        setLogs(scoped);
+      }
     } catch (err) {
       console.error('Failed to load audit logs:', err);
     } finally {

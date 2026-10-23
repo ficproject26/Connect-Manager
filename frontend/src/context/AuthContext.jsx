@@ -33,8 +33,8 @@ const normalizeUser = (u) => {
     (typeof u.state === 'string' && u.state.toLowerCase().includes('karnataka')) ||
     (typeof u.district === 'string' && u.district.toLowerCase().includes('bengaluru')) ||
     (typeof scope.stateName === 'string' && scope.stateName.toLowerCase().includes('karnataka'));
-  const stateVal = u.state || u.stateName || territory.state || scope.stateName || scope.regionName || (isKarnataka ? 'Karnataka' : 'Tamil Nadu');
-  const stateIdVal = u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || (isKarnataka ? 'state_ka' : '6aa10f70ca0932e6eaec1f5c');
+  const stateVal = u.state || u.stateName || territory.state || scope.stateName || scope.regionName || (isKarnataka ? 'Karnataka' : null);
+  const stateIdVal = u.stateId || territory.stateId || scope.stateId || u.regionId || scope.regionId || (isKarnataka ? 'state_ka' : null);
 
   const distVal = level >= 2 ? (u.district || u.districtName || territory.district || scope.districtName || null) : null;
   const distIdVal = level >= 2 ? (u.districtId || territory.districtId || scope.districtId || null) : null;

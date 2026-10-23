@@ -27,7 +27,7 @@ const CATEGORIES = [
   'Jobs'
 ];
 
-const STATUSES = ['All', 'Active', 'Approved', 'Pending', 'Pending Admin Review', 'Rejected', 'Inactive'];
+const STATUSES = ['All', 'Active', 'Approved', 'Pending', 'Pending Admin Review', 'Suspended', 'Rejected', 'Inactive'];
 
 const isVendorDraftIncomplete = (v) => {
   if (!v) return false;
@@ -277,11 +277,11 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
       </div>
 
       {/* Filter Panel */}
-      <div className="card" style={{ marginBottom: '24px', padding: '18px 20px' }}>
+      <div className="card" style={{ marginBottom: '24px', padding: '16px 18px' }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 140px), 1fr))',
-          gap: '14px',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 115px), 1fr))',
+          gap: '10px',
           alignItems: 'center'
         }}>
           {/* Search Box */}
@@ -378,10 +378,21 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
           <div>
             <button
               className="btn btn-secondary btn-sm"
-              style={{ width: '100%', height: '40px' }}
+              style={{
+                width: '100%',
+                height: '38px',
+                padding: '0 8px',
+                whiteSpace: 'nowrap',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '5px',
+                fontSize: '0.8rem'
+              }}
               onClick={resetFilters}
+              title="Clear active filters"
             >
-              <RotateCcw size={14} /> Clear Filters
+              <RotateCcw size={13} /> Clear Filters
             </button>
           </div>
         </div>
@@ -428,9 +439,9 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                       <span style={{ fontWeight: 600, color: '#334155' }}>{v.name}</span>
                       <span>•</span>
-                      <span style={{ whiteSpace: 'nowrap' }}>
+                      <span style={{ whiteSpace: 'nowrap', display: 'inline-block', flexShrink: 0 }}>
                         {(v.mobile || v.phone)
-                          ? `+91 ${String(v.mobile || v.phone).replace(/^\+91\s*/, '')}`
+                          ? `+91\u00A0${String(v.mobile || v.phone).replace(/^\+91[\s\u00A0]*/, '')}`
                           : '—'
                         }
                       </span>

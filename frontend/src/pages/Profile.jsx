@@ -480,34 +480,7 @@ const Profile = () => {
                     onChange={handlePhotoSelect}
                   />
 
-                  {/* Camera overlay button on avatar */}
-                  {!photoPreview && (
-                    <button
-                      type="button"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={photoLoading}
-                      title={user?.avatarUrl ? "Change Photo" : "Upload Photo"}
-                      style={{
-                        position: 'absolute',
-                        bottom: '-2px',
-                        right: '-2px',
-                        width: '26px',
-                        height: '26px',
-                        borderRadius: '50%',
-                        background: 'var(--forge-gold, #f59e0b)',
-                        color: '#0f172a',
-                        border: '2px solid #ffffff',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        cursor: 'pointer',
-                        boxShadow: '0 2px 5px rgba(0,0,0,0.15)'
-                      }}
-                    >
-                      <Camera size={13} />
-                    </button>
-                  )}
-                </div>
+                  </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>

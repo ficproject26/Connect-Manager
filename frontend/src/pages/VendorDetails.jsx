@@ -232,6 +232,21 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
             >
               <ArrowLeft size={18} />
             </button>
+            {(vendor.logo || vendor.shopLogo) && (
+              <img
+                src={resolveMediaUrl(vendor.logo || vendor.shopLogo)}
+                alt="Shop Logo"
+                style={{
+                  width: '46px',
+                  height: '46px',
+                  borderRadius: '10px',
+                  objectFit: 'cover',
+                  border: '1px solid var(--border)',
+                  flexShrink: 0
+                }}
+                onError={(e) => { e.currentTarget.style.display = 'none'; }}
+              />
+            )}
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                 <h2 style={{ fontSize: '1.5rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
@@ -377,7 +392,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
           </div>
         </div>
 
-        {/* Card 3: Assigned Field Manager */}
+        {/* Card 3: ONBOARDED BY */}
         <div style={{
           background: '#ffffff',
           borderRadius: '14px',
@@ -390,13 +405,13 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
         }}>
           <div>
             <div style={{ fontSize: '0.72rem', fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Assigned Field Manager
+              ONBOARDED BY
             </div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: (vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name) ? 'var(--text-main)' : 'var(--text-muted)', marginTop: '4px' }}>
-              {vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name || 'Assignment details unavailable'}
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: (vendor.onboardedBy?.name || vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name) ? 'var(--text-main)' : 'var(--text-muted)', marginTop: '4px' }}>
+              {vendor.onboardedBy?.name || vendor.assignedFieldManager?.name || vendor.assignedManager?.name || vendor.assignedManagerName || vendor.addedBy?.name || 'Assignment details unavailable'}
             </div>
             <div style={{ fontSize: '0.74rem', color: '#6366f1', marginTop: '2px', fontWeight: 600 }}>
-              {vendor.assignedFieldManager?.designation || (vendor.assignedManagerRole ? vendor.assignedManagerRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : (vendor.addedBy?.role === 'pincode_manager' ? 'Pincode Manager' : (vendor.assignedFieldManager?.name ? 'Field Manager' : 'Unassigned')))}
+              {vendor.onboardedBy?.designation || vendor.assignedFieldManager?.designation || (vendor.assignedManagerRole ? vendor.assignedManagerRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : (vendor.addedBy?.role === 'pincode_manager' ? 'Pincode Manager' : (vendor.assignedFieldManager?.name ? 'Field Manager' : 'Unassigned')))}
             </div>
             {vendor.fieldSupervisor?.name && (
               <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '3px', fontWeight: 500 }}>
@@ -477,6 +492,40 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                     <span style={{ color: 'var(--text-muted)' }}>—</span>
                   )}
                 </div>
+                {(vendor.alternatePhone || vendor.altPhone) && (
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Alternate Phone</span>
+                    <a href={`tel:${String(vendor.alternatePhone || vendor.altPhone).replace(/^\+91\s*/, '')}`} style={{ color: '#2563eb', fontWeight: 700, textDecoration: 'none' }}>
+                      +91 {String(vendor.alternatePhone || vendor.altPhone).replace(/^\+91\s*/, '')}
+                    </a>
+                  </div>
+                )}
+                {vendor.agentName && (
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Agent Name</span>
+                    <strong>{vendor.agentName}</strong>
+                  </div>
+                )}
+                {(vendor.coPartnerName || vendor.copartnerName) && (
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Co-Partner Name</span>
+                    <strong>{vendor.coPartnerName || vendor.copartnerName}</strong>
+                  </div>
+                )}
+                {(vendor.logo || vendor.shopLogo) && (
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Shop Logo</span>
+                    <div style={{ marginTop: '4px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <img
+                        src={resolveMediaUrl(vendor.logo || vendor.shopLogo)}
+                        alt="Shop Logo"
+                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                        onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                      />
+                      <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>Uploaded</span>
+                    </div>
+                  </div>
+                )}
                 <div style={{ gridColumn: 'span 2' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Official Email</span>
                   <span style={{ color: 'var(--text-main)', wordBreak: 'break-all' }}>{vendor.email || 'Not provided'}</span>
