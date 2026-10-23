@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const path = require('path');
+const fs = require('fs');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { checkRole } = require('../middleware/roleMiddleware');
 
@@ -26,6 +27,8 @@ const handleDocumentUpload = (req, res) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
         ? 'Business document / KYC document / Business image must not exceed 5MB.'
+        : err.code === 'LIMIT_FILE_COUNT'
+        ? 'Too many files uploaded in a single request.'
         : (err.message || 'File upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
@@ -37,6 +40,17 @@ const handleDocumentUpload = (req, res) => {
       const file = req.file || (req.files && req.files[0]);
       if (!file) {
         return res.status(400).json({ success: false, message: 'No file uploaded.' });
+      }
+
+      // If client sent multiple file parts (e.g. aliased field names), remove the duplicate files from disk
+      if (req.files && req.files.length > 1) {
+        for (let i = 1; i < req.files.length; i++) {
+          try {
+            if (req.files[i]?.path && fs.existsSync(req.files[i].path)) {
+              fs.unlinkSync(req.files[i].path);
+            }
+          } catch (_) {}
+        }
       }
 
       const safeOriginalName = path.basename(file.originalname || '').replace(/[^a-zA-Z0-9._-]/g, '_');
@@ -70,6 +84,8 @@ const handleAvatarUpload = (req, res) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
         ? 'Shop logo must not exceed 2MB.'
+        : err.code === 'LIMIT_FILE_COUNT'
+        ? 'Too many files uploaded in a single request.'
         : (err.message || 'Avatar upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
@@ -81,6 +97,17 @@ const handleAvatarUpload = (req, res) => {
       const file = req.file || (req.files && req.files[0]);
       if (!file) {
         return res.status(400).json({ success: false, message: 'No image file uploaded.' });
+      }
+
+      // If client sent multiple file parts (e.g. aliased field names), remove the duplicate files from disk
+      if (req.files && req.files.length > 1) {
+        for (let i = 1; i < req.files.length; i++) {
+          try {
+            if (req.files[i]?.path && fs.existsSync(req.files[i].path)) {
+              fs.unlinkSync(req.files[i].path);
+            }
+          } catch (_) {}
+        }
       }
 
       const fileUrl = `/uploads/${file.filename}`;
@@ -109,7 +136,6 @@ router.post('/profile-photo', handleAvatarUpload);
 router.post('/logo', handleAvatarUpload);
 router.post('/shop-logo', handleAvatarUpload);
 
-const fs = require('fs');
 const db = require('../config/db');
 
 // DELETE /api/uploads/file & /api/uploads/document - Secure file removal

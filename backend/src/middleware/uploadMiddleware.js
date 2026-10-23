@@ -117,7 +117,7 @@ const upload = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB default limit
-    files: 1
+    files: 5 // Allow field aliases or small batches while enforcing strict reasonable limit
   },
   fileFilter
 });
@@ -126,7 +126,7 @@ const logoUpload = multer({
   storage,
   limits: {
     fileSize: 2 * 1024 * 1024, // 2MB limit for shop/brand logos and profile photos
-    files: 1
+    files: 5
   },
   fileFilter: logoFileFilter
 });
@@ -135,7 +135,7 @@ const documentUpload = multer({
   storage,
   limits: {
     fileSize: 5 * 1024 * 1024, // 5MB limit for business licenses, KYC documents
-    files: 1
+    files: 5
   },
   fileFilter: documentFileFilter
 });

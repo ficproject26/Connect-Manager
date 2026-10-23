@@ -171,6 +171,19 @@ app.post('/api/bank-details', authMiddleware, checkRole(), authController.update
 
 // Centralized production-safe error handling
 app.use((err, req, res, next) => {
+  // Handle Multer errors explicitly with 400 Bad Request
+  if (err && (err.name === 'MulterError' || err.code?.startsWith('LIMIT_'))) {
+    const message = err.code === 'LIMIT_FILE_SIZE'
+      ? 'File size limit exceeded.'
+      : err.code === 'LIMIT_FILE_COUNT'
+      ? 'Too many files uploaded in a single request.'
+      : (err.message || 'File upload validation error.');
+    return res.status(400).json({
+      success: false,
+      message
+    });
+  }
+
   const isProd = process.env.NODE_ENV === 'production';
   const statusCode = err.status || (err.message && err.message.includes('CORS') ? 403 : 500);
   

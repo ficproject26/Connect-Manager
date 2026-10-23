@@ -2239,6 +2239,16 @@ const updateProfilePhoto = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Please select a valid image file to upload.' });
     }
 
+    if (req.files && req.files.length > 1) {
+      for (let i = 1; i < req.files.length; i++) {
+        try {
+          if (req.files[i]?.path && fs.existsSync(req.files[i].path)) {
+            fs.unlinkSync(req.files[i].path);
+          }
+        } catch (_) {}
+      }
+    }
+
     const fileUrl = `/uploads/${file.filename}`;
     const userId = req.user?.id || req.user?._id;
 
@@ -2599,6 +2609,16 @@ const uploadDocument = (req, res) => {
     const file = req.file || (req.files && req.files[0]);
     if (!file) {
       return res.status(400).json({ success: false, message: 'No document file uploaded.' });
+    }
+
+    if (req.files && req.files.length > 1) {
+      for (let i = 1; i < req.files.length; i++) {
+        try {
+          if (req.files[i]?.path && fs.existsSync(req.files[i].path)) {
+            fs.unlinkSync(req.files[i].path);
+          }
+        } catch (_) {}
+      }
     }
 
     const allowedExts = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
