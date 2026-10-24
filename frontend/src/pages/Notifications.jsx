@@ -352,7 +352,8 @@ const Notifications = ({ onNavigate }) => {
                 borderRadius: '8px',
                 border: '1px solid var(--border-normal)',
                 outline: 'none',
-                background: '#ffffff',
+                background: 'var(--bg-card)',
+                color: 'var(--text-main)',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.04)',
                 boxSizing: 'border-box',
                 transition: 'border-color 0.15s ease, box-shadow 0.15s ease'
@@ -380,7 +381,7 @@ const Notifications = ({ onNavigate }) => {
                   background: 'none',
                   border: 'none',
                   cursor: 'pointer',
-                  color: '#94a3b8',
+                  color: 'var(--text-muted)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -388,7 +389,7 @@ const Notifications = ({ onNavigate }) => {
                   borderRadius: '50%'
                 }}
                 onMouseEnter={(e) => e.currentTarget.style.color = 'var(--text-main)'}
-                onMouseLeave={(e) => e.currentTarget.style.color = '#94a3b8'}
+                onMouseLeave={(e) => e.currentTarget.style.color = 'var(--text-muted)'}
               >
                 <X size={14} />
               </button>
@@ -405,7 +406,7 @@ const Notifications = ({ onNavigate }) => {
             style={{
               height: '40px',
               padding: '0 16px',
-              background: '#ffffff',
+              background: 'var(--bg-card)',
               border: '1px solid var(--border-normal)',
               borderRadius: '8px',
               fontWeight: 600,
@@ -433,7 +434,7 @@ const Notifications = ({ onNavigate }) => {
       {/* List */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', flex: 1 }}>
         {loading && notifications.length === 0 ? (
-          <div style={{ padding: '60px', textAlign: 'center', color: '#64748b', fontSize: '0.85rem' }}>
+          <div style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
             Loading live notifications...
           </div>
         ) : filtered.length === 0 ? (
@@ -444,7 +445,7 @@ const Notifications = ({ onNavigate }) => {
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            background: 'white',
+            background: 'var(--bg-card)',
             borderRadius: '14px',
             border: '1px solid var(--border-normal)',
             boxShadow: 'var(--shadow-card)',
@@ -455,17 +456,17 @@ const Notifications = ({ onNavigate }) => {
               width: '64px',
               height: '64px',
               borderRadius: '50%',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-normal)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '14px'
             }}>
-              <Bell size={28} style={{ color: '#94a3b8' }} />
+              <Bell size={28} style={{ color: 'var(--text-muted)' }} />
             </div>
-            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: '#334155' }}>No notifications found</div>
-            <div style={{ fontSize: '0.84rem', color: '#94a3b8', marginTop: '6px', maxWidth: '440px', lineHeight: 1.5 }}>
+            <div style={{ fontWeight: 800, fontSize: '1.05rem', color: 'var(--text-main)' }}>No notifications found</div>
+            <div style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '6px', maxWidth: '440px', lineHeight: 1.5 }}>
               Real-time alerts for vendor onboarding, compliance status updates, and field task assignments will appear here as they occur.
             </div>
           </div>
@@ -483,8 +484,8 @@ const Notifications = ({ onNavigate }) => {
                 style={{ 
                   padding: '16px 20px', 
                   marginBottom: 0,
-                  background: !n.isRead ? '#fffbeb' : 'white',
-                  border: !n.isRead ? '1px solid #fde68a' : '1px solid var(--border-normal)',
+                  background: !n.isRead ? 'rgba(245, 158, 11, 0.08)' : 'var(--bg-card)',
+                  border: !n.isRead ? '1px solid rgba(245, 158, 11, 0.35)' : '1px solid var(--border-normal)',
                   display: 'flex',
                   alignItems: 'flex-start',
                   gap: '14px',
@@ -497,8 +498,8 @@ const Notifications = ({ onNavigate }) => {
                   width: '38px',
                   height: '38px',
                   borderRadius: '50%',
-                  background: !n.isRead ? 'var(--forge-gold-vibrant)' : '#f1f5f9',
-                  color: !n.isRead ? '#713f12' : '#64748b',
+                  background: !n.isRead ? 'rgba(245, 158, 11, 0.2)' : 'var(--bg-subtle)',
+                  color: !n.isRead ? '#f59e0b' : 'var(--text-muted)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -520,12 +521,12 @@ const Notifications = ({ onNavigate }) => {
                     </div>
                     <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>{getRelativeTime(n.createdAt)}</span>
                   </div>
-                  <p style={{ fontSize: '0.8rem', color: '#475569', marginTop: '4px', lineHeight: 1.4 }}>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '4px', lineHeight: 1.4 }}>
                     {n.message}
                   </p>
 
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '10px' }}>
-                    <span style={{ fontSize: '0.72rem', color: '#94a3b8' }}>
+                    <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
                       {n.scope?.pincode ? `PIN: ${n.scope.pincode}` : n.scope?.district || 'General'}
                     </span>
 
@@ -534,9 +535,9 @@ const Notifications = ({ onNavigate }) => {
                         type="button"
                         onClick={() => handleClickItem(n)}
                         style={{
-                          background: '#fef3c7',
-                          border: '1px solid #fde68a',
-                          color: '#b45309',
+                          background: 'rgba(245, 158, 11, 0.15)',
+                          border: '1px solid rgba(245, 158, 11, 0.35)',
+                          color: '#d97706',
                           fontWeight: 700,
                           fontSize: '0.75rem',
                           padding: '5px 12px',
@@ -547,8 +548,8 @@ const Notifications = ({ onNavigate }) => {
                           gap: '4px',
                           transition: 'all 0.15s ease'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fde68a'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#fef3c7'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.25)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(245, 158, 11, 0.15)'; }}
                       >
                         Open <ArrowRight size={13} />
                       </button>
@@ -557,9 +558,9 @@ const Notifications = ({ onNavigate }) => {
                         onClick={() => removeNotification(notifId)}
                         title="Delete notification"
                         style={{
-                          background: '#fee2e2',
-                          border: '1px solid #fecaca',
-                          color: '#dc2626',
+                          background: 'rgba(239, 68, 68, 0.12)',
+                          border: '1px solid rgba(239, 68, 68, 0.25)',
+                          color: '#ef4444',
                           fontWeight: 600,
                           fontSize: '0.75rem',
                           padding: '5px 10px',
@@ -570,8 +571,8 @@ const Notifications = ({ onNavigate }) => {
                           gap: '4px',
                           transition: 'all 0.15s ease'
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = '#fecaca'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = '#fee2e2'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.22)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)'; }}
                       >
                         <Trash2 size={13} /> Delete
                       </button>

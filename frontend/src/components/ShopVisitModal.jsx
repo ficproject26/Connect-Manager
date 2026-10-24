@@ -216,9 +216,10 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
         width: '100%',
         maxWidth: viewMode === 'vendor_onboarding' ? 740 : 660,
         maxHeight: 'min(92vh, 840px)',
-        background: '#ffffff',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-normal)',
         borderRadius: 20,
-        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.35)',
+        boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.4)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
@@ -231,8 +232,8 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '16px 24px',
-          borderBottom: '1px solid #f1f5f9',
-          background: '#ffffff',
+          borderBottom: '1px solid var(--border-normal)',
+          background: 'var(--bg-subtle)',
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -250,10 +251,10 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
               <Store size={20} />
             </div>
             <div>
-              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+              <h2 style={{ fontSize: '1.1rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
                 {viewMode === 'vendor_onboarding' ? 'Vendor Onboarding (Interested Merchant)' : 'Field Shop Visit'}
               </h2>
-              <p style={{ fontSize: 11, color: '#64748b', margin: '2px 0 0 0' }}>
+              <p style={{ fontSize: 11, color: 'var(--text-muted)', margin: '2px 0 0 0' }}>
                 {viewMode === 'vendor_onboarding'
                   ? `Completing full onboarding registration for ${shopName}`
                   : 'Shop Information, Business Category, Storefront Photo & Interest Status'}
@@ -266,13 +267,13 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
               width: 32,
               height: 32,
               borderRadius: 8,
-              border: '1px solid #e2e8f0',
+              border: '1px solid var(--border-normal)',
               cursor: 'pointer',
-              background: '#f8fafc',
+              background: 'var(--bg-card)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: '#64748b'
+              color: 'var(--text-muted)'
             }}
           >
             <X size={18} />
@@ -285,8 +286,9 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
             <div style={{
               padding: '10px 14px',
               borderRadius: 10,
-              background: '#fee2e2',
-              color: '#b91c1c',
+              background: 'rgba(220, 38, 38, 0.12)',
+              border: '1px solid rgba(220, 38, 38, 0.25)',
+              color: '#ef4444',
               fontSize: '0.82rem',
               fontWeight: 600,
               display: 'flex',
@@ -305,8 +307,8 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
               <div style={{
                 padding: '16px',
                 borderRadius: 14,
-                border: '1px solid #e2e8f0',
-                background: '#f8fafc'
+                border: '1px solid var(--border-normal)',
+                background: 'var(--bg-subtle)'
               }}>
                 <div style={{
                   display: 'flex',
@@ -315,7 +317,7 @@ const ShopVisitModal = ({ onClose, onVisitCreated }) => {
                   marginBottom: 12,
                   fontSize: '0.88rem',
                   fontWeight: 800,
-                  color: '#0f172a'
+                  color: 'var(--text-main)'
                 }}>
                   <div style={{
                     width: 22,

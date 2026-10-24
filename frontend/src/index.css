@@ -2059,6 +2059,10 @@ html, body {
 [data-theme='dark'] .navbar,
 [data-theme='dark'] .sidebar,
 [data-theme='dark'] .modal-content,
+[data-theme='dark'] .modal-window,
+[data-theme='dark'] .modal-box,
+[data-theme='dark'] .forge-kpi-card,
+[data-theme='dark'] .tasks-kpi-grid > div,
 [data-theme='dark'] .login-header {
   background-color: var(--bg-card) !important;
   color: var(--text-main) !important;
@@ -2075,13 +2079,19 @@ html, body {
   border-color: #334155 !important;
 }
 
+[data-theme='dark'] input::placeholder,
+[data-theme='dark'] textarea::placeholder {
+  color: #64748b !important;
+}
+
 [data-theme='dark'] table {
   background-color: var(--bg-card);
   color: var(--text-main);
 }
 
+[data-theme='dark'] tbody tr:hover,
 [data-theme='dark'] tr:hover {
-  background-color: rgba(255, 255, 255, 0.03) !important;
+  background-color: rgba(255, 255, 255, 0.05) !important;
 }
 
 [data-theme='dark'] .table th {
@@ -2140,4 +2150,57 @@ html, body {
   background-color: #334155 !important;
   color: #ffffff !important;
 }
+
+/* Status Badges in Dark Mode */
+[data-theme='dark'] .status-badge.active,
+[data-theme='dark'] .status-badge.approved {
+  background-color: rgba(16, 185, 129, 0.16) !important;
+  color: #34d399 !important;
+  border: 1px solid rgba(16, 185, 129, 0.35) !important;
+}
+
+[data-theme='dark'] .status-badge.pending,
+[data-theme='dark'] .status-badge.pending_pincode_approval,
+[data-theme='dark'] .status-badge.pending-admin-review {
+  background-color: rgba(245, 158, 11, 0.16) !important;
+  color: #fbbf24 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+
+[data-theme='dark'] .status-badge.under-review {
+  background-color: rgba(14, 165, 233, 0.16) !important;
+  color: #38bdf8 !important;
+  border: 1px solid rgba(14, 165, 233, 0.35) !important;
+}
+
+[data-theme='dark'] .status-badge.rejected,
+[data-theme='dark'] .status-badge.suspended {
+  background-color: rgba(239, 68, 68, 0.16) !important;
+  color: #f87171 !important;
+  border: 1px solid rgba(239, 68, 68, 0.35) !important;
+}
+
+[data-theme='dark'] .status-badge.inactive {
+  background-color: rgba(148, 163, 184, 0.16) !important;
+  color: #94a3b8 !important;
+  border: 1px solid rgba(148, 163, 184, 0.35) !important;
+}
+
+/* Dark Mode Pill Tabs & Scope Switchers */
+[data-theme='dark'] .scope-bar-container,
+[data-theme='dark'] .filter-tabs-container {
+  background-color: #0f172a !important;
+  border-color: #334155 !important;
+}
+
+/* Ensure high contrast for dark text colors in dark mode */
+[data-theme='dark'] .card h1,
+[data-theme='dark'] .card h2,
+[data-theme='dark'] .card h3,
+[data-theme='dark'] .card h4,
+[data-theme='dark'] .card strong,
+[data-theme='dark'] .card b {
+  color: var(--text-main);
+}
+
 

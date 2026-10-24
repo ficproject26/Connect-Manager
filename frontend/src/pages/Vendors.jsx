@@ -433,11 +433,11 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     {(pagination?.page ? (pagination.page - 1) * (pagination.limit || 10) : 0) + index + 1}
                   </td>
                   <td style={{ paddingLeft: '12px' }}>
-                    <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.88rem' }}>
+                    <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.88rem' }}>
                       {v.businessName}
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontWeight: 600, color: '#334155' }}>{v.name}</span>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{v.name}</span>
                       <span>•</span>
                       <span style={{ whiteSpace: 'nowrap', display: 'inline-block', flexShrink: 0 }}>
                         {(v.mobile || v.phone)
@@ -448,37 +448,37 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontWeight: 600, color: '#1e293b', fontSize: '0.82rem' }}>
+                    <div style={{ fontWeight: 600, color: 'var(--text-main)', fontSize: '0.82rem' }}>
                       {v.category}
                     </div>
                     {v.subCategory ? (
-                      <div style={{ fontSize: '0.74rem', color: '#64748b', marginTop: '2px' }}>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                         {v.subCategory}
                       </div>
                     ) : (
-                      <div style={{ fontSize: '0.74rem', color: '#94a3b8' }}>General</div>
+                      <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>General</div>
                     )}
                   </td>
                   <td>
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700, color: '#0f172a', fontSize: '0.82rem' }}>
-                      <span style={{ background: '#f1f5f9', padding: '2px 7px', borderRadius: '4px', border: '1px solid #e2e8f0', color: '#334155', fontSize: '0.75rem', fontWeight: 700 }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', fontWeight: 700, color: 'var(--text-main)', fontSize: '0.82rem' }}>
+                      <span style={{ background: 'var(--bg-subtle)', padding: '2px 7px', borderRadius: '4px', border: '1px solid var(--border-normal)', color: 'var(--text-main)', fontSize: '0.75rem', fontWeight: 700 }}>
                         PIN {v.pincodeCode}
                       </span>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#64748b', marginTop: '4px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
                       {[v.divisionName, v.districtName].filter(Boolean).join(' • ')}
                     </div>
                   </td>
                   <td>
-                    <div style={{ fontSize: '0.75rem', color: '#475569', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.7rem', fontWeight: 700 }}>PAN:</span>
-                      <code style={{ background: '#f8fafc', padding: '1px 5px', borderRadius: '3px', border: '1px solid #e2e8f0', fontSize: '0.74rem', fontFamily: 'monospace', color: '#334155' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 700 }}>PAN:</span>
+                      <code style={{ background: 'var(--bg-subtle)', padding: '1px 5px', borderRadius: '3px', border: '1px solid var(--border-normal)', fontSize: '0.74rem', fontFamily: 'monospace', color: 'var(--text-main)' }}>
                         {v.panNumber || 'N/A'}
                       </code>
                     </div>
-                    <div style={{ fontSize: '0.75rem', color: '#475569', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                      <span style={{ color: '#94a3b8', fontSize: '0.7rem', fontWeight: 700 }}>A/C:</span>
-                      <code style={{ background: '#f8fafc', padding: '1px 5px', borderRadius: '3px', border: '1px solid #e2e8f0', fontSize: '0.74rem', fontFamily: 'monospace', color: '#334155' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '3px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.7rem', fontWeight: 700 }}>A/C:</span>
+                      <code style={{ background: 'var(--bg-subtle)', padding: '1px 5px', borderRadius: '3px', border: '1px solid var(--border-normal)', fontSize: '0.74rem', fontFamily: 'monospace', color: 'var(--text-main)' }}>
                         {v.accountNumber || 'N/A'}
                       </code>
                     </div>
@@ -514,9 +514,9 @@ const Vendors = ({ onNavigate, filterParams = {}, onOpenOnboard }) => {
                             padding: '5px 10px',
                             fontSize: '0.74rem',
                             fontWeight: 700,
-                            color: '#b45309',
-                            border: '1px solid #f59e0b',
-                            background: '#fffbeb',
+                            color: '#d97706',
+                            border: '1px solid rgba(245, 158, 11, 0.4)',
+                            background: 'rgba(245, 158, 11, 0.15)',
                             display: 'inline-flex',
                             alignItems: 'center',
                             gap: 3,

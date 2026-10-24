@@ -329,10 +329,10 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
                 {error && (
                   <div style={{
                     padding: '12px',
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
+                    background: 'rgba(220, 38, 38, 0.12)',
+                    border: '1px solid rgba(220, 38, 38, 0.25)',
                     borderRadius: 'var(--radius-sm)',
-                    color: '#b91c1c',
+                    color: '#ef4444',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -347,10 +347,10 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
                 {saved && (
                   <div style={{
                     padding: '12px',
-                    background: '#ecfdf5',
-                    border: '1px solid #a7f3d0',
+                    background: 'rgba(22, 163, 74, 0.12)',
+                    border: '1px solid rgba(22, 163, 74, 0.25)',
                     borderRadius: 'var(--radius-sm)',
-                    color: '#065f46',
+                    color: '#22c55e',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px',
@@ -512,8 +512,9 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
             {sessionActionMsg && (
               <div style={{
                 padding: '8px 12px',
-                background: '#dcfce7',
-                color: '#15803d',
+                background: 'rgba(22, 163, 74, 0.12)',
+                color: '#22c55e',
+                border: '1px solid rgba(22, 163, 74, 0.25)',
                 borderRadius: '6px',
                 fontSize: '0.8rem',
                 fontWeight: 600,
@@ -540,9 +541,9 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
                   type="button"
                   onClick={handleRevokeAllOther}
                   style={{
-                    background: '#fef2f2',
-                    border: '1px solid #fecaca',
-                    color: '#dc2626',
+                    background: 'rgba(220, 38, 38, 0.12)',
+                    border: '1px solid rgba(220, 38, 38, 0.25)',
+                    color: '#ef4444',
                     padding: '5px 10px',
                     borderRadius: '6px',
                     fontSize: '0.75rem',
@@ -585,8 +586,8 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
                         width: '32px',
                         height: '32px',
                         borderRadius: '6px',
-                        background: sess.isCurrent ? '#e0f2fe' : '#f1f5f9',
-                        color: sess.isCurrent ? '#0284c7' : '#64748b',
+                        background: sess.isCurrent ? 'rgba(2, 132, 199, 0.15)' : 'var(--bg-subtle)',
+                        color: sess.isCurrent ? '#0284c7' : 'var(--text-muted)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center'
@@ -604,8 +605,8 @@ const Settings = ({ currentTheme = 'light', onToggleTheme }) => {
                           </span>
                           {sess.isCurrent && (
                             <span style={{
-                              background: '#dcfce7',
-                              color: '#15803d',
+                              background: 'rgba(22, 163, 74, 0.15)',
+                              color: '#16a34a',
                               fontSize: '0.68rem',
                               fontWeight: 700,
                               padding: '2px 6px',

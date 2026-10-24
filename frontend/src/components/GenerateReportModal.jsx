@@ -214,13 +214,13 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
         width: '100%',
         maxWidth: step === 'preview' ? '880px' : '560px',
         maxHeight: 'min(92vh, 860px)',
-        background: '#ffffff',
+        background: 'var(--bg-card)',
         borderRadius: '20px',
-        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.35)',
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.45)',
         display: 'flex',
         flexDirection: 'column',
         overflow: 'hidden',
-        border: '1px solid #e2e8f0',
+        border: '1px solid var(--border-normal)',
         zIndex: 1,
         transition: 'max-width 0.25s ease'
       }}>
@@ -230,8 +230,8 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '18px 24px',
-          borderBottom: '1px solid #f1f5f9',
-          background: '#f8fafc',
+          borderBottom: '1px solid var(--border-normal)',
+          background: 'var(--bg-subtle)',
           flexShrink: 0
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
@@ -239,7 +239,7 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
               width: 38,
               height: 38,
               borderRadius: 10,
-              background: '#e0f2fe',
+              background: 'rgba(2, 132, 199, 0.15)',
               color: '#0284c7',
               display: 'flex',
               alignItems: 'center',
@@ -248,10 +248,10 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
               <FileSpreadsheet size={20} />
             </div>
             <div>
-              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: 0 }}>
+              <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
                 {step === 'select_period' ? 'Generate Field Performance Report' : 'Report Preview & Verification'}
               </h3>
-              <p style={{ fontSize: '0.78rem', color: '#64748b', margin: '2px 0 0' }}>
+              <p style={{ fontSize: '0.78rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
                 {step === 'select_period'
                   ? 'Select report period to automatically ingest shop visits and task records'
                   : `Reviewing aggregated data for ${dateRangeLabel}`}
@@ -266,13 +266,13 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
               width: 32,
               height: 32,
               borderRadius: 8,
-              border: '1px solid #e2e8f0',
-              background: '#ffffff',
+              border: '1px solid var(--border-normal)',
+              background: 'var(--bg-card)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
               cursor: 'pointer',
-              color: '#64748b'
+              color: 'var(--text-muted)'
             }}
           >
             <X size={18} />
@@ -319,8 +319,8 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                         justifyContent: 'space-between',
                         padding: '14px 18px',
                         borderRadius: 12,
-                        border: isSelected ? '2px solid #0284c7' : '1px solid #e2e8f0',
-                        background: isSelected ? '#f0f9ff' : '#ffffff',
+                        border: isSelected ? '2px solid #0284c7' : '1px solid var(--border-normal)',
+                        background: isSelected ? 'rgba(2, 132, 199, 0.15)' : 'var(--bg-card)',
                         cursor: 'pointer',
                         transition: 'all 0.15s'
                       }}
@@ -330,15 +330,15 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                           width: 18,
                           height: 18,
                           borderRadius: '50%',
-                          border: isSelected ? '5px solid #0284c7' : '2px solid #cbd5e1',
-                          background: '#ffffff',
+                          border: isSelected ? '5px solid #0284c7' : '2px solid var(--border-normal)',
+                          background: 'var(--bg-card)',
                           flexShrink: 0
                         }} />
                         <div>
-                          <div style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.92rem' }}>
+                          <div style={{ fontWeight: 800, color: 'var(--text-main)', fontSize: '0.92rem' }}>
                             {preset.label}
                           </div>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2 }}>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
                             {preset.description}
                           </div>
                         </div>
@@ -359,9 +359,9 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                   gridTemplateColumns: '1fr 1fr',
                   gap: 14,
                   padding: '14px 16px',
-                  background: '#f8fafc',
+                  background: 'var(--bg-subtle)',
                   borderRadius: 12,
-                  border: '1px solid #cbd5e1'
+                  border: '1px solid var(--border-normal)'
                 }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 700, color: '#475569', marginBottom: 6 }}>
@@ -427,9 +427,9 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
               {/* Report Header Card */}
               <div style={{
                 padding: '16px 20px',
-                background: '#f8fafc',
+                background: 'var(--bg-subtle)',
                 borderRadius: 14,
-                border: '1px solid #e2e8f0',
+                border: '1px solid var(--border-normal)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
@@ -441,28 +441,28 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                     <span style={{
                       fontSize: '0.74rem',
                       fontWeight: 800,
-                      background: '#e0f2fe',
-                      color: '#0369a1',
+                      background: 'rgba(2, 132, 199, 0.15)',
+                      color: '#0284c7',
                       padding: '2px 8px',
                       borderRadius: 6
                     }}>
                       {user?.role?.replace(/_/g, ' ').toUpperCase() || 'PINCODE MANAGER'}
                     </span>
-                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: '#0f172a' }}>
+                    <h4 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)' }}>
                       {user?.name || 'Field Manager'}
                     </h4>
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 4, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <MapPin size={13} />
                     <span>PIN: {user?.pincode || '635112'} • {user?.division || 'Division'} • {user?.district || 'District'}</span>
                   </div>
                 </div>
 
                 <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#94a3b8', textTransform: 'uppercase' }}>
+                  <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase' }}>
                     Report Period
                   </div>
-                  <div style={{ fontSize: '0.92rem', fontWeight: 800, color: '#0f172a' }}>
+                  <div style={{ fontSize: '0.92rem', fontWeight: 800, color: 'var(--text-main)' }}>
                     {dateRangeLabel}
                   </div>
                 </div>
@@ -470,7 +470,7 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
 
               {/* 4. KPI Summary Cards */}
               <div>
-                <div style={{ fontSize: '0.84rem', fontWeight: 800, color: '#0f172a', marginBottom: 10 }}>
+                <div style={{ fontSize: '0.84rem', fontWeight: 800, color: 'var(--text-main)', marginBottom: 10 }}>
                   Report Performance Summary
                 </div>
                 <div style={{
@@ -478,28 +478,28 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                   gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
                   gap: 10
                 }}>
-                  <div style={{ padding: '12px 14px', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b' }}>Total Visits</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0f172a' }}>{summary.totalVisits}</div>
+                  <div style={{ padding: '12px 14px', background: 'var(--bg-subtle)', borderRadius: 10, border: '1px solid var(--border-normal)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted)' }}>Total Visits</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: 'var(--text-main)' }}>{summary.totalVisits}</div>
                   </div>
-                  <div style={{ padding: '12px 14px', background: '#ecfdf5', borderRadius: 10, border: '1px solid #a7f3d0' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#047857' }}>Interested</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#059669' }}>{summary.interested}</div>
+                  <div style={{ padding: '12px 14px', background: 'rgba(16, 185, 129, 0.12)', borderRadius: 10, border: '1px solid rgba(16, 185, 129, 0.25)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#10b981' }}>Interested</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#10b981' }}>{summary.interested}</div>
                   </div>
-                  <div style={{ padding: '12px 14px', background: '#fef2f2', borderRadius: 10, border: '1px solid #fecaca' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#b91c1c' }}>Not Interested</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#dc2626' }}>{summary.notInterested}</div>
+                  <div style={{ padding: '12px 14px', background: 'rgba(239, 68, 68, 0.12)', borderRadius: 10, border: '1px solid rgba(239, 68, 68, 0.25)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#ef4444' }}>Not Interested</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#ef4444' }}>{summary.notInterested}</div>
                   </div>
-                  <div style={{ padding: '12px 14px', background: '#e0f2fe', borderRadius: 10, border: '1px solid #bae6fd' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#0369a1' }}>New Tie-ups</div>
+                  <div style={{ padding: '12px 14px', background: 'rgba(2, 132, 199, 0.12)', borderRadius: 10, border: '1px solid rgba(2, 132, 199, 0.25)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#0284c7' }}>New Tie-ups</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#0284c7' }}>{summary.newTieups}</div>
                   </div>
-                  <div style={{ padding: '12px 14px', background: '#f0fdf4', borderRadius: 10, border: '1px solid #bbf7d0' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#15803d' }}>Tasks Done</div>
+                  <div style={{ padding: '12px 14px', background: 'rgba(34, 197, 94, 0.12)', borderRadius: 10, border: '1px solid rgba(34, 197, 94, 0.25)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#16a34a' }}>Tasks Done</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#16a34a' }}>{summary.tasksCompleted}</div>
                   </div>
-                  <div style={{ padding: '12px 14px', background: '#fffbeb', borderRadius: 10, border: '1px solid #fde68a' }}>
-                    <div style={{ fontSize: 11, fontWeight: 700, color: '#b45309' }}>Tasks Pending</div>
+                  <div style={{ padding: '12px 14px', background: 'rgba(245, 158, 11, 0.12)', borderRadius: 10, border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, color: '#d97706' }}>Tasks Pending</div>
                     <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#d97706' }}>{summary.tasksPending}</div>
                   </div>
                 </div>
@@ -508,15 +508,15 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
               {/* 2. Shop Visit Details Section */}
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
+                  <div style={{ fontSize: '0.88rem', fontWeight: 800, color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Store size={16} style={{ color: '#f59e0b' }} />
                     <span>Shop Visit Details ({periodVisits.length})</span>
                   </div>
-                  <span style={{ fontSize: '0.74rem', color: '#64748b' }}>Includes photos, status, and audio notes</span>
+                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Includes photos, status, and audio notes</span>
                 </div>
 
                 {periodVisits.length === 0 ? (
-                  <div style={{ padding: '24px', textAlign: 'center', background: '#f8fafc', borderRadius: 10, border: '1px solid #e2e8f0', color: '#94a3b8', fontSize: '0.84rem' }}>
+                  <div style={{ padding: '24px', textAlign: 'center', background: 'var(--bg-subtle)', borderRadius: 10, border: '1px solid var(--border-normal)', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
                     No shop visits recorded in this period.
                   </div>
                 ) : (
@@ -527,8 +527,8 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                         style={{
                           padding: '14px 16px',
                           borderRadius: 12,
-                          border: '1px solid #e2e8f0',
-                          background: '#ffffff',
+                          border: '1px solid var(--border-normal)',
+                          background: 'var(--bg-card)',
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'space-between',
@@ -542,25 +542,25 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                             <img
                               src={v.shopPhoto}
                               alt={v.shopName}
-                              style={{ width: 50, height: 50, borderRadius: 8, objectFit: 'cover', border: '1px solid #e2e8f0', flexShrink: 0 }}
+                              style={{ width: 50, height: 50, borderRadius: 8, objectFit: 'cover', border: '1px solid var(--border-normal)', flexShrink: 0 }}
                             />
                           ) : (
-                            <div style={{ width: 50, height: 50, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', flexShrink: 0 }}>
+                            <div style={{ width: 50, height: 50, borderRadius: 8, background: 'var(--bg-subtle)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', flexShrink: 0 }}>
                               <ImageIcon size={22} />
                             </div>
                           )}
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: '#e0f2fe', color: '#0369a1' }}>
+                              <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '1px 6px', borderRadius: 4, background: 'rgba(2, 132, 199, 0.15)', color: '#0284c7' }}>
                                 {v.category || 'Products'}
                               </span>
-                              <strong style={{ color: '#0f172a', fontSize: '0.9rem' }}>{v.shopName}</strong>
+                              <strong style={{ color: 'var(--text-main)', fontSize: '0.9rem' }}>{v.shopName}</strong>
                             </div>
-                            <div style={{ fontSize: '0.76rem', color: '#64748b', marginTop: 3 }}>
+                            <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', marginTop: 3 }}>
                               PIN: {v.pincodeCode || v.pincode || '635112'} • {v.createdAt ? new Date(v.createdAt).toLocaleDateString() : '—'}
                             </div>
                             {v.vendorId && (
-                              <div style={{ fontSize: '0.72rem', color: '#059669', fontWeight: 700, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                              <div style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: 700, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
                                 <CheckCircle2 size={11} /> Tie-up Created (ID: {v.vendorId})
                               </div>
                             )}
@@ -677,8 +677,8 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '16px 24px',
-          borderTop: '1px solid #f1f5f9',
-          background: '#f8fafc',
+          borderTop: '1px solid var(--border-normal)',
+          background: 'var(--bg-subtle)',
           flexShrink: 0
         }}>
           {step === 'select_period' ? (
@@ -689,9 +689,9 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                 style={{
                   padding: '9px 18px',
                   borderRadius: 9,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#475569',
+                  border: '1px solid var(--border-normal)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
                   fontWeight: 700,
                   fontSize: '0.84rem',
                   cursor: 'pointer'
@@ -733,9 +733,9 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                   gap: 6,
                   padding: '9px 18px',
                   borderRadius: 9,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#475569',
+                  border: '1px solid var(--border-normal)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
                   fontWeight: 700,
                   fontSize: '0.84rem',
                   cursor: 'pointer'
@@ -786,17 +786,18 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
           <div style={{
             width: '100%',
             maxWidth: 480,
-            background: '#ffffff',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-normal)',
             borderRadius: 16,
             padding: '24px',
-            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.4)',
+            boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
             textAlign: 'center'
           }}>
             <div style={{
               width: 50,
               height: 50,
               borderRadius: '50%',
-              background: '#fef3c7',
+              background: 'rgba(245, 158, 11, 0.15)',
               color: '#d97706',
               display: 'flex',
               alignItems: 'center',
@@ -806,11 +807,11 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
               <ShieldCheck size={26} />
             </div>
 
-            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a', margin: '0 0 10px' }}>
+            <h3 style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)', margin: '0 0 10px' }}>
               Confirm Report Submission
             </h3>
 
-            <p style={{ fontSize: '0.86rem', color: '#475569', lineHeight: '1.5', margin: '0 0 20px' }}>
+            <p style={{ fontSize: '0.86rem', color: 'var(--text-muted)', lineHeight: '1.5', margin: '0 0 20px' }}>
               “Please verify that all shop visits, interest status, reasons, photos, voice notes, and task details are correct before submitting this report.”
             </p>
 
@@ -822,9 +823,9 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
                 style={{
                   padding: '9px 18px',
                   borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#475569',
+                  border: '1px solid var(--border-normal)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
                   fontWeight: 700,
                   fontSize: '0.84rem',
                   cursor: submitting ? 'not-allowed' : 'pointer'

@@ -109,6 +109,37 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
     reader.onloadend = () => setStorefrontPreview(reader.result);
     reader.readAsDataURL(file);
 
+    const compressImage = (imgFile, maxWidth = 1200, quality = 0.75) => {
+      return new Promise((resolve) => {
+        try {
+          const r = new FileReader();
+          r.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+              let w = img.width;
+              let h = img.height;
+              if (w > maxWidth) {
+                h = Math.round((h * maxWidth) / w);
+                w = maxWidth;
+              }
+              const canvas = document.createElement('canvas');
+              canvas.width = w;
+              canvas.height = h;
+              const ctx = canvas.getContext('2d');
+              ctx.drawImage(img, 0, 0, w, h);
+              resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = () => resolve(e.target.result);
+            img.src = e.target.result;
+          };
+          r.onerror = () => resolve(null);
+          r.readAsDataURL(imgFile);
+        } catch (_) {
+          resolve(null);
+        }
+      });
+    };
+
     setUploadingPhoto(true);
     try {
       const res = await uploadService.uploadDocument(file);
@@ -118,15 +149,10 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
         setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
         setError('');
       } else {
-        const base64Url = await new Promise((resolve) => {
-          const r = new FileReader();
-          r.onload = () => resolve(r.result);
-          r.onerror = () => resolve(null);
-          r.readAsDataURL(file);
-        });
-        if (base64Url) {
-          setStorefrontUrl(base64Url);
-          setStorefrontPreview(base64Url);
+        const compressedBase64 = await compressImage(file, 1200, 0.75);
+        if (compressedBase64) {
+          setStorefrontUrl(compressedBase64);
+          setStorefrontPreview(compressedBase64);
           setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
           setError('');
         } else {
@@ -136,17 +162,12 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
         }
       }
     } catch (err) {
-      console.warn('Network upload failed, attempting fallback to base64 preview:', err);
+      console.warn('Network upload failed, attempting compressed fallback:', err);
       try {
-        const base64Url = await new Promise((resolve) => {
-          const r = new FileReader();
-          r.onload = () => resolve(r.result);
-          r.onerror = () => resolve(null);
-          r.readAsDataURL(file);
-        });
-        if (base64Url) {
-          setStorefrontUrl(base64Url);
-          setStorefrontPreview(base64Url);
+        const compressedBase64 = await compressImage(file, 1200, 0.75);
+        if (compressedBase64) {
+          setStorefrontUrl(compressedBase64);
+          setStorefrontPreview(compressedBase64);
           setFieldErrors(prev => ({ ...prev, storefrontPhoto: '' }));
           setError('');
           return;
@@ -347,12 +368,12 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
     width: '100%',
     padding: '10px 14px',
     borderRadius: '10px',
-    border: `1.5px solid ${hasError ? '#ef4444' : '#e2e8f0'}`,
+    border: `1.5px solid ${hasError ? '#ef4444' : 'var(--border-normal)'}`,
     fontSize: '0.88rem',
     outline: 'none',
     boxSizing: 'border-box',
-    background: '#ffffff',
-    color: '#0f172a',
+    background: 'var(--bg-card)',
+    color: 'var(--text-main)',
     transition: 'border-color 0.15s',
   });
 
@@ -374,9 +395,10 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
         width: '100%',
         maxWidth: '560px',
         maxHeight: '94vh',
-        background: '#ffffff',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-normal)',
         borderRadius: '20px',
-        boxShadow: '0 32px 80px rgba(0,0,0,0.3)',
+        boxShadow: '0 32px 80px rgba(0,0,0,0.4)',
         overflow: 'hidden',
         display: 'flex',
         flexDirection: 'column',
@@ -446,7 +468,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
 
           {/* ── Section 1: Shop Details ── */}
           <div style={{
-            background: '#f8fafc', border: '1px solid #e2e8f0',
+            background: 'var(--bg-subtle)', border: '1px solid var(--border-normal)',
             borderRadius: 14, padding: '16px 18px', marginBottom: 16,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -456,7 +478,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#ffffff', fontSize: '0.85rem', fontWeight: 800, flexShrink: 0,
               }}>1</div>
-              <h3 style={{ margin: 0, fontSize: '0.93rem', fontWeight: 800, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '0.93rem', fontWeight: 800, color: 'var(--text-main)' }}>
                 Shop Details &amp; Business Category <span style={{ color: '#ef4444' }}>*</span>
               </h3>
             </div>
@@ -464,7 +486,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
             <div className="responsive-grid-2" style={{ gap: '12px' }}>
               {/* Shop Name */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: 5 }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 5 }}>
                   Shop Name / Business Title <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <input
@@ -483,13 +505,13 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
 
               {/* Business Category */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: '#475569', marginBottom: 5 }}>
+                <label style={{ display: 'block', fontSize: '0.75rem', fontWeight: 700, color: 'var(--text-muted)', marginBottom: 5 }}>
                   Main Business Category <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <select
                   value={businessCategory}
                   onChange={e => { setBusinessCategory(e.target.value); setFieldErrors(p => ({ ...p, businessCategory: '' })); }}
-                  style={{ ...inputStyle(!!fieldErrors.businessCategory), background: '#ffffff' }}
+                  style={{ ...inputStyle(!!fieldErrors.businessCategory), background: 'var(--bg-card)' }}
                 >
                   <option value="">Select Category...</option>
                   {BUSINESS_CATEGORIES.map(cat => (
@@ -507,8 +529,8 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
 
           {/* ── Section 2: Storefront Photo ── */}
           <div style={{
-            background: '#f8fafc',
-            border: `1px solid ${fieldErrors.storefrontPhoto ? '#fecaca' : '#e2e8f0'}`,
+            background: 'var(--bg-subtle)',
+            border: `1px solid ${fieldErrors.storefrontPhoto ? '#fecaca' : 'var(--border-normal)'}`,
             borderRadius: 14, padding: '16px 18px', marginBottom: 16,
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -518,7 +540,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#ffffff', fontSize: '0.85rem', fontWeight: 800, flexShrink: 0,
               }}>2</div>
-              <h3 style={{ margin: 0, fontSize: '0.93rem', fontWeight: 800, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '0.93rem', fontWeight: 800, color: 'var(--text-main)' }}>
                 Shop Storefront Photo <span style={{ color: '#ef4444' }}>*</span>
               </h3>
             </div>
@@ -758,8 +780,8 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
 
           {/* ── Section 3: Merchant Interest ── */}
           <div style={{
-            background: '#f8fafc',
-            border: `1px solid ${fieldErrors.interestStatus ? '#fecaca' : '#e2e8f0'}`,
+            background: 'var(--bg-subtle)',
+            border: `1px solid ${fieldErrors.interestStatus ? '#fecaca' : 'var(--border-normal)'}`,
             borderRadius: 14, padding: '16px 18px',
           }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
@@ -769,7 +791,7 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 color: '#ffffff', fontSize: '0.85rem', fontWeight: 800, flexShrink: 0,
               }}>3</div>
-              <h3 style={{ margin: 0, fontSize: '0.93rem', fontWeight: 800, color: '#0f172a' }}>
+              <h3 style={{ margin: 0, fontSize: '0.93rem', fontWeight: 800, color: 'var(--text-main)' }}>
                 Merchant Interest Status <span style={{ color: '#ef4444' }}>*</span>
               </h3>
             </div>
@@ -781,10 +803,10 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   padding: '14px 10px', borderRadius: 12,
-                  border: `2px solid ${interestStatus === 'YES' ? '#16a34a' : '#e2e8f0'}`,
-                  background: interestStatus === 'YES' ? '#f0fdf4' : '#ffffff',
+                  border: `2px solid ${interestStatus === 'YES' ? '#16a34a' : 'var(--border-normal)'}`,
+                  background: interestStatus === 'YES' ? 'rgba(22, 163, 74, 0.15)' : 'var(--bg-card)',
                   fontSize: '0.88rem', fontWeight: 800,
-                  color: interestStatus === 'YES' ? '#16a34a' : '#475569',
+                  color: interestStatus === 'YES' ? '#16a34a' : 'var(--text-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}
               >
@@ -797,10 +819,10 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
                 style={{
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10,
                   padding: '14px 10px', borderRadius: 12,
-                  border: `2px solid ${interestStatus === 'NO' ? '#dc2626' : '#e2e8f0'}`,
-                  background: interestStatus === 'NO' ? '#fef2f2' : '#ffffff',
+                  border: `2px solid ${interestStatus === 'NO' ? '#dc2626' : 'var(--border-normal)'}`,
+                  background: interestStatus === 'NO' ? 'rgba(220, 38, 38, 0.15)' : 'var(--bg-card)',
                   fontSize: '0.88rem', fontWeight: 800,
-                  color: interestStatus === 'NO' ? '#dc2626' : '#475569',
+                  color: interestStatus === 'NO' ? '#dc2626' : 'var(--text-muted)',
                   cursor: 'pointer', transition: 'all 0.15s',
                 }}
               >
@@ -929,17 +951,17 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
         {/* Footer */}
         <div style={{
           flexShrink: 0, padding: '16px 20px',
-          borderTop: '1px solid #e2e8f0',
+          borderTop: '1px solid var(--border-normal)',
           display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10,
-          background: '#f8fafc',
+          background: 'var(--bg-subtle)',
         }}>
           <button
             type="button"
             onClick={onClose}
             disabled={submitting}
             style={{
-              padding: '9px 18px', borderRadius: 10, border: '1px solid #e2e8f0',
-              background: '#ffffff', color: '#475569',
+              padding: '9px 18px', borderRadius: 10, border: '1px solid var(--border-normal)',
+              background: 'var(--bg-card)', color: 'var(--text-main)',
               fontSize: '0.85rem', fontWeight: 700, cursor: 'pointer',
             }}
           >

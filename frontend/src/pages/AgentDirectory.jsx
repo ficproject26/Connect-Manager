@@ -359,7 +359,7 @@ const AgentDirectory = ({ onNavigate }) => {
               padding: '8px 14px',
               borderRadius: '8px',
               border: '1px solid var(--border)',
-              background: '#ffffff',
+              background: 'var(--bg-card)',
               color: 'var(--text-main)',
               fontSize: '0.82rem',
               fontWeight: 600,
@@ -375,7 +375,7 @@ const AgentDirectory = ({ onNavigate }) => {
       {/* 2. KPI Summary Cards */}
       <div className="tasks-kpi-grid">
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -392,13 +392,13 @@ const AgentDirectory = ({ onNavigate }) => {
               {hierarchicalAgents.length}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={20} />
           </div>
         </div>
 
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -415,13 +415,13 @@ const AgentDirectory = ({ onNavigate }) => {
               {totalReferrals}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(217, 119, 6, 0.15)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <TrendingUp size={20} />
           </div>
         </div>
 
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -434,11 +434,11 @@ const AgentDirectory = ({ onNavigate }) => {
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
               Vendors Onboarded
             </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#4f46e5', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#6366f1', marginTop: '4px' }}>
               {totalVendors}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#ede9fe', color: '#4f46e5', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Store size={20} />
           </div>
         </div>
@@ -446,7 +446,7 @@ const AgentDirectory = ({ onNavigate }) => {
 
       {/* 3. Search & Filter Bar */}
       <div style={{
-        background: '#ffffff',
+        background: 'var(--bg-card)',
         borderRadius: '14px',
         padding: '14px 18px',
         border: '1px solid var(--border)',
@@ -470,7 +470,8 @@ const AgentDirectory = ({ onNavigate }) => {
               fontSize: '0.84rem',
               borderRadius: '8px',
               border: '1px solid var(--border)',
-              background: '#f8fafc',
+              background: 'var(--bg-subtle)',
+              color: 'var(--text-main)',
               outline: 'none',
               boxSizing: 'border-box'
             }}
@@ -513,7 +514,7 @@ const AgentDirectory = ({ onNavigate }) => {
               fontSize: '0.84rem',
               borderRadius: '8px',
               border: '1px solid var(--border)',
-              background: '#ffffff',
+              background: 'var(--bg-card)',
               outline: 'none',
               color: 'var(--text-main)',
               fontWeight: 600,
@@ -540,7 +541,7 @@ const AgentDirectory = ({ onNavigate }) => {
               fontSize: '0.8rem',
               borderRadius: '8px',
               border: '1px dashed var(--border)',
-              background: '#f8fafc',
+              background: 'var(--bg-subtle)',
               color: 'var(--text-muted)',
               cursor: 'pointer',
               fontWeight: 600
@@ -553,14 +554,14 @@ const AgentDirectory = ({ onNavigate }) => {
 
       {/* 4. Directory Content */}
       {loading ? (
-        <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <div style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border)', padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
           <UserCheck size={36} style={{ animation: 'pulse 1.5s infinite', margin: '0 auto 10px', color: 'var(--primary)' }} />
           <div style={{ fontSize: '0.88rem' }}>Loading field agent directory...</div>
         </div>
       ) : error ? (
-        <div style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <div style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border)', padding: '36px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
           <Shield size={34} style={{ margin: '0 auto 10px', color: '#ef4444' }} />
-          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#b91c1c', marginBottom: '4px' }}>
+          <div style={{ fontWeight: 700, fontSize: '0.95rem', color: '#ef4444', marginBottom: '4px' }}>
             {error}
           </div>
           <button
@@ -573,7 +574,7 @@ const AgentDirectory = ({ onNavigate }) => {
         </div>
       ) : viewMode === 'table' ? (
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           border: '1px solid var(--border)',
           boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
@@ -582,7 +583,7 @@ const AgentDirectory = ({ onNavigate }) => {
           <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ width: '100%', minWidth: '780px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
               <thead>
-                <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+                <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', width: '60px', textAlign: 'center' }}>S.No.</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Agent Profile</th>
                   <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Jurisdiction & Coverage</th>
@@ -745,8 +746,8 @@ const AgentDirectory = ({ onNavigate }) => {
           gap: '16px'
         }}>
           {filteredAgents.length === 0 ? (
-            <div style={{ gridColumn: '1 / -1', background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
-              <UserCheck size={36} style={{ color: '#cbd5e1', margin: '0 auto 8px' }} />
+            <div style={{ gridColumn: '1 / -1', background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border)', padding: '48px 16px', textAlign: 'center', color: 'var(--text-muted)' }}>
+              <UserCheck size={36} style={{ color: 'var(--text-muted)', margin: '0 auto 8px' }} />
               <div style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--text-main)', marginBottom: '4px' }}>No agents found</div>
               <div style={{ fontSize: '0.8rem' }}>
                 {search
@@ -761,7 +762,7 @@ const AgentDirectory = ({ onNavigate }) => {
             <div 
               key={agent._id || agent.id}
               style={{
-                background: '#ffffff',
+                background: 'var(--bg-card)',
                 borderRadius: '14px',
                 border: '1px solid var(--border)',
                 padding: '18px',
@@ -779,7 +780,7 @@ const AgentDirectory = ({ onNavigate }) => {
                       width: '40px',
                       height: '40px',
                       borderRadius: '10px',
-                      background: '#eff6ff',
+                      background: 'rgba(37, 99, 235, 0.15)',
                       color: '#2563eb',
                       display: 'flex',
                       alignItems: 'center',
@@ -802,7 +803,7 @@ const AgentDirectory = ({ onNavigate }) => {
                 </div>
 
                 <div style={{
-                  background: '#f8fafc',
+                  background: 'var(--bg-subtle)',
                   padding: '12px',
                   borderRadius: '10px',
                   fontSize: '0.8rem',
@@ -821,13 +822,13 @@ const AgentDirectory = ({ onNavigate }) => {
                 </div>
 
                 <div className="responsive-grid-2" style={{ gap: '8px', fontSize: '0.8rem' }}>
-                  <div style={{ background: '#fdf4ff', border: '1px solid #fae8ff', padding: '8px 10px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '10px', color: '#86198f', fontWeight: 700 }}>REFERRALS</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#701a75', marginTop: '2px' }}>{agent.totalReferrals || 0}</div>
+                  <div style={{ background: 'rgba(168, 85, 247, 0.12)', border: '1px solid rgba(168, 85, 247, 0.25)', padding: '8px 10px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '10px', color: '#c084fc', fontWeight: 700 }}>REFERRALS</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{agent.totalReferrals || 0}</div>
                   </div>
-                  <div style={{ background: '#f0fdf4', border: '1px solid #dcfce7', padding: '8px 10px', borderRadius: '8px' }}>
-                    <div style={{ fontSize: '10px', color: '#166534', fontWeight: 700 }}>VENDORS</div>
-                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#14532d', marginTop: '2px' }}>{agent.vendorOnboardings || 0}</div>
+                  <div style={{ background: 'rgba(34, 197, 94, 0.12)', border: '1px solid rgba(34, 197, 94, 0.25)', padding: '8px 10px', borderRadius: '8px' }}>
+                    <div style={{ fontSize: '10px', color: '#4ade80', fontWeight: 700 }}>VENDORS</div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: 800, color: '#16a34a', marginTop: '2px' }}>{agent.vendorOnboardings || 0}</div>
                   </div>
                 </div>
               </div>
@@ -845,8 +846,8 @@ const AgentDirectory = ({ onNavigate }) => {
                   fontWeight: 700,
                   padding: '2px 8px',
                   borderRadius: '12px',
-                  background: agent.status === 'Active' ? '#d1fae5' : '#fef3c7',
-                  color: agent.status === 'Active' ? '#065f46' : '#92400e'
+                  background: agent.status === 'Active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                  color: agent.status === 'Active' ? '#10b981' : '#f59e0b'
                 }}>
                   {agent.status}
                 </span>
@@ -858,7 +859,7 @@ const AgentDirectory = ({ onNavigate }) => {
                     fontWeight: 700,
                     borderRadius: '6px',
                     border: '1px solid var(--border)',
-                    background: '#ffffff',
+                    background: 'var(--bg-card)',
                     color: 'var(--text-main)',
                     cursor: 'pointer'
                   }}
@@ -892,9 +893,10 @@ const AgentDirectory = ({ onNavigate }) => {
             width: '100%',
             maxWidth: '540px',
             maxHeight: 'min(92vh, 800px)',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-normal)',
             borderRadius: '16px',
-            boxShadow: '0 20px 60px rgba(0,0,0,0.2)',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.4)',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -911,7 +913,7 @@ const AgentDirectory = ({ onNavigate }) => {
                   width: '42px',
                   height: '42px',
                   borderRadius: '10px',
-                  background: '#eff6ff',
+                  background: 'rgba(37, 99, 235, 0.15)',
                   color: '#2563eb',
                   display: 'flex',
                   alignItems: 'center',
@@ -941,7 +943,7 @@ const AgentDirectory = ({ onNavigate }) => {
             <div style={{ padding: '16px 18px', overflowY: 'auto', flex: 1 }}>
               <div className="responsive-grid-2" style={{
                 gap: '12px',
-                background: '#f8fafc',
+                background: 'var(--bg-subtle)',
                 padding: '14px',
                 borderRadius: '10px',
                 marginBottom: '16px'
@@ -1002,7 +1004,7 @@ const AgentDirectory = ({ onNavigate }) => {
                 </div>
                 <div>
                   <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: 600 }}>KYC Status</div>
-                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#059669', marginTop: '2px' }}>
+                  <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#10b981', marginTop: '2px' }}>
                     {selectedAgent.kycStatus || 'Verified'}
                   </div>
                 </div>
@@ -1012,11 +1014,11 @@ const AgentDirectory = ({ onNavigate }) => {
                 gap: '10px',
                 marginBottom: '16px'
               }}>
-                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>REFERRALS</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', marginTop: '2px' }}>{selectedAgent.totalReferrals || 0}</div>
                 </div>
-                <div style={{ background: '#f8fafc', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
+                <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border)', padding: '10px', borderRadius: '8px', textAlign: 'center' }}>
                   <div style={{ fontSize: '10px', fontWeight: 700, color: 'var(--text-muted)' }}>VENDORS</div>
                   <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#2563eb', marginTop: '2px' }}>{selectedAgent.vendorOnboardings || 0}</div>
                 </div>
@@ -1037,7 +1039,8 @@ const AgentDirectory = ({ onNavigate }) => {
                     fontSize: '0.82rem',
                     fontWeight: 600,
                     border: '1px solid var(--border)',
-                    background: '#ffffff',
+                    background: 'var(--bg-card)',
+                    color: 'var(--text-main)',
                     cursor: 'pointer'
                   }}
                 >

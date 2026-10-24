@@ -76,10 +76,10 @@ const Performance = () => {
       ) : error ? (
         <div style={{
           padding: '16px',
-          background: '#fef2f2',
-          border: '1px solid #fecaca',
+          background: 'rgba(220, 38, 38, 0.12)',
+          border: '1px solid rgba(220, 38, 38, 0.25)',
           borderRadius: 'var(--radius-sm)',
-          color: '#b91c1c',
+          color: '#ef4444',
           display: 'flex',
           alignItems: 'center',
           gap: '10px',
@@ -127,7 +127,7 @@ const Performance = () => {
                     const name = b.districtName || b.divisionName || (b.pincodeCode ? `Pincode ${b.pincodeCode}` : `Cluster ${idx + 1}`);
                     const rate = b.totalVendors > 0 ? Math.round((b.activeVendors / b.totalVendors) * 100) : 0;
                     return (
-                      <div key={idx} style={{ padding: '14px', background: '#f8fafc', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-normal)' }}>
+                      <div key={idx} style={{ padding: '14px', background: 'var(--bg-subtle)', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-normal)' }}>
                         <div style={{ fontWeight: 700, fontSize: '0.9rem', marginBottom: '4px' }}>{name}</div>
                         <div style={{ fontSize: '0.8rem', color: '#15803d', marginBottom: '4px' }}>
                           ● {b.activeVendors} Active / {b.totalVendors} Outlets ({rate}% Active)
@@ -155,7 +155,7 @@ const Performance = () => {
               <div className="card-body" style={{ padding: 0 }}>
                 <div className="table-responsive">
                   <table className="table" style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
-                    <thead style={{ background: '#f8fafc', borderBottom: '1px solid var(--border-normal)' }}>
+                    <thead style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border-normal)' }}>
                       <tr>
                         <th style={{ padding: '10px 16px' }}>Rank</th>
                         <th style={{ padding: '10px 16px' }}>Manager / Region</th>

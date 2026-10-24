@@ -671,10 +671,27 @@ const getLeaderboardData = async (req, res) => {
           continue;
         }
 
-        const status = String(m.status || '').toLowerCase();
-        const isSelf = String(m._id || m.id) === String(user?.id || user?._id);
-        const isEligible = status === 'active' || status === 'approved' || status === 'active & authorized' || status === 'under_review' || isSelf;
-        if (!isEligible) continue;
+        const norm = (v) => String(v || '').trim().toLowerCase();
+        const st = norm(m.status);
+        const ost = norm(m.overallRegistrationStatus);
+        const kyc = norm(m.kycStatus || m.kycVerificationStatus);
+        const mainAdminSt = norm(m.mainAdminApprovalStatus);
+        const subAdminSt = norm(m.subAdminApprovalStatus);
+
+        // Require active/approved status
+        if (st !== 'active' && st !== 'approved' && st !== 'active & authorized') continue;
+        if (ost && ost !== 'active' && ost !== 'approved') continue;
+        if (m.isActive === false || m.isApproved === false) continue;
+
+        // Strictly disallow any pending, under-review, or rejected lifecycle flags
+        if (st.includes('pending') || st.includes('review') || st.includes('reject')) continue;
+        if (ost.includes('pending') || ost.includes('review') || ost.includes('reject')) continue;
+        if (mainAdminSt.includes('pending') || mainAdminSt.includes('waiting') || mainAdminSt.includes('reject')) continue;
+        if (subAdminSt.includes('pending') || subAdminSt.includes('reject')) continue;
+
+        // KYC verification must be confirmed
+        const isKycVerified = kyc === 'verified' || kyc === 'approved' || m.isKycVerified === true;
+        if (!isKycVerified) continue;
 
         // Territory scope enforcement: Managers compete within their assigned state jurisdiction
         if (!isGlobalAdmin) {

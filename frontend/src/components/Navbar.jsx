@@ -325,10 +325,10 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                 right: 0,
                 top: 'calc(100% + 10px)',
                 width: 'min(480px, calc(100vw - 32px))',
-                background: '#ffffff',
+                background: 'var(--bg-card)',
                 borderRadius: '14px',
-                border: '1.5px solid #cbd5e1',
-                boxShadow: '0 16px 40px rgba(15, 23, 42, 0.18)',
+                border: '1.5px solid var(--border-normal)',
+                boxShadow: '0 16px 40px rgba(0, 0, 0, 0.35)',
                 display: 'flex',
                 flexDirection: 'column',
                 zIndex: 1000,
@@ -341,7 +341,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                 alignItems: 'center',
                 gap: '8px',
                 padding: '10px 14px',
-                background: '#ffffff'
+                background: 'var(--bg-card)'
               }}>
                 <Search size={16} style={{ color: '#0284c7', flexShrink: 0 }} />
                 <input
@@ -356,7 +356,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                     border: 'none',
                     outline: 'none',
                     fontSize: '0.86rem',
-                    color: '#1e293b',
+                    color: 'var(--text-main)',
                     background: 'transparent'
                   }}
                 />
@@ -374,7 +374,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                       setSearching(false);
                     }}
                     title="Clear search query"
-                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', padding: '2px', display: 'flex' }}
+                    style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: '2px', display: 'flex' }}
                   >
                     <X size={14} />
                   </button>
@@ -384,11 +384,11 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                   onClick={closeSearch}
                   title="Close (Esc)"
                   style={{
-                    background: '#f1f5f9',
-                    border: '1px solid #e2e8f0',
+                    background: 'var(--bg-subtle)',
+                    border: '1px solid var(--border-normal)',
                     borderRadius: '6px',
                     cursor: 'pointer',
-                    color: '#64748b',
+                    color: 'var(--text-muted)',
                     padding: '3px 8px',
                     fontSize: '0.72rem',
                     fontWeight: 700,
@@ -404,8 +404,8 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
               {/* Search Results Dropdown Body */}
               {searchQuery.trim().length >= 2 && (
                 <div style={{
-                  borderTop: '1px solid #f1f5f9',
-                  background: '#f8fafc',
+                  borderTop: '1px solid var(--border-normal)',
+                  background: 'var(--bg-subtle)',
                   maxHeight: '380px',
                   overflowY: 'auto'
                 }}>
@@ -452,22 +452,22 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                background: '#ffffff',
-                                borderBottom: '1px solid #f1f5f9',
+                                background: 'var(--bg-card)',
+                                borderBottom: '1px solid var(--border-normal)',
                                 transition: 'background 0.15s'
                               }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#f0f9ff'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-card)'; }}
                             >
                               <div>
-                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#0f172a' }}>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
                                   {v.businessName || v.name}
                                 </div>
-                                <div style={{ fontSize: '0.74rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                                   <span>{v.name}</span>
                                   {v.mobile && <span>• +91 {v.mobile}</span>}
                                   {v.pincodeCode && (
-                                    <span style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 4, fontWeight: 700, color: '#334155' }}>
+                                    <span style={{ background: 'var(--bg-subtle)', padding: '1px 5px', borderRadius: 4, fontWeight: 700, color: 'var(--text-main)', border: '1px solid var(--border-normal)' }}>
                                       PIN {v.pincodeCode}
                                     </span>
                                   )}
@@ -479,12 +479,12 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                   fontWeight: 700,
                                   padding: '2px 7px',
                                   borderRadius: 12,
-                                  background: v.status === 'Active' ? '#d1fae5' : '#fef3c7',
-                                  color: v.status === 'Active' ? '#047857' : '#b45309'
+                                  background: v.status === 'Active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                                  color: v.status === 'Active' ? '#10b981' : '#f59e0b'
                                 }}>
                                   {v.status || 'Active'}
                                 </span>
-                                <ArrowRight size={13} style={{ color: '#94a3b8' }} />
+                                <ArrowRight size={13} style={{ color: 'var(--text-muted)' }} />
                               </div>
                             </div>
                           ))}
@@ -499,7 +499,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                             fontSize: '0.7rem',
                             fontWeight: 800,
                             letterSpacing: '0.05em',
-                            color: '#7c3aed',
+                            color: '#8b5cf6',
                             textTransform: 'uppercase',
                             display: 'flex',
                             alignItems: 'center',
@@ -517,28 +517,28 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                background: '#ffffff',
-                                borderBottom: '1px solid #f1f5f9',
+                                background: 'var(--bg-card)',
+                                borderBottom: '1px solid var(--border-normal)',
                                 transition: 'background 0.15s'
                               }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#faf5ff'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-card)'; }}
                             >
                               <div>
-                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#0f172a' }}>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
                                   {m.name || 'Manager'}
                                 </div>
-                                <div style={{ fontSize: '0.74rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                                   <span>{getDisplayValue(m.roleLabel || m.role, 'Field Manager')}</span>
                                   {m.phone && <span>• +91 {m.phone}</span>}
                                   {m.pincodeCode && (
-                                    <span style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 4, fontWeight: 700, color: '#334155' }}>
+                                    <span style={{ background: 'var(--bg-subtle)', padding: '1px 5px', borderRadius: 4, fontWeight: 700, color: 'var(--text-main)', border: '1px solid var(--border-normal)' }}>
                                       PIN {m.pincodeCode}
                                     </span>
                                   )}
                                 </div>
                               </div>
-                              <ArrowRight size={13} style={{ color: '#94a3b8' }} />
+                              <ArrowRight size={13} style={{ color: 'var(--text-muted)' }} />
                             </div>
                           ))}
                         </div>
@@ -570,18 +570,18 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                background: '#ffffff',
-                                borderBottom: '1px solid #f1f5f9',
+                                background: 'var(--bg-card)',
+                                borderBottom: '1px solid var(--border-normal)',
                                 transition: 'background 0.15s'
                               }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#fff7ed'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-card)'; }}
                             >
                               <div>
-                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#0f172a' }}>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
                                   {t.title || 'QC Task'}
                                 </div>
-                                <div style={{ fontSize: '0.74rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                                   <span>{t.type || 'Field Task'}</span>
                                   {t.vendorName && <span>• {t.vendorName}</span>}
                                 </div>
@@ -592,12 +592,12 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                   fontWeight: 700,
                                   padding: '2px 7px',
                                   borderRadius: 12,
-                                  background: t.status === 'Completed' ? '#d1fae5' : '#fee2e2',
-                                  color: t.status === 'Completed' ? '#047857' : '#b91c1c'
+                                  background: t.status === 'Completed' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                  color: t.status === 'Completed' ? '#10b981' : '#ef4444'
                                 }}>
                                   {t.status || 'Pending'}
                                 </span>
-                                <ArrowRight size={13} style={{ color: '#94a3b8' }} />
+                                <ArrowRight size={13} style={{ color: 'var(--text-muted)' }} />
                               </div>
                             </div>
                           ))}
@@ -612,7 +612,7 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                             fontSize: '0.7rem',
                             fontWeight: 800,
                             letterSpacing: '0.05em',
-                            color: '#059669',
+                            color: '#10b981',
                             textTransform: 'uppercase',
                             display: 'flex',
                             alignItems: 'center',
@@ -630,22 +630,22 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                 alignItems: 'center',
                                 justifyContent: 'space-between',
                                 cursor: 'pointer',
-                                background: '#ffffff',
-                                borderBottom: '1px solid #f1f5f9',
+                                background: 'var(--bg-card)',
+                                borderBottom: '1px solid var(--border-normal)',
                                 transition: 'background 0.15s'
                               }}
-                              onMouseEnter={(e) => { e.currentTarget.style.background = '#f0fdf4'; }}
-                              onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; }}
+                              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
+                              onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--bg-card)'; }}
                             >
                               <div>
-                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: '#0f172a' }}>
+                                <div style={{ fontSize: '0.84rem', fontWeight: 700, color: 'var(--text-main)' }}>
                                   {s.shopName || 'Shop Visit'}
                                 </div>
-                                <div style={{ fontSize: '0.74rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                                <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
                                   <span>{s.category || 'Products'}</span>
                                   {s.managerName && <span>• {s.managerName}</span>}
                                   {s.pincodeCode && (
-                                    <span style={{ background: '#f1f5f9', padding: '1px 5px', borderRadius: 4, fontWeight: 700, color: '#334155' }}>
+                                    <span style={{ background: 'var(--bg-subtle)', padding: '1px 5px', borderRadius: 4, fontWeight: 700, color: 'var(--text-main)', border: '1px solid var(--border-normal)' }}>
                                       PIN {s.pincodeCode}
                                     </span>
                                   )}
@@ -657,12 +657,12 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                                   fontWeight: 700,
                                   padding: '2px 7px',
                                   borderRadius: 12,
-                                  background: s.interestedStatus === 'YES' ? '#d1fae5' : '#fee2e2',
-                                  color: s.interestedStatus === 'YES' ? '#047857' : '#b91c1c'
+                                  background: s.interestedStatus === 'YES' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                  color: s.interestedStatus === 'YES' ? '#10b981' : '#ef4444'
                                 }}>
-                                  {s.interestedStatus === 'YES' ? 'Interested' : 'Not Interested'}
+                                  {s.interestedStatus === 'YES' ? 'Interested' : 'Followup'}
                                 </span>
-                                <ArrowRight size={13} style={{ color: '#94a3b8' }} />
+                                <ArrowRight size={13} style={{ color: 'var(--text-muted)' }} />
                               </div>
                             </div>
                           ))}
@@ -752,10 +752,10 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
               right: 0,
               top: '115%',
               width: '190px',
-              background: 'white',
+              background: 'var(--bg-card)',
               borderRadius: 'var(--radius-md)',
               border: '1px solid var(--border-normal)',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.35)',
               padding: '6px',
               zIndex: 50
             }}>
@@ -768,14 +768,17 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                   fontSize: '0.8rem',
                   cursor: 'pointer',
                   borderRadius: 'var(--radius-xs)',
-                  color: '#334155'
+                  color: 'var(--text-main)',
+                  transition: 'background 0.15s ease'
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 onClick={() => {
                   setDropdownOpen(false);
                   onNavigate && onNavigate('profile');
                 }}
               >
-                <User size={14} /> My Profile
+                <User size={14} color="var(--text-muted)" /> My Profile
               </div>
               <div 
                 style={{
@@ -786,16 +789,19 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
                   fontSize: '0.8rem',
                   cursor: 'pointer',
                   borderRadius: 'var(--radius-xs)',
-                  color: '#334155'
+                  color: 'var(--text-main)',
+                  transition: 'background 0.15s ease'
                 }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                 onClick={() => {
                   setDropdownOpen(false);
                   onNavigate && onNavigate('settings');
                 }}
               >
-                <Settings size={14} /> Settings
+                <Settings size={14} color="var(--text-muted)" /> Settings
               </div>
-              <div style={{ height: '1px', background: 'var(--border-subtle)', margin: '4px 0' }} />
+              <div style={{ height: '1px', background: 'var(--border-normal)', margin: '4px 0' }} />
               <div 
                 style={{
                   padding: '7px 10px',

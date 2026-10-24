@@ -200,12 +200,12 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
     <div style={{ maxWidth: '1440px', margin: '0 auto', paddingBottom: '40px' }}>
       {/* ─── 1. Top Header & Action Toolbar ─── */}
       <div style={{
-        background: '#ffffff',
-        border: '1px solid var(--border)',
+        background: 'var(--bg-card)',
+        border: '1px solid var(--border-normal)',
         borderRadius: '16px',
         padding: '20px 24px',
         marginBottom: '20px',
-        boxShadow: '0 2px 6px rgba(0,0,0,0.02)'
+        boxShadow: '0 2px 6px rgba(0,0,0,0.06)'
       }}>
         <div style={{
           display: 'flex',
@@ -340,11 +340,11 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
       <div className="tasks-kpi-grid" style={{ marginBottom: '22px' }}>
         {/* Card 1: Operational Status */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '16px 18px',
-          border: '1px solid var(--border)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+          border: '1px solid var(--border-normal)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -360,18 +360,18 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               {vendor.approvalStatus || 'Pincode Admin Approved'}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(37, 99, 235, 0.15)', color: '#3b82f6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Store size={22} />
           </div>
         </div>
 
         {/* Card 2: Jurisdiction & Pincode */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '16px 18px',
-          border: '1px solid var(--border)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+          border: '1px solid var(--border-normal)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -387,18 +387,18 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               {vendor.division || vendor.divisionName} • {vendor.district || vendor.districtName}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#e0f2fe', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <MapPin size={22} />
           </div>
         </div>
 
         {/* Card 3: ONBOARDED BY */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '16px 18px',
-          border: '1px solid var(--border)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+          border: '1px solid var(--border-normal)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -414,23 +414,23 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               {vendor.onboardedBy?.designation || vendor.assignedFieldManager?.designation || (vendor.assignedManagerRole ? vendor.assignedManagerRole.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase()) : (vendor.addedBy?.role === 'pincode_manager' ? 'Pincode Manager' : (vendor.assignedFieldManager?.name ? 'Field Manager' : 'Unassigned')))}
             </div>
             {vendor.fieldSupervisor?.name && (
-              <div style={{ fontSize: '0.72rem', color: '#64748b', marginTop: '3px', fontWeight: 500 }}>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '3px', fontWeight: 500 }}>
                 Supervisor: {vendor.fieldSupervisor.name}
               </div>
             )}
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(124, 58, 237, 0.15)', color: '#a78bfa', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <UserCheck size={22} />
           </div>
         </div>
 
         {/* Card 4: Settlement Readiness */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '16px 18px',
-          border: '1px solid var(--border)',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
+          border: '1px solid var(--border-normal)',
+          boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between'
@@ -446,7 +446,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               T+1 Auto Credit • IFSC Validated
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CreditCard size={22} />
           </div>
         </div>
@@ -462,9 +462,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
         {/* ── Column 1: Commercial & Identity ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Card: Business Profile */}
-          <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
-              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+          <div className="card" style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-normal)', overflow: 'hidden' }}>
+            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-normal)', background: 'var(--bg-subtle)' }}>
+              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-main)' }}>
                 <Building size={18} color="var(--primary)" /> Business Profile
               </h3>
             </div>
@@ -476,11 +476,11 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Sub-Category</span>
-                  <strong>{vendor.subCategory || 'General Merchandise'}</strong>
+                  <strong style={{ color: 'var(--text-main)' }}>{vendor.subCategory || 'General Merchandise'}</strong>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Contact Person</span>
-                  <strong>{vendor.contactPerson || vendor.name}</strong>
+                  <strong style={{ color: 'var(--text-main)' }}>{vendor.contactPerson || vendor.name}</strong>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Mobile Number</span>
@@ -503,13 +503,13 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 {vendor.agentName && (
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Agent Name</span>
-                    <strong>{vendor.agentName}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{vendor.agentName}</strong>
                   </div>
                 )}
                 {(vendor.coPartnerName || vendor.copartnerName) && (
                   <div>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Co-Partner Name</span>
-                    <strong>{vendor.coPartnerName || vendor.copartnerName}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{vendor.coPartnerName || vendor.copartnerName}</strong>
                   </div>
                 )}
                 {(vendor.logo || vendor.shopLogo) && (
@@ -519,7 +519,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                       <img
                         src={resolveMediaUrl(vendor.logo || vendor.shopLogo)}
                         alt="Shop Logo"
-                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid var(--border-normal)' }}
                         onError={(e) => { e.currentTarget.style.display = 'none'; }}
                       />
                       <span style={{ fontSize: '0.75rem', color: '#059669', fontWeight: 600 }}>Uploaded</span>
@@ -536,7 +536,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 </div>
                 <div style={{ gridColumn: 'span 2' }}>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Storefront Description</span>
-                  <p style={{ margin: '4px 0 0', color: '#475569', fontSize: '0.84rem', lineHeight: '1.45', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <p style={{ margin: '4px 0 0', color: 'var(--text-main)', fontSize: '0.84rem', lineHeight: '1.45', background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                     {vendor.description || vendor.address || 'No detailed storefront description registered.'}
                   </p>
                 </div>
@@ -545,36 +545,36 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
           </div>
 
           {/* Card: Settlement Bank */}
-          <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
+          <div className="card" style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-normal)', overflow: 'hidden' }}>
+            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-normal)', background: 'var(--bg-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-main)' }}>
                   <CreditCard size={18} color="#8b5cf6" /> Settlement Bank
                 </h3>
-                <span style={{ fontSize: '10px', fontWeight: 700, color: '#059669', background: '#dcfce7', padding: '2px 8px', borderRadius: '12px' }}>
+                <span style={{ fontSize: '10px', fontWeight: 700, color: '#059669', background: 'rgba(16, 185, 129, 0.15)', padding: '2px 8px', borderRadius: '12px' }}>
                   Auto-Disbursement Active
                 </span>
               </div>
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.86rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Account Holder:</span>
                   <strong style={{ color: 'var(--text-main)' }}>{vendor.accountHolderName || '—'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Account Number:</span>
-                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
+                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: 'var(--bg-subtle)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '4px', letterSpacing: '0.5px' }}>
                     {vendor.accountNumber ? (unmasked ? vendor.accountNumber : (vendor.accountNumber.includes('•') ? vendor.accountNumber : maskText(vendor.accountNumber, 4, 4))) : '—'}
                   </code>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>IFSC Code:</span>
                   <strong style={{ fontFamily: 'monospace', color: '#0284c7' }}>{vendor.ifsc || '—'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Bank & Branch:</span>
-                  <span>{vendor.bankName || '—'}{vendor.bankBranch ? ` (${vendor.bankBranch})` : ''}</span>
+                  <span style={{ color: 'var(--text-main)' }}>{vendor.bankName || '—'}{vendor.bankBranch ? ` (${vendor.bankBranch})` : ''}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Settlement Cycle:</span>
@@ -588,17 +588,17 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
         {/* ── Column 2: Location & Territory Hierarchy ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Card: Location Hierarchy */}
-          <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
-              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+          <div className="card" style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-normal)', overflow: 'hidden' }}>
+            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-normal)', background: 'var(--bg-subtle)' }}>
+              <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-main)' }}>
                 <MapPin size={18} color="#0ea5e9" /> Location Hierarchy
               </h3>
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.86rem' }}>
                 <div style={{
-                  background: '#f0f9ff',
-                  border: '1px solid #bae6fd',
+                  background: 'rgba(2, 132, 199, 0.1)',
+                  border: '1px solid rgba(2, 132, 199, 0.25)',
                   borderRadius: '10px',
                   padding: '12px 14px',
                   display: 'flex',
@@ -606,11 +606,11 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                   justifyContent: 'space-between'
                 }}>
                   <div>
-                    <span style={{ color: '#0369a1', display: 'block', fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Pincode Station</span>
+                    <span style={{ color: '#0284c7', display: 'block', fontSize: '0.74rem', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Pincode Station</span>
                     <strong style={{ fontSize: '1.2rem', color: '#0284c7', fontFamily: 'monospace' }}>
                       {vendor.pincode || vendor.pincodeCode}
                     </strong>
-                    <span style={{ display: 'block', fontSize: '0.78rem', color: '#0369a1', marginTop: '2px' }}>
+                    <span style={{ display: 'block', fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: '2px' }}>
                       {vendor.division || vendor.divisionName} Region ({vendor.district || vendor.districtName})
                     </span>
                   </div>
@@ -619,21 +619,21 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Division:</span>
-                  <strong>{vendor.division || vendor.divisionName || '—'}</strong>
+                  <strong style={{ color: 'var(--text-main)' }}>{vendor.division || vendor.divisionName || '—'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>District:</span>
-                  <strong>{vendor.district || vendor.districtName || '—'}</strong>
+                  <strong style={{ color: 'var(--text-main)' }}>{vendor.district || vendor.districtName || '—'}</strong>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>State:</span>
-                  <strong>{vendor.state || vendor.stateName || '—'}</strong>
+                  <strong style={{ color: 'var(--text-main)' }}>{vendor.state || vendor.stateName || '—'}</strong>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Physical Merchant Address:</span>
-                  <div style={{ marginTop: '4px', color: '#334155', fontSize: '0.84rem', background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ marginTop: '4px', color: 'var(--text-main)', fontSize: '0.84rem', background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-subtle)' }}>
                     {formatMerchantAddress(vendor)}
                   </div>
                 </div>
@@ -642,10 +642,10 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
           </div>
 
           {/* Card: Verification & Onboarding Audit Trail */}
-          <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
+          <div className="card" style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-normal)', overflow: 'hidden' }}>
+            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-normal)', background: 'var(--bg-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-main)' }}>
                   <FileCheck2 size={18} color="#6366f1" /> Onboarding & Verification Audit
                 </h3>
                 <span style={{
@@ -805,10 +805,10 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
         {/* ── Column 3: KYC, Identity & Document Proofs ── */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Card: KYC & Statutory Verification */}
-          <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
-            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
+          <div className="card" style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-normal)', overflow: 'hidden' }}>
+            <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-normal)', background: 'var(--bg-subtle)' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-main)' }}>
                   <ShieldCheck size={18} color="#10b981" /> KYC & Statutory Identity
                 </h3>
                 {(() => {
@@ -834,38 +834,38 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
             </div>
             <div className="card-body" style={{ padding: '18px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '0.86rem' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>PAN Card:</span>
-                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
+                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: 'var(--bg-subtle)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '4px' }}>
                     {maskText(vendor.panNumber, 2, 2)}
                   </code>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Aadhaar Number:</span>
-                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
+                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: 'var(--bg-subtle)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '4px' }}>
                     {maskText(vendor.aadhaarNumber, 2, 4)}
                   </code>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>GSTIN Registration:</span>
-                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: '#f1f5f9', padding: '2px 8px', borderRadius: '4px' }}>
+                  <code style={{ fontSize: '0.9rem', fontWeight: 800, background: 'var(--bg-subtle)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '4px' }}>
                     {maskText(vendor.gstNumber, 2, 3)}
                   </code>
                 </div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid #f1f5f9', paddingBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>GST Registration Status:</span>
-                  <span style={{ fontWeight: 600, color: '#475569' }}>{vendor.gstStatus || 'Registered'}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{vendor.gstStatus || 'Registered'}</span>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ color: 'var(--text-muted)' }}>MSME Category:</span>
-                  <span style={{ fontWeight: 600, color: '#475569' }}>{vendor.msmeStatus || 'Micro Enterprise'}</span>
+                  <span style={{ fontWeight: 600, color: 'var(--text-main)' }}>{vendor.msmeStatus || 'Micro Enterprise'}</span>
                 </div>
               </div>
             </div>
           </div>
 
           {/* Card: Attached Documents & Storefront Visual Proofs */}
-          <div className="card" style={{ background: '#ffffff', borderRadius: '14px', border: '1px solid var(--border)', overflow: 'hidden' }}>
+          <div className="card" style={{ background: 'var(--bg-card)', borderRadius: '14px', border: '1px solid var(--border-normal)', overflow: 'hidden' }}>
             {(() => {
               // 1. Gather all business images explicitly saved on the vendor
               const explicitBusinessImages = (Array.isArray(vendor.businessImages) ? vendor.businessImages : [])
@@ -935,9 +935,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
               return (
                 <>
-                  <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border)', background: '#fafbfc' }}>
+                  <div className="card-header" style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-normal)', background: 'var(--bg-subtle)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                      <h3 style={{ fontSize: '0.98rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: 'var(--text-main)' }}>
                         <FileText size={18} color="#f59e0b" /> Verified Storefront Proofs ({allStorefrontImages.length})
                       </h3>
                       <span style={{ fontSize: '10px', fontWeight: 700, color: '#3b82f6', background: '#eff6ff', padding: '2px 8px', borderRadius: '12px' }}>
@@ -965,8 +965,8 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
                           return (
                             <div key={idx} style={{
-                              background: '#f8fafc',
-                              border: '1px solid #e2e8f0',
+                              background: 'var(--bg-subtle)',
+                              border: '1px solid var(--border-normal)',
                               borderRadius: '10px',
                               overflow: 'hidden'
                             }}>
@@ -1098,9 +1098,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                                         padding: '4px 8px',
                                         fontSize: '0.74rem',
                                         fontWeight: 600,
-                                        background: '#f1f5f9',
-                                        color: '#475569',
-                                        border: '1px solid #e2e8f0',
+                                        background: 'var(--bg-card)',
+                                        color: 'var(--text-main)',
+                                        border: '1px solid var(--border-normal)',
                                         borderRadius: '6px',
                                         textDecoration: 'none',
                                         display: 'inline-flex',
@@ -1119,7 +1119,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                       </div>
                     ) : (
                       <div style={{ textAlign: 'center', padding: '24px 10px', color: 'var(--text-muted)' }}>
-                        <Store size={32} style={{ color: '#cbd5e1', marginBottom: '6px' }} />
+                        <Store size={32} style={{ color: 'var(--text-muted)', marginBottom: '6px' }} />
                         <div style={{ fontSize: '0.84rem', fontWeight: 600 }}>No business images uploaded.</div>
                         <div style={{ fontSize: '0.74rem' }}>KYC agent will capture storefront photos during verification visit.</div>
                       </div>
@@ -1127,7 +1127,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
 
                     {/* Attached KYC Documents & Licenses */}
                     {kycDocs.length > 0 && (
-                      <div style={{ marginTop: '16px', borderTop: '1px solid #f1f5f9', paddingTop: '14px' }}>
+                      <div style={{ marginTop: '16px', borderTop: '1px solid var(--border-subtle)', paddingTop: '14px' }}>
                         <div style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <ShieldCheck size={14} color="#10b981" /> Attached KYC & License Documents ({kycDocs.length})
                         </div>
@@ -1139,8 +1139,8 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                             return (
                               <div key={kidx} style={{
                                 padding: '8px 10px',
-                                background: '#f8fafc',
-                                border: '1px solid #e2e8f0',
+                                background: 'var(--bg-subtle)',
+                                border: '1px solid var(--border-normal)',
                                 borderRadius: '8px',
                                 display: 'flex',
                                 alignItems: 'center',
@@ -1223,9 +1223,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
               width: isPdf ? '90vw' : 'auto',
               maxWidth: isPdf ? '1100px' : '90vw',
               maxHeight: '92vh',
-              background: isPdf ? '#ffffff' : 'transparent',
+              background: isPdf ? 'var(--bg-card)' : 'transparent',
               borderRadius: '14px',
-              boxShadow: '0 25px 60px rgba(0,0,0,0.5)',
+              boxShadow: '0 25px 60px rgba(0,0,0,0.6)',
               display: 'flex',
               flexDirection: 'column',
               overflow: 'hidden'
@@ -1236,9 +1236,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '12px 18px',
-                background: isPdf ? '#f8fafc' : 'rgba(0,0,0,0.65)',
-                borderBottom: isPdf ? '1px solid #e2e8f0' : 'none',
-                color: isPdf ? '#0f172a' : '#ffffff'
+                background: isPdf ? 'var(--bg-subtle)' : 'rgba(0,0,0,0.65)',
+                borderBottom: isPdf ? '1px solid var(--border-normal)' : 'none',
+                color: isPdf ? 'var(--text-main)' : '#ffffff'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
                   {isPdf ? <FileText size={18} color="#dc2626" /> : <Eye size={18} />}
@@ -1246,7 +1246,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                     {activeName}
                   </span>
                   {isPdf && (
-                    <span style={{ fontSize: '10px', fontWeight: 700, background: '#fee2e2', color: '#b91c1c', padding: '2px 8px', borderRadius: '12px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: 700, background: 'rgba(220, 38, 38, 0.15)', color: '#dc2626', padding: '2px 8px', borderRadius: '12px' }}>
                       PDF Document
                     </span>
                   )}
@@ -1260,9 +1260,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                       padding: '5px 10px',
                       fontSize: '0.74rem',
                       fontWeight: 600,
-                      background: isPdf ? '#eff6ff' : 'rgba(255,255,255,0.2)',
-                      color: isPdf ? '#2563eb' : '#ffffff',
-                      border: isPdf ? '1px solid #bfdbfe' : 'none',
+                      background: isPdf ? 'rgba(37, 99, 235, 0.15)' : 'rgba(255,255,255,0.2)',
+                      color: isPdf ? '#3b82f6' : '#ffffff',
+                      border: isPdf ? '1px solid rgba(37, 99, 235, 0.3)' : 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',
                       display: 'inline-flex',
@@ -1280,9 +1280,9 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                       padding: '5px 10px',
                       fontSize: '0.74rem',
                       fontWeight: 600,
-                      background: isPdf ? '#f1f5f9' : 'rgba(255,255,255,0.2)',
-                      color: isPdf ? '#475569' : '#ffffff',
-                      border: isPdf ? '1px solid #e2e8f0' : 'none',
+                      background: isPdf ? 'var(--bg-card)' : 'rgba(255,255,255,0.2)',
+                      color: isPdf ? 'var(--text-main)' : '#ffffff',
+                      border: isPdf ? '1px solid var(--border-normal)' : 'none',
                       borderRadius: '6px',
                       cursor: 'pointer',
                       display: 'inline-flex',
@@ -1301,7 +1301,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                     }}
                     title="Close preview"
                     style={{
-                      background: isPdf ? '#fee2e2' : 'rgba(255,255,255,0.2)',
+                      background: isPdf ? 'rgba(220, 38, 38, 0.15)' : 'rgba(255,255,255,0.2)',
                       color: isPdf ? '#dc2626' : '#ffffff',
                       border: 'none',
                       borderRadius: '50%',
@@ -1327,7 +1327,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 padding: isPdf ? '0' : '10px',
                 maxHeight: 'calc(92vh - 56px)',
                 overflow: 'auto',
-                background: isPdf ? '#ffffff' : 'transparent'
+                background: isPdf ? 'var(--bg-card)' : 'transparent'
               }}>
                 {isPdf ? (
                   <iframe
@@ -1338,7 +1338,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                       height: '76vh',
                       border: 'none',
                       display: 'block',
-                      background: '#ffffff'
+                      background: 'var(--bg-card)'
                     }}
                   />
                 ) : (

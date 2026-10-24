@@ -378,12 +378,12 @@ const Profile = () => {
       {/* Under Review Informational Banner */}
       {isUnderReview && (
         <div style={{
-          background: '#fffbeb',
-          border: '1.5px solid #fde68a',
+          background: 'rgba(245, 158, 11, 0.12)',
+          border: '1.5px solid rgba(245, 158, 11, 0.3)',
           borderRadius: 'var(--radius-md)',
           padding: '16px 20px',
           marginBottom: '24px',
-          boxShadow: '0 2px 8px rgba(245, 158, 11, 0.08)',
+          boxShadow: '0 2px 8px rgba(0,0,0,0.08)',
           display: 'flex',
           alignItems: 'center',
           gap: '14px'
@@ -403,13 +403,13 @@ const Profile = () => {
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: '#92400e', margin: 0 }}>
+              <h4 style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)', margin: 0 }}>
                 Account Under Administrative Review
               </h4>
               <span style={{
-                background: '#fef3c7',
-                border: '1px solid #fde68a',
-                color: '#b45309',
+                background: 'rgba(245, 158, 11, 0.18)',
+                border: '1px solid rgba(245, 158, 11, 0.35)',
+                color: '#d97706',
                 padding: '2px 8px',
                 borderRadius: '12px',
                 fontSize: '0.72rem',
@@ -418,7 +418,7 @@ const Profile = () => {
                 Pending Authorization
               </span>
             </div>
-            <p style={{ fontSize: '0.8rem', color: '#78350f', marginTop: '3px', margin: 0 }}>
+            <p style={{ fontSize: '0.8rem', color: 'var(--text-muted)', marginTop: '3px', margin: 0 }}>
               Your account is currently progressing through the administrative approval pipeline. Sub-admin territorial authorization, Main Admin approval, and KYC clearance are required.
             </p>
           </div>
@@ -483,7 +483,7 @@ const Profile = () => {
                   </div>
 
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: '#0f172a', lineHeight: 1.2 }}>
+                  <div style={{ fontSize: '1.2rem', fontWeight: 800, color: 'var(--text-main)', lineHeight: 1.2 }}>
                     {user?.name}
                   </div>
                   <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '2px', wordBreak: 'break-all' }}>
@@ -532,8 +532,8 @@ const Profile = () => {
                           fontSize: '0.78rem',
                           fontWeight: 600,
                           borderRadius: '6px',
-                          border: '1px solid var(--border)',
-                          background: '#ffffff',
+                          border: '1px solid var(--border-normal)',
+                          background: 'var(--bg-card)',
                           color: 'var(--text-muted)',
                           cursor: 'pointer',
                           display: 'inline-flex',
@@ -556,8 +556,8 @@ const Profile = () => {
                           fontSize: '0.76rem',
                           fontWeight: 700,
                           borderRadius: '6px',
-                          border: '1px solid var(--border)',
-                          background: '#f8fafc',
+                          border: '1px solid var(--border-normal)',
+                          background: 'var(--bg-subtle)',
                           color: 'var(--text-main)',
                           cursor: 'pointer',
                           display: 'inline-flex',
@@ -579,9 +579,9 @@ const Profile = () => {
                             fontSize: '0.76rem',
                             fontWeight: 600,
                             borderRadius: '6px',
-                            border: '1px solid #fee2e2',
-                            background: '#fff5f5',
-                            color: '#dc2626',
+                            border: '1px solid rgba(220, 38, 38, 0.25)',
+                            background: 'rgba(220, 38, 38, 0.12)',
+                            color: '#ef4444',
                             cursor: 'pointer',
                             display: 'inline-flex',
                             alignItems: 'center',
@@ -594,8 +594,8 @@ const Profile = () => {
                       )}
 
                       {confirmRemove && (
-                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fee2e2', padding: '3px 8px', borderRadius: '6px' }}>
-                          <span style={{ fontSize: '0.72rem', color: '#b91c1c', fontWeight: 700 }}>Remove photo?</span>
+                        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(220, 38, 38, 0.15)', padding: '3px 8px', borderRadius: '6px' }}>
+                          <span style={{ fontSize: '0.72rem', color: '#dc2626', fontWeight: 700 }}>Remove photo?</span>
                           <button
                             type="button"
                             onClick={handleRemovePhoto}
@@ -621,9 +621,9 @@ const Profile = () => {
                               fontSize: '0.72rem',
                               fontWeight: 600,
                               borderRadius: '4px',
-                              border: '1px solid #fca5a5',
-                              background: '#ffffff',
-                              color: '#334155',
+                              border: '1px solid var(--border-normal)',
+                              background: 'var(--bg-card)',
+                              color: 'var(--text-main)',
                               cursor: 'pointer'
                             }}
                           >
@@ -640,10 +640,10 @@ const Profile = () => {
               {photoSuccess && (
                 <div style={{
                   padding: '8px 12px',
-                  background: '#dcfce7',
-                  border: '1px solid #86efac',
+                  background: 'rgba(22, 163, 74, 0.12)',
+                  border: '1px solid rgba(22, 163, 74, 0.25)',
                   borderRadius: '6px',
-                  color: '#15803d',
+                  color: '#22c55e',
                   fontSize: '0.78rem',
                   fontWeight: 600,
                   display: 'flex',
@@ -657,10 +657,10 @@ const Profile = () => {
               {photoError && (
                 <div style={{
                   padding: '8px 12px',
-                  background: '#fee2e2',
-                  border: '1px solid #fca5a5',
+                  background: 'rgba(220, 38, 38, 0.12)',
+                  border: '1px solid rgba(220, 38, 38, 0.25)',
                   borderRadius: '6px',
-                  color: '#b91c1c',
+                  color: '#ef4444',
                   fontSize: '0.78rem',
                   fontWeight: 600,
                   display: 'flex',
@@ -709,14 +709,14 @@ const Profile = () => {
                 </div>
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Manager ID</label>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: '#f1f5f9', padding: '4px 10px', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, fontSize: '0.85rem', color: '#0f172a' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--bg-subtle)', padding: '4px 10px', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>
                   <span>{user?.managerId || user?.id || user?._id || 'MGR-VERIFIED'}</span>
                 </div>
               </div>
 
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Active Since</label>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', fontWeight: 600, color: '#0f172a' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.88rem', fontWeight: 600, color: 'var(--text-main)' }}>
                   <Clock size={14} color="#059669" />
                   <span>
                     {(() => {
@@ -731,50 +731,50 @@ const Profile = () => {
 
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Role Level</label>
-                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#eef2ff', color: '#4338ca', padding: '4px 12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem' }}>
+                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', padding: '4px 12px', borderRadius: '12px', fontWeight: 600, fontSize: '0.85rem' }}>
                   <Shield size={14} /> Level {user?.level}: {user?.role?.replace('_', ' ').toUpperCase()}
                 </div>
               </div>
 
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Official Email</label>
-                <div style={{ fontSize: '0.95rem' }}>{user?.email}</div>
+                <div style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>{user?.email}</div>
               </div>
 
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Registered Mobile</label>
-                <div style={{ fontSize: '0.95rem' }}>+91 {user?.mobile}</div>
+                <div style={{ fontSize: '0.95rem', color: 'var(--text-main)' }}>+91 {user?.mobile}</div>
               </div>
 
               <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: '14px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: '#475569', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                <div style={{ fontWeight: 700, fontSize: '0.82rem', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                   Registered Personal & Identity Details
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', fontSize: '0.85rem' }}>
                   <div>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Date of Birth</span>
-                    <strong>{user?.dob || user?.dateOfBirth || 'Registered with KYC'}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{user?.dob || user?.dateOfBirth || 'Registered with KYC'}</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Gender</span>
-                    <strong>{user?.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : 'Registered'}</strong>
+                    <strong style={{ color: 'var(--text-main)' }}>{user?.gender ? user.gender.charAt(0).toUpperCase() + user.gender.slice(1) : 'Registered'}</strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Aadhaar Number</span>
-                    <strong style={{ fontFamily: 'monospace' }}>
+                    <strong style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>
                       {user?.aadharNumber ? `•••• •••• ${String(user.aadharNumber).slice(-4)}` : (user?.documents?.aadharNumber ? `•••• •••• ${String(user.documents.aadharNumber).slice(-4)}` : '•••• •••• Verified')}
                     </strong>
                   </div>
                   <div>
                     <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>PAN Number</span>
-                    <strong style={{ fontFamily: 'monospace' }}>
+                    <strong style={{ fontFamily: 'monospace', color: 'var(--text-main)' }}>
                       {user?.panNumber ? `${String(user.panNumber).slice(0, 2)}••••••${String(user.panNumber).slice(-2)}` : (user?.documents?.panNumber ? `${String(user.documents.panNumber).slice(0, 2)}••••••${String(user.documents.panNumber).slice(-2)}` : 'Verified')}
                     </strong>
                   </div>
                 </div>
                 <div>
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.74rem', display: 'block' }}>Residential Address</span>
-                  <div style={{ fontSize: '0.85rem', color: '#334155', background: '#f8fafc', padding: '8px 12px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ fontSize: '0.85rem', color: 'var(--text-main)', background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '6px', border: '1px solid var(--border-subtle)' }}>
                     {(() => {
                       const addr = user?.residentialAddress;
                       if (addr && (addr.doorNumberStreet || addr.villageTown || addr.district)) {
@@ -790,7 +790,7 @@ const Profile = () => {
                 <label className="form-label" style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <MapPin size={14} color="var(--primary)" /> Assigned Jurisdiction
                 </label>
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)', fontSize: '0.875rem', display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {(() => {
                     const role = (user?.role || '').toLowerCase();
                     const stateVal = user?.scope?.stateName || user?.stateName || user?.state;
@@ -890,57 +890,57 @@ const Profile = () => {
           <div className="card-body">
             {user?.bankDetails ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                   <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
                     Account Holder Name
                   </label>
-                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: '#0f172a' }}>
+                  <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     {user.bankDetails.accountHolderName || '-'}
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
                       Bank Name
                     </label>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)' }}>
                       {user.bankDetails.bankName || '-'}
                     </div>
                   </div>
 
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
                       Branch Name
                     </label>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)' }}>
                       {user.bankDetails.branchName || '-'}
                     </div>
                   </div>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
                       City
                     </label>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 600 }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)' }}>
                       {user.bankDetails.city || '-'}
                     </div>
                   </div>
 
-                  <div style={{ background: '#f8fafc', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
                       Branch Street / Address
                     </label>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: user.bankDetails.street ? 'inherit' : 'var(--text-muted)' }}>
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: user.bankDetails.street ? 'var(--text-main)' : 'var(--text-muted)' }}>
                       {user.bankDetails.street || 'Not provided'}
                     </div>
                   </div>
                 </div>
 
                 {/* Account Number with Mask / Reveal & Copy */}
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
                       Account Number
@@ -975,8 +975,8 @@ const Profile = () => {
                           }
                         }}
                         style={{
-                          background: copiedBankField === 'account' ? '#dcfce7' : '#f1f5f9',
-                          border: '1px solid #cbd5e1',
+                          background: copiedBankField === 'account' ? 'rgba(22, 163, 74, 0.15)' : 'var(--bg-card)',
+                          border: '1px solid var(--border-normal)',
                           borderRadius: '4px',
                           padding: '2px 6px',
                           fontSize: '0.72rem',
@@ -984,7 +984,7 @@ const Profile = () => {
                           display: 'inline-flex',
                           alignItems: 'center',
                           gap: '3px',
-                          color: copiedBankField === 'account' ? '#15803d' : '#475569',
+                          color: copiedBankField === 'account' ? '#16a34a' : 'var(--text-main)',
                           fontWeight: 600
                         }}
                       >
@@ -993,7 +993,7 @@ const Profile = () => {
                       </button>
                     </div>
                   </div>
-                  <div style={{ fontSize: '1rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: '#0f172a' }}>
+                  <div style={{ fontSize: '1rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: 'var(--text-main)' }}>
                     {showAccountNumber
                       ? user.bankDetails.accountNumber
                       : (user.bankDetails.accountNumber ? `•••• •••• •••• ${String(user.bankDetails.accountNumber).slice(-4)}` : '-')}
@@ -1001,7 +1001,7 @@ const Profile = () => {
                 </div>
 
                 {/* IFSC Code with Copy */}
-                <div style={{ background: '#f8fafc', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid #e2e8f0' }}>
+                <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '4px' }}>
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', margin: 0 }}>
                       IFSC Code
@@ -1016,8 +1016,8 @@ const Profile = () => {
                         }
                       }}
                       style={{
-                        background: copiedBankField === 'ifsc' ? '#dcfce7' : '#f1f5f9',
-                        border: '1px solid #cbd5e1',
+                        background: copiedBankField === 'ifsc' ? 'rgba(22, 163, 74, 0.15)' : 'var(--bg-card)',
+                        border: '1px solid var(--border-normal)',
                         borderRadius: '4px',
                         padding: '2px 6px',
                         fontSize: '0.72rem',
@@ -1025,7 +1025,7 @@ const Profile = () => {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '3px',
-                        color: copiedBankField === 'ifsc' ? '#15803d' : '#475569',
+                        color: copiedBankField === 'ifsc' ? '#16a34a' : 'var(--text-main)',
                         fontWeight: 600
                       }}
                     >
@@ -1033,22 +1033,22 @@ const Profile = () => {
                       <span>{copiedBankField === 'ifsc' ? 'Copied' : 'Copy'}</span>
                     </button>
                   </div>
-                  <div style={{ fontSize: '0.98rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: '#0f172a' }}>
+                  <div style={{ fontSize: '0.98rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: 'var(--text-main)' }}>
                     {user.bankDetails.ifscCode || '-'}
                   </div>
                 </div>
               </div>
             ) : (
               <div style={{
-                background: '#f8fafc',
-                border: '1px dashed #cbd5e1',
+                background: 'var(--bg-subtle)',
+                border: '1px dashed var(--border-normal)',
                 borderRadius: 'var(--radius-sm)',
                 padding: '28px 16px',
                 textAlign: 'center',
                 color: 'var(--text-muted)'
               }}>
-                <Landmark size={32} style={{ margin: '0 auto 8px', color: '#94a3b8' }} />
-                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: '#475569', marginBottom: '4px' }}>
+                <Landmark size={32} style={{ margin: '0 auto 8px', color: 'var(--text-muted)' }} />
+                <div style={{ fontSize: '0.88rem', fontWeight: 700, color: 'var(--text-main)', marginBottom: '4px' }}>
                   Bank details not provided
                 </div>
                 <p style={{ fontSize: '0.78rem', margin: '0 0 14px' }}>
@@ -1096,24 +1096,25 @@ const Profile = () => {
             padding: '20px'
           }}>
             <div style={{
-              background: '#ffffff',
+              background: 'var(--bg-card)',
               borderRadius: '16px',
               width: '100%',
               maxWidth: '520px',
-              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+              boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3)',
+              border: '1px solid var(--border-normal)',
               overflow: 'hidden'
             }}>
               <div style={{
                 padding: '18px 24px',
-                borderBottom: '1px solid #e2e8f0',
+                borderBottom: '1px solid var(--border-normal)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                background: '#f8fafc'
+                background: 'var(--bg-subtle)'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <Landmark size={20} color="var(--primary)" />
-                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: '#0f172a' }}>
+                  <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: 700, color: 'var(--text-main)' }}>
                     {user?.bankDetails ? 'Update Bank Account Details' : 'Add Bank Account Details'}
                   </h3>
                 </div>
@@ -1339,16 +1340,16 @@ const Profile = () => {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '10px 14px',
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
+              background: 'var(--bg-subtle)',
+              border: '1px solid var(--border-normal)',
               borderRadius: '8px',
               marginBottom: '16px',
               fontSize: '0.8rem'
             }}>
-              <span style={{ color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <Clock size={14} /> Last password changed:
               </span>
-              <span style={{ fontWeight: 600, color: user?.passwordChangedAt ? '#0f172a' : '#94a3b8' }}>
+              <span style={{ fontWeight: 600, color: user?.passwordChangedAt ? 'var(--text-main)' : 'var(--text-muted)' }}>
                 {user?.passwordChangedAt
                   ? new Date(user.passwordChangedAt).toLocaleDateString('en-IN', {
                       day: 'numeric',
@@ -1375,7 +1376,7 @@ const Profile = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#94a3b8',
+                    color: 'var(--text-muted)',
                     pointerEvents: 'none'
                   }}>
                     <Lock size={16} />
@@ -1393,8 +1394,9 @@ const Profile = () => {
                       fontSize: '0.86rem',
                       height: '42px',
                       borderRadius: '8px',
-                      borderColor: '#cbd5e1',
-                      background: '#f8fafc',
+                      borderColor: 'var(--border-normal)',
+                      background: 'var(--bg-subtle)',
+                      color: 'var(--text-main)',
                       width: '100%'
                     }}
                   />
@@ -1410,7 +1412,7 @@ const Profile = () => {
                       transform: 'translateY(-50%)',
                       background: 'none',
                       border: 'none',
-                      color: showCurrentPassword ? 'var(--primary, #0ea5e9)' : '#94a3b8',
+                      color: showCurrentPassword ? 'var(--primary, #0ea5e9)' : 'var(--text-muted)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -1437,7 +1439,7 @@ const Profile = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#94a3b8',
+                    color: 'var(--text-muted)',
                     pointerEvents: 'none'
                   }}>
                     <Lock size={16} />
@@ -1455,8 +1457,9 @@ const Profile = () => {
                       fontSize: '0.86rem',
                       height: '42px',
                       borderRadius: '8px',
-                      borderColor: '#cbd5e1',
-                      background: '#f8fafc',
+                      borderColor: 'var(--border-normal)',
+                      background: 'var(--bg-subtle)',
+                      color: 'var(--text-main)',
                       width: '100%'
                     }}
                   />
@@ -1472,7 +1475,7 @@ const Profile = () => {
                       transform: 'translateY(-50%)',
                       background: 'none',
                       border: 'none',
-                      color: showNewPassword ? 'var(--primary, #0ea5e9)' : '#94a3b8',
+                      color: showNewPassword ? 'var(--primary, #0ea5e9)' : 'var(--text-muted)',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -1491,7 +1494,7 @@ const Profile = () => {
                   return (
                     <div style={{ marginTop: '8px' }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                        <span style={{ fontSize: '0.74rem', color: '#64748b' }}>Password Strength:</span>
+                        <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>Password Strength:</span>
                         <span style={{
                           fontSize: '0.74rem',
                           fontWeight: 700,
@@ -1503,12 +1506,12 @@ const Profile = () => {
                           {strength.label}
                         </span>
                       </div>
-                      <div style={{ height: '4px', width: '100%', background: '#e2e8f0', borderRadius: '2px', overflow: 'hidden', display: 'flex', gap: '3px' }}>
-                        <div style={{ flex: 1, background: strength.score >= 1 ? strength.color : '#e2e8f0', borderRadius: '2px', transition: 'all 0.2s' }} />
-                        <div style={{ flex: 1, background: strength.score >= 2 ? strength.color : '#e2e8f0', borderRadius: '2px', transition: 'all 0.2s' }} />
-                        <div style={{ flex: 1, background: strength.score >= 3 ? strength.color : '#e2e8f0', borderRadius: '2px', transition: 'all 0.2s' }} />
+                      <div style={{ height: '4px', width: '100%', background: 'var(--border-normal)', borderRadius: '2px', overflow: 'hidden', display: 'flex', gap: '3px' }}>
+                        <div style={{ flex: 1, background: strength.score >= 1 ? strength.color : 'var(--border-subtle)', borderRadius: '2px', transition: 'all 0.2s' }} />
+                        <div style={{ flex: 1, background: strength.score >= 2 ? strength.color : 'var(--border-subtle)', borderRadius: '2px', transition: 'all 0.2s' }} />
+                        <div style={{ flex: 1, background: strength.score >= 3 ? strength.color : 'var(--border-subtle)', borderRadius: '2px', transition: 'all 0.2s' }} />
                       </div>
-                      <div style={{ fontSize: '0.72rem', color: strength.score < 3 ? '#94a3b8' : '#15803d', marginTop: '4px' }}>
+                      <div style={{ fontSize: '0.72rem', color: strength.score < 3 ? 'var(--text-muted)' : '#15803d', marginTop: '4px' }}>
                         {strength.feedback}
                       </div>
                     </div>
@@ -1529,7 +1532,7 @@ const Profile = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    color: '#94a3b8',
+                    color: 'var(--text-muted)',
                     pointerEvents: 'none'
                   }}>
                     <Lock size={16} />
@@ -1547,8 +1550,9 @@ const Profile = () => {
                       fontSize: '0.86rem',
                       height: '42px',
                       borderRadius: '8px',
-                      borderColor: '#cbd5e1',
-                      background: '#f8fafc',
+                      borderColor: 'var(--border-normal)',
+                      background: 'var(--bg-subtle)',
+                      color: 'var(--text-main)',
                       width: '100%'
                     }}
                   />

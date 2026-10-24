@@ -491,12 +491,12 @@ const FieldManagers = () => {
           <button
             onClick={() => setViewMode('table')}
             style={{
-              background: viewMode === 'table' ? '#e2e8f0' : '#f8fafc',
-              border: '1px solid #cbd5e1',
+              background: viewMode === 'table' ? 'var(--bg-subtle)' : 'var(--bg-card)',
+              border: '1px solid var(--border-normal)',
               padding: '6px 12px',
               borderRadius: '6px',
               cursor: 'pointer',
-              color: viewMode === 'table' ? 'var(--text-main)' : '#64748b',
+              color: viewMode === 'table' ? 'var(--text-main)' : 'var(--text-muted)',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
@@ -509,12 +509,12 @@ const FieldManagers = () => {
           <button
             onClick={() => setViewMode('grid')}
             style={{
-              background: viewMode === 'grid' ? '#e2e8f0' : '#f8fafc',
-              border: '1px solid #cbd5e1',
+              background: viewMode === 'grid' ? 'var(--bg-subtle)' : 'var(--bg-card)',
+              border: '1px solid var(--border-normal)',
               padding: '6px 12px',
               borderRadius: '6px',
               cursor: 'pointer',
-              color: viewMode === 'grid' ? 'var(--text-main)' : '#64748b',
+              color: viewMode === 'grid' ? 'var(--text-main)' : 'var(--text-muted)',
               display: 'flex',
               alignItems: 'center',
               gap: '6px',
@@ -531,12 +531,12 @@ const FieldManagers = () => {
       <div className="card" style={{ marginBottom: '20px', padding: '14px 18px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           {/* Relation Tabs */}
-          <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '3px', borderRadius: '8px', gap: '3px', flexWrap: 'wrap' }}>
             <button
               onClick={() => handleTabChange('all')}
               style={{
-                background: activeTab === 'all' ? 'white' : 'transparent',
-                color: activeTab === 'all' ? 'var(--text-main)' : '#64748b',
+                background: activeTab === 'all' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'all' ? 'var(--text-main)' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '6px 12px',
@@ -552,8 +552,8 @@ const FieldManagers = () => {
             <button
               onClick={() => handleTabChange('equal')}
               style={{
-                background: activeTab === 'equal' ? 'white' : 'transparent',
-                color: activeTab === 'equal' ? '#3730a3' : '#64748b',
+                background: activeTab === 'equal' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'equal' ? '#6366f1' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '6px 12px',
@@ -569,8 +569,8 @@ const FieldManagers = () => {
             <button
               onClick={() => handleTabChange('under')}
               style={{
-                background: activeTab === 'under' ? 'white' : 'transparent',
-                color: activeTab === 'under' ? '#166534' : '#64748b',
+                background: activeTab === 'under' ? 'var(--bg-card)' : 'transparent',
+                color: activeTab === 'under' ? '#10b981' : 'var(--text-muted)',
                 border: 'none',
                 borderRadius: '6px',
                 padding: '6px 12px',
@@ -759,9 +759,9 @@ const FieldManagers = () => {
                         display: 'inline-flex',
                         alignItems: 'center',
                         gap: '4px',
-                        border: '1px solid #cbd5e1',
-                        background: '#f8fafc',
-                        color: '#334155',
+                        border: '1px solid var(--border-normal)',
+                        background: 'var(--bg-card)',
+                        color: 'var(--text-main)',
                         cursor: 'pointer',
                         whiteSpace: 'nowrap',
                         transition: 'all 0.15s ease'
@@ -851,30 +851,30 @@ const FieldManagers = () => {
                   </div>
 
                   <div style={{
-                    background: '#f8fafc',
-                    border: '1px solid #edf2f7',
+                    background: 'var(--bg-subtle)',
+                    border: '1px solid var(--border-normal)',
                     borderRadius: '6px',
                     padding: '8px 10px',
                     marginBottom: '12px',
                     fontSize: '0.78rem'
                   }}>
-                    <div style={{ fontWeight: 700, color: '#475569', marginBottom: '2px' }}>Jurisdiction:</div>
+                    <div style={{ fontWeight: 700, color: 'var(--text-main)', marginBottom: '2px' }}>Jurisdiction:</div>
                     {getJurisdictionFormatted(m)}
                   </div>
 
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', marginBottom: '12px', color: '#475569' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '0.8rem', marginBottom: '12px', color: 'var(--text-muted)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Mail size={13} color="#64748b" />
-                      <span>{m.email}</span>
+                      <Mail size={13} color="var(--text-muted)" />
+                      <span style={{ color: 'var(--text-main)' }}>{m.email}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <Phone size={13} color="#64748b" />
-                      <span>{m.mobile}</span>
+                      <Phone size={13} color="var(--text-muted)" />
+                      <span style={{ color: 'var(--text-main)' }}>{m.mobile}</span>
                     </div>
                   </div>
                 </div>
 
-                <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ borderTop: '1px solid var(--border-normal)', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {getStatusBadge(m.status)}
 
                   <button
@@ -917,21 +917,21 @@ const FieldManagers = () => {
           backdropFilter: 'blur(2px)'
         }}>
           <div style={{
-            background: 'white',
+            background: 'var(--bg-card)',
             borderRadius: '12px',
             width: '100%',
             maxWidth: '500px',
             maxHeight: 'min(92vh, 800px)',
             display: 'flex',
             flexDirection: 'column',
-            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+            boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.1)',
             overflow: 'hidden',
-            border: '1px solid #e2e8f0'
+            border: '1px solid var(--border-normal)'
           }}>
             {/* Modal Header */}
             <div style={{
               padding: '16px 20px',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid var(--border-normal)',
               display: 'flex',
               justifyContent: 'space-between',
               alignItems: 'center'
@@ -947,12 +947,12 @@ const FieldManagers = () => {
               <button 
                 onClick={() => setSelectedManager(null)}
                 style={{
-                  background: '#f1f5f9',
+                  background: 'var(--bg-subtle)',
                   border: 'none',
                   borderRadius: '6px',
                   width: '28px',
                   height: '28px',
-                  color: '#64748b',
+                  color: 'var(--text-muted)',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1014,26 +1014,26 @@ const FieldManagers = () => {
               </div>
 
               {/* Jurisdiction Details Box */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', marginBottom: '14px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+              <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-normal)', borderRadius: '8px', padding: '12px 14px', marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
                   Assigned Territorial Jurisdiction
                 </div>
                 
                 <div className="responsive-grid-2" style={{ gap: '10px', fontSize: '0.82rem' }}>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>State:</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>State:</span>
                     <strong>{selectedManager.stateName || selectedManager.state || '-'}</strong>
                   </div>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>District:</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>District:</span>
                     <strong>{selectedManager.districtName || 'All Districts'}</strong>
                   </div>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Division:</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>Division:</span>
                     <strong>{selectedManager.divisionName || 'All Divisions'}</strong>
                   </div>
                   <div>
-                    <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>PIN Code:</span>
+                    <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>PIN Code:</span>
                     <strong>
                       {(String(selectedManager.role || '').toLowerCase().includes('district') || String(selectedManager.role || '').toLowerCase().includes('division') || String(selectedManager.role || '').toLowerCase().includes('state'))
                         ? 'All Pincodes'
@@ -1044,22 +1044,22 @@ const FieldManagers = () => {
               </div>
 
               {/* Contact Info Box */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
+              <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-normal)', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px' }}>
                   Contact Information
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.82rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
-                      <Mail size={14} color="#64748b" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+                      <Mail size={14} color="var(--text-muted)" />
                       <span>{selectedManager.email}</span>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', fontSize: '0.82rem' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#334155' }}>
-                      <Phone size={14} color="#64748b" />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'var(--text-main)' }}>
+                      <Phone size={14} color="var(--text-muted)" />
                       <span>+91 {selectedManager.mobile}</span>
                     </div>
                   </div>
@@ -1067,8 +1067,8 @@ const FieldManagers = () => {
               </div>
 
               {/* Bank Account Details Box */}
-              <div style={{ background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
-                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ background: 'var(--bg-subtle)', border: '1px solid var(--border-normal)', borderRadius: '8px', padding: '12px 14px', marginBottom: '18px' }}>
+                <div style={{ fontSize: '0.72rem', fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <Landmark size={13} color="var(--primary)" />
                   <span>Bank Account Details</span>
                 </div>
@@ -1077,22 +1077,22 @@ const FieldManagers = () => {
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.82rem' }}>
                     <div className="responsive-grid-2" style={{ gap: '10px' }}>
                       <div>
-                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Account Holder:</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>Account Holder:</span>
                         <strong>{selectedManager.bankDetails.accountHolderName || '-'}</strong>
                       </div>
                       <div>
-                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Bank & Branch:</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>Bank & Branch:</span>
                         <strong>{selectedManager.bankDetails.bankName || '-'} ({selectedManager.bankDetails.branchName || '-'})</strong>
                       </div>
                     </div>
 
                     <div className="responsive-grid-2" style={{ gap: '10px' }}>
                       <div>
-                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>City:</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>City:</span>
                         <strong>{selectedManager.bankDetails.city || '-'}</strong>
                       </div>
                       <div>
-                        <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>IFSC Code:</span>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>IFSC Code:</span>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <strong style={{ fontFamily: 'monospace', letterSpacing: '0.05em' }}>{selectedManager.bankDetails.ifscCode || '-'}</strong>
                           {selectedManager.bankDetails.ifscCode && (
@@ -1100,18 +1100,19 @@ const FieldManagers = () => {
                               type="button"
                               onClick={() => handleCopy(selectedManager.bankDetails.ifscCode, 'modal_ifsc')}
                               style={{
-                                background: copiedField === 'modal_ifsc' ? '#dcfce7' : '#f1f5f9',
-                                border: '1px solid #cbd5e1',
+                                background: copiedField === 'modal_ifsc' ? 'rgba(34, 197, 94, 0.2)' : 'var(--bg-card)',
+                                border: '1px solid var(--border-normal)',
                                 borderRadius: '4px',
                                 padding: '1px 6px',
                                 fontSize: '0.7rem',
+                                color: 'var(--text-main)',
                                 cursor: 'pointer',
                                 display: 'inline-flex',
                                 alignItems: 'center',
                                 gap: '3px'
                               }}
                             >
-                              {copiedField === 'modal_ifsc' ? <CheckCircle2 size={11} color="#16a34a" /> : <Copy size={11} color="#64748b" />}
+                              {copiedField === 'modal_ifsc' ? <CheckCircle2 size={11} color="#16a34a" /> : <Copy size={11} color="var(--text-muted)" />}
                               <span>{copiedField === 'modal_ifsc' ? 'Copied' : 'Copy'}</span>
                             </button>
                           )}
@@ -1120,9 +1121,9 @@ const FieldManagers = () => {
                     </div>
 
                     <div>
-                      <span style={{ color: '#64748b', fontSize: '0.72rem', display: 'block' }}>Account Number:</span>
+                      <span style={{ color: 'var(--text-muted)', fontSize: '0.72rem', display: 'block' }}>Account Number:</span>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <strong style={{ fontFamily: 'monospace', letterSpacing: '0.08em', color: '#0f172a' }}>
+                        <strong style={{ fontFamily: 'monospace', letterSpacing: '0.08em', color: 'var(--text-main)' }}>
                           {selectedManager.bankDetails.accountNumber}
                         </strong>
                       </div>

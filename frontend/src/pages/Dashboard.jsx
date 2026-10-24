@@ -1098,10 +1098,10 @@ const Dashboard = ({ onNavigate }) => {
             width: '100%',
             maxWidth: 620,
             maxHeight: 'min(90vh, 760px)',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             borderRadius: 18,
-            boxShadow: '0 25px 70px rgba(0,0,0,0.3)',
-            border: '1px solid #e2e8f0',
+            boxShadow: '0 25px 70px rgba(0,0,0,0.4)',
+            border: '1px solid var(--border-normal)',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden',
@@ -1113,27 +1113,27 @@ const Dashboard = ({ onNavigate }) => {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '18px 24px 14px',
-              borderBottom: '1px solid #e2e8f0',
-              background: '#f8fafc'
+              borderBottom: '1px solid var(--border-normal)',
+              background: 'var(--bg-subtle)'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                 <div style={{
                   width: 36,
                   height: 36,
                   borderRadius: 10,
-                  background: '#e0f2fe',
+                  background: 'rgba(2, 132, 199, 0.15)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#0284c7'
+                  color: 'var(--accent-primary, #0284c7)'
                 }}>
                   <Clock size={18} />
                 </div>
                 <div>
-                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: '#0f172a' }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: 800, margin: 0, color: 'var(--text-main)' }}>
                     Today's & Recent Activities
                   </h3>
-                  <p style={{ fontSize: '0.75rem', color: '#64748b', margin: '2px 0 0' }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: '2px 0 0' }}>
                     Live operational activity ledger for {stateName}
                   </p>
                 </div>
@@ -1151,7 +1151,7 @@ const Dashboard = ({ onNavigate }) => {
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  color: '#64748b',
+                  color: 'var(--text-muted)',
                   fontSize: 18
                 }}
               >
@@ -1162,12 +1162,12 @@ const Dashboard = ({ onNavigate }) => {
             {/* Category Filter Pills */}
             <div style={{
               padding: '12px 24px',
-              borderBottom: '1px solid #e2e8f0',
+              borderBottom: '1px solid var(--border-normal)',
               display: 'flex',
               gap: 8,
               flexWrap: 'wrap',
               alignItems: 'center',
-              background: '#ffffff'
+              background: 'var(--bg-card)'
             }}>
               {[
                 { id: 'all', label: 'All Activities' },
@@ -1182,9 +1182,9 @@ const Dashboard = ({ onNavigate }) => {
                   style={{
                     padding: '5px 12px',
                     borderRadius: 20,
-                    border: activityFilter === cat.id ? '1px solid #0284c7' : '1px solid #e2e8f0',
-                    background: activityFilter === cat.id ? '#0284c7' : '#f8fafc',
-                    color: activityFilter === cat.id ? '#ffffff' : '#64748b',
+                    border: activityFilter === cat.id ? '1px solid #0284c7' : '1px solid var(--border-normal)',
+                    background: activityFilter === cat.id ? '#0284c7' : 'var(--bg-subtle)',
+                    color: activityFilter === cat.id ? '#ffffff' : 'var(--text-muted)',
                     fontSize: '0.74rem',
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -1200,7 +1200,7 @@ const Dashboard = ({ onNavigate }) => {
             <div style={{ flex: 1, overflowY: 'auto', padding: '16px 24px' }}>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
                 {filteredActivities.length === 0 ? (
-                  <div style={{ textAlign: 'center', padding: '36px', color: '#94a3b8', fontSize: '0.85rem' }}>
+                  <div style={{ textAlign: 'center', padding: '36px', color: 'var(--text-muted)', fontSize: '0.85rem' }}>
                     No activities found for this category.
                   </div>
                 ) : (
@@ -1214,7 +1214,7 @@ const Dashboard = ({ onNavigate }) => {
                           alignItems: 'flex-start',
                           gap: 12,
                           paddingBottom: 12,
-                          borderBottom: '1px solid #f1f5f9'
+                          borderBottom: '1px solid var(--border-subtle)'
                         }}
                       >
                         <div style={{
@@ -1232,14 +1232,14 @@ const Dashboard = ({ onNavigate }) => {
                         </div>
                         <div style={{ flex: 1 }}>
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: '#0f172a' }}>
+                            <div style={{ fontSize: '0.85rem', fontWeight: 700, color: 'var(--text-main)' }}>
                               {act.title}
                             </div>
-                            <span style={{ fontSize: '0.72rem', color: '#94a3b8', whiteSpace: 'nowrap' }}>
+                            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', whiteSpace: 'nowrap' }}>
                               {act.time}
                             </span>
                           </div>
-                          <div style={{ fontSize: '0.78rem', color: '#64748b', marginTop: 2 }}>
+                          <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginTop: 2 }}>
                             {act.sub}
                           </div>
                           <span style={{
@@ -1268,8 +1268,8 @@ const Dashboard = ({ onNavigate }) => {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '12px 24px',
-              borderTop: '1px solid #e2e8f0',
-              background: '#f8fafc'
+              borderTop: '1px solid var(--border-normal)',
+              background: 'var(--bg-subtle)'
             }}>
               <button
                 type="button"
@@ -1280,7 +1280,7 @@ const Dashboard = ({ onNavigate }) => {
                 style={{
                   background: 'none',
                   border: 'none',
-                  color: '#0284c7',
+                  color: 'var(--accent-primary, #0284c7)',
                   fontSize: '0.8rem',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -1295,9 +1295,9 @@ const Dashboard = ({ onNavigate }) => {
                 style={{
                   padding: '7px 18px',
                   borderRadius: 8,
-                  border: '1px solid #cbd5e1',
-                  background: '#ffffff',
-                  color: '#334155',
+                  border: '1px solid var(--border-normal)',
+                  background: 'var(--bg-card)',
+                  color: 'var(--text-main)',
                   fontSize: '0.8rem',
                   fontWeight: 700,
                   cursor: 'pointer'

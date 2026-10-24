@@ -577,8 +577,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
             justifyContent: 'space-between',
             gap: 8,
             marginBottom: 20,
-            background: '#f1f5f9',
-            border: '1px solid #e2e8f0',
+            background: 'var(--bg-subtle, #f1f5f9)',
+            border: '1px solid var(--border)',
             padding: '4px 6px',
             borderRadius: 12,
             width: '100%',
@@ -608,12 +608,12 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                   fontWeight: 700,
                   cursor: 'pointer',
                   flexShrink: 0,
-                  background: viewScope === 'all' ? '#ffffff' : 'transparent',
-                  color: viewScope === 'all' ? '#0f172a' : '#64748b',
+                  background: viewScope === 'all' ? 'var(--bg-card, #ffffff)' : 'transparent',
+                  color: viewScope === 'all' ? 'var(--text-main, #0f172a)' : 'var(--text-muted, #64748b)',
                   boxShadow: viewScope === 'all' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
                 }}
               >
-                <Layers size={14} style={{ color: viewScope === 'all' ? '#f59e0b' : '#94a3b8' }} />
+                <Layers size={14} style={{ color: viewScope === 'all' ? '#f59e0b' : 'var(--text-muted, #94a3b8)' }} />
                 <span>All Reports</span>
               </button>
             )}
@@ -632,12 +632,12 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 fontWeight: 700,
                 cursor: 'pointer',
                 flexShrink: 0,
-                background: viewScope === 'self' ? '#ffffff' : 'transparent',
-                color: viewScope === 'self' ? '#0f172a' : '#64748b',
+                background: viewScope === 'self' ? 'var(--bg-card, #ffffff)' : 'transparent',
+                color: viewScope === 'self' ? 'var(--text-main, #0f172a)' : 'var(--text-muted, #64748b)',
                 boxShadow: viewScope === 'self' ? '0 1px 3px rgba(0,0,0,0.1)' : 'none'
               }}
             >
-              <User size={14} style={{ color: viewScope === 'self' ? '#0284c7' : '#94a3b8' }} />
+              <User size={14} style={{ color: viewScope === 'self' ? '#0284c7' : 'var(--text-muted, #94a3b8)' }} />
               <span>My Reports</span>
             </button>
 
@@ -750,12 +750,12 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 padding: '7px 14px',
                 borderRadius: 8,
                 border: '1px solid',
-                borderColor: activeTab === 'team_reports' ? '#0284c7' : '#cbd5e1',
+                borderColor: activeTab === 'team_reports' ? '#0284c7' : 'var(--border)',
                 fontSize: '0.81rem',
                 fontWeight: 700,
                 cursor: 'pointer',
-                background: activeTab === 'team_reports' ? '#0f172a' : '#ffffff',
-                color: activeTab === 'team_reports' ? '#ffffff' : '#0f172a',
+                background: activeTab === 'team_reports' ? 'var(--primary, #0f172a)' : 'var(--bg-card, #ffffff)',
+                color: activeTab === 'team_reports' ? '#ffffff' : 'var(--text-main, #0f172a)',
                 boxShadow: '0 1px 2px rgba(0,0,0,0.05)',
                 transition: 'all 0.15s'
               }}
@@ -765,7 +765,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
               <span style={{
                 fontSize: '10px',
                 fontWeight: 800,
-                background: activeTab === 'team_reports' ? '#0284c7' : '#e0f2fe',
+                background: activeTab === 'team_reports' ? '#0284c7' : 'var(--bg-subtle, #e0f2fe)',
                 color: activeTab === 'team_reports' ? '#ffffff' : '#0369a1',
                 padding: '1px 6px',
                 borderRadius: 10
@@ -778,25 +778,25 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
 
           {/* KPI Cards */}
           <div className="tasks-kpi-grid" style={{ marginBottom: 20 }}>
-            <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #3b82f6', background: '#ffffff', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #3b82f6', background: 'var(--bg-card, #ffffff)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--text-muted, #64748b)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                 {viewScope === 'state_managers' ? 'State Manager Visits' : viewScope === 'district_managers' ? 'District Manager Visits' : viewScope === 'division_managers' ? 'Division Manager Visits' : viewScope === 'pincode_managers' ? 'Pincode Manager Visits' : viewScope === 'self' ? 'My Direct Visits' : 'Total Visits Recorded'}
               </div>
-              <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#0f172a', marginTop: 4 }}>{totalVisitCount}</div>
+              <div style={{ fontSize: '1.7rem', fontWeight: 800, color: 'var(--text-main, #0f172a)', marginTop: 4 }}>{totalVisitCount}</div>
             </div>
-            <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #10b981', background: '#ffffff', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#047857', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Interested</div>
-              <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#059669', marginTop: 4 }}>{interestedCount}</div>
+            <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #10b981', background: 'var(--bg-card, #ffffff)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Interested</div>
+              <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#10b981', marginTop: 4 }}>{interestedCount}</div>
             </div>
-            <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #ef4444', background: '#ffffff', borderRadius: 12, border: '1px solid var(--border)' }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: '#b91c1c', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Not Interested</div>
-              <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#dc2626', marginTop: 4 }}>{notInterestedCount}</div>
+            <div className="card" style={{ padding: '18px 20px', borderLeft: '4px solid #ef4444', background: 'var(--bg-card, #ffffff)', borderRadius: 12, border: '1px solid var(--border)' }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Not Interested</div>
+              <div style={{ fontSize: '1.7rem', fontWeight: 800, color: '#ef4444', marginTop: 4 }}>{notInterestedCount}</div>
             </div>
           </div>
 
           {/* Filter Panel & Right-Aligned Export to CSV */}
           <div className="card" style={{
-            background: '#ffffff',
+            background: 'var(--bg-card, #ffffff)',
             borderRadius: 12,
             border: '1px solid var(--border)',
             marginBottom: 20,
@@ -804,7 +804,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
           }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
               <div style={{ flex: '1 1 220px', position: 'relative' }}>
-                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+                <Search size={15} style={{ position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted, #94a3b8)' }} />
                 <input
                   type="text"
                   placeholder="Search shop, category, manager..."
@@ -817,7 +817,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     fontSize: '0.84rem',
                     borderRadius: 8,
                     border: '1px solid var(--border)',
-                    background: '#f8fafc',
+                    background: 'var(--bg-subtle, #f8fafc)',
+                    color: 'var(--text-main)',
                     outline: 'none',
                     boxSizing: 'border-box'
                   }}
@@ -835,7 +836,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     fontSize: '0.84rem',
                     borderRadius: 8,
                     border: '1px solid var(--border)',
-                    background: '#f8fafc',
+                    background: 'var(--bg-subtle, #f8fafc)',
+                    color: 'var(--text-main)',
                     cursor: 'pointer',
                     fontWeight: 600
                   }}
@@ -858,7 +860,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     fontSize: '0.84rem',
                     borderRadius: 8,
                     border: '1px solid var(--border)',
-                    background: '#f8fafc',
+                    background: 'var(--bg-subtle, #f8fafc)',
+                    color: 'var(--text-main)',
                     cursor: 'pointer'
                   }}
                 >
@@ -883,7 +886,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     fontSize: '0.84rem',
                     borderRadius: 8,
                     border: '1px solid var(--border)',
-                    background: '#f8fafc',
+                    background: 'var(--bg-subtle, #f8fafc)',
+                    color: 'var(--text-main)',
                     cursor: 'pointer',
                     fontWeight: 600
                   }}
@@ -906,8 +910,8 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: 6,
-                  background: '#ffffff',
-                  color: '#0f172a',
+                  background: 'var(--bg-card, #ffffff)',
+                  color: 'var(--text-main, #0f172a)',
                   border: '1px solid var(--border)',
                   padding: '9px 16px',
                   borderRadius: 8,
@@ -926,7 +930,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
 
           {/* Visits Table */}
           <div className="card" style={{
-            background: '#ffffff',
+            background: 'var(--bg-card, #ffffff)',
             borderRadius: 12,
             border: '1px solid var(--border)',
             overflow: 'hidden'
@@ -939,16 +943,16 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                 justifyContent: 'space-between',
                 padding: '10px 20px',
                 borderBottom: '1px solid var(--border)',
-                background: '#f8fafc',
+                background: 'var(--bg-subtle, #f8fafc)',
                 fontSize: '0.82rem',
-                color: '#64748b'
+                color: 'var(--text-muted, #64748b)'
               }}>
                 <div>
-                  Showing <strong style={{ color: '#0f172a' }}>
+                  Showing <strong style={{ color: 'var(--text-main, #0f172a)' }}>
                     {pageSize >= 1000 ? 1 : Math.min((pagination.page - 1) * pagination.limit + 1, pagination.total)}
-                  </strong> to <strong style={{ color: '#0f172a' }}>
+                  </strong> to <strong style={{ color: 'var(--text-main, #0f172a)' }}>
                     {pageSize >= 1000 ? pagination.total : Math.min(pagination.page * pagination.limit, pagination.total)}
-                  </strong> of <strong style={{ color: '#0f172a' }}>{pagination.total}</strong> reports
+                  </strong> of <strong style={{ color: 'var(--text-main, #0f172a)' }}>{pagination.total}</strong> reports
                   {pageSize >= 1000 && <span style={{ marginLeft: 6, color: '#16a34a', fontWeight: 700 }}>(All records displayed)</span>}
                 </div>
                 {pagination.totalPages > 1 && (
@@ -960,9 +964,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                       style={{
                         padding: '4px 10px',
                         borderRadius: 6,
-                        border: '1px solid #cbd5e1',
-                        background: pagination.page <= 1 ? '#f1f5f9' : '#ffffff',
-                        color: pagination.page <= 1 ? '#94a3b8' : '#0f172a',
+                        border: '1px solid var(--border)',
+                        background: pagination.page <= 1 ? 'var(--bg-subtle, #f1f5f9)' : 'var(--bg-card, #ffffff)',
+                        color: pagination.page <= 1 ? 'var(--text-muted, #94a3b8)' : 'var(--text-main, #0f172a)',
                         cursor: pagination.page <= 1 ? 'not-allowed' : 'pointer',
                         fontWeight: 600,
                         fontSize: '0.78rem'
@@ -970,7 +974,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     >
                       Previous
                     </button>
-                    <span style={{ fontWeight: 700, color: '#0f172a', padding: '0 4px', fontSize: '0.78rem' }}>
+                    <span style={{ fontWeight: 700, color: 'var(--text-main, #0f172a)', padding: '0 4px', fontSize: '0.78rem' }}>
                       Page {pagination.page} of {pagination.totalPages}
                     </span>
                     <button
@@ -980,9 +984,9 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                       style={{
                         padding: '4px 10px',
                         borderRadius: 6,
-                        border: '1px solid #cbd5e1',
-                        background: pagination.page >= pagination.totalPages ? '#f1f5f9' : '#ffffff',
-                        color: pagination.page >= pagination.totalPages ? '#94a3b8' : '#0f172a',
+                        border: '1px solid var(--border)',
+                        background: pagination.page >= pagination.totalPages ? 'var(--bg-subtle, #f1f5f9)' : 'var(--bg-card, #ffffff)',
+                        color: pagination.page >= pagination.totalPages ? 'var(--text-muted, #94a3b8)' : 'var(--text-main, #0f172a)',
                         cursor: pagination.page >= pagination.totalPages ? 'not-allowed' : 'pointer',
                         fontWeight: 600,
                         fontSize: '0.78rem'
@@ -997,20 +1001,20 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.86rem' }}>
                 <thead>
-                  <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
-                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase', width: '70px' }}>
+                  <tr style={{ background: 'var(--bg-subtle, #f8fafc)', borderBottom: '1px solid var(--border)' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: 'var(--text-muted, #475569)', fontSize: '0.78rem', textTransform: 'uppercase', width: '70px' }}>
                       S.No
                     </th>
-                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: 'var(--text-muted, #475569)', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                       Date
                     </th>
-                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: 'var(--text-muted, #475569)', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                       Category &amp; Shop Name
                     </th>
-                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'left', fontWeight: 800, color: 'var(--text-muted, #475569)', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                       Manager &amp; Level
                     </th>
-                    <th style={{ padding: '14px 20px', textAlign: 'center', fontWeight: 800, color: '#475569', fontSize: '0.78rem', textTransform: 'uppercase' }}>
+                    <th style={{ padding: '14px 20px', textAlign: 'center', fontWeight: 800, color: 'var(--text-muted, #475569)', fontSize: '0.78rem', textTransform: 'uppercase' }}>
                       Interest Status
                     </th>
                   </tr>
@@ -1051,19 +1055,19 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                           key={v._id || v.id || idx}
                           onClick={() => setSelectedVisit(v)}
                           title="Click row to view complete shop visit details, KYC, photo, and voice note"
-                          style={{ borderBottom: '1px solid #f1f5f9', cursor: 'pointer' }}
-                          onMouseEnter={(e) => { e.currentTarget.style.background = '#f8fafc'; }}
+                          style={{ borderBottom: '1px solid var(--border-subtle, #f1f5f9)', cursor: 'pointer' }}
+                          onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--bg-subtle, #f8fafc)'; }}
                           onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                         >
                           {/* S.No */}
-                          <td style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontWeight: 700, color: '#64748b', fontSize: '0.84rem' }}>
+                          <td style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap', fontWeight: 700, color: 'var(--text-muted, #64748b)', fontSize: '0.84rem' }}>
                             {serialNumber}
                           </td>
 
                           {/* Date */}
                           <td style={{ padding: '16px 20px', verticalAlign: 'middle', whiteSpace: 'nowrap' }}>
-                            <div style={{ fontWeight: 700, color: '#0f172a', display: 'flex', alignItems: 'center', gap: 6 }}>
-                              <Calendar size={14} style={{ color: '#64748b' }} />
+                            <div style={{ fontWeight: 700, color: 'var(--text-main, #0f172a)', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <Calendar size={14} style={{ color: 'var(--text-muted, #64748b)' }} />
                               <span>{v.createdAt ? new Date(v.createdAt).toLocaleDateString() : '—'}</span>
                             </div>
                           </td>
@@ -1087,7 +1091,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                                   <Tag size={10} />
                                   {v.category || 'Products'}
                                 </span>
-                                <span style={{ fontWeight: 800, color: '#0f172a', fontSize: '0.92rem' }}>
+                                <span style={{ fontWeight: 800, color: 'var(--text-main, #0f172a)', fontSize: '0.92rem' }}>
                                   {v.shopName || 'Unnamed Shop'}
                                 </span>
                               </div>
@@ -1098,7 +1102,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                                   <span>{v.vendorName ? `${v.vendorName} • ` : ''}{v.vendorStatus || 'Active'}</span>
                                 </div>
                               ) : (
-                                <div style={{ fontSize: 11, color: '#94a3b8' }}>
+                                <div style={{ fontSize: 11, color: 'var(--text-muted, #94a3b8)' }}>
                                   {v.onboardingStatus === 'INCOMPLETE' ? 'Onboarding In Progress' : 'Field Visit Record'}
                                 </div>
                               )}
@@ -1108,7 +1112,7 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                           {/* Manager & Level */}
                           <td style={{ padding: '16px 20px', verticalAlign: 'middle' }}>
                             <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                              <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.86rem', display: 'flex', alignItems: 'center', gap: 6 }}>
+                              <div style={{ fontWeight: 700, color: 'var(--text-main, #0f172a)', fontSize: '0.86rem', display: 'flex', alignItems: 'center', gap: 6 }}>
                                 <User size={14} style={{ color: '#0284c7', flexShrink: 0 }} />
                                 <span>{v.managerName || 'Manager'}</span>
                               </div>

@@ -107,13 +107,13 @@ const Leaderboard = ({ onNavigate }) => {
   const getRoleBadge = (role) => {
     switch (role) {
       case 'state_manager':
-        return <span style={{ background: '#fef3c7', color: '#92400e', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 1 • State Manager</span>;
+        return <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#d97706', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 1 • State Manager</span>;
       case 'district_manager':
-        return <span style={{ background: '#e0f2fe', color: '#0369a1', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 2 • District Manager</span>;
+        return <span style={{ background: 'rgba(2, 132, 199, 0.15)', color: '#0284c7', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 2 • District Manager</span>;
       case 'division_manager':
-        return <span style={{ background: '#ecfdf5', color: '#047857', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 3 • Division Manager</span>;
+        return <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 3 • Division Manager</span>;
       case 'pincode_manager':
-        return <span style={{ background: '#f5f3ff', color: '#6d28d9', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 4 • Pincode Manager</span>;
+        return <span style={{ background: 'rgba(139, 92, 246, 0.15)', color: '#8b5cf6', padding: '3px 8px', borderRadius: '6px', fontSize: '0.72rem', fontWeight: 700, whiteSpace: 'nowrap' }}>Level 4 • Pincode Manager</span>;
       default:
         return <span>{role}</span>;
     }
@@ -129,7 +129,7 @@ const Leaderboard = ({ onNavigate }) => {
           padding: '20px 22px', 
           borderRadius: '12px', 
           border: '2px solid #f59e0b', 
-          background: 'linear-gradient(135deg, #fffbeb 0%, #ffffff 100%)', 
+          background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, var(--bg-card) 100%)', 
           boxShadow: '0 8px 20px rgba(245, 158, 11, 0.15)', 
           position: 'relative', 
           overflow: 'hidden',
@@ -141,7 +141,7 @@ const Leaderboard = ({ onNavigate }) => {
       >
         <div style={{ position: 'absolute', top: '12px', right: '14px', fontSize: '1.8rem' }}>👑</div>
         <div>
-          <div style={{ display: 'inline-block', background: '#fef3c7', color: '#92400e', fontSize: '0.68rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ display: 'inline-block', background: 'rgba(245, 158, 11, 0.2)', color: '#d97706', fontSize: '0.68rem', fontWeight: 800, padding: '2px 8px', borderRadius: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             {getTopLeaderBadgeText()}
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px' }}>
@@ -151,24 +151,24 @@ const Leaderboard = ({ onNavigate }) => {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: '1.1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <span>{card.name}</span>
-                {card.isSelf && <span style={{ fontSize: '0.72rem', color: '#854d0e', fontWeight: 800 }}>★ You</span>}
+                {card.isSelf && <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 800 }}>★ You</span>}
               </div>
               <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.territory}</div>
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #fde68a', paddingTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(245, 158, 11, 0.25)', paddingTop: '10px' }}>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#92400e', fontWeight: 600 }}>VENDORS</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#0f172a' }}>{card.vendorsOnboarded}</div>
+            <div style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: 600 }}>VENDORS</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'var(--text-main)' }}>{card.vendorsOnboarded}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#92400e', fontWeight: 600 }}>ACTIVE</div>
+            <div style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: 600 }}>ACTIVE</div>
             <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#16a34a' }}>{card.activeVendors}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#92400e', fontWeight: 600 }}>SCORE</div>
-            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#b45309' }}>{card.points.toLocaleString()} pts</div>
+            <div style={{ fontSize: '0.7rem', color: '#d97706', fontWeight: 600 }}>SCORE</div>
+            <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#f59e0b' }}>{card.points.toLocaleString()} pts</div>
           </div>
         </div>
       </div>
@@ -184,8 +184,8 @@ const Leaderboard = ({ onNavigate }) => {
         style={{ 
           padding: '18px 20px', 
           borderRadius: '12px', 
-          border: '1px solid #cbd5e1', 
-          background: 'linear-gradient(to bottom, #ffffff, #f8fafc)', 
+          border: '1px solid var(--border-normal)', 
+          background: 'linear-gradient(135deg, rgba(148, 163, 184, 0.12) 0%, var(--bg-card) 100%)', 
           position: 'relative', 
           overflow: 'hidden',
           display: 'flex',
@@ -196,7 +196,7 @@ const Leaderboard = ({ onNavigate }) => {
       >
         <div style={{ position: 'absolute', top: '12px', right: '14px', fontSize: '1.6rem' }}>🥈</div>
         <div>
-          <div style={{ display: 'inline-block', background: '#f1f5f9', color: '#475569', fontSize: '0.66rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ display: 'inline-block', background: 'var(--bg-subtle)', color: 'var(--text-muted)', fontSize: '0.66rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             🥈 2ND PLACE
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
@@ -206,24 +206,24 @@ const Leaderboard = ({ onNavigate }) => {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <span>{card.name}</span>
-                {card.isSelf && <span style={{ fontSize: '0.72rem', color: '#854d0e', fontWeight: 800 }}>★ You</span>}
+                {card.isSelf && <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 800 }}>★ You</span>}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.territory}</div>
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', paddingTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid var(--border-normal)', paddingTop: '10px' }}>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>VENDORS</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>{card.vendorsOnboarded}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>VENDORS</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>{card.vendorsOnboarded}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>ACTIVE</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>ACTIVE</div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#16a34a' }}>{card.activeVendors}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>SCORE</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#4f46e5' }}>{card.points.toLocaleString()} pts</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>SCORE</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#6366f1' }}>{card.points.toLocaleString()} pts</div>
           </div>
         </div>
       </div>
@@ -239,8 +239,8 @@ const Leaderboard = ({ onNavigate }) => {
         style={{ 
           padding: '18px 20px', 
           borderRadius: '12px', 
-          border: '1px solid #fed7aa', 
-          background: 'linear-gradient(to bottom, #ffffff, #fffaf5)', 
+          border: '1px solid rgba(217, 119, 6, 0.4)', 
+          background: 'linear-gradient(135deg, rgba(217, 119, 6, 0.12) 0%, var(--bg-card) 100%)', 
           position: 'relative', 
           overflow: 'hidden',
           display: 'flex',
@@ -251,7 +251,7 @@ const Leaderboard = ({ onNavigate }) => {
       >
         <div style={{ position: 'absolute', top: '12px', right: '14px', fontSize: '1.6rem' }}>🥉</div>
         <div>
-          <div style={{ display: 'inline-block', background: '#ffedd5', color: '#9a3412', fontSize: '0.66rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+          <div style={{ display: 'inline-block', background: 'rgba(217, 119, 6, 0.18)', color: '#d97706', fontSize: '0.66rem', fontWeight: 800, padding: '2px 7px', borderRadius: '4px', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
             🥉 3RD PLACE
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
@@ -261,23 +261,23 @@ const Leaderboard = ({ onNavigate }) => {
             <div style={{ minWidth: 0 }}>
               <div style={{ fontWeight: 800, fontSize: '1rem', color: 'var(--text-main)', display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
                 <span>{card.name}</span>
-                {card.isSelf && <span style={{ fontSize: '0.72rem', color: '#854d0e', fontWeight: 800 }}>★ You</span>}
+                {card.isSelf && <span style={{ fontSize: '0.72rem', color: '#f59e0b', fontWeight: 800 }}>★ You</span>}
               </div>
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.territory}</div>
             </div>
           </div>
         </div>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #fed7aa', paddingTop: '10px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(217, 119, 6, 0.25)', paddingTop: '10px' }}>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>VENDORS</div>
-            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#0f172a' }}>{card.vendorsOnboarded}</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>VENDORS</div>
+            <div style={{ fontSize: '1.15rem', fontWeight: 800, color: 'var(--text-main)' }}>{card.vendorsOnboarded}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>ACTIVE</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>ACTIVE</div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#16a34a' }}>{card.activeVendors}</div>
           </div>
           <div>
-            <div style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>SCORE</div>
+            <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', fontWeight: 600 }}>SCORE</div>
             <div style={{ fontSize: '1.15rem', fontWeight: 800, color: '#d97706' }}>{card.points.toLocaleString()} pts</div>
           </div>
         </div>
@@ -294,8 +294,8 @@ const Leaderboard = ({ onNavigate }) => {
             <h2 style={{ fontSize: '1.45rem', fontWeight: 800, color: 'var(--text-main)', margin: 0 }}>
               Manager Performance Leaderboard
             </h2>
-            <span style={{ background: 'linear-gradient(135deg, #fef3c7, #fef08a)', color: '#854d0e', fontSize: '0.75rem', fontWeight: 800, padding: '3px 9px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-              <Trophy size={13} color="#b45309" /> Live Database Rankings
+            <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#d97706', fontSize: '0.75rem', fontWeight: 800, padding: '3px 9px', borderRadius: '6px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <Trophy size={13} color="#d97706" /> Live Database Rankings
             </span>
           </div>
           <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
@@ -304,71 +304,30 @@ const Leaderboard = ({ onNavigate }) => {
         </div>
 
         {/* Period Selector */}
-        <div style={{ display: 'flex', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px' }}>
-          <button
-            onClick={() => setPeriod('month')}
-            style={{
-              background: period === 'month' ? 'white' : 'transparent',
-              color: period === 'month' ? 'var(--text-main)' : '#64748b',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '0.78rem',
-              fontWeight: period === 'month' ? 700 : 500,
-              cursor: 'pointer',
-              boxShadow: period === 'month' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none'
-            }}
-          >
-            This Month
-          </button>
-          <button
-            onClick={() => setPeriod('quarter')}
-            style={{
-              background: period === 'quarter' ? 'white' : 'transparent',
-              color: period === 'quarter' ? 'var(--text-main)' : '#64748b',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '0.78rem',
-              fontWeight: period === 'quarter' ? 700 : 500,
-              cursor: 'pointer',
-              boxShadow: period === 'quarter' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none'
-            }}
-          >
-            This Quarter
-          </button>
-          <button
-            onClick={() => setPeriod('year')}
-            style={{
-              background: period === 'year' ? 'white' : 'transparent',
-              color: period === 'year' ? 'var(--text-main)' : '#64748b',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '0.78rem',
-              fontWeight: period === 'year' ? 700 : 500,
-              cursor: 'pointer',
-              boxShadow: period === 'year' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none'
-            }}
-          >
-            Full Year
-          </button>
-          <button
-            onClick={() => setPeriod('all')}
-            style={{
-              background: period === 'all' ? 'white' : 'transparent',
-              color: period === 'all' ? 'var(--text-main)' : '#64748b',
-              border: 'none',
-              borderRadius: '6px',
-              padding: '6px 12px',
-              fontSize: '0.78rem',
-              fontWeight: period === 'all' ? 700 : 500,
-              cursor: 'pointer',
-              boxShadow: period === 'all' ? '0 1px 2px rgba(0,0,0,0.08)' : 'none'
-            }}
-          >
-            All Time
-          </button>
+        <div style={{ display: 'flex', background: 'var(--bg-subtle)', padding: '3px', borderRadius: '8px', gap: '3px' }}>
+          {['month', 'quarter', 'year', 'all'].map((p) => {
+            const labels = { month: 'This Month', quarter: 'This Quarter', year: 'Full Year', all: 'All Time' };
+            const isActive = period === p;
+            return (
+              <button
+                key={p}
+                onClick={() => setPeriod(p)}
+                style={{
+                  background: isActive ? 'var(--bg-card)' : 'transparent',
+                  color: isActive ? 'var(--text-main)' : 'var(--text-muted)',
+                  border: 'none',
+                  borderRadius: '6px',
+                  padding: '6px 12px',
+                  fontSize: '0.78rem',
+                  fontWeight: isActive ? 700 : 500,
+                  cursor: 'pointer',
+                  boxShadow: isActive ? '0 1px 2px rgba(0,0,0,0.08)' : 'none'
+                }}
+              >
+                {labels[p]}
+              </button>
+            );
+          })}
         </div>
       </div>
 
@@ -408,14 +367,14 @@ const Leaderboard = ({ onNavigate }) => {
       <div className="card" style={{ marginBottom: '20px', padding: '14px 18px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
           {/* Level Filter Tabs */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', background: '#f1f5f9', padding: '3px', borderRadius: '8px', gap: '3px', maxWidth: '100%' }}>
+          <div style={{ display: 'flex', flexWrap: 'wrap', background: 'var(--bg-subtle)', padding: '3px', borderRadius: '8px', gap: '3px', maxWidth: '100%' }}>
             {['All', 'state_manager', 'district_manager', 'division_manager', 'pincode_manager'].map((t) => (
               <button
                 key={t}
                 onClick={() => setTierFilter(t)}
                 style={{
-                  background: tierFilter === t ? 'white' : 'transparent',
-                  color: tierFilter === t ? 'var(--text-main)' : '#64748b',
+                  background: tierFilter === t ? 'var(--bg-card)' : 'transparent',
+                  color: tierFilter === t ? 'var(--text-main)' : 'var(--text-muted)',
                   border: 'none',
                   borderRadius: '6px',
                   padding: '6px 12px',
@@ -474,7 +433,7 @@ const Leaderboard = ({ onNavigate }) => {
               </tr>
             ) : (
               filteredRankings.map((m) => (
-                <tr key={m.id} style={{ background: m.displayRank === 1 ? '#fffbeb' : m.isSelf ? '#fefce8' : 'transparent' }}>
+                <tr key={m.id} style={{ background: m.displayRank === 1 ? 'rgba(245, 158, 11, 0.08)' : m.isSelf ? 'rgba(234, 179, 8, 0.06)' : 'transparent' }}>
                   <td style={{ textAlign: 'center', paddingLeft: '18px' }}>
                     {getRankMedal(m.displayRank)}
                   </td>
@@ -497,7 +456,7 @@ const Leaderboard = ({ onNavigate }) => {
                       </div>
                       <div>
                         <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.88rem' }}>
-                          {m.name} {m.isSelf && <span style={{ fontSize: '0.7rem', color: '#854d0e', fontWeight: 800 }}>★ You</span>}
+                          {m.name} {m.isSelf && <span style={{ fontSize: '0.7rem', color: '#f59e0b', fontWeight: 800 }}>★ You</span>}
                         </div>
                         <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>ID: {m.id}</div>
                       </div>
@@ -505,12 +464,12 @@ const Leaderboard = ({ onNavigate }) => {
                   </td>
                   <td>{getRoleBadge(m.role)}</td>
                   <td>
-                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: '#334155' }}>
+                    <div style={{ fontSize: '0.82rem', fontWeight: 600, color: 'var(--text-main)' }}>
                       {m.territory}
                     </div>
                   </td>
                   <td style={{ textAlign: 'center' }}>
-                    <strong style={{ fontSize: '0.9rem', color: '#0f172a' }}>{m.vendorsOnboarded}</strong>
+                    <strong style={{ fontSize: '0.9rem', color: 'var(--text-main)' }}>{m.vendorsOnboarded}</strong>
                   </td>
                   <td style={{ textAlign: 'center' }}>
                     <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#16a34a' }}>
@@ -519,8 +478,8 @@ const Leaderboard = ({ onNavigate }) => {
                   </td>
                   <td style={{ textAlign: 'center', paddingRight: '18px' }}>
                     <span style={{
-                      background: m.displayRank <= 3 ? '#fef3c7' : '#f1f5f9',
-                      color: m.displayRank <= 3 ? '#92400e' : '#334155',
+                      background: m.displayRank <= 3 ? 'rgba(245, 158, 11, 0.15)' : 'var(--bg-subtle)',
+                      color: m.displayRank <= 3 ? '#d97706' : 'var(--text-main)',
                       padding: '4px 8px',
                       borderRadius: '6px',
                       fontSize: '0.8rem',

@@ -52,11 +52,11 @@ const AuditLogs = ({ onNavigate }) => {
 
   const getActionBadgeColor = (action) => {
     switch (action) {
-      case 'Vendor Created': return { bg: '#e0f2fe', text: '#0369a1' };
-      case 'Vendor Approved': return { bg: '#dcfce7', text: '#15803d' };
-      case 'Vendor Rejected': return { bg: '#fee2e2', text: '#b91c1c' };
-      case 'Status Changed': return { bg: '#fef3c7', text: '#b45309' };
-      default: return { bg: '#f1f5f9', text: '#475569' };
+      case 'Vendor Created': return { bg: 'rgba(2, 132, 199, 0.15)', text: '#0284c7' };
+      case 'Vendor Approved': return { bg: 'rgba(22, 163, 74, 0.15)', text: '#16a34a' };
+      case 'Vendor Rejected': return { bg: 'rgba(220, 38, 38, 0.15)', text: '#dc2626' };
+      case 'Status Changed': return { bg: 'rgba(217, 119, 6, 0.15)', text: '#d97706' };
+      default: return { bg: 'var(--bg-subtle)', text: 'var(--text-muted)' };
     }
   };
 
@@ -80,18 +80,18 @@ const AuditLogs = ({ onNavigate }) => {
     const name = log.targetName || log.metadata?.vendorName || log.targetRecordName || null;
 
     if (!rawId && !name) {
-      return <span style={{ color: '#94a3b8', fontStyle: 'italic' }}>Record unavailable</span>;
+      return <span style={{ color: 'var(--text-muted)', fontStyle: 'italic' }}>Record unavailable</span>;
     }
 
     const shortId = rawId && rawId.length > 14 ? `${rawId.slice(0, 8)}...${rawId.slice(-4)}` : rawId;
 
     return (
       <div>
-        <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.84rem' }}>
+        <div style={{ fontWeight: 700, color: 'var(--text-main)', fontSize: '0.84rem' }}>
           {name || 'Record unavailable'}
         </div>
         {rawId && (
-          <code style={{ fontSize: '0.72rem', color: '#64748b', background: '#f1f5f9', padding: '1px 5px', borderRadius: 4 }}>
+          <code style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-subtle)', padding: '1px 5px', borderRadius: 4 }}>
             {shortId}
           </code>
         )}
@@ -103,9 +103,9 @@ const AuditLogs = ({ onNavigate }) => {
     if (!val) {
       const isCreate = String(action).toLowerCase().includes('create');
       if (isPrevious && isCreate) {
-        return <span style={{ color: '#94a3b8', fontSize: '0.76rem' }}>None (Initial)</span>;
+        return <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem' }}>None (Initial)</span>;
       }
-      return <span style={{ color: '#94a3b8', fontSize: '0.76rem', fontStyle: 'italic' }}>Not available</span>;
+      return <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontStyle: 'italic' }}>Not available</span>;
     }
 
     let parsed = val;
@@ -113,17 +113,17 @@ const AuditLogs = ({ onNavigate }) => {
       try {
         parsed = JSON.parse(parsed);
       } catch (e) {
-        return <span style={{ color: '#475569', fontSize: '0.78rem' }}>{String(val)}</span>;
+        return <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{String(val)}</span>;
       }
     }
 
     if (typeof parsed !== 'object' || parsed === null) {
-      return <span style={{ color: '#475569', fontSize: '0.78rem' }}>{String(parsed)}</span>;
+      return <span style={{ color: 'var(--text-muted)', fontSize: '0.78rem' }}>{String(parsed)}</span>;
     }
 
     const entries = Object.entries(parsed).filter(([k]) => !k.startsWith('_') && k !== '__v');
     if (entries.length === 0) {
-      return <span style={{ color: '#94a3b8', fontSize: '0.76rem', fontStyle: 'italic' }}>Not available</span>;
+      return <span style={{ color: 'var(--text-muted)', fontSize: '0.76rem', fontStyle: 'italic' }}>Not available</span>;
     }
 
     const formatKey = (k) => k.replace(/([A-Z])/g, ' $1').replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -135,8 +135,8 @@ const AuditLogs = ({ onNavigate }) => {
           if (strVal.length > 28) strVal = strVal.slice(0, 25) + '...';
           return (
             <div key={k} style={{ fontSize: '0.75rem', display: 'flex', alignItems: 'baseline', gap: 5 }}>
-              <span style={{ color: '#64748b', fontWeight: 600 }}>{formatKey(k)}:</span>
-              <strong style={{ color: isPrevious ? '#475569' : '#0f172a' }}>{strVal}</strong>
+              <span style={{ color: 'var(--text-muted)', fontWeight: 600 }}>{formatKey(k)}:</span>
+              <strong style={{ color: isPrevious ? 'var(--text-muted)' : 'var(--text-main)' }}>{strVal}</strong>
             </div>
           );
         })}
@@ -192,9 +192,9 @@ const AuditLogs = ({ onNavigate }) => {
             gap: 6,
             padding: '6px 12px',
             borderRadius: 8,
-            background: '#f0fdf4',
-            border: '1px solid #bbf7d0',
-            color: '#15803d',
+            background: 'rgba(22, 163, 74, 0.12)',
+            border: '1px solid rgba(22, 163, 74, 0.25)',
+            color: '#22c55e',
             fontSize: '0.8rem',
             fontWeight: 700
           }}>

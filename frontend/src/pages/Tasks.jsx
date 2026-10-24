@@ -727,7 +727,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
       <div className="tasks-kpi-grid">
         {/* Total */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -744,14 +744,14 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
               {totalCount}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#eff6ff', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(37, 99, 235, 0.15)', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <ClipboardList size={20} />
           </div>
         </div>
 
         {/* In Progress */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -764,18 +764,18 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
               In Progress
             </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#4f46e5', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#6366f1', marginTop: '4px' }}>
               {inProgressCount}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#ede9fe', color: '#7c3aed', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.15)', color: '#6366f1', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <Clock size={20} />
           </div>
         </div>
 
         {/* Pending Action */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -792,14 +792,14 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
               {pendingCount}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#fef3c7', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(217, 119, 6, 0.15)', color: '#d97706', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <AlertCircle size={20} />
           </div>
         </div>
 
         {/* Completed */}
         <div style={{
-          background: '#ffffff',
+          background: 'var(--bg-card)',
           borderRadius: '14px',
           padding: '18px 20px',
           border: '1px solid var(--border)',
@@ -812,11 +812,11 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             <div style={{ fontSize: '0.75rem', fontWeight: 700, textTransform: 'uppercase', color: 'var(--text-muted)', letterSpacing: '0.5px' }}>
               Completed
             </div>
-            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
+            <div style={{ fontSize: '1.65rem', fontWeight: 800, color: '#10b981', marginTop: '4px' }}>
               {completedCount}
             </div>
           </div>
-          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: '#d1fae5', color: '#059669', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <CheckCircle2 size={20} />
           </div>
         </div>
@@ -824,7 +824,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
 
       {/* 3. Search & Filter Bar */}
       <div style={{
-        background: '#ffffff',
+        background: 'var(--bg-card)',
         borderRadius: '14px',
         padding: '14px 18px',
         border: '1px solid var(--border)',
@@ -850,7 +850,8 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
               fontSize: '0.84rem',
               borderRadius: '8px',
               border: '1px solid var(--border)',
-              background: '#f8fafc',
+              background: 'var(--bg-subtle)',
+              color: 'var(--text-main)',
               outline: 'none',
               boxSizing: 'border-box'
             }}
@@ -866,7 +867,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             fontSize: '0.84rem',
             borderRadius: '8px',
             border: '1px solid var(--border)',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             outline: 'none',
             color: 'var(--text-main)',
             fontWeight: 600,
@@ -900,7 +901,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             fontSize: '0.84rem',
             borderRadius: '8px',
             border: '1px solid var(--border)',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             outline: 'none',
             color: 'var(--text-main)',
             fontWeight: 600,
@@ -921,7 +922,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             fontSize: '0.84rem',
             borderRadius: '8px',
             border: '1px solid var(--border)',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
             outline: 'none',
             color: 'var(--text-main)',
             fontWeight: 600,
@@ -947,7 +948,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
               fontSize: '0.8rem',
               borderRadius: '8px',
               border: '1px dashed var(--border)',
-              background: '#f8fafc',
+              background: 'var(--bg-subtle)',
               color: 'var(--text-muted)',
               cursor: 'pointer',
               fontWeight: 600
@@ -960,7 +961,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
 
       {/* 4. Tasks Table */}
       <div style={{
-        background: '#ffffff',
+        background: 'var(--bg-card)',
         borderRadius: '14px',
         border: '1px solid var(--border)',
         boxShadow: '0 1px 3px rgba(0,0,0,0.02)',
@@ -969,7 +970,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
         <div style={{ overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
           <table style={{ width: '100%', minWidth: '760px', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.85rem' }}>
             <thead>
-              <tr style={{ background: '#f8fafc', borderBottom: '1px solid var(--border)' }}>
+              <tr style={{ background: 'var(--bg-subtle)', borderBottom: '1px solid var(--border)' }}>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase', width: '60px', textAlign: 'center' }}>S.No.</th>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Task ID & Summary</th>
                 <th style={{ padding: '14px 16px', fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.76rem', textTransform: 'uppercase' }}>Shop Name and Location</th>
@@ -1315,9 +1316,10 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             width: '100%',
             maxWidth: '680px',
             maxHeight: 'min(92vh, 850px)',
-            background: '#ffffff',
+            background: 'var(--bg-card)',
+            border: '1px solid var(--border-normal)',
             borderRadius: '18px',
-            boxShadow: '0 25px 60px rgba(0,0,0,0.28)',
+            boxShadow: '0 25px 60px rgba(0,0,0,0.4)',
             overflow: 'hidden',
             display: 'flex',
             flexDirection: 'column'
@@ -1329,7 +1331,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
               justifyContent: 'space-between',
               padding: '16px 22px',
               borderBottom: '1px solid var(--border)',
-              background: '#f8fafc'
+              background: 'var(--bg-subtle)'
             }}>
               <div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1337,10 +1339,11 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
                     fontFamily: 'monospace',
                     fontSize: '11px',
                     fontWeight: 700,
-                    background: '#e2e8f0',
-                    color: '#334155',
+                    background: 'var(--bg-card)',
+                    color: 'var(--text-main)',
                     padding: '2px 8px',
-                    borderRadius: '4px'
+                    borderRadius: '4px',
+                    border: '1px solid var(--border-normal)'
                   }}>
                     {selectedTask.id}
                   </span>
@@ -1458,42 +1461,42 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
 
                 {/* Details Grid */}
                 <div className="responsive-grid-2" style={{ gap: '10px', fontSize: '0.78rem' }}>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>State / Jurisdiction</span>
                     <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.state || selectedTask.raw?.state, user?.stateName || user?.state || '—')}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>District</span>
                     <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.district || selectedTask.raw?.district, '—')}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Division</span>
                     <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.division || selectedTask.raw?.division, '—')}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Pincode</span>
                     <strong style={{ color: 'var(--text-main)' }}>{getDisplayValue(selectedTask.pincode || selectedTask.raw?.pincode, '—')}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Assigned Date</span>
                     <strong style={{ color: 'var(--text-main)' }}>{selectedTask.assignedDate ? new Date(selectedTask.assignedDate).toLocaleDateString('en-IN') : 'Recently'}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Due Date</span>
-                    <strong style={{ color: '#b45309' }}>{selectedTask.dueDate || 'Standard 3 days'}</strong>
+                    <strong style={{ color: '#d97706' }}>{selectedTask.dueDate || 'Standard 3 days'}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Last Update</span>
                     <strong style={{ color: 'var(--text-main)' }}>{selectedTask.lastUpdate ? new Date(selectedTask.lastUpdate).toLocaleDateString('en-IN') : 'N/A'}</strong>
                   </div>
-                  <div style={{ background: '#f8fafc', padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                  <div style={{ background: 'var(--bg-subtle)', padding: '8px 12px', borderRadius: '8px', border: '1px solid var(--border-normal)' }}>
                     <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase' }}>Completed Date</span>
-                    <strong style={{ color: selectedTask.completedDate ? '#15803d' : 'var(--text-muted)' }}>{selectedTask.completedDate ? new Date(selectedTask.completedDate).toLocaleDateString('en-IN') : 'Pending'}</strong>
+                    <strong style={{ color: selectedTask.completedDate ? '#10b981' : 'var(--text-muted)' }}>{selectedTask.completedDate ? new Date(selectedTask.completedDate).toLocaleDateString('en-IN') : 'Pending'}</strong>
                   </div>
                 </div>
 
                 {selectedTask.description && (
-                  <div style={{ marginTop: '10px', padding: '10px 12px', background: '#f1f5f9', borderRadius: '8px', fontSize: '0.8rem', color: '#334155' }}>
+                  <div style={{ marginTop: '10px', padding: '10px 12px', background: 'var(--bg-subtle)', borderRadius: '8px', fontSize: '0.8rem', color: 'var(--text-main)', border: '1px solid var(--border-normal)' }}>
                     <span style={{ fontWeight: 700, color: 'var(--text-muted)', fontSize: '0.7rem', textTransform: 'uppercase', display: 'block', marginBottom: '2px' }}>Description / Deliverable</span>
                     {selectedTask.description}
                   </div>
@@ -1502,8 +1505,8 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
 
               {/* 1. Shop Name and Location */}
               <div style={{
-                background: '#f8fafc',
-                border: '1px solid #e2e8f0',
+                background: 'var(--bg-subtle)',
+                border: '1px solid var(--border-normal)',
                 borderRadius: '12px',
                 padding: '12px 16px',
                 marginBottom: '16px'
