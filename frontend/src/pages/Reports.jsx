@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { shopVisitService, reportService } from '../services/api';
+import { shopVisitService, reportService, API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
 import {
@@ -474,9 +473,230 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     setIsDateRangeExportModalOpen(false);
   };
 
-  // Print / PDF Export for Complete Submitted Report
+  // Print / PDF Export for Complete Submitted Report with all KPI summaries and 100% itemized records
   const handlePrintPDF = () => {
-    window.print();
+    if (!selectedSubmittedReport) return;
+    const rpt = selectedSubmittedReport;
+    const visits = Array.isArray(rpt.shopVisits) ? rpt.shopVisits : [];
+    const summary = rpt.summary || {};
+
+    const printWindow = window.open('', '_blank', 'width=950,height=1000');
+    if (!printWindow) {
+      window.print();
+      return;
+    }
+
+    const jurisdictionText = rpt.district 
+      ? `${rpt.district}${rpt.division ? ` • ${rpt.division}` : ''}${rpt.pincode ? ` • PIN: ${rpt.pincode}` : ''}`
+      : `${rpt.state || user?.stateName || user?.state || 'State'} (Statewide)`;
+
+    const visitsHtml = visits.map((v, idx) => {
+      const rawPhoto = (v.shopPhoto && !v.shopPhoto.includes('[binary_truncated]'))
+        ? v.shopPhoto
+        : (v.storefrontPhoto && !v.storefrontPhoto.includes('[binary_truncated]'))
+        ? v.storefrontPhoto
+        : (v.photo || v.photoUrl || v.imageUrl || null);
+      
+      const photoSrc = rawPhoto && rawPhoto.startsWith('/') && !rawPhoto.startsWith('//')
+        ? (API_BASE ? API_BASE.replace('/api', '') + rawPhoto : rawPhoto)
+        : rawPhoto;
+
+      const photoImg = photoSrc 
+        ? `<img src="${photoSrc}" alt="${v.shopName || 'Shop'}" style="width:48px;height:48px;border-radius:6px;object-fit:cover;border:1px solid #e2e8f0;flex-shrink:0;" />`
+        : `<div style="width:48px;height:48px;border-radius:6px;background:#f1f5f9;border:1px solid #e2e8f0;display:flex;align-items:center;justify-content:center;color:#94a3b8;font-size:10px;font-weight:700;flex-shrink:0;">SHOP</div>`;
+
+      const isInterested = String(v.interestedStatus || v.interestStatus || '').toUpperCase() === 'YES' || String(v.interestedStatus || '').toLowerCase() === 'interested';
+      const statusBadge = isInterested
+        ? `<span style="background:#d1fae5;color:#047857;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:800;border:1px solid #a7f3d0;">Interested</span>`
+        : `<span style="background:#fee2e2;color:#b91c1c;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:800;border:1px solid #fecaca;">Not Interested</span>`;
+
+      return `
+        <tr style="border-bottom:1px solid #f1f5f9;page-break-inside:avoid;">
+          <td style="padding:10px 12px;font-size:12px;color:#64748b;font-weight:700;width:30px;vertical-align:middle;">${idx + 1}</td>
+          <td style="padding:10px 12px;vertical-align:middle;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              ${photoImg}
+              <div>
+                <div style="display:flex;align-items:center;gap:6px;">
+                  <span style="background:#e0f2fe;color:#0369a1;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:800;text-transform:uppercase;">${v.category || 'Products'}</span>
+                  <strong style="font-size:13px;color:#0f172a;">${v.shopName || 'Shop'}</strong>
+                </div>
+                <div style="font-size:11px;color:#64748b;margin-top:3px;">
+                  PIN: ${v.pincodeCode || v.pincode || '—'} • Visited: ${v.createdAt ? new Date(v.createdAt).toLocaleDateString() : '—'}
+                  ${v.ownerName ? ` • Contact: ${v.ownerName}` : ''}
+                </div>
+                ${!isInterested && v.notInterestedReason ? `<div style="font-size:11px;color:#ef4444;margin-top:2px;font-style:italic;">Reason: "${v.notInterestedReason}"</div>` : ''}
+              </div>
+            </div>
+          </td>
+          <td style="padding:10px 12px;text-align:right;vertical-align:middle;white-space:nowrap;">
+            ${statusBadge}
+          </td>
+        </tr>
+      `;
+    }).join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <meta charset="utf-8" />
+        <title>Performance Report - ${rpt.reportNumber || rpt.reportCode || 'Official Field Report'}</title>
+        <style>
+          @page {
+            size: A4 portrait;
+            margin: 14mm;
+          }
+          * { box-sizing: border-box; }
+          body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            color: #0f172a;
+            background: #ffffff;
+            margin: 0;
+            padding: 10px;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          .header {
+            border-bottom: 2px solid #0284c7;
+            padding-bottom: 14px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+          }
+          .title { font-size: 20px; font-weight: 800; color: #0f172a; margin: 0; }
+          .subtitle { font-size: 12px; color: #64748b; margin-top: 4px; font-family: monospace; }
+          .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 8px;
+            margin-bottom: 20px;
+          }
+          .kpi-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 8px 10px;
+            background: #f8fafc;
+            text-align: center;
+          }
+          .kpi-val { font-size: 18px; font-weight: 800; margin-top: 2px; }
+          .kpi-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748b; }
+          .visits-table {
+            width: 100%;
+            border-collapse: collapse;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+          }
+          .visits-table th {
+            background: #f1f5f9;
+            padding: 8px 12px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 800;
+            color: #475569;
+            text-transform: uppercase;
+            border-bottom: 1px solid #e2e8f0;
+          }
+          tr { page-break-inside: avoid; }
+          @media print {
+            body { padding: 0; }
+            .no-print { display: none !important; }
+          }
+        </style>
+      </head>
+      <body>
+        <div class="header">
+          <div>
+            <div style="font-size:12px;font-weight:800;color:#0284c7;letter-spacing:0.5px;text-transform:uppercase;">Forge India Connect</div>
+            <h1 class="title">Official Field Performance Report</h1>
+            <div class="subtitle">Report No: <strong>${rpt.reportNumber || rpt.reportCode || 'N/A'}</strong> • Generated: ${new Date().toLocaleString()}</div>
+            <div style="font-size:12px;color:#334155;margin-top:6px;">
+              <strong>${rpt.managerName || 'Manager'}</strong> (${rpt.managerRole ? formatRoleLabel(rpt.managerRole) : 'Manager'}) • Jurisdiction: ${jurisdictionText}
+            </div>
+          </div>
+          <div style="text-align:right;">
+            <div style="display:inline-block;padding:4px 12px;border-radius:12px;background:#d1fae5;color:#047857;font-weight:800;font-size:11px;">
+              Status: ${rpt.status || 'Submitted'}
+            </div>
+            <div style="font-size:11px;color:#64748b;margin-top:4px;">
+              Period: <strong>${rpt.dateRange || rpt.periodLabel || 'N/A'}</strong>
+            </div>
+            <div style="font-size:11px;color:#64748b;margin-top:2px;">
+              Submitted: ${rpt.submittedAt ? new Date(rpt.submittedAt).toLocaleDateString() : '—'}
+            </div>
+          </div>
+        </div>
+
+        <div style="font-size:12px;font-weight:800;color:#0f172a;margin-bottom:8px;">Executive Performance Summary</div>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="kpi-label">Total Visits</div>
+            <div class="kpi-val" style="color:#0f172a;">${summary.totalVisits ?? visits.length}</div>
+          </div>
+          <div class="kpi-card" style="background:#ecfdf5;border-color:#a7f3d0;">
+            <div class="kpi-label" style="color:#047857;">Interested</div>
+            <div class="kpi-val" style="color:#059669;">${summary.interested ?? 0}</div>
+          </div>
+          <div class="kpi-card" style="background:#fef2f2;border-color:#fecaca;">
+            <div class="kpi-label" style="color:#b91c1c;">Not Interested</div>
+            <div class="kpi-val" style="color:#dc2626;">${summary.notInterested ?? 0}</div>
+          </div>
+          <div class="kpi-card" style="background:#e0f2fe;border-color:#bae6fd;">
+            <div class="kpi-label" style="color:#0369a1;">New Tie-ups</div>
+            <div class="kpi-val" style="color:#0284c7;">${summary.newTieups ?? 0}</div>
+          </div>
+          <div class="kpi-card" style="background:#f0fdf4;border-color:#bbf7d0;">
+            <div class="kpi-label" style="color:#15803d;">Tasks Done</div>
+            <div class="kpi-val" style="color:#16a34a;">${summary.tasksCompleted ?? 0}</div>
+          </div>
+          <div class="kpi-card" style="background:#fffbeb;border-color:#fde68a;">
+            <div class="kpi-label" style="color:#b45309;">Tasks Pending</div>
+            <div class="kpi-val" style="color:#d97706;">${summary.tasksPending ?? 0}</div>
+          </div>
+        </div>
+
+        <div style="font-size:13px;font-weight:800;color:#0f172a;margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+          <span>Itemized Shop Visit Records (${visits.length})</span>
+          <span style="font-size:11px;color:#64748b;font-weight:600;">Complete Verification Dataset</span>
+        </div>
+
+        <table class="visits-table">
+          <thead>
+            <tr>
+              <th style="width:30px;">#</th>
+              <th>Storefront & Visit Details</th>
+              <th style="text-align:right;">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${visitsHtml || '<tr><td colspan="3" style="padding:16px;text-align:center;color:#64748b;">No visit records logged.</td></tr>'}
+          </tbody>
+        </table>
+
+        <div style="margin-top:24px;border-top:1px solid #e2e8f0;padding-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:10px;color:#94a3b8;">
+          <span>Forge India Connect • Official Operations Management System</span>
+          <span>Complete Report (${visits.length} of ${visits.length} items rendered)</span>
+        </div>
+      </body>
+      </html>
+    `;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+
+    printWindow.onload = () => {
+      printWindow.focus();
+      printWindow.print();
+    };
+    setTimeout(() => {
+      try {
+        printWindow.focus();
+        printWindow.print();
+      } catch (_) {}
+    }, 500);
   };
 
   const totalVisitCount = pagination && typeof pagination.total === 'number' && pagination.total >= 0
@@ -2101,17 +2321,39 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
                     >
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                          {v.shopPhoto ? (
-                            <img
-                              src={v.shopPhoto}
-                              alt={v.shopName}
-                              style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', border: '1px solid #e2e8f0' }}
-                            />
-                          ) : (
-                            <div style={{ width: 56, height: 56, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
-                              <ImageIcon size={24} />
-                            </div>
-                          )}
+                          {(() => {
+                            const rawPhoto = (v.shopPhoto && !v.shopPhoto.includes('[binary_truncated]'))
+                              ? v.shopPhoto
+                              : (v.storefrontPhoto && !v.storefrontPhoto.includes('[binary_truncated]'))
+                              ? v.storefrontPhoto
+                              : (v.photo || v.photoUrl || v.imageUrl || null);
+                            if (!rawPhoto) {
+                              return (
+                                <div style={{ width: 56, height: 56, borderRadius: 8, background: '#f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', flexShrink: 0 }}>
+                                  <ImageIcon size={24} />
+                                </div>
+                              );
+                            }
+                            const resolvedPhoto = rawPhoto.startsWith('/') && !rawPhoto.startsWith('//')
+                              ? (API_BASE ? API_BASE.replace('/api', '') + rawPhoto : rawPhoto)
+                              : rawPhoto;
+                            return (
+                              <div style={{ position: 'relative', width: 56, height: 56, flexShrink: 0 }}>
+                                <img
+                                  src={resolvedPhoto}
+                                  alt={v.shopName || 'Shop storefront'}
+                                  style={{ width: 56, height: 56, borderRadius: 8, objectFit: 'cover', border: '1px solid #e2e8f0' }}
+                                  onError={(e) => {
+                                    e.currentTarget.style.display = 'none';
+                                    if (e.currentTarget.nextSibling) e.currentTarget.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                                <div style={{ width: 56, height: 56, borderRadius: 8, background: '#f1f5f9', display: 'none', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+                                  <ImageIcon size={24} />
+                                </div>
+                              </div>
+                            );
+                          })()}
                           <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                               <span style={{ fontSize: '0.7rem', fontWeight: 800, padding: '2px 6px', borderRadius: 4, background: '#e0f2fe', color: '#0369a1' }}>

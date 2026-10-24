@@ -567,10 +567,51 @@ const login = async (req, res) => {
       });
     }
 
+    // Device & Concurrent Session Tracking
+    const userAgent = req.headers['user-agent'] || 'Modern Web Browser';
+    const rawIp = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
+    const clientIp = typeof rawIp === 'string' ? rawIp.split(',')[0].trim() : '127.0.0.1';
+    const device = /mobile|iphone|android|ipad/i.test(userAgent) ? 'Mobile Device' :
+      userAgent.includes('Windows') ? 'Windows PC' :
+      userAgent.includes('Mac') ? 'Mac OS' :
+      userAgent.includes('Linux') ? 'Linux PC' : 'Desktop Browser';
+    const browser = userAgent.includes('Chrome') && !userAgent.includes('Edg') ? 'Google Chrome' :
+      userAgent.includes('Edg') ? 'Microsoft Edge' :
+      userAgent.includes('Firefox') ? 'Mozilla Firefox' :
+      userAgent.includes('Safari') && !userAgent.includes('Chrome') ? 'Apple Safari' : 'Web Browser';
+    const sessionId = crypto.randomUUID ? crypto.randomUUID() : `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    try {
+      await db.securitySessions.insertOne({
+        _id: sessionId,
+        id: sessionId,
+        sessionId,
+        userId: user._id,
+        device,
+        browser,
+        deviceInfo: {
+          deviceName: `${device} (${browser})`,
+          browser,
+          os: device,
+          deviceType: /mobile|phone|android/i.test(device) ? 'Mobile' : 'Desktop'
+        },
+        ipAddress: clientIp,
+        location: user?.state || user?.assignedState || (user?.territory && user.territory.state) || 'Tamil Nadu',
+        isActive: true,
+        status: 'active',
+        lastActive: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString()
+      });
+    } catch (sessErr) {
+      console.warn('[Manager Auth] Session creation warning:', sessErr.message);
+    }
+
     // Authorized Manager Session Generation
     const tokenPayload = {
       id: user._id,
       managerId,
+      sessionId,
       role: user.role,
       level: user.level,
       status: 'active',
@@ -2931,9 +2972,50 @@ const verifyOtp = async (req, res) => {
       });
     }
 
+    // Device & Concurrent Session Tracking for OTP Login
+    const userAgent = req.headers['user-agent'] || 'Modern Web Browser';
+    const rawIp = req.headers['x-forwarded-for'] || req.ip || req.connection?.remoteAddress || '127.0.0.1';
+    const clientIp = typeof rawIp === 'string' ? rawIp.split(',')[0].trim() : '127.0.0.1';
+    const device = /mobile|iphone|android|ipad/i.test(userAgent) ? 'Mobile Device' :
+      userAgent.includes('Windows') ? 'Windows PC' :
+      userAgent.includes('Mac') ? 'Mac OS' :
+      userAgent.includes('Linux') ? 'Linux PC' : 'Desktop Browser';
+    const browser = userAgent.includes('Chrome') && !userAgent.includes('Edg') ? 'Google Chrome' :
+      userAgent.includes('Edg') ? 'Microsoft Edge' :
+      userAgent.includes('Firefox') ? 'Mozilla Firefox' :
+      userAgent.includes('Safari') && !userAgent.includes('Chrome') ? 'Apple Safari' : 'Web Browser';
+    const sessionId = crypto.randomUUID ? crypto.randomUUID() : `sess_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+    try {
+      await db.securitySessions.insertOne({
+        _id: sessionId,
+        id: sessionId,
+        sessionId,
+        userId: user._id,
+        device,
+        browser,
+        deviceInfo: {
+          deviceName: `${device} (${browser})`,
+          browser,
+          os: device,
+          deviceType: /mobile|phone|android/i.test(device) ? 'Mobile' : 'Desktop'
+        },
+        ipAddress: clientIp,
+        location: user?.state || user?.assignedState || (user?.territory && user.territory.state) || 'Tamil Nadu',
+        isActive: true,
+        status: 'active',
+        lastActive: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString()
+      });
+    } catch (sessErr) {
+      console.warn('[Manager Auth] OTP session creation warning:', sessErr.message);
+    }
+
     const tokenPayload = {
       id: user._id,
       managerId: user.managerId,
+      sessionId,
       role: user.role,
       level: user.level,
       status: 'active',

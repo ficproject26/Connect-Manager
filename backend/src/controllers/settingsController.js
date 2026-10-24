@@ -91,34 +91,78 @@ const getActiveSessions = async (req, res) => {
     const clientIp = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
 
     let sessions = await db.securitySessions.find({ userId: uid });
-    sessions = sessions.filter(s => s.status !== 'revoked');
+    // Filter active sessions only
+    sessions = sessions.filter(s => s.status !== 'revoked' && s.isActive !== false);
 
     if (sessions.length === 0) {
+      const currSessionId = user?.sessionId || (crypto.randomUUID ? crypto.randomUUID() : `sess_${Date.now()}`);
+      const dev = userAgent.includes('Windows') ? 'Windows PC' : userAgent.includes('Mac') ? 'Mac OS' : userAgent.includes('Linux') ? 'Linux PC' : 'Desktop Device';
+      const br = userAgent.includes('Chrome') ? 'Google Chrome' : userAgent.includes('Firefox') ? 'Mozilla Firefox' : userAgent.includes('Safari') ? 'Apple Safari' : 'Web Browser';
       const defaultSession = await db.securitySessions.insertOne({
-        userId: uid,
-        device: userAgent.includes('Windows') ? 'Windows PC' : userAgent.includes('Mac') ? 'Mac OS' : userAgent.includes('Linux') ? 'Linux PC' : 'Desktop Device',
-        browser: userAgent.includes('Chrome') ? 'Google Chrome' : userAgent.includes('Firefox') ? 'Mozilla Firefox' : userAgent.includes('Safari') ? 'Apple Safari' : 'Web Browser',
+        sessionId: currSessionId,
+        userId: user?._id || uid,
+        device: dev,
+        browser: br,
+        deviceInfo: {
+          deviceName: `${dev} (${br})`,
+          browser: br,
+          os: dev,
+          deviceType: /mobile|phone/i.test(dev) ? 'Mobile' : 'Desktop'
+        },
         ipAddress: typeof clientIp === 'string' ? clientIp.split(',')[0].trim() : '127.0.0.1',
-        location: user?.state || user?.assignedState || 'India',
+        location: user?.state || user?.assignedState || 'Tamil Nadu',
         lastActive: new Date().toISOString(),
         createdAt: new Date().toISOString(),
         status: 'active',
-        isCurrent: true
+        isActive: true
       });
       sessions = [defaultSession];
-    } else {
-      // Mark first or matching session as current
-      sessions = sessions.map((s, idx) => ({
-        ...s,
-        isCurrent: idx === 0 || s.isCurrent === true
-      }));
+    }
+
+    // Format and determine isCurrent accurately
+    const formattedSessions = sessions.map((s, idx) => {
+      const sId = String(s.sessionId || s._id || s.id);
+      const isCurrent = user?.sessionId
+        ? (sId === String(user.sessionId))
+        : (idx === 0);
+
+      const deviceName = s.device || s.deviceInfo?.deviceName || s.deviceInfo?.os || 'Desktop Browser';
+      const browserName = s.browser || s.deviceInfo?.browser || 'Web Browser';
+      let locStr = 'Assigned Territory';
+      if (typeof s.location === 'string' && s.location) {
+        locStr = s.location;
+      } else if (s.location && typeof s.location === 'object') {
+        locStr = [s.location.city, s.location.country].filter(Boolean).join(', ') || 'India';
+      } else if (user?.state || user?.assignedState) {
+        locStr = user?.state || user?.assignedState;
+      }
+
+      return {
+        _id: s._id || sId,
+        id: sId,
+        sessionId: sId,
+        userId: String(s.userId || uid),
+        device: deviceName,
+        browser: browserName,
+        ipAddress: s.ipAddress || (typeof clientIp === 'string' ? clientIp.split(',')[0].trim() : '127.0.0.1'),
+        location: locStr,
+        lastActive: s.lastActive || s.updatedAt || s.createdAt || new Date().toISOString(),
+        createdAt: s.createdAt || new Date().toISOString(),
+        status: s.status || 'active',
+        isActive: s.isActive !== false,
+        isCurrent
+      };
+    });
+
+    if (!formattedSessions.some(s => s.isCurrent) && formattedSessions.length > 0) {
+      formattedSessions[0].isCurrent = true;
     }
 
     const settingsDoc = await db.settings.findOne({ userId: uid });
 
     res.json({
       success: true,
-      sessions,
+      sessions: formattedSessions,
       inactivityTimeout: settingsDoc?.inactivityTimeout || user?.inactivityTimeout || 30
     });
   } catch (err) {
@@ -131,16 +175,16 @@ const getActiveSessions = async (req, res) => {
 const revokeSession = async (req, res) => {
   try {
     const user = req.user;
-    const uid = String(user?.id || user?._id || 'mgr_default');
     const { sessionId } = req.body;
 
     if (!sessionId) {
       return res.status(400).json({ success: false, message: 'Session ID is required.' });
     }
 
-    await db.securitySessions.findByIdAndUpdate(sessionId, {
-      $set: { status: 'revoked', revokedAt: new Date().toISOString() }
-    });
+    await db.securitySessions.updateMany(
+      { $or: [{ sessionId: sessionId }, { _id: sessionId }, { id: sessionId }] },
+      { $set: { status: 'revoked', isActive: false, revokedAt: new Date().toISOString() } }
+    );
 
     res.json({
       success: true,
@@ -157,14 +201,14 @@ const revokeAllOtherSessions = async (req, res) => {
   try {
     const user = req.user;
     const uid = String(user?.id || user?._id || 'mgr_default');
-    const { currentSessionId } = req.body;
+    const currentSessionId = req.body.currentSessionId || user?.sessionId;
 
     const allSessions = await db.securitySessions.find({ userId: uid });
     for (const s of allSessions) {
-      const sId = String(s._id || s.id);
+      const sId = String(s.sessionId || s._id || s.id);
       if (sId !== String(currentSessionId)) {
-        await db.securitySessions.findByIdAndUpdate(sId, {
-          $set: { status: 'revoked', revokedAt: new Date().toISOString() }
+        await db.securitySessions.findByIdAndUpdate(s._id || s.id, {
+          $set: { status: 'revoked', isActive: false, revokedAt: new Date().toISOString() }
         });
       }
     }

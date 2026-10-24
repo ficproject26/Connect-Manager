@@ -206,7 +206,7 @@ class GlobalErrorBoundary extends React.Component {
 }
 
 function AppInner() {
-  const { isAuthenticated, loading } = useAuth();
+  const { isAuthenticated, loading, user } = useAuth();
 
   // Navigation State with URL synchronization
   const getInitialNavigation = () => {
@@ -240,6 +240,32 @@ function AppInner() {
   const [theme, setTheme] = useState(() => {
     return localStorage.getItem('manager_theme') || 'light';
   });
+
+  const previousUserIdRef = React.useRef(user?.id || user?._id || null);
+
+  // Clear previous session navigation route state upon logout or when logging in as a different manager
+  useEffect(() => {
+    const currentUserId = user?.id || user?._id || null;
+    if (previousUserIdRef.current && currentUserId && previousUserIdRef.current !== currentUserId) {
+      // Switching between different manager accounts: redirect newly authenticated user to default home dashboard
+      setCurrentPage('dashboard');
+      setVisitedPages(new Set(['dashboard']));
+      setNavParams({});
+      try {
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (_) {}
+    } else if (previousUserIdRef.current && !currentUserId) {
+      // Logout occurred: completely reset cached page state to dashboard
+      setCurrentPage('dashboard');
+      setVisitedPages(new Set(['dashboard']));
+      setNavParams({});
+      setAuthPage('login');
+      try {
+        window.history.replaceState({}, '', window.location.pathname);
+      } catch (_) {}
+    }
+    previousUserIdRef.current = currentUserId;
+  }, [user?.id, user?._id]);
 
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);

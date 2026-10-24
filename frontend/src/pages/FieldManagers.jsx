@@ -24,19 +24,56 @@ import {
   Landmark
 } from 'lucide-react';
 
-const FieldManagers = () => {
+const getCanonicalManagerId = (m) => {
+  if (!m) return '—';
+  if (m.managerId && typeof m.managerId === 'string' && m.managerId.startsWith('MGR-')) {
+    return m.managerId;
+  }
+  if (m.id && typeof m.id === 'string' && m.id.startsWith('MGR-')) {
+    return m.id;
+  }
+  if (m.managerId) return m.managerId;
+  const role = String(m.role || '').toLowerCase();
+  const prefix = role.includes('state') ? 'STM' : role.includes('district') ? 'DTM' : role.includes('division') ? 'DIV' : 'PIN';
+  const rawId = String(m._id || m.id || '').replace(/[^a-zA-Z0-9]/g, '');
+  return rawId ? `MGR-${prefix}-${rawId.slice(-6).toUpperCase()}` : 'MGR-VERIFIED';
+};
+
+const FieldManagers = ({ filterParams }) => {
   const { user, loading: authLoading } = useAuth();
   const [allManagers, setAllManagers] = useState([]);
   const [peersList, setPeersList] = useState([]);
   const [subordinatesList, setSubordinatesList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [search, setSearch] = useState('');
+
+  const getInitialSearch = () => {
+    try {
+      const urlSearch = new URLSearchParams(window.location.search).get('search');
+      return (filterParams?.search || urlSearch || '').trim();
+    } catch (_) {
+      return (filterParams?.search || '').trim();
+    }
+  };
+
+  const [search, setSearch] = useState(getInitialSearch);
   const [activeTab, setActiveTab] = useState('all'); // 'all' | 'equal' | 'under'
   const [roleFilter, setRoleFilter] = useState('All');
   const [viewMode, setViewMode] = useState('table'); // Default to clean table view
   const [selectedManager, setSelectedManager] = useState(null);
   const [copiedField, setCopiedField] = useState(null);
+
+  // Sync search state when filterParams or URL parameter changes (e.g. from Global Search navigation)
+  useEffect(() => {
+    const targetSearch = filterParams?.search !== undefined 
+      ? String(filterParams.search || '').trim()
+      : (new URLSearchParams(window.location.search).get('search') || '').trim();
+    if (targetSearch) {
+      setSearch(targetSearch);
+      setActiveTab('all');
+      setRoleFilter('All');
+    }
+  }, [filterParams?.search]);
 
   // Authenticated user hierarchy level: 0 = Admin, 1 = State, 2 = District, 3 = Division, 4 = Pincode
   const userLevel = useMemo(() => {
@@ -458,9 +495,8 @@ const FieldManagers = () => {
         const matchesMobile = m.mobile?.includes(q);
         const matchesArea = m.pincodeArea?.toLowerCase().includes(q);
         const matchesPin = m.pincodeCode?.includes(q);
-        const matchesDiv = m.divisionName?.toLowerCase().includes(q);
-        const matchesDist = m.districtName?.toLowerCase().includes(q);
-        if (!matchesName && !matchesEmail && !matchesMobile && !matchesArea && !matchesPin && !matchesDiv && !matchesDist) {
+        const matchesId = (m.managerId?.toLowerCase().includes(q) || m.id?.toLowerCase().includes(q) || m._id?.toLowerCase().includes(q));
+        if (!matchesName && !matchesEmail && !matchesMobile && !matchesArea && !matchesPin && !matchesDiv && !matchesDist && !matchesId) {
           return false;
         }
       }
@@ -717,7 +753,7 @@ const FieldManagers = () => {
                           {getDisplayValue(m.name, 'Manager')}
                         </div>
                         <div 
-                          title={`Full ID: ${m.managerId || m.id}`} 
+                          title={`Full ID: ${getCanonicalManagerId(m)}`} 
                           style={{ 
                             fontSize: '0.72rem', 
                             color: 'var(--text-muted)', 
@@ -726,7 +762,7 @@ const FieldManagers = () => {
                             letterSpacing: '0.2px'
                           }}
                         >
-                          ID: {m.managerId || (m.id ? (m.id.length > 12 ? `${m.id.slice(0, 8)}…` : m.id) : '—')}
+                          ID: {getCanonicalManagerId(m)}
                         </div>
                       </div>
                     </div>
@@ -834,10 +870,10 @@ const FieldManagers = () => {
                           {getDisplayValue(m.name, 'Manager')}
                         </div>
                         <div 
-                          title={`Manager ID: ${m.managerId || m.id}`}
+                          title={`Manager ID: ${getCanonicalManagerId(m)}`}
                           style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontFamily: 'monospace', wordBreak: 'break-all', marginTop: '2px' }}
                         >
-                          ID: {m.managerId || (m.id ? (m.id.length > 14 ? `${m.id.slice(0, 10)}…` : m.id) : '—')}
+                          ID: {getCanonicalManagerId(m)}
                         </div>
                       </div>
                     </div>
@@ -1001,7 +1037,7 @@ const FieldManagers = () => {
                     {selectedManager.name}
                   </div>
                   <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
-                    Manager ID: {selectedManager.managerId || selectedManager.id}
+                    Manager ID: {getCanonicalManagerId(selectedManager)}
                   </div>
                 </div>
               </div>

@@ -199,6 +199,11 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
     setPendingUser(null);
     realtimeClient.disconnect();
+    try {
+      if (typeof window !== 'undefined' && window.location) {
+        window.history.replaceState({}, '', window.location.pathname);
+      }
+    } catch (_) {}
   };
 
   const initAuth = async () => {
@@ -300,6 +305,11 @@ export const AuthProvider = ({ children }) => {
         const isRoleValid = isAuthorizedRole(normalized?.role);
 
         if (isApproved && isRoleValid) {
+          try {
+            if (typeof window !== 'undefined' && window.location) {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          } catch (_) {}
           localStorage.setItem('agent_mgr_token', token);
           setToken(token);
           updateActiveUser(normalized);
@@ -359,6 +369,11 @@ export const AuthProvider = ({ children }) => {
         const isRoleValid = isAuthorizedRole(normalized?.role);
 
         if (isApproved && isRoleValid) {
+          try {
+            if (typeof window !== 'undefined' && window.location) {
+              window.history.replaceState({}, '', window.location.pathname);
+            }
+          } catch (_) {}
           localStorage.setItem('agent_mgr_token', token);
           setToken(token);
           updateActiveUser(normalized);

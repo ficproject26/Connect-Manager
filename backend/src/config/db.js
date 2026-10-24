@@ -20,8 +20,10 @@ function sanitizeQuery(query) {
     // Block dangerous NoSQL operators at root query level
     if (k.startsWith('$')) continue;
 
-    if (['_id', 'id', 'stateId', 'districtId', 'divisionId', 'pincodeId'].includes(k) && typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v)) {
+    if (['_id', 'id', 'userId', 'managerId', 'stateId', 'districtId', 'divisionId', 'pincodeId'].includes(k) && typeof v === 'string' && /^[0-9a-fA-F]{24}$/.test(v)) {
       sanitized[k] = { $in: [new ObjectId(v), v] };
+    } else if (v instanceof ObjectId) {
+      sanitized[k] = v;
     } else if (v && typeof v === 'object' && !Array.isArray(v) && !(v instanceof RegExp)) {
       // Disallow dangerous operators inside nested object queries
       const cleanSub = {};
@@ -218,6 +220,19 @@ class Collection {
     }
 
     return await this.findOne(cleanQuery);
+  }
+
+  async updateMany(query, update) {
+    await this._ensureReady();
+    const cleanQuery = sanitizeQuery(query);
+    const patch = update.$set ? update.$set : update;
+    const updatePayload = {
+      $set: {
+        ...patch,
+        updatedAt: new Date().toISOString()
+      }
+    };
+    return await this._mongoCol.updateMany(cleanQuery, updatePayload);
   }
 
   async findByIdAndUpdate(id, update) {

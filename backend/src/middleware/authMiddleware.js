@@ -36,6 +36,26 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ success: false, message: 'User account not found.' });
     }
 
+    // Verify session has not been revoked in Security & Session Governance
+    if (decoded.sessionId) {
+      try {
+        const sessDoc = await db.securitySessions.findOne({
+          $or: [
+            { sessionId: decoded.sessionId },
+            { _id: decoded.sessionId },
+            { id: decoded.sessionId }
+          ]
+        });
+        if (sessDoc && (sessDoc.status === 'revoked' || sessDoc.isActive === false)) {
+          return res.status(401).json({
+            success: false,
+            code: 'SESSION_REVOKED',
+            message: 'Your active session has been terminated or logged out. Please log in again.'
+          });
+        }
+      } catch (_) {}
+    }
+
     // STRICT ROLE ISOLATION:
     // Only regional managers and authorized administrative reviewers can access this portal
     const userRole = String(user.role || '').toLowerCase().trim();
@@ -244,7 +264,8 @@ const authMiddleware = async (req, res, next) => {
         pincodeId,
         pincodeCode,
         pincodeArea
-      }
+      },
+      sessionId: decoded.sessionId || null
     };
 
     next();

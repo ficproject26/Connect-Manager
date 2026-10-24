@@ -490,57 +490,21 @@ const Dashboard = ({ onNavigate }) => {
           </div>
         </div>
 
-        {/* KPI 3: Total Shops / Outlets */}
+        {/* KPI 3: Verified Active Merchants (Consolidated from Active Outlets, Onboarded Vendors & Verified Merchants) */}
         <div className="forge-kpi-card" onClick={() => onNavigate('vendors', { status: 'Active' })} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="kpi-icon-box" style={{ background: '#fef3c7', color: '#d97706' }}>
-                <ShoppingBag size={18} />
-              </div>
-              <div>
-                <div className="kpi-main-title">Active Outlets</div>
-                <div className="kpi-main-value">{(kpis.activeShops !== undefined ? kpis.activeShops : kpis.totalShops).toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-          <div className="kpi-card-footer">
-            <span>{(kpis.activeShops ?? 0).toLocaleString()} Active | {(kpis.inactiveShops ?? 0).toLocaleString()} Inactive</span>
-          </div>
-        </div>
-
-        {/* KPI 4: Total Onboardings */}
-        <div className="forge-kpi-card" onClick={() => onNavigate('vendors')} style={{ cursor: 'pointer' }}>
-          <div className="kpi-top-row">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div className="kpi-icon-box" style={{ background: '#fef3c7', color: '#b45309' }}>
-                <Handshake size={18} />
-              </div>
-              <div>
-                <div className="kpi-main-title">Onboarded Vendors</div>
-                <div className="kpi-main-value">{kpis.totalTieups.toLocaleString()}</div>
-              </div>
-            </div>
-          </div>
-          <div className="kpi-card-footer">
-            <span>{kpis.todayTieups} Today | {kpis.weekTieups} This Week</span>
-          </div>
-        </div>
-
-        {/* KPI 5: Verified Merchants */}
-        <div className="forge-kpi-card" onClick={() => onNavigate('vendors')} style={{ cursor: 'pointer' }}>
           <div className="kpi-top-row">
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
               <div className="kpi-icon-box" style={{ background: '#dcfce7', color: '#16a34a' }}>
                 <CheckCircle size={18} />
               </div>
               <div>
-                <div className="kpi-main-title">Verified Merchants</div>
-                <div className="kpi-main-value">{kpis.verifiedVendors || kpis.activeVendors}</div>
+                <div className="kpi-main-title">Verified Active Merchants</div>
+                <div className="kpi-main-value">{(kpis.verifiedVendors || kpis.activeVendors).toLocaleString()}</div>
               </div>
             </div>
           </div>
           <div className="kpi-card-footer">
-            <span>100% KYC & Inspection Passed</span>
+            <span>{(kpis.activeShops ?? kpis.activeVendors).toLocaleString()} Active Outlets | {kpis.totalTieups.toLocaleString()} Onboarded (100% KYC)</span>
           </div>
         </div>
 

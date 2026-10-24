@@ -644,9 +644,9 @@ button, input, select, textarea {
   }
 }
 
-/* ---------------- 6-Card Metric KPI Grid for Dashboard (3x2) ---------------- */
+/* ---------------- Consolidated Metric KPI Grid for Dashboard (4 Cards) ---------------- */
 .dashboard-kpi-grid {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
 }
 
 @media (max-width: 1024px) {

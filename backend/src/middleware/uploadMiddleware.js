@@ -124,23 +124,8 @@ const documentUpload = multer({
   fileFilter: documentFileFilter
 });
 
-// Narrow, field-restricted Multer middleware accepting strictly allowed fields and maximum 1 file per field
-const avatarUploadFields = upload.fields([
-  { name: 'avatar', maxCount: 1 },
-  { name: 'photo', maxCount: 1 },
-  { name: 'image', maxCount: 1 },
-  { name: 'file', maxCount: 1 },
-  { name: 'profilePhoto', maxCount: 1 }
-]);
-
-const logoUploadFields = logoUpload.fields([
-  { name: 'logo', maxCount: 1 },
-  { name: 'shopLogo', maxCount: 1 },
-  { name: 'avatar', maxCount: 1 },
-  { name: 'photo', maxCount: 1 },
-  { name: 'file', maxCount: 1 }
-]);
-
+const avatarUploadFields = upload.any();
+const logoUploadFields = logoUpload.any();
 const documentUploadFields = documentUpload.any();
 
 module.exports = upload;

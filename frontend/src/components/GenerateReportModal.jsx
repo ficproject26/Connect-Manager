@@ -153,26 +153,13 @@ export default function GenerateReportModal({ onClose, onReportSubmitted, allVis
     setSubmitError('');
 
     try {
-      const sanitizedVisits = periodVisits.map(v => {
-        const copy = { ...v };
-        for (const key of Object.keys(copy)) {
-          const val = copy[key];
-          if (typeof val === 'string' && val.startsWith('data:') && val.length > 512) {
-            copy[key] = val.slice(0, 100) + '...[binary_truncated]';
-          } else if (Array.isArray(val)) {
-            copy[key] = val.map(item => (typeof item === 'string' && item.startsWith('data:') && item.length > 512) ? item.slice(0, 100) + '...[binary_truncated]' : item);
-          }
-        }
-        return copy;
-      });
-
       const payload = {
         periodLabel: `${periodTitle} (${dateRangeLabel})`,
         dateRange: dateRangeLabel,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
         summary,
-        shopVisits: sanitizedVisits,
+        shopVisits: periodVisits,
         tasks: periodTasks
       };
 

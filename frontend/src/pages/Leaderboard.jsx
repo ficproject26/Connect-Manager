@@ -57,6 +57,13 @@ const Leaderboard = ({ onNavigate }) => {
   const tierRankings = useMemo(() => {
     const safeRankings = Array.isArray(allRankings) ? allRankings : [];
     const list = safeRankings.filter((m) => {
+      // Strictly exclude any unapproved, pending, or inactive managers from leaderboard
+      const st = String(m.status || 'active').toLowerCase().trim();
+      const ost = String(m.overallRegistrationStatus || '').toLowerCase().trim();
+      if (st.includes('pending') || st.includes('review') || st.includes('reject')) return false;
+      if (ost.includes('pending') || ost.includes('review') || ost.includes('reject')) return false;
+      if (m.isActive === false || m.isApproved === false) return false;
+
       if (tierFilter === 'All') return true;
       const r = String(m.role || '').toLowerCase();
       const tf = String(tierFilter || '').toLowerCase();

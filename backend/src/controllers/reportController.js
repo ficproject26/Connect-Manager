@@ -862,6 +862,9 @@ const getLeaderboardData = async (req, res) => {
           slaRate,
           points: basePoints,
           isSelf,
+          status: 'active',
+          isActive: true,
+          isApproved: true,
           rating: activeVendors > 0 ? 'Excellent' : totalVendors > 0 ? 'Good' : 'Steady',
           avatarBg: colorPalette[idx % colorPalette.length]
         };
@@ -952,10 +955,11 @@ const getSubmittedReports = async (req, res) => {
     const user = req.user;
     const { district, division, pincode, managerRole, search } = req.query;
 
-    const [allReports, allUsers, allManagers, districts, divisions, pincodes] = await Promise.all([
+    const [allReports, allUsers, allManagers, allVisits, districts, divisions, pincodes] = await Promise.all([
       db.submittedReports.find(),
       db.users.find(),
       db.managers ? db.managers.find() : [],
+      db.shopVisits ? db.shopVisits.find() : [],
       db.districts.find(user.stateId ? { stateId: user.stateId } : {}),
       db.divisions.find(user.districtId ? { districtId: user.districtId } : {}),
       db.pincodes.find(user.divisionId ? { divisionId: user.divisionId } : {})
@@ -972,6 +976,14 @@ const getSubmittedReports = async (req, res) => {
       if (u.name) userMap.set(String(u.name).toLowerCase(), u);
     });
 
+    // Build shop visit lookup map to recover complete storefront photos for performance reports
+    const visitMap = new Map();
+    (allVisits || []).forEach(v => {
+      if (v._id) visitMap.set(String(v._id), v);
+      if (v.id) visitMap.set(String(v.id), v);
+      if (v.shopName) visitMap.set(String(v.shopName).toLowerCase().trim(), v);
+    });
+
     const enrichedReports = allReports.map(r => {
       let mRole = r.managerRole;
       const author = userMap.get(String(r.managerId || '')) ||
@@ -981,8 +993,31 @@ const getSubmittedReports = async (req, res) => {
         mRole = author.role || mRole;
       }
       const authorState = author?.state || author?.stateName || (author?.stateId === 'state_ka' ? 'Karnataka' : (author?.stateId === 'state_tn' || author?.stateId === '6aa10f70ca0932e6eaec1f5c' ? 'Tamil Nadu' : null));
+
+      const enrichedVisits = (r.shopVisits || []).map(v => {
+        const fullVisit = visitMap.get(String(v._id || '')) ||
+                          visitMap.get(String(v.id || '')) ||
+                          visitMap.get(String(v.shopName || '').toLowerCase().trim());
+        const realPhoto = (fullVisit?.storefrontPhoto && !fullVisit.storefrontPhoto.includes('[binary_truncated]'))
+          ? fullVisit.storefrontPhoto
+          : (fullVisit?.shopPhoto && !fullVisit.shopPhoto.includes('[binary_truncated]'))
+          ? fullVisit.shopPhoto
+          : (v.storefrontPhoto && !v.storefrontPhoto.includes('[binary_truncated]'))
+          ? v.storefrontPhoto
+          : (v.shopPhoto && !v.shopPhoto.includes('[binary_truncated]'))
+          ? v.shopPhoto
+          : (fullVisit?.photo || fullVisit?.photoUrl || v.photo || v.photoUrl || null);
+
+        return {
+          ...v,
+          shopPhoto: realPhoto,
+          storefrontPhoto: realPhoto
+        };
+      });
+
       return {
         ...r,
+        shopVisits: enrichedVisits,
         managerRole: mRole || r.managerRole || (author ? author.role : ''),
         managerName: r.managerName || (author ? author.name : ''),
         stateId: r.stateId || (author ? author.stateId : null),
