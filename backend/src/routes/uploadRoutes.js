@@ -1,3 +1,4 @@
+const { uploadToS3 } = require('../config/s3');
 const express = require('express');
 const router = express.Router();
 const path = require('path');
@@ -23,7 +24,7 @@ const { upload, logoUpload, documentUpload, documentUploadFields, logoUploadFiel
 
 // Handler for document, KYC file, and business image uploads
 const handleDocumentUpload = (req, res) => {
-  documentUploadFields(req, res, (err) => {
+  documentUploadFields(req, res, async (err) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
         ? 'Business document / KYC document / Business image must not exceed 5MB.'
@@ -44,33 +45,34 @@ const handleDocumentUpload = (req, res) => {
         return res.status(400).json({ success: false, message: 'No file uploaded.' });
       }
 
-      // If client sent multiple file parts (e.g. aliased field names), remove the duplicate files from disk
-      if (req.files && req.files.length > 1) {
-        for (let i = 1; i < req.files.length; i++) {
-          try {
-            if (req.files[i]?.path && fs.existsSync(req.files[i].path)) {
-              fs.unlinkSync(req.files[i].path);
-            }
-          } catch (_) {}
-        }
+      const safeOriginalName = path.basename(file.originalname || '').replace(/[^a-zA-Z0-9._-]/g, '_');
+      const mime = (file.mimetype || '').toLowerCase();
+      let targetFolder = 'manager_docs';
+      if (mime.startsWith('audio/') || file.originalname.match(/\.(webm|mp3|wav|m4a|ogg)$/i)) {
+        targetFolder = 'voice_notes';
+      } else if (mime.startsWith('image/')) {
+        targetFolder = 'manager_images';
       }
 
-      const safeOriginalName = path.basename(file.originalname || '').replace(/[^a-zA-Z0-9._-]/g, '_');
-      const fileUrl = `/uploads/${file.filename}`;
+      const s3Result = await uploadToS3(file.buffer || file.path, targetFolder, file.originalname);
+      const fileUrl = s3Result.url;
+
       res.json({
         success: true,
-        message: 'File uploaded successfully',
+        message: 'File uploaded successfully to AWS S3',
         file: {
           name: safeOriginalName,
-          filename: file.filename,
+          filename: s3Result.key,
+          key: s3Result.key,
           url: fileUrl,
+          secure_url: fileUrl,
           size: file.size,
           type: file.mimetype
         }
       });
     } catch (routeErr) {
-      console.error('File upload route error:', routeErr);
-      res.status(500).json({ success: false, message: 'File upload processing failed.' });
+      console.error('File upload to S3 route error:', routeErr);
+      res.status(500).json({ success: false, message: routeErr.message || 'File upload processing failed.' });
     }
   });
 };
@@ -82,7 +84,7 @@ router.post('/storefront-photo', handleDocumentUpload);
 
 // POST /api/uploads/avatar, /api/uploads/photo, /api/uploads/profile-photo, /api/uploads/logo
 const handleAvatarUpload = (req, res) => {
-  logoUploadFields(req, res, (err) => {
+  logoUploadFields(req, res, async (err) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
         ? 'Shop logo must not exceed 2MB.'
@@ -114,15 +116,19 @@ const handleAvatarUpload = (req, res) => {
         }
       }
 
-      const fileUrl = `/uploads/${file.filename}`;
+      const s3Result = await uploadToS3(file.buffer || file.path, 'manager_avatars', file.originalname);
+      const fileUrl = s3Result.url;
+
       res.json({
         success: true,
         message: 'Profile photo uploaded successfully',
         avatarUrl: fileUrl,
         file: {
           name: file.originalname,
-          filename: file.filename,
+          filename: s3Result.key,
+          key: s3Result.key,
           url: fileUrl,
+          secure_url: fileUrl,
           size: file.size,
           type: file.mimetype
         }

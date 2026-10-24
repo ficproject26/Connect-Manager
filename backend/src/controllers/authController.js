@@ -1,3 +1,4 @@
+const { uploadToS3 } = require('../config/s3');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
@@ -797,8 +798,10 @@ const register = async (req, res) => {
       const filename = path.basename(item.url.trim());
       const filePath = path.join(UPLOAD_DIR, filename);
 
-      // Verify file existence in storage
-      if (!fs.existsSync(filePath)) {
+      // Verify file existence in storage (supports S3, Cloudinary, and local disk)
+      const isS3Url = item.url.includes('amazonaws.com') || item.url.includes('/api/media/s3/') || (typeof extractS3Key === 'function' && extractS3Key(item.url));
+      const isCloudinary = item.url.includes('res.cloudinary.com');
+      if (!isS3Url && !isCloudinary && !fs.existsSync(filePath)) {
         return res.status(400).json({
           success: false,
           message: `${item.name} file was not found in storage. Mock or unuploaded files are not permitted.`
@@ -2223,7 +2226,8 @@ const uploadAvatar = async (req, res) => {
       return res.status(400).json({ success: false, message: 'No image file uploaded.' });
     }
 
-    const fileUrl = `/uploads/${file.filename}`;
+    const s3Result = await uploadToS3(file.buffer || file.path, 'manager_avatars', file.originalname);
+    const fileUrl = s3Result.url;
 
     // If caller provided token in Authorization header, also persist avatarUrl to their account
     const authHeader = req.headers.authorization;
@@ -2629,7 +2633,7 @@ const resetPassword = async (req, res) => {
 };
 
 
-const uploadDocument = (req, res) => {
+const uploadDocument = async (req, res) => {
   try {
     const file = req.file || (Array.isArray(req.files) ? req.files[0] : (req.files && typeof req.files === 'object' ? Object.values(req.files).flat()[0] : null));
     if (!file) {
@@ -2667,14 +2671,18 @@ const uploadDocument = (req, res) => {
       });
     }
 
-    const fileUrl = `/uploads/${file.filename}`;
+    const s3Result = await uploadToS3(file.buffer || file.path, 'manager_docs', file.originalname);
+    const fileUrl = s3Result.url;
+
     res.json({
       success: true,
-      message: 'Document uploaded successfully',
+      message: 'Document uploaded successfully to AWS S3',
       file: {
         name: file.originalname,
-        filename: file.filename,
+        filename: s3Result.key,
+        key: s3Result.key,
         url: fileUrl,
+        secure_url: fileUrl,
         size: file.size,
         type: file.mimetype
       }

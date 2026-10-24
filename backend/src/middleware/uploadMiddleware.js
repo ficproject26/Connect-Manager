@@ -28,18 +28,7 @@ const BLOCKED_EXTENSIONS = new Set([
   '.dll', '.com', '.jar', '.py', '.rb', '.pl', '.cgi', '.asp', '.aspx', '.jsp'
 ]);
 
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, UPLOAD_DIR);
-  },
-  filename: (req, file, cb) => {
-    // Generate secure, unguessable random filename preserving only sanitized extension
-    const ext = path.extname(file.originalname).toLowerCase();
-    const safeExt = Object.keys(ALLOWED_EXTENSIONS_MAP).includes(ext) ? ext : '.bin';
-    const randomName = `${Date.now()}_${crypto.randomBytes(16).toString('hex')}${safeExt}`;
-    cb(null, randomName);
-  }
-});
+const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
   // 1. Sanitize original filename and check for null bytes / path traversal
@@ -84,11 +73,6 @@ const logoFileFilter = (req, file, cb) => {
   if (!imageExtensions.includes(ext)) {
     return cb(new Error('Invalid logo file type. Only JPG, PNG, and WEBP image files are accepted.'));
   }
-  const validMimes = ALLOWED_EXTENSIONS_MAP[ext];
-  const mime = (file.mimetype || '').toLowerCase();
-  if (!validMimes || !validMimes.includes(mime)) {
-    return cb(new Error(`MIME type mismatch: Content-Type '${mime}' does not match extension '${ext}'.`));
-  }
   cb(null, true);
 };
 
@@ -101,7 +85,7 @@ const documentFileFilter = (req, file, cb) => {
   if (BLOCKED_EXTENSIONS.has(ext)) {
     return cb(new Error(`Security Violation: File extension '${ext}' is not permitted.`));
   }
-  const validDocs = ['.pdf', '.jpg', '.jpeg', '.png', '.webp'];
+  const validDocs = ['.pdf', '.jpg', '.jpeg', '.png', '.webp', '.webm', '.mp3', '.wav', '.m4a', '.ogg', '.aac', '.doc', '.docx', '.xls', '.xlsx', '.csv', '.txt'];
   if (!validDocs.includes(ext)) {
     return cb(new Error('Invalid document file type. Only PDF, JPG, PNG, and WEBP documents are accepted.'));
   }

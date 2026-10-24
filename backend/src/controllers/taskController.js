@@ -559,7 +559,7 @@ const updateTaskStatus = async (req, res) => {
       }
 
       // Mandatory Field 1: Field Photo
-      const photo = req.body.completionPhoto ||
+      let photo = req.body.completionPhoto ||
         (Array.isArray(completionPhotos) && completionPhotos[0]) ||
         (Array.isArray(req.body.photos) && req.body.photos[0]) ||
         req.body.actionPhoto ||
@@ -584,12 +584,30 @@ const updateTaskStatus = async (req, res) => {
       }
 
       // Mandatory Field 3: Field Audio Note
-      const audio = req.body.completionAudio || req.body.voiceNote || req.body.audioUrl || reworkAudio || task.voiceNote || null;
+      let audio = req.body.completionAudio || req.body.voiceNote || req.body.audioUrl || reworkAudio || task.voiceNote || null;
       if (!audio) {
         return res.status(400).json({
           success: false,
           message: 'Field audio note recording is required to complete the task.'
         });
+      }
+
+      if (photo && typeof photo === 'string' && photo.startsWith('data:')) {
+        try {
+          const s3Res = await uploadToS3(photo, 'tasks', `task_${taskId}_${Date.now()}`);
+          photo = s3Res.url || s3Res.key;
+        } catch (err) {
+          console.error('Failed to upload task photo to S3:', err);
+        }
+      }
+
+      if (audio && typeof audio === 'string' && audio.startsWith('data:')) {
+        try {
+          const s3Res = await uploadToS3(audio, 'voice_notes', `task_audio_${taskId}_${Date.now()}`);
+          audio = s3Res.url || s3Res.key;
+        } catch (err) {
+          console.error('Failed to upload task audio to S3:', err);
+        }
       }
 
       const completedAt = new Date().toISOString();

@@ -415,8 +415,26 @@ const createShopVisit = async (req, res) => {
 
     const resolvedStatus = (interestedStatus || interestStatus || 'NO').toUpperCase() === 'YES' ? 'YES' : 'NO';
     const resolvedCategory = category || businessCategory || 'Products';
-    const resolvedPhoto = shopPhoto || storefrontPhoto || null;
-    const resolvedVoice = voiceNote || audioVoiceNote || null;
+    let resolvedPhoto = shopPhoto || storefrontPhoto || null;
+    let resolvedVoice = voiceNote || audioVoiceNote || null;
+
+    if (resolvedPhoto && typeof resolvedPhoto === 'string' && resolvedPhoto.startsWith('data:')) {
+      try {
+        const s3Res = await uploadToS3(resolvedPhoto, 'shop_visits', `visit_${Date.now()}`);
+        resolvedPhoto = s3Res.url || s3Res.key;
+      } catch (uploadErr) {
+        console.error('Failed to upload storefront photo to S3:', uploadErr);
+      }
+    }
+
+    if (resolvedVoice && typeof resolvedVoice === 'string' && resolvedVoice.startsWith('data:')) {
+      try {
+        const s3Res = await uploadToS3(resolvedVoice, 'voice_notes', `voice_${Date.now()}`);
+        resolvedVoice = s3Res.url || s3Res.key;
+      } catch (uploadErr) {
+        console.error('Failed to upload voice note to S3:', uploadErr);
+      }
+    }
     const resolvedReason = notInterestedReason || (resolvedStatus === 'YES' ? 'Interested in Onboarding' : 'Not specified');
     const resolvedOther = otherReason || customReason || null;
 
