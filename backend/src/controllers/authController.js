@@ -2218,7 +2218,7 @@ const getRegistrationLocations = async (req, res) => {
 
 const uploadAvatar = async (req, res) => {
   try {
-    const file = req.file || (req.files && req.files[0]);
+    const file = req.file || (Array.isArray(req.files) ? req.files[0] : (req.files && typeof req.files === 'object' ? Object.values(req.files).flat()[0] : null));
     if (!file) {
       return res.status(400).json({ success: false, message: 'No image file uploaded.' });
     }
@@ -2259,7 +2259,7 @@ const uploadAvatar = async (req, res) => {
 
 const updateProfilePhoto = async (req, res) => {
   try {
-    const file = req.file || (req.files && req.files[0]);
+    const file = req.file || (Array.isArray(req.files) ? req.files[0] : (req.files && typeof req.files === 'object' ? Object.values(req.files).flat()[0] : null));
     if (!file) {
       return res.status(400).json({ success: false, message: 'Please select a valid image file to upload.' });
     }
@@ -2631,7 +2631,7 @@ const resetPassword = async (req, res) => {
 
 const uploadDocument = (req, res) => {
   try {
-    const file = req.file || (req.files && req.files[0]);
+    const file = req.file || (Array.isArray(req.files) ? req.files[0] : (req.files && typeof req.files === 'object' ? Object.values(req.files).flat()[0] : null));
     if (!file) {
       return res.status(400).json({ success: false, message: 'No document file uploaded.' });
     }

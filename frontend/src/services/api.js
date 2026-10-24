@@ -421,8 +421,6 @@ export const authService = {
   async updateProfilePhoto(file) {
     const formData = new FormData();
     formData.append('avatar', file);
-    formData.append('photo', file);
-    formData.append('image', file);
     const token = getAuthToken();
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
 

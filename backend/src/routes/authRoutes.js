@@ -3,7 +3,7 @@ const router = express.Router();
 const authController = require('../controllers/authController');
 const { authMiddleware } = require('../middleware/authMiddleware');
 const { checkRole, requireApprovalPermission } = require('../middleware/roleMiddleware');
-const { upload, documentUpload, logoUpload } = require('../middleware/uploadMiddleware');
+const { upload, documentUpload, logoUpload, avatarUploadFields, documentUploadFields } = require('../middleware/uploadMiddleware');
 
 const { authLimiter, otpLimiter, uploadLimiter, avatarUploadLimiter, documentUploadLimiter } = require('../middleware/rateLimitMiddleware');
 
@@ -17,8 +17,8 @@ router.get('/check-capacity', authController.checkCapacity);
 router.get('/registration-status/:userId', authController.getRegistrationStatus);
 
 // Registration KYC and Avatar upload during registration (independent rate limited buckets)
-router.post('/upload-avatar', avatarUploadLimiter, upload.single('avatar'), authController.uploadAvatar);
-router.post('/upload-document', documentUploadLimiter, documentUpload.any(), authController.uploadDocument);
+router.post('/upload-avatar', avatarUploadLimiter, avatarUploadFields, authController.uploadAvatar);
+router.post('/upload-document', documentUploadLimiter, documentUploadFields, authController.uploadDocument);
 
 // Password recovery routes
 router.post('/forgot-password', authLimiter, authController.forgotPassword);
@@ -38,8 +38,8 @@ router.put('/change-password', authMiddleware, checkRole(), authController.chang
 router.get('/bank-details', authMiddleware, checkRole(), authController.getBankDetails);
 router.put('/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
 router.post('/bank-details', authMiddleware, checkRole(), authController.updateBankDetails);
-router.put('/profile-photo', authMiddleware, checkRole(), uploadLimiter, upload.any(), authController.updateProfilePhoto);
-router.post('/profile-photo', authMiddleware, checkRole(), uploadLimiter, upload.any(), authController.updateProfilePhoto);
+router.put('/profile-photo', authMiddleware, checkRole(), uploadLimiter, avatarUploadFields, authController.updateProfilePhoto);
+router.post('/profile-photo', authMiddleware, checkRole(), uploadLimiter, avatarUploadFields, authController.updateProfilePhoto);
 router.delete('/profile-photo', authMiddleware, checkRole(), authController.removeProfilePhoto);
 router.delete('/profile-image', authMiddleware, checkRole(), authController.removeProfilePhoto);
 router.delete('/avatar', authMiddleware, checkRole(), authController.removeProfilePhoto);

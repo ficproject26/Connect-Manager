@@ -19,16 +19,18 @@ const optionalAuth = (req, res, next) => {
 router.use(optionalAuth);
 router.use(uploadLimiter);
 
-const { upload, logoUpload, documentUpload } = require('../middleware/uploadMiddleware');
+const { upload, logoUpload, documentUpload, documentUploadFields, logoUploadFields } = require('../middleware/uploadMiddleware');
 
 // Handler for document, KYC file, and business image uploads
 const handleDocumentUpload = (req, res) => {
-  documentUpload.any()(req, res, (err) => {
+  documentUploadFields(req, res, (err) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
         ? 'Business document / KYC document / Business image must not exceed 5MB.'
         : err.code === 'LIMIT_FILE_COUNT'
         ? 'Too many files uploaded in a single request.'
+        : err.code === 'LIMIT_UNEXPECTED_FILE'
+        ? `Unexpected upload field '${err.field || 'unknown'}'. Expected 'document' or 'file'.`
         : (err.message || 'File upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
@@ -37,7 +39,7 @@ const handleDocumentUpload = (req, res) => {
     }
 
     try {
-      const file = req.file || (req.files && req.files[0]);
+      const file = req.file || (Array.isArray(req.files) ? req.files[0] : (req.files && typeof req.files === 'object' ? Object.values(req.files).flat()[0] : null));
       if (!file) {
         return res.status(400).json({ success: false, message: 'No file uploaded.' });
       }
@@ -80,12 +82,14 @@ router.post('/storefront-photo', handleDocumentUpload);
 
 // POST /api/uploads/avatar, /api/uploads/photo, /api/uploads/profile-photo, /api/uploads/logo
 const handleAvatarUpload = (req, res) => {
-  logoUpload.any()(req, res, (err) => {
+  logoUploadFields(req, res, (err) => {
     if (err) {
       const message = err.code === 'LIMIT_FILE_SIZE'
         ? 'Shop logo must not exceed 2MB.'
         : err.code === 'LIMIT_FILE_COUNT'
         ? 'Too many files uploaded in a single request.'
+        : err.code === 'LIMIT_UNEXPECTED_FILE'
+        ? `Unexpected upload field '${err.field || 'unknown'}'. Expected 'logo', 'avatar', 'photo', or 'file'.`
         : (err.message || 'Avatar upload rejected due to validation failure.');
       return res.status(400).json({
         success: false,
@@ -94,7 +98,7 @@ const handleAvatarUpload = (req, res) => {
     }
 
     try {
-      const file = req.file || (req.files && req.files[0]);
+      const file = req.file || (Array.isArray(req.files) ? req.files[0] : (req.files && typeof req.files === 'object' ? Object.values(req.files).flat()[0] : null));
       if (!file) {
         return res.status(400).json({ success: false, message: 'No image file uploaded.' });
       }

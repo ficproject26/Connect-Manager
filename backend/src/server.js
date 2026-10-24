@@ -202,6 +202,8 @@ app.use((err, req, res, next) => {
       ? 'File size limit exceeded.'
       : err.code === 'LIMIT_FILE_COUNT'
       ? 'Too many files uploaded in a single request.'
+      : err.code === 'LIMIT_UNEXPECTED_FILE'
+      ? `Unexpected upload field '${err.field || 'unknown'}'. Please upload using the expected field name.`
       : (err.message || 'File upload validation error.');
     return res.status(400).json({
       success: false,
