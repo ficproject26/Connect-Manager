@@ -190,7 +190,14 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
         () => taskService.getTasks(queryParams, user),
         { force: showSpinner }
       );
-      const rawList = (res && res.success && (Array.isArray(res.tasks) ? res.tasks : (Array.isArray(res.data) ? res.data : []))) || [];
+      let rawList = [];
+      if (Array.isArray(res)) {
+        rawList = res;
+      } else if (res && typeof res === 'object') {
+        if (Array.isArray(res.tasks)) rawList = res.tasks;
+        else if (Array.isArray(res.data)) rawList = res.data;
+        else if (Array.isArray(res.items)) rawList = res.items;
+      }
       if (rawList.length > 0) {
         // Enforce strict territory boundaries & exclude mock/test tasks
         const territoryScoped = rawList.filter(t => isTaskInManagerTerritory(t, territoryProfile));
@@ -269,7 +276,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
           };
         });
         setTasks(mapped);
-        cacheClient.set(cacheKey, mapped);
+        cacheClient.set(cacheKey, { success: true, tasks: mapped, data: mapped });
       } else {
         setTasks([]);
       }
@@ -328,7 +335,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
         if (selectedTask && (selectedTask._id || selectedTask.id) === taskId) {
           setSelectedTask(prev => ({ ...prev, status: 'Accepted', assignmentStatus: 'ACCEPTED' }));
         }
-        await fetchTasks();
+        await fetchTasks(true);
       } else {
         alert(res?.message || 'Failed to accept task.');
       }
@@ -376,7 +383,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
           }));
         }
         setRejectModalTask(null);
-        await fetchTasks();
+        await fetchTasks(true);
       } else {
         setRejectError(res?.message || 'Failed to reject task.');
       }
@@ -409,7 +416,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
             progress: 50
           }));
         }
-        await fetchTasks();
+        await fetchTasks(true);
       }
       // Bug 18: Start opens the task execution page/modal with required deliverables
       openCompletionModal(updatedItem, false);
@@ -566,7 +573,7 @@ const Tasks = ({ onNavigate, filterParams = {} }) => {
           setSelectedTask(null);
         }
         setCompletionModalTask(null);
-        await fetchTasks();
+        await fetchTasks(true);
       } else {
         setCompletionError(res?.message || 'Failed to complete task.');
       }

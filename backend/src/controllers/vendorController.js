@@ -37,6 +37,14 @@ const maskGst = (gst) => {
   return `${stateCode}•••••••••${endCode}`;
 };
 
+const maskAadhaar = (aadhaar) => {
+  if (!aadhaar) return '—';
+  const clean = String(aadhaar).replace(/\D/g, '');
+  if (clean.length < 4) return aadhaar;
+  const last4 = clean.slice(-4);
+  return `XXXX-XXXX-${last4}`;
+};
+
 // High-speed in-memory location lookup map to eliminate N+1 database queries
 const locationMemoryLookup = {
   states: new Map(),
@@ -536,12 +544,15 @@ const getVendorById = async (req, res) => {
     // Check if client requested unmasked view (detail view permission)
     const showFull = req.query?.unmask === 'true' || req.query?.showFull === 'true';
     const isDraftIncomplete = isVendorIncompleteDraft(withManagers);
+    const rawAadhaar = withManagers.aadhaarNumber || withManagers.aadharNumber || '';
     const responseData = {
       ...withManagers,
       onboardedBy: withManagers.onboardedBy || withManagers.assignedFieldManager || withManagers.registeredBy || null,
       isEligibleForResume: isDraftIncomplete,
       hasIncompleteDraft: isDraftIncomplete,
       panNumber: showFull ? withManagers.panNumber : maskPan(withManagers.panNumber),
+      aadhaarNumber: showFull ? rawAadhaar : (rawAadhaar ? maskAadhaar(rawAadhaar) : '—'),
+      aadharNumber: showFull ? rawAadhaar : (rawAadhaar ? maskAadhaar(rawAadhaar) : '—'),
       accountNumber: showFull ? withManagers.accountNumber : maskAccount(withManagers.accountNumber),
       gstNumber: showFull ? withManagers.gstNumber : maskGst(withManagers.gstNumber),
       isMasked: !showFull
@@ -820,6 +831,8 @@ const createVendor = async (req, res) => {
       pincodeArea: pincodeDoc?.areaName || req.body.pincodeArea || '',
       fieldVisitId,
       panNumber: cleanPanNumber,
+      aadhaarNumber: cleanAadhaarNum || null,
+      aadharNumber: cleanAadhaarNum || null,
       gstNumber: rawGst || '',
       gst: rawGst || '',
       documents: Array.isArray(documents) ? documents : [],
@@ -963,10 +976,12 @@ const updateVendor = async (req, res) => {
       if (holderErr) return res.status(400).json({ success: false, message: holderErr });
       updates.accountHolderName = formatName(updates.accountHolderName);
     }
-    if (updates.aadhaarNumber) {
-      const aadharErr = validateAadhaar(updates.aadhaarNumber, false);
+    const rawUpdateAadhaar = updates.aadhaarNumber || updates.aadhaar || updates.aadharNumber;
+    if (rawUpdateAadhaar) {
+      const aadharErr = validateAadhaar(rawUpdateAadhaar, false);
       if (aadharErr) return res.status(400).json({ success: false, message: aadharErr });
-      updates.aadhaarNumber = cleanAadhaar(updates.aadhaarNumber);
+      updates.aadhaarNumber = cleanAadhaar(rawUpdateAadhaar);
+      updates.aadharNumber = updates.aadhaarNumber;
     }
     if (updates.alternatePhone) {
       const altErr = validateMobile(updates.alternatePhone, false, 'Alternate mobile');

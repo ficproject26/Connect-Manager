@@ -2671,16 +2671,36 @@ const uploadDocument = async (req, res) => {
       });
     }
 
-    const s3Result = await uploadToS3(file.buffer || file.path, 'manager_docs', file.originalname);
-    const fileUrl = s3Result.url;
+    let fileUrl;
+    let fileKey;
+    try {
+      const s3Result = await uploadToS3(file.buffer || file.path, 'manager_docs', file.originalname);
+      fileUrl = s3Result.url;
+      fileKey = s3Result.key;
+    } catch (s3Err) {
+      console.warn('S3 upload fallback to local storage for document:', s3Err.message);
+      const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
+      if (!fs.existsSync(UPLOAD_DIR)) {
+        fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+      }
+      const safeFilename = `doc_${Date.now()}_${path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+      const localFilePath = path.join(UPLOAD_DIR, safeFilename);
+      if (file.buffer) {
+        fs.writeFileSync(localFilePath, file.buffer);
+      } else if (file.path && fs.existsSync(file.path)) {
+        fs.copyFileSync(file.path, localFilePath);
+      }
+      fileUrl = `/uploads/${safeFilename}`;
+      fileKey = safeFilename;
+    }
 
     res.json({
       success: true,
-      message: 'Document uploaded successfully to AWS S3',
+      message: 'Document uploaded successfully',
       file: {
         name: file.originalname,
-        filename: s3Result.key,
-        key: s3Result.key,
+        filename: fileKey,
+        key: fileKey,
         url: fileUrl,
         secure_url: fileUrl,
         size: file.size,
@@ -3121,11 +3141,7 @@ const getBankDetails = async (req, res) => {
     if (!user) {
       user = await db.users.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
     }
-    if (!user && db.managers) {
-      user = await db.managers.findById(userId) || await db.managers.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
-    }
-
-    const bankDetails = user?.bankDetails || user?.bankAccount || null;
+    const bankDetails = await resolveUserBankDetails(user);
     return res.json({
       success: true,
       bankDetails: bankDetails || {

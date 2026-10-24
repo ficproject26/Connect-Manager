@@ -474,10 +474,12 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Business Category</span>
                   <strong style={{ color: 'var(--text-main)' }}>{vendor.category || 'General'}</strong>
                 </div>
-                <div>
-                  <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Sub-Category</span>
-                  <strong style={{ color: 'var(--text-main)' }}>{vendor.subCategory || 'General Merchandise'}</strong>
-                </div>
+                {vendor.subCategory ? (
+                  <div>
+                    <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Sub-Category</span>
+                    <strong style={{ color: 'var(--text-main)' }}>{vendor.subCategory}</strong>
+                  </div>
+                ) : null}
                 <div>
                   <span style={{ color: 'var(--text-muted)', display: 'block', fontSize: '0.75rem', fontWeight: 600 }}>Contact Person</span>
                   <strong style={{ color: 'var(--text-main)' }}>{vendor.contactPerson || vendor.name}</strong>
@@ -843,7 +845,7 @@ const VendorDetails = ({ vendorId, onNavigate }) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>
                   <span style={{ color: 'var(--text-muted)' }}>Aadhaar Number:</span>
                   <code style={{ fontSize: '0.9rem', fontWeight: 800, background: 'var(--bg-subtle)', color: 'var(--text-main)', padding: '2px 8px', borderRadius: '4px' }}>
-                    {maskText(vendor.aadhaarNumber, 2, 4)}
+                    {vendor.aadhaarNumber || vendor.aadharNumber ? (unmasked ? (vendor.aadhaarNumber || vendor.aadharNumber) : ((vendor.aadhaarNumber || vendor.aadharNumber).includes('X') || (vendor.aadhaarNumber || vendor.aadharNumber).includes('•') ? (vendor.aadhaarNumber || vendor.aadharNumber) : maskText(vendor.aadhaarNumber || vendor.aadharNumber, 2, 4))) : '—'}
                   </code>
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid var(--border-subtle)', paddingBottom: '8px' }}>

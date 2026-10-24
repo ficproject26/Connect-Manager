@@ -256,7 +256,10 @@ function AppInner() {
   const handleFieldVisitProceed = (fieldVisitId, prefillData) => {
     setFieldVisitModalOpen(false);
     setPendingFieldVisitId(fieldVisitId);
-    setPendingPrefill(prefillData || {});
+    setPendingPrefill({
+      ...(prefillData || {}),
+      fieldVisitId: fieldVisitId || prefillData?.fieldVisitId || null
+    });
     setOnboardModalOpen(true);
   };
 
@@ -482,6 +485,7 @@ function AppInner() {
                 </div>
                 <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
                   <VendorForm
+                    key={pendingFieldVisitId || (pendingPrefill?.isNewSession ? `session_${Date.now()}` : 'vendor_form_instance')}
                     prefill={pendingPrefill}
                     initialData={pendingPrefill}
                     fieldVisitId={pendingFieldVisitId}

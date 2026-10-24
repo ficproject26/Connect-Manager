@@ -236,6 +236,9 @@ class TerritoryScopeService {
    */
   getRoleLevel(role) {
     const r = norm(role);
+    if (!r) return 99;
+    if (r === 'agent' || r === 'field_agent' || (r.includes('agent') && !r.includes('manager'))) return 99;
+    if (['state', 'district', 'division', 'pincode'].includes(r)) return 99; // bare agent tier designations
     if (r.includes('pincode') || r.includes('pin_')) return 4;
     if (r.includes('division') || r.includes('divisional')) return 3;
     if (r.includes('district')) return 2;
@@ -357,6 +360,13 @@ class TerritoryScopeService {
     const reportRole = report.managerRole || report.recordedByRole || report.role || '';
     const reportLevel = this.getRoleLevel(reportRole);
 
+    // Strictly enforce role-based boundaries: exclude field agent logs from manager report views
+    const rawRole = norm(reportRole);
+    const isAgent = rawRole === 'agent' || rawRole === 'field_agent' || (rawRole.includes('agent') && !rawRole.includes('manager')) || ['state', 'district', 'division', 'pincode'].includes(rawRole);
+    if (isAgent) {
+      return false;
+    }
+
     // Strict Rule: A lower-tier manager can NEVER access report history of a higher-tier manager
     if (!isOwner && !isGlobalAdmin) {
       if (reportLevel < userLevel) return false;
@@ -381,6 +391,7 @@ class TerritoryScopeService {
     }
 
     // 3. "All Reports" Tab (scope === 'all' or empty)
+    if (reportLevel === 99) return false;
     if (isGlobalAdmin) return true;
 
     // A. State Manager: self + all authorized subordinates in state

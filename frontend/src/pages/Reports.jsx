@@ -66,8 +66,19 @@ const getCategoryBadgeStyle = (cat) => {
 };
 
 const formatRoleLabel = (role) => {
-  if (!role) return 'Pincode Manager';
+  if (!role) return 'Manager';
   const clean = normalizeString(role).toLowerCase().replace(/_/g, ' ');
+  if (clean.includes('agent')) {
+    if (clean.includes('state')) return 'State Agent';
+    if (clean.includes('district')) return 'District Agent';
+    if (clean.includes('division') || clean.includes('divisional')) return 'Division Agent';
+    if (clean.includes('pincode')) return 'Pincode Agent';
+    return 'Field Agent';
+  }
+  if (clean === 'pincode') return 'Pincode Agent';
+  if (clean === 'state') return 'State Agent';
+  if (clean === 'division' || clean === 'divisional') return 'Division Agent';
+  if (clean === 'district') return 'District Agent';
   if (clean.includes('state')) return 'State Manager';
   if (clean.includes('district')) return 'District Manager';
   if (clean.includes('division') || clean.includes('divisional')) return 'Division Manager';
@@ -470,13 +481,28 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
 
   const totalVisitCount = pagination && typeof pagination.total === 'number' && pagination.total >= 0
     ? pagination.total
-    : (typeof kpiStats.total === 'number' && kpiStats.total >= 0 ? kpiStats.total : safeVisits.length);
-  const interestedCount = typeof kpiStats.interested === 'number' && kpiStats.interested >= 0
+    : (kpiStats && typeof kpiStats.total === 'number' && kpiStats.total >= 0 ? kpiStats.total : safeVisits.length);
+
+  const computedInterested = safeVisits.filter(v => v && (
+    v.interestedStatus === 'YES' || v.interestStatus === 'YES' ||
+    String(v.interestedStatus || v.interestStatus || '').toUpperCase() === 'YES' ||
+    String(v.interestedStatus || v.interestStatus || '').toLowerCase() === 'interested'
+  )).length;
+
+  const computedNotInterested = safeVisits.filter(v => v && (
+    v.interestedStatus === 'NO' || v.interestStatus === 'NO' ||
+    String(v.interestedStatus || v.interestStatus || '').toUpperCase() === 'NO' ||
+    String(v.interestedStatus || v.interestStatus || '').toLowerCase() === 'not interested' ||
+    String(v.interestedStatus || v.interestStatus || '').toLowerCase() === 'notinterested'
+  )).length;
+
+  const interestedCount = (kpiStats && typeof kpiStats.interested === 'number' && kpiStats.interested > 0)
     ? kpiStats.interested
-    : safeVisits.filter(v => v && (v.interestedStatus === 'YES' || v.interestStatus === 'YES')).length;
-  const notInterestedCount = typeof kpiStats.notInterested === 'number' && kpiStats.notInterested >= 0
+    : computedInterested;
+
+  const notInterestedCount = (kpiStats && typeof kpiStats.notInterested === 'number' && kpiStats.notInterested > 0)
     ? kpiStats.notInterested
-    : safeVisits.filter(v => v && (v.interestedStatus === 'NO' || v.interestStatus === 'NO')).length;
+    : computedNotInterested;
 
   const isVisitsFiltered = (statusFilter && statusFilter !== 'All') ||
     (categoryFilter && categoryFilter !== 'All') ||
@@ -2686,49 +2712,98 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
             }}>
               <span style={{ fontSize: '0.76rem', color: '#94a3b8' }}>Forge India Connect Field Portal</span>
               <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {selectedVisit.interestedStatus === 'YES' && !selectedVisit.vendorId && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const v = selectedVisit;
-                      setSelectedVisit(null);
-                      if (onNavigate) {
-                        onNavigate('resume-onboarding', {
-                          fieldVisitId: v._id || v.id,
-                          prefillData: {
-                            shopName: v.shopName,
-                            businessName: v.shopName,
-                            category: v.category || 'Products',
-                            storefrontPhoto: v.storefrontPhoto || v.shopPhoto || '',
-                            mobile: v.mobile || v.phone || '',
-                            pincodeCode: v.pincodeCode || v.pincode || '',
-                            pincodeId: v.pincodeId || '',
-                            districtId: v.districtId || '',
-                            stateId: v.stateId || '',
-                            address: v.address || v.location || '',
-                            fieldVisitId: v._id || v.id
+                {(() => {
+                  const isInterested = selectedVisit.interestedStatus === 'YES' || selectedVisit.interestStatus === 'YES';
+                  if (!isInterested) return null;
+
+                  const isCompletedOrSubmitted = selectedVisit.vendorId || selectedVisit.isOnboardingCompleted || selectedVisit.onboardingStatus === 'COMPLETED' || selectedVisit.onboardingStatus === 'PENDING' || ['Pending', 'Active', 'Approved', 'Submitted'].includes(selectedVisit.vendorStatus);
+
+                  if (isCompletedOrSubmitted) {
+                    const isPending = selectedVisit.vendorStatus === 'Pending' || selectedVisit.onboardingStatus === 'PENDING' || !['Active', 'Approved'].includes(selectedVisit.vendorStatus);
+                    return (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const vId = selectedVisit.vendorId;
+                          setSelectedVisit(null);
+                          if (vId && onNavigate) {
+                            onNavigate('vendor-details', { vendorId: vId });
+                          } else if (onNavigate) {
+                            onNavigate('vendors');
                           }
-                        });
-                      }
-                    }}
-                    style={{
-                      padding: '8px 18px',
-                      borderRadius: 8,
-                      border: 'none',
-                      background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                      color: '#ffffff',
-                      fontSize: '0.84rem',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 6,
-                      boxShadow: '0 2px 8px rgba(245, 158, 11, 0.35)'
-                    }}
-                  >
-                    <Sparkles size={14} /> Resume Onboarding
-                  </button>
-                )}
+                        }}
+                        style={{
+                          padding: '8px 18px',
+                          borderRadius: 8,
+                          border: 'none',
+                          background: isPending ? 'linear-gradient(135deg, #0284c7, #0369a1)' : 'linear-gradient(135deg, #10b981, #059669)',
+                          color: '#ffffff',
+                          fontSize: '0.84rem',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          boxShadow: isPending ? '0 2px 8px rgba(2, 132, 199, 0.35)' : '0 2px 8px rgba(16, 185, 129, 0.35)'
+                        }}
+                      >
+                        {isPending ? (
+                          <>
+                            <Clock size={14} /> Pending Approval
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 size={14} /> View Details
+                          </>
+                        )}
+                      </button>
+                    );
+                  }
+
+                  return (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const v = selectedVisit;
+                        setSelectedVisit(null);
+                        if (onNavigate) {
+                          onNavigate('resume-onboarding', {
+                            fieldVisitId: v._id || v.id,
+                            prefillData: {
+                              shopName: v.shopName,
+                              businessName: v.shopName,
+                              category: v.category || 'Products',
+                              storefrontPhoto: v.storefrontPhoto || v.shopPhoto || '',
+                              mobile: v.mobile || v.phone || '',
+                              pincodeCode: v.pincodeCode || v.pincode || '',
+                              pincodeId: v.pincodeId || '',
+                              districtId: v.districtId || '',
+                              stateId: v.stateId || '',
+                              address: v.address || v.location || '',
+                              fieldVisitId: v._id || v.id
+                            }
+                          });
+                        }
+                      }}
+                      style={{
+                        padding: '8px 18px',
+                        borderRadius: 8,
+                        border: 'none',
+                        background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                        color: '#ffffff',
+                        fontSize: '0.84rem',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        boxShadow: '0 2px 8px rgba(245, 158, 11, 0.35)'
+                      }}
+                    >
+                      <Sparkles size={14} /> Resume Onboarding
+                    </button>
+                  );
+                })()}
                 <button
                   type="button"
                   onClick={() => setSelectedVisit(null)}

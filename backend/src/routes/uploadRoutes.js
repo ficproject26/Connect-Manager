@@ -54,16 +54,36 @@ const handleDocumentUpload = (req, res) => {
         targetFolder = 'manager_images';
       }
 
-      const s3Result = await uploadToS3(file.buffer || file.path, targetFolder, file.originalname);
-      const fileUrl = s3Result.url;
+      let fileUrl;
+      let fileKey;
+      try {
+        const s3Result = await uploadToS3(file.buffer || file.path, targetFolder, file.originalname);
+        fileUrl = s3Result.url;
+        fileKey = s3Result.key;
+      } catch (s3Err) {
+        console.warn('S3 upload fallback to local storage:', s3Err.message);
+        const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
+        if (!fs.existsSync(UPLOAD_DIR)) {
+          fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+        }
+        const safeFilename = `${targetFolder}_${Date.now()}_${safeOriginalName}`;
+        const localFilePath = path.join(UPLOAD_DIR, safeFilename);
+        if (file.buffer) {
+          fs.writeFileSync(localFilePath, file.buffer);
+        } else if (file.path && fs.existsSync(file.path)) {
+          fs.copyFileSync(file.path, localFilePath);
+        }
+        fileUrl = `/uploads/${safeFilename}`;
+        fileKey = safeFilename;
+      }
 
       res.json({
         success: true,
-        message: 'File uploaded successfully to AWS S3',
+        message: 'File uploaded successfully',
         file: {
           name: safeOriginalName,
-          filename: s3Result.key,
-          key: s3Result.key,
+          filename: fileKey,
+          key: fileKey,
           url: fileUrl,
           secure_url: fileUrl,
           size: file.size,
@@ -116,8 +136,28 @@ const handleAvatarUpload = (req, res) => {
         }
       }
 
-      const s3Result = await uploadToS3(file.buffer || file.path, 'manager_avatars', file.originalname);
-      const fileUrl = s3Result.url;
+      let fileUrl;
+      let fileKey;
+      try {
+        const s3Result = await uploadToS3(file.buffer || file.path, 'manager_avatars', file.originalname);
+        fileUrl = s3Result.url;
+        fileKey = s3Result.key;
+      } catch (s3Err) {
+        console.warn('S3 avatar upload fallback to local storage:', s3Err.message);
+        const UPLOAD_DIR = path.join(__dirname, '..', '..', 'uploads');
+        if (!fs.existsSync(UPLOAD_DIR)) {
+          fs.mkdirSync(UPLOAD_DIR, { recursive: true });
+        }
+        const safeFilename = `avatar_${Date.now()}_${path.basename(file.originalname).replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+        const localFilePath = path.join(UPLOAD_DIR, safeFilename);
+        if (file.buffer) {
+          fs.writeFileSync(localFilePath, file.buffer);
+        } else if (file.path && fs.existsSync(file.path)) {
+          fs.copyFileSync(file.path, localFilePath);
+        }
+        fileUrl = `/uploads/${safeFilename}`;
+        fileKey = safeFilename;
+      }
 
       res.json({
         success: true,
@@ -125,8 +165,8 @@ const handleAvatarUpload = (req, res) => {
         avatarUrl: fileUrl,
         file: {
           name: file.originalname,
-          filename: s3Result.key,
-          key: s3Result.key,
+          filename: fileKey,
+          key: fileKey,
           url: fileUrl,
           secure_url: fileUrl,
           size: file.size,

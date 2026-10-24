@@ -352,10 +352,18 @@ const FieldShopVisitModal = ({ onClose, onProceedToOnboarding }) => {
       }
 
       // Merchant is interested — proceed to vendor onboarding
-      onProceedToOnboarding(res.data._id || res.data.id, {
-        shopName:        shopName.trim(),
+      const visitId = res.data?._id || res.data?.id || null;
+      onProceedToOnboarding(visitId, {
+        fieldVisitId: visitId,
+        isNewSession: true,
+        businessName: shopName.trim(),
+        shopName: shopName.trim(),
+        name: shopName.trim(),
+        category: businessCategory,
         businessCategory,
         storefrontPhoto: storefrontUrl,
+        shopPhoto: storefrontUrl,
+        businessImages: storefrontUrl ? [storefrontUrl] : []
       });
     } catch (err) {
       setError(err.message || 'An error occurred. Please try again.');

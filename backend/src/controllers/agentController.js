@@ -144,14 +144,15 @@ const normalizeAgent = (a) => {
   if (division) coverage += ` > ${division}`;
   if (pincode) coverage += ` (${pincode})`;
 
-  const agentId = a.agentId || a.agentCode || a.id || a._id;
-  const agentCode = a.agentCode || a.agentId || a.id || a._id;
+  const agentId = a.agentId || a.agentCode || (typeof a.id === 'string' && a.id.startsWith('AGT-') ? a.id : null) || a.registrationId || (typeof a._id === 'string' ? a._id : (a._id?.toString?.() || String(a._id)));
+  const agentCode = a.agentCode || a.agentId || (typeof a.id === 'string' && a.id.startsWith('AGT-') ? a.id : null) || a.registrationId || String(agentId);
 
   return {
     ...a,
     id: agentId,
     agentId,
     agentCode,
+    registrationId: a.registrationId || agentId,
     level: computedLevel,
     roleLevel: computedLevel,
     role: typeof a.role === 'string' ? a.role : `${computedLevel}_agent`,
@@ -183,7 +184,27 @@ const getAgents = async (req, res) => {
     const payload = await cacheManager.fetchWithCache(cacheKey, async () => {
       const { status, level, search } = req.query;
 
-      const allAgents = await db.agents.find();
+      const [allAgents, allVendors] = await Promise.all([
+        db.agents.find(),
+        db.vendors ? db.vendors.find() : []
+      ]);
+
+      // Map vendor onboardings by agent identifier
+      const agentVendorCountMap = new Map();
+      (allVendors || []).forEach(v => {
+        const ids = [
+          v.onboardedBy,
+          v.agentId,
+          v.agentCode,
+          v.createdBy,
+          v.assignedTo,
+          v.agentName
+        ].filter(Boolean).map(x => String(typeof x === 'object' ? (x._id || x.id || x.name) : x).trim().toLowerCase());
+
+        ids.forEach(id => {
+          agentVendorCountMap.set(id, (agentVendorCountMap.get(id) || 0) + 1);
+        });
+      });
 
       // Deduplicate agents by unique identifiers
       const seen = new Set();
@@ -192,7 +213,25 @@ const getAgents = async (req, res) => {
         const key = String(a.registrationId || a._id || a.id || a.email || a.phone || a.mobile);
         if (!seen.has(key)) {
           seen.add(key);
-          unique.push(normalizeAgent(a));
+          const norm = normalizeAgent(a);
+          const agentKeys = [
+            String(a._id || ''),
+            String(a.id || ''),
+            String(a.agentId || ''),
+            String(a.agentCode || ''),
+            String(a.registrationId || ''),
+            String(a.name || '').toLowerCase()
+          ].filter(Boolean).map(k => k.trim().toLowerCase());
+
+          let vendorCount = Number(a.vendorOnboardings || a.vendorsCount || a.vendorsOnboarded || 0);
+          for (const k of agentKeys) {
+            if (agentVendorCountMap.has(k)) {
+              vendorCount = Math.max(vendorCount, agentVendorCountMap.get(k));
+            }
+          }
+          norm.vendorOnboardings = vendorCount;
+          norm.vendorsOnboarded = vendorCount;
+          unique.push(norm);
         }
       }
 
@@ -200,11 +239,7 @@ const getAgents = async (req, res) => {
         // Scope filtering
         if (!isAgentInScope(a, user)) return false;
 
-        // Exclude pending KYC agents - manager directory strictly surfaces Active & Suspended agents
         const aStatus = String(a.status || 'Active').toLowerCase();
-        if (['pending kyc', 'kyc pending', 'pending_kyc', 'pending'].includes(aStatus)) {
-          return false;
-        }
 
         // Status filter
         if (status && status !== 'All') {

@@ -80,7 +80,13 @@ const Dashboard = ({ onNavigate }) => {
   // Live Stats fetcher
   useEffect(() => {
     fetchDashboardMetrics();
-  }, [user?.id || user?._id]);
+    const unsub = cacheClient.subscribe ? cacheClient.subscribe(userCacheKey, (freshData) => {
+      if (freshData) setDashboardData(freshData);
+    }) : undefined;
+    return () => {
+      if (typeof unsub === 'function') unsub();
+    };
+  }, [user?.id || user?._id, userCacheKey]);
 
   // Real-time synchronization: refresh dashboard metrics when tasks, vendors, or agents change
   useRealtime('*', (event) => {
@@ -93,7 +99,7 @@ const Dashboard = ({ onNavigate }) => {
 
 
   // Exact KPI Metrics computed from database
-  const kpis = dashboardData?.kpiMetrics || {
+  const kpis = dashboardData?.kpiMetrics || dashboardData?.kpis || dashboardData?.data || {
     totalManagers: 0,
     activeManagers: 0,
     managersBreakdown: '0 State | 0 District | 0 Division | 0 Pincode',

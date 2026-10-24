@@ -235,11 +235,17 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     territoryConfigError = 'Manager account does not have an assigned Pincode. Cannot onboard vendor without assigned pincode.';
   }
 
-  const draftStorageKey = `vendor_onboarding_draft_${prefill?.fieldVisitId || prefill?._id || prefill?.mobile || user?.id || 'default'}`;
+  const resolvedVisitId = fieldVisitId || prefill?.fieldVisitId || initialData?.fieldVisitId || null;
+  const isNewSession = Boolean(prefill?.isNewSession || initialData?.isNewSession);
+  const draftStorageKey = resolvedVisitId
+    ? `vendor_onboarding_draft_visit_${resolvedVisitId}`
+    : (isNewSession
+        ? `vendor_onboarding_draft_session_${Date.now()}`
+        : `vendor_onboarding_draft_${prefill?._id || (prefill?.mobile && prefill.mobile.length >= 10 ? prefill.mobile : null) || user?.id || 'default'}`);
 
   const getBlank = () => {
     let savedDraft = null;
-    if (typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== 'undefined' && !isNewSession) {
       try {
         const raw = localStorage.getItem(draftStorageKey);
         if (raw) savedDraft = JSON.parse(raw);
@@ -248,7 +254,14 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
 
     const prefillData = prefill || {};
     const initData = initialData || {};
-    const effectivePrefill = { ...(savedDraft || {}), ...prefillData, ...initData };
+    // Strip empty values from prefill and initialData so they don't overwrite savedDraft fields
+    const cleanPrefill = Object.fromEntries(
+      Object.entries(prefillData).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+    );
+    const cleanInit = Object.fromEntries(
+      Object.entries(initData).filter(([_, v]) => v !== '' && v !== null && v !== undefined)
+    );
+    const effectivePrefill = { ...(savedDraft || {}), ...cleanPrefill, ...cleanInit };
     const prefillShop = effectivePrefill.shopName || effectivePrefill.businessName || '';
     const prefillCat = effectivePrefill.businessCategory || effectivePrefill.category || CATEGORIES[0];
     const prefillDocs = effectivePrefill.storefrontPhoto
@@ -310,7 +323,7 @@ const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCance
     if (initialData?.step) return Number(initialData.step);
     if (prefill?.step) return Number(prefill.step);
     let savedDraft = null;
-    if (typeof localStorage !== 'undefined') {
+    if (typeof localStorage !== 'undefined' && !isNewSession) {
       try {
         const raw = localStorage.getItem(draftStorageKey);
         if (raw) savedDraft = JSON.parse(raw);

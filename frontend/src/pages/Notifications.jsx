@@ -217,10 +217,17 @@ const Notifications = ({ onNavigate }) => {
   const handleClickItem = (n) => {
     markAsRead(n._id || n.id);
     if (onNavigate) {
-      if (n.type?.startsWith('vendor') || n.entityType === 'vendor') {
+      const vendorId = n.metadata?.vendorId || n.entityId || n.vendorId || (n.type?.startsWith('vendor') ? (n.metadata?.id || n.entityId) : null);
+      if ((n.type?.startsWith('vendor') || n.entityType === 'vendor') && vendorId) {
+        onNavigate('vendor-details', { vendorId });
+      } else if (n.type?.startsWith('vendor') || n.entityType === 'vendor') {
         onNavigate('vendors');
       } else if (n.type?.startsWith('task') || n.entityType === 'task') {
-        onNavigate('tasks');
+        onNavigate('tasks', { taskId: n.metadata?.taskId || n.entityId });
+      } else if (n.type?.startsWith('shop_visit') || n.entityType === 'shop_visit') {
+        onNavigate('visits', { visitId: n.metadata?.visitId || n.entityId });
+      } else if (n.type?.startsWith('agent') || n.entityType === 'agent') {
+        onNavigate('agent-directory', { agentId: n.metadata?.agentId || n.entityId });
       }
     }
   };

@@ -707,6 +707,8 @@ const Profile = () => {
                     </span>
                   )}
                 </div>
+              </div>
+
               <div>
                 <label className="form-label" style={{ color: 'var(--text-muted)' }}>Manager ID</label>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', background: 'var(--bg-subtle)', padding: '4px 10px', borderRadius: '6px', fontFamily: 'monospace', fontWeight: 700, fontSize: '0.85rem', color: 'var(--text-main)' }}>
@@ -1594,7 +1596,6 @@ const Profile = () => {
         </div>
       </div>
     </div>
-  </div>
 );
 };
 

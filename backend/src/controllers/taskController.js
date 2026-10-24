@@ -769,6 +769,10 @@ const updateTaskStatus = async (req, res) => {
       }
     });
 
+    // Invalidate cached task lists across instances
+    await cacheManager.invalidateEntity('task', id).catch(() => null);
+    await cacheManager.purgeLocalEntity('tasks', null, true).catch(() => null);
+
     res.json({ success: true, message: `Task status updated to ${nextStatus}`, data: updatedTask });
   } catch (err) {
     console.error('Error updating task status:', err);

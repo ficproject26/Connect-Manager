@@ -241,45 +241,90 @@ const getDashboardStats = async (req, res) => {
 
     const isGlobalAdmin = ['admin', 'super_admin', 'super-admin'].includes(user.role) || user.email === 'admin@example.com';
 
+    const currentUserId = String(user.id || user._id || '');
+    const currentUserEmail = (user.email || '').trim().toLowerCase();
+    const isSelfUser = (u) => {
+      const uId = String(u._id || u.id || '');
+      const uEmail = (u.email || '').trim().toLowerCase();
+      return (currentUserId && uId === currentUserId) || (currentUserEmail && uEmail === currentUserEmail);
+    };
+
+    const isApprovedManager = (u) => {
+      if (!u) return false;
+      if (isSelfUser(u)) return false;
+      const st = String(u.status || '').toLowerCase().trim();
+      const ost = String(u.overallRegistrationStatus || '').toLowerCase().trim();
+      if (st === 'deleted' || st.includes('reject')) return false;
+      if (ost.includes('reject')) return false;
+      if (st.includes('pending') || ost.includes('pending') || st.includes('review') || ost.includes('review')) return false;
+      if (u.isActive === false || u.isApproved === false) return false;
+      return ['active', 'approved'].includes(st) || ['active', 'approved'].includes(ost) || u.isApproved === true;
+    };
+
     const isManagerRole = (r) => ['state_manager', 'district_manager', 'division_manager', 'pincode_manager', 'manager'].includes(r);
     const allManagersList = allUsers.filter(u => isManagerRole(u.role));
 
     if (isGlobalAdmin) {
-      scopedManagers = allManagersList;
+      scopedManagers = allManagersList.filter(u => !isSelfUser(u) && isApprovedManager(u));
       const sCount = scopedManagers.filter(u => u.role === 'state_manager').length;
       const dCount = scopedManagers.filter(u => u.role === 'district_manager').length;
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${sCount} State | ${dCount} District | ${vCount} Division | ${pCount} Pincode`;
     } else if (user.role === 'state_manager') {
-      scopedManagers = allManagersList.filter(u => !user.stateId || u.stateId === user.stateId || u.state === user.state);
-      const sCount = scopedManagers.filter(u => u.role === 'state_manager').length;
-      const dCount = scopedManagers.filter(u => u.role === 'district_manager').length;
-      const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
-      const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
-      managersBreakdownText = `${sCount} State | ${dCount} District | ${vCount} Division | ${pCount} Pincode`;
-    } else if (user.role === 'district_manager') {
-      scopedManagers = allManagersList.filter(u => !user.districtId || u.districtId === user.districtId || u.district === user.district);
+      scopedManagers = allManagersList.filter(u => {
+        if (!isApprovedManager(u)) return false;
+        // Subordinate managers under State Manager: district, division, and pincode managers within the state
+        if (!['district_manager', 'division_manager', 'pincode_manager'].includes(u.role)) return false;
+        const uState = (u.state || u.stateName || u.assignedState || '').trim().toLowerCase();
+        const myState = (user.state || user.stateName || user.assignedState || '').trim().toLowerCase();
+        const uStateId = String(u.stateId || u.regionId || '');
+        const myStateId = String(user.stateId || user.regionId || '');
+        if (myStateId && uStateId && myStateId === uStateId) return true;
+        if (myState && uState && myState === uState) return true;
+        return !myStateId && !myState;
+      });
       const dCount = scopedManagers.filter(u => u.role === 'district_manager').length;
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${dCount} District | ${vCount} Division | ${pCount} Pincode`;
-    } else if (user.role === 'division_manager') {
-      scopedManagers = allManagersList.filter(u => !user.divisionId || u.divisionId === user.divisionId || u.division === user.division);
+    } else if (user.role === 'district_manager') {
+      scopedManagers = allManagersList.filter(u => {
+        if (!isApprovedManager(u)) return false;
+        if (!['division_manager', 'pincode_manager'].includes(u.role)) return false;
+        const uDist = (u.district || u.districtName || u.assignedDistrict || '').trim().toLowerCase();
+        const myDist = (user.district || user.districtName || user.assignedDistrict || '').trim().toLowerCase();
+        const uDistId = String(u.districtId || '');
+        const myDistId = String(user.districtId || '');
+        if (myDistId && uDistId && myDistId === uDistId) return true;
+        if (myDist && uDist && myDist === uDist) return true;
+        return !myDistId && !myDist;
+      });
       const vCount = scopedManagers.filter(u => u.role === 'division_manager').length;
       const pCount = scopedManagers.filter(u => u.role === 'pincode_manager').length;
       managersBreakdownText = `${vCount} Division | ${pCount} Pincode`;
-    } else if (user.role === 'pincode_manager') {
-      scopedManagers = allManagersList.filter(u => !user.pincodeId || u.pincodeId === user.pincodeId || u.pincode === user.pincode);
+    } else if (user.role === 'division_manager') {
+      scopedManagers = allManagersList.filter(u => {
+        if (!isApprovedManager(u)) return false;
+        if (u.role !== 'pincode_manager') return false;
+        const uDiv = (u.division || u.divisionName || u.assignedDivision || '').trim().toLowerCase();
+        const myDiv = (user.division || user.divisionName || user.assignedDivision || '').trim().toLowerCase();
+        const uDivId = String(u.divisionId || '');
+        const myDivId = String(user.divisionId || '');
+        if (myDivId && uDivId && myDivId === uDivId) return true;
+        if (myDiv && uDiv && myDiv === uDiv) return true;
+        return !myDivId && !myDiv;
+      });
       managersBreakdownText = `${scopedManagers.length} Pincode Managers`;
+    } else if (user.role === 'pincode_manager') {
+      scopedManagers = [];
+      managersBreakdownText = `0 Subordinate Managers`;
     } else {
-      scopedManagers = allManagersList;
+      scopedManagers = allManagersList.filter(u => !isSelfUser(u) && isApprovedManager(u));
       managersBreakdownText = `${scopedManagers.length} Managers`;
     }
 
-    // Exclude deleted managers from total & active counts
-    scopedManagers = scopedManagers.filter(u => String(u.status || '').toLowerCase() !== 'deleted');
-    const activeManagersCount = scopedManagers.filter(u => ['active', 'approved'].includes(String(u.status || '').toLowerCase()) || u.isApproved === true).length;
+    const activeManagersCount = scopedManagers.length;
 
     // Time calculations strictly in Asia/Kolkata (+05:30) timezone
     const now = new Date();
@@ -497,6 +542,7 @@ const getDashboardStats = async (req, res) => {
       trendData,
       categoryCounts,
       kpiMetrics,
+      kpis: kpiMetrics,
       stats: kpiMetrics,
       data: kpiMetrics,
       roleSpecificData,

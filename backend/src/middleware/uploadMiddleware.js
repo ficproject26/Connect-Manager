@@ -141,11 +141,7 @@ const logoUploadFields = logoUpload.fields([
   { name: 'file', maxCount: 1 }
 ]);
 
-const documentUploadFields = documentUpload.fields([
-  { name: 'document', maxCount: 1 },
-  { name: 'file', maxCount: 1 },
-  { name: 'businessLicense', maxCount: 1 }
-]);
+const documentUploadFields = documentUpload.any();
 
 module.exports = upload;
 module.exports.upload = upload;

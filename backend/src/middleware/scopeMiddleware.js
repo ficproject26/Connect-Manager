@@ -280,16 +280,48 @@ const validateVendorCreationScope = async (req, res, next) => {
     }
     // 4. STATE MANAGER / STATE ADMIN
     else if (rawRole === 'state_manager' || rawRole === 'state_admin' || rawRole.includes('state')) {
-      const assignedState = norm(user.stateId || userRegion);
+      const userStateIds = new Set([
+        norm(user.stateId),
+        norm(user.regionId),
+        norm(user.state),
+        norm(user.stateName),
+        norm(user.assignedState),
+        norm(userRegion)
+      ].filter(Boolean));
 
-      if (!assignedState) {
+      if (userStateIds.size === 0) {
         return res.status(403).json({
           success: false,
           message: 'Access Denied: Manager profile is missing assigned state. Cannot onboard vendor.'
         });
       }
 
-      if (body.stateId && norm(body.stateId) !== assignedState) {
+      // Resolve state document from database if available to match all representations
+      let stateDoc = null;
+      if (user.stateId) {
+        stateDoc = await db.states.findById(user.stateId).catch(() => null) ||
+                   await db.states.findOne({ $or: [{ id: user.stateId }, { stateId: user.stateId }] }).catch(() => null);
+      }
+      if (!stateDoc) {
+        const sName = user.state || user.stateName || user.assignedState || userRegion;
+        if (sName) {
+          stateDoc = await db.states.findOne({
+            $or: [
+              { name: new RegExp(`^${sName.toString().trim()}$`, 'i') },
+              { code: new RegExp(`^${sName.toString().trim()}$`, 'i') }
+            ]
+          }).catch(() => null);
+        }
+      }
+      if (stateDoc) {
+        if (stateDoc._id) userStateIds.add(norm(stateDoc._id));
+        if (stateDoc.id) userStateIds.add(norm(stateDoc.id));
+        if (stateDoc.stateId) userStateIds.add(norm(stateDoc.stateId));
+        if (stateDoc.name) userStateIds.add(norm(stateDoc.name));
+        if (stateDoc.code) userStateIds.add(norm(stateDoc.code));
+      }
+
+      if (body.stateId && !userStateIds.has(norm(body.stateId))) {
         return res.status(403).json({
           success: false,
           message: 'Access Denied: You cannot onboard vendors outside your assigned state.'
@@ -300,33 +332,111 @@ const validateVendorCreationScope = async (req, res, next) => {
         return res.status(400).json({ success: false, message: 'District, Division, and Pincode are required' });
       }
 
-      const district = await db.districts.findById(body.districtId);
-      const districtState = norm(district?.stateId || district?.regionId);
-      if (!district || districtState !== assignedState) {
-        return res.status(403).json({
+      let district = await db.districts.findById(body.districtId).catch(() => null) ||
+                     await db.districts.findOne({
+                       $or: [
+                         { id: body.districtId },
+                         { districtId: body.districtId },
+                         { code: body.districtId },
+                         { name: new RegExp(`^${body.districtId.toString().trim()}$`, 'i') }
+                       ]
+                     }).catch(() => null);
+
+      if (!district) {
+        return res.status(404).json({
           success: false,
-          message: 'Selected district does not belong to your assigned regional jurisdiction.'
+          message: 'Selected district could not be found.'
         });
       }
 
-      const division = await db.divisions.findById(body.divisionId);
-      if (!division || norm(division.districtId) !== norm(body.districtId)) {
+      const districtStateIds = [
+        district.stateId ? norm(district.stateId) : null,
+        district.regionId ? norm(district.regionId) : null,
+        district.stateName ? norm(district.stateName) : null,
+        district.state ? norm(district.state) : null
+      ].filter(Boolean);
+
+      const belongsToState = districtStateIds.some(sid => userStateIds.has(sid));
+      if (!belongsToState) {
+        // Also check if district's state matches stateDoc._id
+        if (stateDoc && district.stateId && String(stateDoc._id) === String(district.stateId)) {
+          // Matched
+        } else {
+          return res.status(403).json({
+            success: false,
+            message: 'Selected district does not belong to your assigned regional jurisdiction.'
+          });
+        }
+      }
+
+      let division = await db.divisions.findById(body.divisionId).catch(() => null) ||
+                     await db.divisions.findOne({
+                       $or: [
+                         { id: body.divisionId },
+                         { divisionId: body.divisionId },
+                         { code: body.divisionId },
+                         { name: new RegExp(`^${body.divisionId.toString().trim()}$`, 'i') }
+                       ]
+                     }).catch(() => null);
+
+      if (!division) {
+        return res.status(404).json({
+          success: false,
+          message: 'Selected division could not be found.'
+        });
+      }
+
+      const validDistrictIds = [
+        district._id ? norm(district._id) : null,
+        district.id ? norm(district.id) : null,
+        district.districtId ? norm(district.districtId) : null,
+        district.name ? norm(district.name) : null,
+        norm(body.districtId)
+      ].filter(Boolean);
+
+      const divDistrict = norm(division.districtId || division.district || division.districtName);
+      if (!validDistrictIds.includes(divDistrict)) {
         return res.status(403).json({
           success: false,
           message: 'Selected division does not belong to the selected district.'
         });
       }
 
-      const pincode = await db.pincodes.findById(body.pincodeId);
-      if (!pincode || norm(pincode.divisionId) !== norm(body.divisionId)) {
+      let pincode = await db.pincodes.findById(body.pincodeId).catch(() => null) ||
+                    await db.pincodes.findOne({
+                      $or: [
+                        { id: body.pincodeId },
+                        { pincodeId: body.pincodeId },
+                        { code: body.pincodeId },
+                        { pincode: body.pincodeId }
+                      ]
+                    }).catch(() => null);
+
+      if (!pincode) {
+        return res.status(404).json({
+          success: false,
+          message: 'Selected pincode could not be found.'
+        });
+      }
+
+      const validDivisionIds = [
+        division._id ? norm(division._id) : null,
+        division.id ? norm(division.id) : null,
+        division.divisionId ? norm(division.divisionId) : null,
+        division.name ? norm(division.name) : null,
+        norm(body.divisionId)
+      ].filter(Boolean);
+
+      const pinDivision = norm(pincode.divisionId || pincode.division || pincode.divisionName);
+      if (!validDivisionIds.includes(pinDivision)) {
         return res.status(403).json({
           success: false,
           message: 'Selected pincode does not belong to the selected division.'
         });
       }
 
-      body.regionId = userRegion;
-      body.stateId = user.stateId || userRegion;
+      body.regionId = stateDoc?._id || user.regionId || user.stateId;
+      body.stateId = stateDoc?._id || user.stateId || user.regionId;
     }
 
     next();

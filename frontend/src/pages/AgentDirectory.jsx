@@ -206,11 +206,7 @@ const AgentDirectory = ({ onNavigate }) => {
   // Hierarchical Scoping Rules:
   // Show only Active and Suspended agents, removing all other agents (e.g. Pending KYC)
   const hierarchicalAgents = useMemo(() => {
-    const list = Array.isArray(agents) ? agents : [];
-    return list.filter(agent => {
-      const st = String(agent.status || '').toLowerCase().trim();
-      return st === 'active' || st === 'suspended';
-    });
+    return Array.isArray(agents) ? agents : [];
   }, [agents]);
 
   const filteredAgents = useMemo(() => {
@@ -236,7 +232,9 @@ const AgentDirectory = ({ onNavigate }) => {
                       (agent.jurisdiction && agent.jurisdiction.toLowerCase().includes(q)) ||
                       (agent.assignedArea && agent.assignedArea.toLowerCase().includes(q)) ||
                       (agent.pincode && agent.pincode.includes(q)) ||
-                      (agent.id && agent.id.toLowerCase().includes(q));
+                      (agent.id && agent.id.toLowerCase().includes(q)) ||
+                      (agent.agentId && agent.agentId.toLowerCase().includes(q)) ||
+                      (agent.agentCode && agent.agentCode.toLowerCase().includes(q));
         if (!match) return false;
       }
 
@@ -647,7 +645,7 @@ const AgentDirectory = ({ onNavigate }) => {
                               {getDisplayValue(agent.name, 'Agent')}
                             </div>
                             <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                              {getDisplayValue(agent.id || agent.agentCode, '—')}
+                              {getDisplayValue(agent.agentId || agent.agentCode || (typeof agent.id === 'string' && agent.id.startsWith('AGT-') ? agent.id : null) || agent.registrationId || agent.id, '—')}
                             </div>
                           </div>
                         </div>
@@ -795,7 +793,7 @@ const AgentDirectory = ({ onNavigate }) => {
                         {getDisplayValue(agent.name, 'Agent')}
                       </h4>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                        {getDisplayValue(agent.id, '—')}
+                        {getDisplayValue(agent.agentId || agent.agentCode || (typeof agent.id === 'string' && agent.id.startsWith('AGT-') ? agent.id : null) || agent.registrationId || agent.id, '—')}
                       </span>
                     </div>
                   </div>
