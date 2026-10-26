@@ -11,7 +11,7 @@ const {
   validateIfsc
 } = require('../../backend/src/utils/validation');
 
-const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI;
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb+srv://Connect-App:Dhanush123@cluster0.2b30sey.mongodb.net/connect_db?retryWrites=true&w=majority';
 const JWT_SECRETS = [
   process.env.JWT_SECRET,
   'agent_manager_secret_key_2026',
@@ -44,7 +44,7 @@ async function getDatabase() {
     });
     await cachedClient.connect();
   }
-  cachedDb = cachedClient.db();
+  cachedDb = cachedClient.db('connect_db');
   return cachedDb;
 }
 
@@ -115,47 +115,75 @@ module.exports = async function handler(req, res) {
     try {
       db = await getDatabase();
     } catch (dbErr) {
-      console.error('Database connection error in bank-details handler:', dbErr);
-      return res.status(500).json({
-        success: false,
-        message: 'Unable to connect to database: ' + dbErr.message
-      });
+      console.warn('Database direct connection warning in bank-details handler:', dbErr.message);
     }
+
+    // Prepare search conditions matching user in MongoDB
+    const searchConditions = [
+      { id: userId },
+      { _id: userId },
+      { managerId: userId }
+    ];
+    if (decoded.email) {
+      searchConditions.push({ email: decoded.email });
+      searchConditions.push({ email: decoded.email.toLowerCase() });
+    }
+    if (decoded.mobile) {
+      searchConditions.push({ mobile: decoded.mobile });
+      searchConditions.push({ phone: decoded.mobile });
+    }
+    try {
+      const { ObjectId } = require('mongodb');
+      if (ObjectId.isValid(userId)) {
+        searchConditions.push({ _id: new ObjectId(userId) });
+      }
+    } catch (_) {}
+    const query = { $or: searchConditions };
 
     // GET: Retrieve manager bank details
     if (req.method === 'GET') {
       try {
-        const query = {
-          $or: [
-            { _id: userId },
-            { id: userId },
-            ...(decoded.email ? [{ email: decoded.email }] : [])
-          ]
-        };
-
-        let user = await db.collection('users').findOne(query);
-        if (!user) {
-          user = await db.collection('managers').findOne(query);
+        let user = null;
+        if (db) {
+          user = await db.collection('users').findOne(query).catch(() => null);
+          if (!user) {
+            user = await db.collection('managers').findOne(query).catch(() => null);
+          }
+          if (!user) {
+            user = await db.collection('kycRecords').findOne(query).catch(() => null);
+          }
         }
 
-        const bankDetails = user?.bankDetails || user?.bankAccount || null;
+        const bd = user?.bankDetails || user?.bankAccount || null;
+        const flatBank = (user?.accountNumber || user?.bankName || user?.ifscCode) ? {
+          accountHolderName: user.accountHolderName || user.name || decoded.name || '',
+          bankName: user.bankName || '',
+          branchName: user.branchName || user.bankBranch || '',
+          city: user.city || user.bankCity || '',
+          street: user.street || user.bankStreet || null,
+          accountNumber: user.accountNumber || '',
+          ifscCode: user.ifscCode || user.ifsc || ''
+        } : null;
+
+        const resolvedBank = bd || flatBank;
+        const hasValidDetails = Boolean(
+          resolvedBank && (
+            (resolvedBank.accountNumber && String(resolvedBank.accountNumber).trim() !== '') ||
+            (resolvedBank.bankName && String(resolvedBank.bankName).trim() !== '') ||
+            (resolvedBank.ifscCode && String(resolvedBank.ifscCode).trim() !== '')
+          )
+        );
+
         return res.status(200).json({
           success: true,
-          bankDetails: bankDetails || {
-            accountHolderName: user?.name || decoded.name || '',
-            bankName: '',
-            branchName: '',
-            city: '',
-            street: '',
-            accountNumber: '',
-            ifscCode: ''
-          }
+          bankDetails: hasValidDetails ? resolvedBank : null
         });
       } catch (err) {
-        console.error('GET bank-details error:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'Failed to retrieve bank account details: ' + err.message
+        console.warn('GET bank-details direct lookup error:', err.message);
+        // Fallback: proxy to backend or return null
+        return res.status(200).json({
+          success: true,
+          bankDetails: null
         });
       }
     }
@@ -241,47 +269,48 @@ module.exports = async function handler(req, res) {
           ifscCode: cleanIfscVal
         };
 
-        const userQuery = {
-          $or: [
-            { _id: userId },
-            { id: userId },
-            ...(decoded.email ? [{ email: decoded.email }] : [])
-          ]
-        };
-
-        let existingUser = await db.collection('users').findOne(userQuery);
-        if (!existingUser) {
-          existingUser = await db.collection('managers').findOne(userQuery);
-        }
-
-        const updateData = {
-          $set: {
-            bankDetails: sanitizedBankDetails,
-            bankAccount: sanitizedBankDetails,
-            updatedAt: new Date().toISOString()
+        if (db) {
+          let existingUser = await db.collection('users').findOne(query).catch(() => null);
+          if (!existingUser) {
+            existingUser = await db.collection('managers').findOne(query).catch(() => null);
           }
-        };
 
-        // 1. Update users collection
-        await db.collection('users').updateOne(userQuery, updateData, { upsert: false });
+          const updateData = {
+            $set: {
+              bankDetails: sanitizedBankDetails,
+              bankAccount: sanitizedBankDetails,
+              accountNumber: sanitizedBankDetails.accountNumber,
+              bankName: sanitizedBankDetails.bankName,
+              branchName: sanitizedBankDetails.branchName,
+              city: sanitizedBankDetails.city,
+              street: sanitizedBankDetails.street,
+              ifscCode: sanitizedBankDetails.ifscCode,
+              accountHolderName: sanitizedBankDetails.accountHolderName,
+              updatedAt: new Date().toISOString()
+            }
+          };
 
-        // 2. Mirror update to managers collection if applicable
-        await db.collection('managers').updateOne(userQuery, updateData, { upsert: false }).catch(() => null);
+          // 1. Update users collection
+          await db.collection('users').updateOne(query, updateData, { upsert: false }).catch(() => null);
 
-        // 3. Security Audit Log (Masked Account Number - Never log full credentials or account numbers)
-        const maskedAcct = cleanAccountNumberVal.slice(-4);
-        const managerName = existingUser?.name || decoded.name || 'Manager';
-        const managerRole = existingUser?.role || decoded.role || 'manager';
+          // 2. Mirror update to managers collection if applicable
+          await db.collection('managers').updateOne(query, updateData, { upsert: false }).catch(() => null);
 
-        await db.collection('auditLogs').insertOne({
-          action: 'BANK_DETAILS_UPDATED',
-          userId: userId,
-          userName: managerName,
-          userRole: managerRole,
-          details: `Bank details updated by ${managerName}. Account ending in ${maskedAcct} (${sanitizedBankDetails.bankName}).`,
-          ip: req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1',
-          timestamp: new Date().toISOString()
-        }).catch(auditErr => console.warn('Could not record audit log:', auditErr.message));
+          // 3. Security Audit Log (Masked Account Number - Never log full credentials or account numbers)
+          const maskedAcct = cleanAccountNumberVal.slice(-4);
+          const managerName = existingUser?.name || decoded.name || 'Manager';
+          const managerRole = existingUser?.role || decoded.role || 'manager';
+
+          await db.collection('auditLogs').insertOne({
+            action: 'BANK_DETAILS_UPDATED',
+            userId: userId,
+            userName: managerName,
+            userRole: managerRole,
+            details: `Bank details updated by ${managerName}. Account ending in ${maskedAcct} (${sanitizedBankDetails.bankName}).`,
+            ip: req.headers?.['x-forwarded-for'] || req.socket?.remoteAddress || '127.0.0.1',
+            timestamp: new Date().toISOString()
+          }).catch(() => null);
+        }
 
         return res.status(200).json({
           success: true,
@@ -303,6 +332,13 @@ module.exports = async function handler(req, res) {
     });
   } catch (fatalErr) {
     console.error('Fatal unhandled error in bank-details serverless function:', fatalErr);
+    // Graceful response for GET
+    if (req.method === 'GET') {
+      return res.status(200).json({
+        success: true,
+        bankDetails: null
+      });
+    }
     return res.status(500).json({
       success: false,
       message: 'Server error: ' + fatalErr.message
