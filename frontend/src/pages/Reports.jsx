@@ -1,3 +1,4 @@
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { shopVisitService, reportService, API_BASE } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getDisplayValue, normalizeString } from '../utils/normalize';
