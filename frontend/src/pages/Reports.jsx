@@ -135,6 +135,28 @@ const Reports = ({ onNavigate, initialTab, filterParams = {} }) => {
     }
   }, [filterParams?.search, initialTab]);
 
+  // Auto-open shop visit details modal when navigated with visitId (e.g. from Notification Open button)
+  useEffect(() => {
+    const targetVisitId = filterParams?.visitId;
+    if (!targetVisitId) return;
+
+    const match = (Array.isArray(visits) ? visits : []).find(v => (v._id || v.id) === targetVisitId);
+    if (match) {
+      setSelectedVisit(match);
+      setActiveTab('visits');
+    } else {
+      shopVisitService.getShopVisitById(targetVisitId)
+        .then(res => {
+          const visitData = res?.data || res?.visit || (res?.success && res) || null;
+          if (visitData && typeof visitData === 'object' && (visitData._id || visitData.id || visitData.shopName)) {
+            setSelectedVisit(visitData);
+            setActiveTab('visits');
+          }
+        })
+        .catch(() => {});
+    }
+  }, [filterParams?.visitId, visits]);
+
   // --- SUBMITTED TEAM REPORTS STATE ---
   const [submittedReports, setSubmittedReports] = useState([]);
   const [loadingSubmitted, setLoadingSubmitted] = useState(false);

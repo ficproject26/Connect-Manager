@@ -449,11 +449,11 @@ function AppInner() {
           )}
           {(visitedPages.has('agents-directory') || visitedPages.has('agent-directory')) && (
             <div style={{ display: (currentPage === 'agents-directory' || currentPage === 'agent-directory') ? 'block' : 'none', width: '100%' }}>
-              <AgentDirectory onNavigate={navigate} />
+              <AgentDirectory onNavigate={navigate} filterParams={navParams} />
             </div>
           )}
-          {visitedPages.has('shop-visits') && (
-            <div style={{ display: currentPage === 'shop-visits' ? 'block' : 'none', width: '100%' }}>
+          {(visitedPages.has('shop-visits') || visitedPages.has('visits')) && (
+            <div style={{ display: (currentPage === 'shop-visits' || currentPage === 'visits') ? 'block' : 'none', width: '100%' }}>
               <Reports onNavigate={navigate} initialTab="shop-visits" filterParams={navParams} />
             </div>
           )}

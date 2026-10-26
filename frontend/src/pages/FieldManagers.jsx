@@ -492,9 +492,11 @@ const FieldManagers = ({ filterParams }) => {
         const q = search.toLowerCase();
         const matchesName = m.name?.toLowerCase().includes(q);
         const matchesEmail = m.email?.toLowerCase().includes(q);
-        const matchesMobile = m.mobile?.includes(q);
+        const matchesMobile = (m.mobile?.includes(q) || m.phone?.includes(q));
         const matchesArea = m.pincodeArea?.toLowerCase().includes(q);
-        const matchesPin = m.pincodeCode?.includes(q);
+        const matchesPin = (m.pincodeCode?.includes(q) || m.pincode?.includes(q));
+        const matchesDiv = (m.divisionName?.toLowerCase().includes(q) || m.division?.toLowerCase().includes(q));
+        const matchesDist = (m.districtName?.toLowerCase().includes(q) || m.district?.toLowerCase().includes(q));
         const matchesId = (m.managerId?.toLowerCase().includes(q) || m.id?.toLowerCase().includes(q) || m._id?.toLowerCase().includes(q));
         if (!matchesName && !matchesEmail && !matchesMobile && !matchesArea && !matchesPin && !matchesDiv && !matchesDist && !matchesId) {
           return false;

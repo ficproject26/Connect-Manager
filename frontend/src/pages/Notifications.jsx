@@ -216,20 +216,53 @@ const Notifications = ({ onNavigate }) => {
 
   const handleClickItem = (n) => {
     markAsRead(n._id || n.id);
-    if (onNavigate) {
-      const vendorId = n.metadata?.vendorId || n.entityId || n.vendorId || (n.type?.startsWith('vendor') ? (n.metadata?.id || n.entityId) : null);
-      if ((n.type?.startsWith('vendor') || n.entityType === 'vendor') && vendorId) {
-        onNavigate('vendor-details', { vendorId });
-      } else if (n.type?.startsWith('vendor') || n.entityType === 'vendor') {
-        onNavigate('vendors');
-      } else if (n.type?.startsWith('task') || n.entityType === 'task') {
-        onNavigate('tasks', { taskId: n.metadata?.taskId || n.entityId });
-      } else if (n.type?.startsWith('shop_visit') || n.entityType === 'shop_visit') {
-        onNavigate('visits', { visitId: n.metadata?.visitId || n.entityId });
-      } else if (n.type?.startsWith('agent') || n.entityType === 'agent') {
-        onNavigate('agent-directory', { agentId: n.metadata?.agentId || n.entityId });
-      }
+    if (!onNavigate) return;
+
+    const notifType = String(n.type || n.entityType || '').toLowerCase();
+    const title = String(n.title || '').toLowerCase();
+    const targetRecordId = n.recordId || n.metadata?.recordId || n.metadata?.visitId || n.metadata?.taskId || n.metadata?.vendorId || n.metadata?.id || n.entityId || n.id;
+
+    // 1. Shop Visits (e.g. 'New Shop Visit Logged', type 'shop_visit')
+    if (notifType.includes('shop_visit') || notifType.includes('visit') || title.includes('shop visit') || title.includes('field visit')) {
+      const visitId = n.metadata?.visitId || n.visitId || targetRecordId;
+      onNavigate('shop-visits', visitId ? { visitId, tab: 'visits' } : { tab: 'visits' });
+      return;
     }
+
+    // 2. Vendors (e.g. onboarding requests, merchant updates)
+    if (notifType.includes('vendor') || title.includes('vendor') || title.includes('merchant')) {
+      const vendorId = n.metadata?.vendorId || n.vendorId || targetRecordId;
+      if (vendorId) {
+        onNavigate('vendor-details', { vendorId });
+      } else {
+        onNavigate('vendors');
+      }
+      return;
+    }
+
+    // 3. Tasks / QC assignments
+    if (notifType.includes('task') || notifType.includes('qc') || title.includes('task')) {
+      const taskId = n.metadata?.taskId || n.taskId || targetRecordId;
+      onNavigate('tasks', taskId ? { taskId } : {});
+      return;
+    }
+
+    // 4. Agents Directory
+    if (notifType.includes('agent') || title.includes('agent')) {
+      const agentId = n.metadata?.agentId || n.agentId || targetRecordId;
+      onNavigate('agents-directory', agentId ? { search: agentId } : {});
+      return;
+    }
+
+    // 5. Field Managers Directory
+    if (notifType.includes('manager') || title.includes('manager')) {
+      const managerId = n.metadata?.managerId || n.managerId || targetRecordId;
+      onNavigate('field-managers', managerId ? { search: managerId } : {});
+      return;
+    }
+
+    // Graceful fallback: navigate to dashboard if reference is unavailable instead of rendering a blank page
+    onNavigate('dashboard');
   };
 
   return (

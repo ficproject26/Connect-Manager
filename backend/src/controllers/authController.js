@@ -113,33 +113,83 @@ const getOccupancy = async (role, { stateId, districtId, divisionId, pincodeId }
 };
 
 
-// Helper: Safely resolve and populate saved manager bank details from users, managers, or top-level fields
+// Helper: Safely resolve and populate saved manager bank details from users, managers, kycRecords, or top-level fields
 const resolveUserBankDetails = async (user) => {
   if (!user) return null;
-  let bd = user.bankDetails || user.bankAccount || null;
+  let bd = user.bankDetails || user.bankAccount || user.bankingDetails || user.bank_details || user.bank || null;
   let mgrDoc = null;
-  if (!bd || !bd.accountNumber) {
-    mgrDoc = await db.managers.findOne({
-      $or: [
-        ...(user._id ? [{ _id: user._id }] : []),
-        ...(user.id ? [{ id: user.id }] : []),
-        ...(user.email ? [{ email: user.email }] : []),
-        ...(user.mobile ? [{ mobile: user.mobile }, { phone: user.mobile }] : []),
-        ...(user.phone ? [{ phone: user.phone }, { mobile: user.phone }] : [])
-      ]
-    }).catch(() => null);
-    if (mgrDoc?.bankDetails) {
-      bd = { ...(bd || {}), ...mgrDoc.bankDetails };
+  let userDoc = null;
+
+  const searchCriteria = [
+    ...(user._id ? [{ _id: user._id }] : []),
+    ...(user.id ? [{ id: user.id }] : []),
+    ...(user.managerId ? [{ managerId: user.managerId }] : []),
+    ...(user.email ? [{ email: user.email }] : []),
+    ...(user.mobile ? [{ mobile: user.mobile }, { phone: user.mobile }] : []),
+    ...(user.phone ? [{ phone: user.phone }, { mobile: user.phone }] : [])
+  ];
+
+  if (!bd || (!bd.accountNumber && !bd.account_number && !bd.accNo)) {
+    // Check db.users if user record might be in users collection
+    if (db.users && searchCriteria.length > 0) {
+      userDoc = await db.users.findOne({ $or: searchCriteria }).catch(() => null);
+      if (userDoc?.bankDetails || userDoc?.bankAccount) {
+        bd = { ...(bd || {}), ...(userDoc.bankDetails || userDoc.bankAccount) };
+      } else if (userDoc?.accountNumber || userDoc?.bankName) {
+        bd = {
+          ...(bd || {}),
+          accountHolderName: userDoc.accountHolderName || userDoc.name || '',
+          bankName: userDoc.bankName || '',
+          branchName: userDoc.branchName || userDoc.bankBranch || '',
+          city: userDoc.city || userDoc.bankCity || '',
+          street: userDoc.street || userDoc.bankStreet || null,
+          accountNumber: userDoc.accountNumber || '',
+          ifscCode: userDoc.ifscCode || userDoc.ifsc || ''
+        };
+      }
+    }
+    // Check db.managers
+    if ((!bd || (!bd.accountNumber && !bd.account_number && !bd.accNo)) && db.managers && searchCriteria.length > 0) {
+      mgrDoc = await db.managers.findOne({ $or: searchCriteria }).catch(() => null);
+      if (mgrDoc?.bankDetails || mgrDoc?.bankAccount) {
+        bd = { ...(bd || {}), ...(mgrDoc.bankDetails || mgrDoc.bankAccount) };
+      } else if (mgrDoc?.accountNumber || mgrDoc?.bankName) {
+        bd = {
+          ...(bd || {}),
+          accountHolderName: mgrDoc.accountHolderName || mgrDoc.name || '',
+          bankName: mgrDoc.bankName || '',
+          branchName: mgrDoc.branchName || mgrDoc.bankBranch || '',
+          city: mgrDoc.city || mgrDoc.bankCity || '',
+          street: mgrDoc.street || mgrDoc.bankStreet || null,
+          accountNumber: mgrDoc.accountNumber || '',
+          ifscCode: mgrDoc.ifscCode || mgrDoc.ifsc || ''
+        };
+      }
+    }
+    // Check db.kycRecords
+    if ((!bd || (!bd.accountNumber && !bd.account_number && !bd.accNo)) && db.kycRecords) {
+      const kycCriteria = [
+        ...(user._id ? [{ managerId: String(user._id) }, { _id: `KYC-MGR-${user._id}` }] : []),
+        ...(user.id ? [{ managerId: String(user.id) }, { id: `KYC-MGR-${user.id}` }] : []),
+        ...(user.managerId ? [{ managerId: user.managerId }] : []),
+        ...(user.email ? [{ email: user.email }] : [])
+      ];
+      if (kycCriteria.length > 0) {
+        const kycDoc = await db.kycRecords.findOne({ $or: kycCriteria }).catch(() => null);
+        if (kycDoc?.bankDetails || kycDoc?.bankAccount) {
+          bd = { ...(bd || {}), ...(kycDoc.bankDetails || kycDoc.bankAccount) };
+        }
+      }
     }
   }
 
-  const accountHolderName = bd?.accountHolderName || bd?.accountHolder || user.accountHolderName || mgrDoc?.accountHolderName || user.name || '';
-  const bankName = bd?.bankName || bd?.bank || user.bankName || mgrDoc?.bankName || '';
-  const branchName = bd?.branchName || bd?.branch || user.branchName || user.bankBranch || mgrDoc?.branchName || '';
-  const city = bd?.city || bd?.bankCity || user.city || user.bankCity || mgrDoc?.city || '';
-  const street = bd?.street || bd?.bankStreet || user.street || user.bankStreet || mgrDoc?.street || null;
-  const accountNumber = bd?.accountNumber || bd?.accountNo || bd?.bankAccount || user.accountNumber || user.accountNo || mgrDoc?.accountNumber || mgrDoc?.accountNo || '';
-  const ifscCode = bd?.ifscCode || bd?.ifsc || user.ifscCode || user.ifsc || mgrDoc?.ifscCode || mgrDoc?.ifsc || '';
+  const accountHolderName = bd?.accountHolderName || bd?.account_holder_name || bd?.accountHolder || bd?.account_holder || bd?.holderName || user.accountHolderName || user.account_holder_name || userDoc?.accountHolderName || mgrDoc?.accountHolderName || user.name || '';
+  const bankName = bd?.bankName || bd?.bank_name || bd?.bank || user.bankName || user.bank_name || userDoc?.bankName || mgrDoc?.bankName || '';
+  const branchName = bd?.branchName || bd?.branch_name || bd?.branch || user.branchName || user.branch_name || user.bankBranch || userDoc?.branchName || mgrDoc?.branchName || '';
+  const city = bd?.city || bd?.bankCity || bd?.bank_city || user.city || user.bankCity || userDoc?.city || mgrDoc?.city || '';
+  const street = bd?.street || bd?.bankStreet || bd?.bank_street || bd?.address || user.street || user.bankStreet || userDoc?.street || mgrDoc?.street || null;
+  const accountNumber = bd?.accountNumber || bd?.account_number || bd?.accountNo || bd?.accNo || bd?.account || bd?.bankAccount || user.accountNumber || user.account_number || user.accountNo || userDoc?.accountNumber || mgrDoc?.accountNumber || '';
+  const ifscCode = bd?.ifscCode || bd?.ifsc_code || bd?.ifsc || user.ifscCode || user.ifsc_code || user.ifsc || userDoc?.ifscCode || mgrDoc?.ifscCode || '';
 
   if (accountNumber || bankName || ifscCode) {
     return {
@@ -152,7 +202,7 @@ const resolveUserBankDetails = async (user) => {
       ifscCode: ifscCode || ''
     };
   }
-  return bd || null;
+  return null;
 };
 
 // Helper: Identify responsible Sub-admin according to hierarchy level and assigned territory
@@ -508,6 +558,7 @@ const login = async (req, res) => {
       documents: user.documents || {},
       avatarUrl: user.avatarUrl || null,
       bankDetails: await resolveUserBankDetails(user),
+      bankAccount: await resolveUserBankDetails(user),
       scope: {
         regionId: user.stateId || null,
         regionName: resolvedState,
@@ -1101,7 +1152,13 @@ const register = async (req, res) => {
       pincodeCode: pinDoc?.code || null,
       regionId: stateId || null,
       avatarUrl: avatarUrl || null,
-      bankDetails: sanitizedBankDetails
+      bankDetails: sanitizedBankDetails,
+      bankAccount: sanitizedBankDetails,
+      accountNumber: sanitizedBankDetails.accountNumber,
+      bankName: sanitizedBankDetails.bankName,
+      branchName: sanitizedBankDetails.branchName,
+      ifscCode: sanitizedBankDetails.ifscCode,
+      accountHolderName: sanitizedBankDetails.accountHolderName
     });
 
     const territoryDescription = [
@@ -1324,6 +1381,7 @@ const getRegistrationStatus = async (req, res) => {
         signatureUrl: user.documents?.signatureUrl || user.documents?.digitalSignature || null
       },
       bankDetails: await resolveUserBankDetails(user),
+      bankAccount: await resolveUserBankDetails(user),
       scope: {
         stateName: resolvedState,
         districtName: resolvedDistrict,
@@ -1517,6 +1575,16 @@ const subAdminApproval = async (req, res) => {
       isApproved: false,
       isActive: false
     });
+    const resolvedUserBank = user.bankDetails || user.bankAccount || await resolveUserBankDetails(user);
+    const bankSyncFields = resolvedUserBank ? {
+      bankDetails: resolvedUserBank,
+      bankAccount: resolvedUserBank,
+      accountNumber: resolvedUserBank.accountNumber,
+      bankName: resolvedUserBank.bankName,
+      branchName: resolvedUserBank.branchName,
+      ifscCode: resolvedUserBank.ifscCode,
+      accountHolderName: resolvedUserBank.accountHolderName
+    } : {};
     if (db.managers) {
       await db.managers.findByIdAndUpdate(user._id, {
         status: 'PENDING_MAIN_ADMIN_APPROVAL',
@@ -1533,7 +1601,8 @@ const subAdminApproval = async (req, res) => {
         adminApprovedAt: now,
         routingQueue: 'MAIN_ADMIN_APPROVAL_QUEUE',
         isApproved: false,
-        isActive: false
+        isActive: false,
+        ...bankSyncFields
       }).catch(() => {});
     }
     const updatedUser = await db.users.findById(user._id);
@@ -1811,6 +1880,8 @@ const mainAdminApproval = async (req, res) => {
           kycStatus: 'Pending Verification',
           submittedDate: (updatedUser.createdAt || now).split('T')[0],
           documents: updatedUser.documents || {},
+          bankDetails: updatedUser.bankDetails || updatedUser.bankAccount || await resolveUserBankDetails(updatedUser),
+          bankAccount: updatedUser.bankDetails || updatedUser.bankAccount || await resolveUserBankDetails(updatedUser),
           notes: `Sub-admin (${updatedUser.subadminApprovedByName || 'Sub-Admin'}) & Main Admin (${adminName}) approvals completed. Forwarded to KYC Team.`,
           createdAt: now,
           updatedAt: now
@@ -2013,13 +2084,25 @@ const kycApproval = async (req, res) => {
       ).catch(() => {});
     }
 
+    const finalManagerBank = user.bankDetails || user.bankAccount || await resolveUserBankDetails(user);
+    const finalBankSync = finalManagerBank ? {
+      bankDetails: finalManagerBank,
+      bankAccount: finalManagerBank,
+      accountNumber: finalManagerBank.accountNumber,
+      bankName: finalManagerBank.bankName,
+      branchName: finalManagerBank.branchName,
+      ifscCode: finalManagerBank.ifscCode,
+      accountHolderName: finalManagerBank.accountHolderName
+    } : {};
+
     if (db.managers) {
       await db.managers.findByIdAndUpdate(user._id, {
         status: 'active',
         overallRegistrationStatus: 'active',
         isApproved: true,
         isActive: true,
-        kycStatus: 'verified'
+        kycStatus: 'verified',
+        ...finalBankSync
       }).catch(() => {});
     }
 
@@ -2527,6 +2610,7 @@ const getMe = async (req, res) => {
         documents: user.documents || {},
         avatarUrl: user.avatarUrl || null,
         bankDetails: await resolveUserBankDetails(user),
+        bankAccount: await resolveUserBankDetails(user),
         territory: {
           state: stateName,
           stateId: stateId,
@@ -2922,6 +3006,7 @@ const verifyOtp = async (req, res) => {
       documents: user.documents || {},
       avatarUrl: user.avatarUrl || null,
       bankDetails: await resolveUserBankDetails(user),
+      bankAccount: await resolveUserBankDetails(user),
       regionId: user.regionId || user.stateId,
       scope: {
         regionId: user.regionId || user.stateId,
@@ -3195,7 +3280,7 @@ const updateBankDetails = async (req, res) => {
       userId: user._id || user.id,
       userName: user.name,
       userRole: user.role,
-      details: `Bank details updated by ${user.name}. Account ending in ${cleanAccountNumber.slice(-4)} (${sanitizedBankDetails.bankName}).`,
+      details: `Bank details updated by ${user.name}. Account ending in ${cleanAccount.slice(-4)} (${sanitizedBankDetails.bankName}).`,
       ip: req.ip || '127.0.0.1',
       timestamp: new Date().toISOString()
     });
@@ -3223,18 +3308,14 @@ const getBankDetails = async (req, res) => {
     if (!user) {
       user = await db.users.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
     }
-    const bankDetails = await resolveUserBankDetails(user);
+    if (!user && db.managers) {
+      user = await db.managers.findById(userId) || await db.managers.findOne({ $or: [{ id: userId }, { _id: userId }, { email: req.user?.email }] });
+    }
+    const bankDetails = await resolveUserBankDetails(user || req.user);
+    const hasValidDetails = Boolean(bankDetails && (bankDetails.accountNumber || bankDetails.bankName || bankDetails.ifscCode));
     return res.json({
       success: true,
-      bankDetails: bankDetails || {
-        accountHolderName: user?.name || req.user?.name || '',
-        bankName: '',
-        branchName: '',
-        city: '',
-        street: '',
-        accountNumber: '',
-        ifscCode: ''
-      }
+      bankDetails: hasValidDetails ? bankDetails : null
     });
   } catch (err) {
     console.error('Get bank details error:', err);

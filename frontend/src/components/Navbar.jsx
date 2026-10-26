@@ -188,7 +188,14 @@ const Navbar = ({ onNavigate, onToggleMobileSidebar }) => {
 
   const handleSelectManager = (m) => {
     closeSearch();
-    if (onNavigate) onNavigate('field-managers', { search: m.name });
+    if (!onNavigate) return;
+    const roleStr = String(m?.role || m?.roleLabel || m?.type || '').toLowerCase();
+    const isAgent = (roleStr.includes('agent') && !roleStr.includes('manager')) || m?.type === 'agent';
+    if (isAgent) {
+      onNavigate('agents-directory', { search: m.name || m.agentId || m.id });
+    } else {
+      onNavigate('field-managers', { search: m.name || m.managerId || m.id });
+    }
   };
 
   const handleSelectTask = (t) => {

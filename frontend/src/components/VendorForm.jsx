@@ -182,7 +182,7 @@ const PRESET_TIME_SLOTS = [
   { label: 'Food & Dining', slot: '11:00 AM - 11:00 PM' },
   { label: 'Open 24/7', slot: 'Open 24/7' },
 ];
-const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCancel }) => {
+const VendorForm = ({ initialData, prefill, onSubmit, isEditing = false, onCancel, fieldVisitId }) => {
   const { user } = useAuth();
 
   const normRole = (r) => {

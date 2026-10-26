@@ -38,7 +38,17 @@ const Profile = () => {
           } catch (ce) {}
         }
 
-        const effectiveBank = fetchedBank || targetUser?.bankDetails || targetUser?.bankAccount || cachedBank || null;
+        const flatBank = (targetUser?.accountNumber || targetUser?.bankName) ? {
+          accountHolderName: targetUser.accountHolderName || targetUser.name || '',
+          bankName: targetUser.bankName || '',
+          branchName: targetUser.branchName || targetUser.bankBranch || '',
+          city: targetUser.city || targetUser.bankCity || '',
+          street: targetUser.street || '',
+          accountNumber: targetUser.accountNumber || '',
+          ifscCode: targetUser.ifscCode || targetUser.ifsc || ''
+        } : null;
+
+        const effectiveBank = fetchedBank || targetUser?.bankDetails || targetUser?.bankAccount || flatBank || cachedBank || null;
 
         if (res && res.success && res.user && setSession) {
           setSession({
@@ -111,8 +121,26 @@ const Profile = () => {
   const [bankError, setBankError] = useState('');
   const [bankSuccess, setBankSuccess] = useState('');
 
+  const activeBankDetails = user?.bankDetails || user?.bankAccount || ((user?.accountNumber || user?.bankName) ? {
+    accountHolderName: user.accountHolderName || user.name || '',
+    bankName: user.bankName || '',
+    branchName: user.branchName || user.bankBranch || '',
+    city: user.city || user.bankCity || '',
+    street: user.street || user.bankStreet || null,
+    accountNumber: user.accountNumber || '',
+    ifscCode: user.ifscCode || user.ifsc || ''
+  } : null);
+
+  const hasBankDetails = Boolean(
+    activeBankDetails && (
+      (activeBankDetails.accountNumber && String(activeBankDetails.accountNumber).trim() !== '') ||
+      (activeBankDetails.bankName && String(activeBankDetails.bankName).trim() !== '') ||
+      (activeBankDetails.ifscCode && String(activeBankDetails.ifscCode).trim() !== '')
+    )
+  );
+
   const openBankModal = () => {
-    const currentBank = user?.bankDetails || user?.bankAccount || {};
+    const currentBank = activeBankDetails || {};
     setBankForm({
       accountHolderName: currentBank.accountHolderName || user?.name || '',
       bankName: currentBank.bankName || '',
@@ -854,7 +882,7 @@ const Profile = () => {
               <Landmark size={18} color="var(--primary)" /> Bank Account Details
             </h3>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {user?.bankDetails && (
+              {hasBankDetails && (
                 <span style={{
                   background: '#dcfce7',
                   border: '1px solid #bbf7d0',
@@ -885,19 +913,19 @@ const Profile = () => {
                 }}
               >
                 <Edit3 size={12} />
-                <span>{user?.bankDetails ? 'Edit Details' : 'Add Bank Details'}</span>
+                <span>{hasBankDetails ? 'Edit Details' : 'Add Bank Details'}</span>
               </button>
             </div>
           </div>
           <div className="card-body">
-            {user?.bankDetails ? (
+            {hasBankDetails && activeBankDetails ? (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ background: 'var(--bg-subtle)', padding: '12px', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-subtle)' }}>
                   <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '4px' }}>
                     Account Holder Name
                   </label>
                   <div style={{ fontSize: '0.95rem', fontWeight: 700, color: 'var(--text-main)' }}>
-                    {user.bankDetails.accountHolderName || '-'}
+                    {activeBankDetails.accountHolderName || '-'}
                   </div>
                 </div>
 
@@ -907,7 +935,7 @@ const Profile = () => {
                       Bank Name
                     </label>
                     <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {user.bankDetails.bankName || '-'}
+                      {activeBankDetails.bankName || '-'}
                     </div>
                   </div>
 
@@ -916,7 +944,7 @@ const Profile = () => {
                       Branch Name
                     </label>
                     <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {user.bankDetails.branchName || '-'}
+                      {activeBankDetails.branchName || '-'}
                     </div>
                   </div>
                 </div>
@@ -927,7 +955,7 @@ const Profile = () => {
                       City
                     </label>
                     <div style={{ fontSize: '0.86rem', fontWeight: 600, color: 'var(--text-main)' }}>
-                      {user.bankDetails.city || '-'}
+                      {activeBankDetails.city || '-'}
                     </div>
                   </div>
 
@@ -935,8 +963,8 @@ const Profile = () => {
                     <label className="form-label" style={{ color: 'var(--text-muted)', fontSize: '0.72rem', marginBottom: '2px' }}>
                       Branch Street / Address
                     </label>
-                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: user.bankDetails.street ? 'var(--text-main)' : 'var(--text-muted)' }}>
-                      {user.bankDetails.street || 'Not provided'}
+                    <div style={{ fontSize: '0.86rem', fontWeight: 600, color: activeBankDetails.street ? 'var(--text-main)' : 'var(--text-muted)' }}>
+                      {activeBankDetails.street || 'Not provided'}
                     </div>
                   </div>
                 </div>
@@ -970,8 +998,8 @@ const Profile = () => {
                       <button
                         type="button"
                         onClick={() => {
-                          if (user.bankDetails.accountNumber) {
-                            navigator.clipboard.writeText(user.bankDetails.accountNumber);
+                          if (activeBankDetails.accountNumber) {
+                            navigator.clipboard.writeText(activeBankDetails.accountNumber);
                             setCopiedBankField('account');
                             setTimeout(() => setCopiedBankField(null), 2000);
                           }
@@ -997,8 +1025,8 @@ const Profile = () => {
                   </div>
                   <div style={{ fontSize: '1rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: 'var(--text-main)' }}>
                     {showAccountNumber
-                      ? user.bankDetails.accountNumber
-                      : (user.bankDetails.accountNumber ? `•••• •••• •••• ${String(user.bankDetails.accountNumber).slice(-4)}` : '-')}
+                      ? activeBankDetails.accountNumber
+                      : (activeBankDetails.accountNumber ? `•••• •••• •••• ${String(activeBankDetails.accountNumber).slice(-4)}` : '-')}
                   </div>
                 </div>
 
@@ -1011,8 +1039,8 @@ const Profile = () => {
                     <button
                       type="button"
                       onClick={() => {
-                        if (user.bankDetails.ifscCode) {
-                          navigator.clipboard.writeText(user.bankDetails.ifscCode);
+                        if (activeBankDetails.ifscCode) {
+                          navigator.clipboard.writeText(activeBankDetails.ifscCode);
                           setCopiedBankField('ifsc');
                           setTimeout(() => setCopiedBankField(null), 2000);
                         }
@@ -1036,7 +1064,7 @@ const Profile = () => {
                     </button>
                   </div>
                   <div style={{ fontSize: '0.98rem', fontWeight: 800, letterSpacing: '0.08em', fontFamily: 'monospace', color: 'var(--text-main)' }}>
-                    {user.bankDetails.ifscCode || '-'}
+                    {activeBankDetails.ifscCode || '-'}
                   </div>
                 </div>
               </div>

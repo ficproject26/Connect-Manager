@@ -28,7 +28,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 
-const AgentDirectory = ({ onNavigate }) => {
+const AgentDirectory = ({ onNavigate, filterParams = {} }) => {
   const { user, loading: authLoading } = useAuth();
   const [agents, setAgents] = useState(() => {
     const cached = cacheClient.get(`agents:directory:${user?.id || user?._id || 'mgr'}`);
@@ -40,7 +40,7 @@ const AgentDirectory = ({ onNavigate }) => {
   });
   const [error, setError] = useState(null);
   const [refreshing, setRefreshing] = useState(false);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(() => (filterParams?.search || '').trim());
   const [levelFilter, setLevelFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
   const [viewMode, setViewMode] = useState('table'); // 'table' | 'card'
@@ -99,6 +99,13 @@ const AgentDirectory = ({ onNavigate }) => {
       fetchAgents();
     }
   }, [user, authLoading]);
+
+  // Synchronize search when navigated from global search
+  useEffect(() => {
+    if (filterParams?.search !== undefined) {
+      setSearch(String(filterParams.search || '').trim());
+    }
+  }, [filterParams?.search]);
 
   // Real-time synchronization for agent directory
   useRealtime('agent', () => {
