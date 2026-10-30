@@ -261,10 +261,21 @@ const getTasks = async (req, res) => {
     const enriched = filtered.map(t => {
       const assignmentStatus = t.assignmentStatus || (['Assigned', 'Accepted', 'In Progress', 'Completed', 'Closed'].includes(t.status) ? 'ACCEPTED' : (t.status === 'Rejected' ? 'REJECTED' : t.status === 'Cancelled' ? 'CANCELLED' : 'ACCEPTED'));
       const executionStatus = t.executionStatus || (['Completed', 'Closed', 'Resolved'].includes(t.status) ? 'COMPLETED' : t.status === 'In Progress' ? 'IN_PROGRESS' : 'NOT_STARTED');
+      const safeCompletionDetails = t.completionDetails ? {
+        ...t.completionDetails,
+        completionPhoto: typeof t.completionDetails.completionPhoto === 'string' && t.completionDetails.completionPhoto.startsWith('data:') ? undefined : t.completionDetails.completionPhoto,
+        voiceNote: typeof t.completionDetails.voiceNote === 'string' && t.completionDetails.voiceNote.startsWith('data:') ? undefined : t.completionDetails.voiceNote,
+      } : undefined;
+      const safePhotos = Array.isArray(t.photos) ? t.photos.filter(p => typeof p === 'string' && !p.startsWith('data:')) : [];
+      const safeShopPhoto = typeof t.shopPhoto === 'string' && t.shopPhoto.startsWith('data:') ? undefined : t.shopPhoto;
       return {
         ...t,
+        id: t._id || t.id || t.taskNumber,
         assignmentStatus,
-        executionStatus
+        executionStatus,
+        completionDetails: safeCompletionDetails,
+        photos: safePhotos,
+        shopPhoto: safeShopPhoto
       };
     });
 
