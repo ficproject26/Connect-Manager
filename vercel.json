@@ -5,11 +5,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "http://3.110.88.42:8005/api/:path*"
+      "destination": "https://connect-manager.onrender.com/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "http://3.110.88.42:8005/uploads/:path*"
+      "destination": "https://connect-manager.onrender.com/uploads/:path*"
     },
     {
       "source": "/(.*)",

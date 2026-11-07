@@ -27,16 +27,15 @@ class WebSocketClient {
       return `${import.meta.env.VITE_WS_URL}?token=${token}`;
     }
 
-    // Vercel serverless edge does not host persistent WebSocket connections
-    if (window.location.hostname.endsWith('vercel.app')) {
-      return null;
+    const apiUrl = (import.meta.env.VITE_API_URL || '').replace(/\/+$/, '');
+    if (apiUrl.includes('onrender.com')) {
+      const wsOrigin = apiUrl.replace(/^http/, 'ws');
+      return `${wsOrigin}/ws?token=${token}`;
     }
 
-    const isHttps = window.location.protocol === 'https:';
-    if (isHttps) {
-      // Modern browsers reject insecure ws:// from https:// origin (Mixed Content).
-      // Fallback to high-performance real-time HTTP event polling when WSS endpoint is not provided.
-      return null;
+    // Default Render production WSS endpoint
+    if (window.location.protocol === 'https:' || window.location.hostname.endsWith('vercel.app')) {
+      return `wss://connect-manager.onrender.com/ws?token=${token}`;
     }
 
     let host = window.location.host;

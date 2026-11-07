@@ -63,7 +63,8 @@ const ALLOWED_ORIGINS = [
   'http://127.0.0.1:5173',
   'http://localhost:3000',
   'https://connect-manager.vercel.app',
-  'https://manager.ficapp.in'
+  'https://manager.ficapp.in',
+  'https://connect-manager.onrender.com'
 ];
 
 if (process.env.ALLOWED_ORIGINS) {
@@ -83,7 +84,7 @@ app.use(cors({
     const isAllowed = ALLOWED_ORIGINS.some(allowed => {
       if (allowed === origin) return true;
       // Allow dynamic subdomains for configured apex domain if needed
-      if (origin.endsWith('.vercel.app') || origin.endsWith('.ficapp.in')) return true;
+      if (origin.endsWith('.vercel.app') || origin.endsWith('.ficapp.in') || origin.endsWith('.onrender.com')) return true;
       return false;
     });
 
