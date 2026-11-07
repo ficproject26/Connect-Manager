@@ -4,6 +4,7 @@
   "description": "Backend API for Agent Manager & Vendor Management Portal",
   "main": "src/server.js",
   "scripts": {
+    "build": "echo Backend build completed",
     "start": "node src/server.js",
     "dev": "node --watch src/server.js",
     "seed": "node src/seed/seed.js",
