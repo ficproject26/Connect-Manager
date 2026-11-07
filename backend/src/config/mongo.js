@@ -17,20 +17,22 @@ candidateEnvPaths.forEach(p => {
   }
 });
 
+const DEFAULT_MONGO_URI = 'mongodb+srv://Connect-App:Dhanush123@cluster0.2b30sey.mongodb.net/connect_db?retryWrites=true&w=majority';
+
 function resolveDatabaseName(uri) {
   if (process.env.DB_NAME) return process.env.DB_NAME;
   if (uri) {
     const match = uri.match(/mongodb(?:\+srv)?:\/\/[^\/]+\/([^?]+)/);
     if (match && match[1]) return match[1];
   }
-  return undefined;
+  return 'connect_db';
 }
 
 let client = null;
 let db = null;
 
 function resolveMongoUri() {
-  return process.env.MONGODB_URI || process.env.MONGO_URI;
+  return process.env.MONGODB_URI || process.env.MONGO_URI || DEFAULT_MONGO_URI;
 }
 
 async function getMongoDb() {
